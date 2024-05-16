@@ -38,13 +38,13 @@ function run_Benders(
         @constraint(master_env.model, 0 >= ex)   
 
         # Print
-        # @printf "%5d     %10.2f   %10.2f    %10.2f  %10.2f  %10.2f\n" iter LB UB Gap master_time sub_time  
+        @printf "%5d     %10.2f   %10.2f    %10.2f  %10.2f  %10.2f\n" iter LB UB Gap master_time sub_time  
 
         # Stopping Criteria
         # Gap 
-        if Gap < 1e-3
-            break
-        end 
+        # if Gap < 1e-3
+        #     break
+        # end 
 
         # Time Limit
         algo_run_time = time()
@@ -58,10 +58,8 @@ function run_Benders(
         iter += 1
     end
 
-    optimize!(master_env.model)
-    obj_value = objective_value(master_env.model)
-    return obj_value
-    # return df
+   
+    return df
 end
 
 

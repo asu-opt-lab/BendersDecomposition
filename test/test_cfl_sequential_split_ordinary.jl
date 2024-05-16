@@ -2,18 +2,18 @@ include("../src/SplitBenders.jl")
 import .SplitBenders
 using JuMP
 
-# instance = "f100-c100-r5.0-p2"
+# instance = "f300-c300-r5.0-p1"
 # data = SplitBenders.read_random_data(instance)
 
-instance = "p2"
+instance = "p35"
 data = SplitBenders.read_data(instance)
 
 algo_params = SplitBenders.AlgorithmParams(
-    SplitBenders.SPLIT_CUTSTRATEGY,
-    SplitBenders.LINFGAMMANORM,
-    SplitBenders.MOST_FRAC_INDEX,
-    SplitBenders.SPLIT_PURE_CUT_STRATEGY,
-    SplitBenders.NO_SPLIT_BENDERS_STRATEGY
+    cut_strategy= SplitBenders.SPLIT_CUTSTRATEGY,
+    SplitCGLPNormType=SplitBenders.LINFGAMMANORM,
+    SplitSetSelectionPolicy=SplitBenders.RANDOM_INDEX,
+    StrengthenCutStrategy=SplitBenders.SPLIT_STRENGTHEN_CUT_STRATEGY,
+    SplitBendersStrategy=SplitBenders.ALL_SPLIT_BENDERS_STRATEGY
 )
 
 

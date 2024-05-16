@@ -46,6 +46,16 @@ struct AlgorithmParams
     SplitSetSelectionPolicy::Union{AbstractSplitSetSelectionPolicy, Nothing}
     StrengthenCutStrategy::Union{AbstractSplitStengtheningPolicy, Nothing}
     SplitBendersStrategy::Union{AbstractSplitBendersPolicy, Nothing} 
+    
+    function AlgorithmParams(;cut_strategy=nothing, SplitCGLPNormType=nothing, SplitSetSelectionPolicy=nothing, StrengthenCutStrategy=nothing, SplitBendersStrategy=nothing)
+        if cut_strategy == ORDINARY_CUTSTRATEGY
+            if !isa(SplitCGLPNormType, Nothing) @warn "Warning: SplitCGLPNormType is not Nothing." end
+            if !isa(SplitSetSelectionPolicy, Nothing) @warn "Warning: SplitSetSelectionPolicy is not Nothing." end
+            if !isa(StrengthenCutStrategy, Nothing) @warn "Warning: StrengthenCutStrategy is not Nothing." end
+            if !isa(SplitBendersStrategy, Nothing) @warn "Warning: SplitBendersStrategy is not Nothing." end
+        end
+        new(cut_strategy, SplitCGLPNormType, SplitSetSelectionPolicy, StrengthenCutStrategy, SplitBendersStrategy)
+    end
 end
 
 function run_Benders(

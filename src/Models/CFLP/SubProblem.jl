@@ -30,6 +30,14 @@ mutable struct CFLPStandardKNSubEnv <: AbstractSubEnv
     knapsack_subproblems
 end
 
+mutable struct SplitInfo 
+    # indices
+    γ₀s
+    γₓs
+    γₜs
+    # ifaddall::Bool
+end
+
 mutable struct CFLPSplitSubEnv <: AbstractSubEnv
     model::Model
     sub_constr::Array
@@ -40,6 +48,7 @@ mutable struct CFLPSplitSubEnv <: AbstractSubEnv
     algo_params
     data
     BSPProblem
+    split_info
 end
 
 
@@ -55,7 +64,8 @@ function CFLPSplitSubEnv(data::CFLPData, algo_params; solver::Symbol=:Gurobi)
     model, constr, rhs, cconstr = generate_CFLP_subproblem(data, solver=solver) 
 
     BSPProblem = generate_BSPProblem(data)
-    return CFLPSplitSubEnv(model, constr, rhs, cconstr, 0.0, algo_params, data, BSPProblem)
+    split_info = SplitInfo([],[],[])
+    return CFLPSplitSubEnv(model, constr, rhs, cconstr, 0.0, algo_params, data, BSPProblem, split_info)
 end
 
 function CFLPStandardKNSubEnv(data::CFLPData, algo_params; solver::Symbol=:Gurobi)
@@ -179,13 +189,7 @@ function generate_knapsack_subproblems(data::CFLPData)
     return models
 end
 
-# mutable struct SplitInfo 
-#     indices
-#     γ₀s
-#     γₓs
-#     γₜs
-#     ifaddall::Bool
-# end
+
 
 # mutable struct CFLPProjectSplitSubEnv <: AbstractSubEnv
 #     model::Model
