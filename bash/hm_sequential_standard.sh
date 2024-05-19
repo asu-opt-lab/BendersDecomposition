@@ -1,5 +1,9 @@
-for j in 1 2 3 5 7 10
-    for ((i=1; i<=10; i++))
+#!/bin/sh
+#SBATCH -t 0-01:00:00
+
+for j in 1 2
+do
+    for ((i=1; i<=1; i++))
     do
         for cut_strategy in "ORDINARY_CUTSTRATEGY" "SPLIT_CUTSTRATEGY"
         do

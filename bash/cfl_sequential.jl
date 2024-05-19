@@ -28,4 +28,4 @@ sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params)
 df = SplitBenders.run_Benders(data,master_env,sub_env)
 
 # result post processing
-CSV.write("result/Gurobi/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy).csv", df)
+CSV.write("results/Gurobi/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy).csv", df)

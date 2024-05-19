@@ -42,9 +42,9 @@ function run_Benders(
 
         # Stopping Criteria
         # Gap 
-        # if Gap < 1e-3
-        #     break
-        # end 
+        if Gap < 1e-3
+            break
+        end 
 
         # Time Limit
         algo_run_time = time()
