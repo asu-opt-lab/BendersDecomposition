@@ -16,11 +16,11 @@ StrengthenCutStrategy = settings["StrengthenCutStrategy"]
 SplitBendersStrategy = settings["SplitBendersStrategy"]
 
 algo_params = SplitBenders.AlgorithmParams(
-    cut_strategy = c_cut_strategy,
-    SplitCGLPNormType = c_SplitCGLPNormType,
-    SplitSetSelectionPolicy = c_SplitSetSelectionPolicy,
-    StrengthenCutStrategy = c_StrengthenCutStrategy,
-    SplitBendersStrategy = c_SplitBendersStrategy
+    cut_strategy = cut_strategy,
+    SplitCGLPNormType = SplitCGLPNormType,
+    SplitSetSelectionPolicy = SplitSetSelectionPolicy,
+    StrengthenCutStrategy = StrengthenCutStrategy,
+    SplitBendersStrategy = SplitBendersStrategy
 )
 
 master_env = SplitBenders.MasterProblem(data)

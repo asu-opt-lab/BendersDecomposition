@@ -107,7 +107,7 @@ function reConvert_splitsetselectionpolicy(s::Union{AbstractSplitSetSelectionPol
     end
 end
 
-function ArgParse.parse_item(::Type{Union{AbstractSplitStengtheningPolicy, Nothing}}, s::AbstractString)
+function ArgParse.parse_item(::Type{Union{AbstractSplitBendersPolicy, Nothing}}, s::AbstractString)
     if s == "NO_SPLIT_BENDERS_STRATEGY"
         return NO_SPLIT_BENDERS_STRATEGY
     elseif s == "ALL_SPLIT_BENDERS_STRATEGY"
@@ -133,7 +133,7 @@ function reConvert_splitbenderspolicy(s::Union{AbstractSplitBendersPolicy, Nothi
     end
 end
 
-function ArgParse.parse_item(::Type{Union{AbstractSplitBendersPolicy, Nothing}}, s::AbstractString)
+function ArgParse.parse_item(::Type{Union{AbstractSplitStengtheningPolicy, Nothing}}, s::AbstractString)
     if s == "SPLIT_PURE_CUT_STRATEGY"
         return SPLIT_PURE_CUT_STRATEGY
     elseif s == "SPLIT_STRENGTHEN_CUT_STRATEGY"
