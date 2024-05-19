@@ -42,6 +42,7 @@ function ArgParse.parse_item(::Type{Union{AbstractCutStrategy, Nothing}}, s::Abs
     end
 end
 
+
 function ArgParse.parse_item(::Type{Union{AbstractNormType, Nothing}}, s::AbstractString)
     if s == "STANDARDNORM"
         return STANDARDNORM
