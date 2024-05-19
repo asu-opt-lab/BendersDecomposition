@@ -31,3 +31,59 @@ function parse_commandline()
 
     return parse_args(s)
 end
+
+function ArgParse.parse_item(::Type{Union{AbstractCutStrategy, Nothing}}, s::AbstractString)
+    if s == "ORDINARY_CUTSTRATEGY"
+        return ORDINARY_CUTSTRATEGY
+    elseif s == "SPLIT_CUTSTRATEGY"
+        return SPLIT_CUTSTRATEGY
+    else
+        throw(ArgumentError("Invalid cut strategy"))
+    end
+end
+
+function ArgParse.parse_item(::Type{Union{AbstractNormType, Nothing}}, s::AbstractString)
+    if s == "STANDARDNORM"
+        return STANDARDNORM
+    elseif s == "L1GammaNorm"
+        return L1GammaNorm
+    elseif s == "L2GammaNorm"
+        return L2GammaNorm
+    elseif s == "LINFGAMMANORM"
+        return LINFGAMMANORM
+    else
+        throw(ArgumentError("Invalid norm type"))
+    end
+end
+
+function ArgParse.parse_item(::Type{Union{AbstractSplitSetSelectionPolicy, Nothing}}, s::AbstractString)
+    if s == "MOST_FRAC_INDEX"
+        return MOST_FRAC_INDEX
+    elseif s == "RANDOM_INDEX"
+        return RANDOM_INDEX
+    else
+        throw(ArgumentError("Invalid split set selection policy"))
+    end
+end
+
+function ArgParse.parse_item(::Type{Union{AbstractSplitStengtheningPolicy, Nothing}}, s::AbstractString)
+    if s == "NO_SPLIT_BENDERS_STRATEGY"
+        return NO_SPLIT_BENDERS_STRATEGY
+    elseif s == "ALL_SPLIT_BENDERS_STRATEGY"
+        return ALL_SPLIT_BENDERS_STRATEGY
+    elseif s == "TIGHT_SPLIT_BENDERS_STRATEGY"
+        return TIGHT_SPLIT_BENDERS_STRATEGY
+    else
+        throw(ArgumentError("Invalid split benders policy"))
+    end
+end
+
+function ArgParse.parse_item(::Type{Union{AbstractSplitBendersPolicy, Nothing}}, s::AbstractString)
+    if s == "SPLIT_PURE_CUT_STRATEGY"
+        return SPLIT_PURE_CUT_STRATEGY
+    elseif s == "SPLIT_STRENGTHEN_CUT_STRATEGY"
+        return SPLIT_STRENGTHEN_CUT_STRATEGY
+    else
+        throw(ArgumentError("Invalid split strengthening policy"))
+    end
+end
