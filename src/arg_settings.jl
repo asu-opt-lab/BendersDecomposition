@@ -33,11 +33,14 @@ function parse_commandline()
 end
 
 function ArgParse.parse_item(::Type{Union{AbstractCutStrategy, Nothing}}, s::AbstractString)
-    if s == "ORDINARY_CUTSTRATEGY"
+    if s == "ORDINARY_CUTSTRATEGY" 
         return ORDINARY_CUTSTRATEGY
     elseif s == "SPLIT_CUTSTRATEGY"
         return SPLIT_CUTSTRATEGY
+    elseif isnothing(s)
+        return "nothing"
     else
+        @info s
         throw(ArgumentError("Invalid cut strategy"))
     end
 end
