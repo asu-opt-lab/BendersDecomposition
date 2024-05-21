@@ -4,7 +4,7 @@
 
 for ((i=1; i<=1; i++))
 do
-    for cut_strategy in "ORDINARY_CUTSTRATEGY" "SPLIT_CUTSTRATEGY"
+    for cut_strategy in "SPLIT_CUTSTRATEGY"
     do
         for SplitCGLPNormType in "STANDARDNORM" "L1GAMMANORM" "LINFGAMMANORM"
         do
@@ -14,7 +14,7 @@ do
                 do
                     for SplitBendersStrategy in "NO_SPLIT_BENDERS_STRATEGY" "ALL_SPLIT_BENDERS_STRATEGY" "TIGHT_SPLIT_BENDERS_STRATEGY" 
                     do
-                        bash bash/cfl_sequential.sh "f100-c100-r5.0-p$i" $cut_strategy $SplitCGLPNormType $SplitSetSelectionPolicy $StrengthenCutStrategy $SplitBendersStrategy
+                        bash bash/cfl_sequential_split.sh "f100-c100-r5.0-p$i" $cut_strategy $SplitCGLPNormType $SplitSetSelectionPolicy $StrengthenCutStrategy $SplitBendersStrategy
                     done
                 done
             done

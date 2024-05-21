@@ -2,3 +2,4 @@
 # Project.toml
 willdelete/
 *.csv
+*.out

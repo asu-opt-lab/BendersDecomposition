@@ -47,9 +47,9 @@ end
 function set_params_attribute(algo_params,::Type{AbstractNormType},s::AbstractString)
     if s == "STANDARDNORM"
         algo_params.SplitCGLPNormType = STANDARDNORM
-    elseif s == "L1GammaNorm"
+    elseif s == "L1GAMMANORM"
         algo_params.SplitCGLPNormType = L1GAMMANORM
-    elseif s == "L2GammaNorm"
+    elseif s == "L2GAMMANORM"
         algo_params.SplitCGLPNormType = L2GAMMANORM
     elseif s == "LINFGAMMANORM"
         algo_params.SplitCGLPNormType = LINFGAMMANORM

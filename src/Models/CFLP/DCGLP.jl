@@ -77,7 +77,7 @@ function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::Stan
     @constraint(model, conx[i=1:N], kₓ[i] .+ vₓ[i] == 0)  #-x̂
     @constraint(model, cont, kₜ + vₜ == 0) #-t̂
     
-    for i in eachindex(sub_env.split_info.indices)
+    for i in eachindex(sub_env.split_info.γ₀s)
         @constraint(model, sub_env.split_info.γ₀s[i]*k₀ + sub_env.split_info.γₓs[i]'kₓ + sub_env.split_info.γₜs[i]*kₜ <= 0)
         @constraint(model, sub_env.split_info.γ₀s[i]*v₀ + sub_env.split_info.γₓs[i]'vₓ + sub_env.split_info.γₜs[i]*vₜ <= 0)
     end
