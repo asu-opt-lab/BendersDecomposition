@@ -2,7 +2,7 @@
 #SBATCH -t 0-01:00:00
 
 
-for ((i=1; i<=1; i++))
+for ((i=1; i<=2; i++))
 do
     for cut_strategy in "SPLIT_CUTSTRATEGY"
     do
@@ -14,7 +14,7 @@ do
                 do
                     for SplitBendersStrategy in "NO_SPLIT_BENDERS_STRATEGY" "ALL_SPLIT_BENDERS_STRATEGY" "TIGHT_SPLIT_BENDERS_STRATEGY" 
                     do
-                        bash bash/cfl_sequential_split.sh "f100-c100-r5.0-p$i" $cut_strategy $SplitCGLPNormType $SplitSetSelectionPolicy $StrengthenCutStrategy $SplitBendersStrategy
+                        bash bash/cfl_sequential_split.sh "f500-c500-r5.0-p$i" $cut_strategy $SplitCGLPNormType $SplitSetSelectionPolicy $StrengthenCutStrategy $SplitBendersStrategy
                     done
                 done
             done
