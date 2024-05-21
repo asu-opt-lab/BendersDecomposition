@@ -74,7 +74,7 @@ function solve_DCGLP(
 
         k += 1
         main_time_limit = time() - start_time
-        set_time_limit_sec(main_env.model, time_limit-main_time_limit)
+        set_time_limit_sec(main_env.model, max(time_limit-main_time_limit,1))
         optimize!(main_env.model)
         k̂₀ = value(main_env.model[:k₀])
         k̂ₓ = value.(main_env.model[:kₓ])
@@ -88,7 +88,7 @@ function solve_DCGLP(
         set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
         set_normalized_rhs(bsp_env.model[:cb], k̂₀)
         bsp_time_limit = time() - start_time
-        set_time_limit_sec(bsp_env.model, time_limit-bsp_time_limit)
+        set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
         optimize!(bsp_env.model)
         status1 = dual_status(bsp_env.model)
 
@@ -102,14 +102,14 @@ function solve_DCGLP(
             ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:kₓ] + dual(bsp_env.model[:cb])*main_env.model[:k₀])
             # @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
         else
-            @error "Wrong status1"
+            @error "Wrong status1: $status1"
         end
 
         # BSP2
         set_normalized_rhs.(bsp_env.model[:cx], v̂ₓ)
         set_normalized_rhs(bsp_env.model[:cb], v̂₀)
         bsp_time_limit = time() - start_time
-        set_time_limit_sec(bsp_env.model, time_limit-bsp_time_limit)
+        set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
         optimize!(bsp_env.model)
         status2 = dual_status(bsp_env.model)
 
@@ -123,7 +123,7 @@ function solve_DCGLP(
             ex2 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:vₓ] + dual(bsp_env.model[:cb])*main_env.model[:v₀])
             # @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
         else
-            @error "Wrong status2"
+            @error "Wrong status2: $status2"
         end
 
         _UB1 = min(_UB1, g₁ - k̂ₜ)
@@ -132,14 +132,15 @@ function solve_DCGLP(
 
         LB = τ̂
         UB = min(max(_UB1, _UB2),UB)
-        # @info "Iteration $k: LB = $LB, UB = $UB"
+        @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
 
-        if ((UB - LB) <= 0.01 || (τ̂  >= _UB1 && τ̂  >= _UB2 )) || (UB - LB)/abs(UB) <= 0.01
+        if (UB - LB) <= 0.01 || (τ̂  >= _UB1 && τ̂  >= _UB2 ) || (UB - LB)/abs(UB) <= 1e-03
             main_env.ifsolved = true
             break
         end
 
-        if main_time_limit <= time() - start_time
+        if time_limit <= time() - start_time
+            @info time() - start_time
             main_env.ifsolved = false
             break
         end
@@ -197,7 +198,7 @@ function solve_DCGLP(
 
         k += 1
         main_time_limit = time() - start_time
-        set_time_limit_sec(main_env.model, time_limit-main_time_limit)
+        set_time_limit_sec(main_env.model, max(time_limit-main_time_limit,1))
         optimize!(main_env.model)
         k̂₀ = value(main_env.model[:k₀])
         k̂ₓ = value.(main_env.model[:kₓ])
@@ -212,7 +213,7 @@ function solve_DCGLP(
         set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
         set_normalized_rhs(bsp_env.model[:cb], k̂₀)
         bsp_time_limit = time() - start_time
-        set_time_limit_sec(bsp_env.model, time_limit-bsp_time_limit)
+        set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
         optimize!(bsp_env.model)
         status1 = dual_status(bsp_env.model)
         
@@ -235,7 +236,7 @@ function solve_DCGLP(
         set_normalized_rhs.(bsp_env.model[:cx], v̂ₓ)
         set_normalized_rhs(bsp_env.model[:cb], v̂₀)
         bsp_time_limit = time() - start_time
-        set_time_limit_sec(bsp_env.model, time_limit-bsp_time_limit)
+        set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
         optimize!(bsp_env.model)
         status2 = dual_status(bsp_env.model)
         
@@ -260,17 +261,17 @@ function solve_DCGLP(
         LB = τ̂
         UB = update_UB!(UB,_sx,g₁,g₂,t̂, pConeType)
 
-        # @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
+        @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
 
         if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) 
             main_env.ifsolved = true
             break
         end
 
-        # if main_time_limit <= time() - start_time
-        #     main_env.ifsolved = false
-        #     break
-        # end
+        if time_limit <= time() - start_time
+            main_env.ifsolved = false
+            break
+        end
         if status1 == FEASIBLE_POINT
             if 1e-3 < _UB1
                 push!(conπpoints1, @constraint(main_env.model, 0 >= ex1))

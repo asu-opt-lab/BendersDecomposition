@@ -4,7 +4,7 @@ function parse_commandline()
     @add_arg_table s begin
         "--instance"
         help = "instance"
-        default = "f100-c200-r5.0-p1"
+        default = "f100-c100-r5.0-p1"
         arg_type = AbstractString
         "--cut_strategy"
         help = "cut_strategy"
