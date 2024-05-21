@@ -40,7 +40,7 @@ const SPLIT_PURE_CUT_STRATEGY = SplitPureCutStrategy()
 struct SplitStrengthenCutStrategy <: AbstractSplitStengtheningPolicy end
 const SPLIT_STRENGTHEN_CUT_STRATEGY = SplitStrengthenCutStrategy()
 
-struct AlgorithmParams
+mutable struct AlgorithmParams
     cut_strategy::Union{AbstractCutStrategy, Nothing}
     SplitCGLPNormType::Union{AbstractNormType, Nothing}
     SplitSetSelectionPolicy::Union{AbstractSplitSetSelectionPolicy, Nothing}
