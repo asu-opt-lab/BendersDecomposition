@@ -11,7 +11,7 @@ function generate_cut(
     end
     
     start_time = time()
-    set_time_limit_sec(sub_env.model, time_limit)
+    # set_time_limit_sec(sub_env.model, time_limit)
     JuMP.optimize!(sub_env.model)
     sub_time = time() - start_time
 

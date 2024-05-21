@@ -82,7 +82,7 @@ function generate_CFLP_subproblem(data::CFLPData; solver::Symbol=:Gurobi)
         # set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
-        # set_optimizer_attribute(model, "Method", 2)
+        set_optimizer_attribute(model, "Method", 1)
         set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)

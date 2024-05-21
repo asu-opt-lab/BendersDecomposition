@@ -67,7 +67,7 @@ end
 function solve_master!(master_env::AbstractMasterEnv; time_limit=1000)
 
     start_time = time()
-    set_time_limit_sec(master_env.model, time_limit)
+    # set_time_limit_sec(master_env.model, time_limit)
     JuMP.optimize!(master_env.model)
     master_time = time() - start_time
 
