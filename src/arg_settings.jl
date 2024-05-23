@@ -6,97 +6,150 @@ function parse_commandline()
         help = "instance"
         default = "f100-c100-r5.0-p1"
         arg_type = AbstractString
-        "--cut_strategy"
-        help = "cut_strategy"
-        default = "ORDINARY_CUTSTRATEGY"
-        arg_type = AbstractString
-        "--SplitCGLPNormType"
-        help = "SplitCGLPNormType"
-        default = "nothing"
-        arg_type = AbstractString
-        "--SplitSetSelectionPolicy"
-        help = "SplitSetSelectionPolicy"
-        default = "nothing"
-        arg_type = AbstractString
-        "--StrengthenCutStrategy"
-        help = "StrengthenCutStrategy"
-        default = "nothing"
-        arg_type = AbstractString
-        "--SplitBendersStrategy"
-        help = "SplitBendersStrategy"
-        default = "nothing"
-        arg_type = AbstractString
-
     end
 
     return parse_args(s)
 end
 
-function set_params_attribute(algo_params,::Type{AbstractCutStrategy},s::AbstractString)
-    if s == "ORDINARY_CUTSTRATEGY" 
-        algo_params.cut_strategy = ORDINARY_CUTSTRATEGY
-    elseif s == "SPLIT_CUTSTRATEGY"
-        algo_params.cut_strategy = SPLIT_CUTSTRATEGY
-    elseif s == "nothing"
-        algo_params.cut_strategy = nothing
-    else
-        throw(ArgumentError("Invalid cut strategy"))
-    end
+
+function set_params_attribute(attribute::Any,s::AbstractString)
+    attribute = eval(Meta.parse(s))
 end
 
-function set_params_attribute(algo_params,::Type{AbstractNormType},s::AbstractString)
-    if s == "STANDARDNORM"
-        algo_params.SplitCGLPNormType = STANDARDNORM
-    elseif s == "L1GAMMANORM"
-        algo_params.SplitCGLPNormType = L1GAMMANORM
-    elseif s == "L2GAMMANORM"
-        algo_params.SplitCGLPNormType = L2GAMMANORM
-    elseif s == "LINFGAMMANORM"
-        algo_params.SplitCGLPNormType = LINFGAMMANORM
-    elseif s == "nothing"
-        algo_params.SplitCGLPNormType = nothing
-    else
-        throw(ArgumentError("Invalid norm type"))
-    end
-end
 
-function set_params_attribute(algo_params,::Type{AbstractSplitSetSelectionPolicy},s::AbstractString)
-    if s == "MOST_FRAC_INDEX"
-        algo_params.SplitSetSelectionPolicy = MOST_FRAC_INDEX
-    elseif s == "RANDOM_INDEX"
-        algo_params.SplitSetSelectionPolicy = RANDOM_INDEX
-    elseif s == "nothing"
-        algo_params.SplitSetSelectionPolicy = nothing
-    else
-        throw(ArgumentError("Invalid split set selection policy"))
-    end
-end
+# function set_params_attribute(algo_params,::Type{AbstractCutStrategy},s::AbstractString)
+#     algo_params.cut_strategy = eval(Meta.parse(s))
+# end
 
-function set_params_attribute(algo_params,::Type{AbstractSplitBendersPolicy},s::AbstractString)
-    if s == "NO_SPLIT_BENDERS_STRATEGY"
-        algo_params.SplitBendersStrategy = NO_SPLIT_BENDERS_STRATEGY
-    elseif s == "ALL_SPLIT_BENDERS_STRATEGY"
-        algo_params.SplitBendersStrategy = ALL_SPLIT_BENDERS_STRATEGY
-    elseif s == "TIGHT_SPLIT_BENDERS_STRATEGY"
-        algo_params.SplitBendersStrategy = TIGHT_SPLIT_BENDERS_STRATEGY
-    elseif s == "nothing"
-        algo_params.SplitBendersStrategy = nothing
-    else
-        throw(ArgumentError("Invalid split benders policy"))
-    end
-end
+# function set_params_attribute(algo_params,::Type{AbstractNormType},s::AbstractString)
+#     algo_params.SplitCGLPNormType = eval(Meta.parse(s))
+# end
 
-function set_params_attribute(algo_params,::Type{AbstractSplitStengtheningPolicy},s::AbstractString)
-    if s == "SPLIT_PURE_CUT_STRATEGY"
-        algo_params.StrengthenCutStrategy = SPLIT_PURE_CUT_STRATEGY
-    elseif s == "SPLIT_STRENGTHEN_CUT_STRATEGY"
-        algo_params.StrengthenCutStrategy = SPLIT_STRENGTHEN_CUT_STRATEGY
-    elseif s == "nothing"
-        algo_params.StrengthenCutStrategy = nothing
-    else
-        throw(ArgumentError("Invalid split strengthening policy"))
-    end
-end
+# function set_params_attribute(algo_params,::Type{AbstractSplitSetSelectionPolicy},s::AbstractString)
+#     algo_params.SplitSetSelectionPolicy = eval(Meta.parse(s))
+# end
+
+# function set_params_attribute(algo_params,::Type{AbstractSplitBendersPolicy},s::AbstractString)
+#     algo_params.SplitBendersStrategy = eval(Meta.parse(s))
+# end
+
+
+
+
+
+
+
+
+
+
+
+
+# function parse_commandline()
+#     s = ArgParseSettings()
+
+#     @add_arg_table s begin
+#         "--instance"
+#         help = "instance"
+#         default = "f100-c100-r5.0-p1"
+#         arg_type = AbstractString
+#         "--cut_strategy"
+#         help = "cut_strategy"
+#         default = "ORDINARY_CUTSTRATEGY"
+#         arg_type = AbstractString
+#         "--SplitCGLPNormType"
+#         help = "SplitCGLPNormType"
+#         default = "nothing"
+#         arg_type = AbstractString
+#         "--SplitSetSelectionPolicy"
+#         help = "SplitSetSelectionPolicy"
+#         default = "nothing"
+#         arg_type = AbstractString
+#         "--StrengthenCutStrategy"
+#         help = "StrengthenCutStrategy"
+#         default = "nothing"
+#         arg_type = AbstractString
+#         "--SplitBendersStrategy"
+#         help = "SplitBendersStrategy"
+#         default = "nothing"
+#         arg_type = AbstractString
+
+#     end
+
+#     return parse_args(s)
+# end
+
+
+
+
+
+
+
+
+# function set_params_attribute(algo_params,::Type{AbstractCutStrategy},s::AbstractString)
+#     if s == "ORDINARY_CUTSTRATEGY" 
+#         algo_params.cut_strategy = ORDINARY_CUTSTRATEGY
+#     elseif s == "SPLIT_CUTSTRATEGY"
+#         algo_params.cut_strategy = SPLIT_CUTSTRATEGY
+#     elseif s == "nothing"
+#         algo_params.cut_strategy = nothing
+#     else
+#         throw(ArgumentError("Invalid cut strategy"))
+#     end
+# end
+
+# function set_params_attribute(algo_params,::Type{AbstractNormType},s::AbstractString)
+#     if s == "STANDARDNORM"
+#         algo_params.SplitCGLPNormType = STANDARDNORM
+#     elseif s == "L1GAMMANORM"
+#         algo_params.SplitCGLPNormType = L1GAMMANORM
+#     elseif s == "L2GAMMANORM"
+#         algo_params.SplitCGLPNormType = L2GAMMANORM
+#     elseif s == "LINFGAMMANORM"
+#         algo_params.SplitCGLPNormType = LINFGAMMANORM
+#     elseif s == "nothing"
+#         algo_params.SplitCGLPNormType = nothing
+#     else
+#         throw(ArgumentError("Invalid norm type"))
+#     end
+# end
+
+# function set_params_attribute(algo_params,::Type{AbstractSplitSetSelectionPolicy},s::AbstractString)
+#     if s == "MOST_FRAC_INDEX"
+#         algo_params.SplitSetSelectionPolicy = MOST_FRAC_INDEX
+#     elseif s == "RANDOM_INDEX"
+#         algo_params.SplitSetSelectionPolicy = RANDOM_INDEX
+#     elseif s == "nothing"
+#         algo_params.SplitSetSelectionPolicy = nothing
+#     else
+#         throw(ArgumentError("Invalid split set selection policy"))
+#     end
+# end
+
+# function set_params_attribute(algo_params,::Type{AbstractSplitBendersPolicy},s::AbstractString)
+#     if s == "NO_SPLIT_BENDERS_STRATEGY"
+#         algo_params.SplitBendersStrategy = NO_SPLIT_BENDERS_STRATEGY
+#     elseif s == "ALL_SPLIT_BENDERS_STRATEGY"
+#         algo_params.SplitBendersStrategy = ALL_SPLIT_BENDERS_STRATEGY
+#     elseif s == "TIGHT_SPLIT_BENDERS_STRATEGY"
+#         algo_params.SplitBendersStrategy = TIGHT_SPLIT_BENDERS_STRATEGY
+#     elseif s == "nothing"
+#         algo_params.SplitBendersStrategy = nothing
+#     else
+#         throw(ArgumentError("Invalid split benders policy"))
+#     end
+# end
+
+# function set_params_attribute(algo_params,::Type{AbstractSplitStengtheningPolicy},s::AbstractString)
+#     if s == "SPLIT_PURE_CUT_STRATEGY"
+#         algo_params.StrengthenCutStrategy = SPLIT_PURE_CUT_STRATEGY
+#     elseif s == "SPLIT_STRENGTHEN_CUT_STRATEGY"
+#         algo_params.StrengthenCutStrategy = SPLIT_STRENGTHEN_CUT_STRATEGY
+#     elseif s == "nothing"
+#         algo_params.StrengthenCutStrategy = nothing
+#     else
+#         throw(ArgumentError("Invalid split strengthening policy"))
+#     end
+# end
 
 
 
