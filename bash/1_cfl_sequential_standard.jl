@@ -3,7 +3,7 @@ import .SplitBenders
 using JuMP, CSV
 
 settings = SplitBenders.parse_commandline()
-instance = "f300-c300-r5.0-p1"
+instance = "f500-c500-r5.0-p1"
 data = SplitBenders.read_random_data(instance)
 
 # instance = "p2"
