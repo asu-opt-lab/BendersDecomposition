@@ -102,6 +102,7 @@ function solve_DCGLP(
             ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:kₓ] + dual(bsp_env.model[:cb])*main_env.model[:k₀])
             # @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
         else
+            g₁ = Inf
             @error "Wrong status1: $status1"
         end
 
@@ -123,6 +124,7 @@ function solve_DCGLP(
             ex2 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:vₓ] + dual(bsp_env.model[:cb])*main_env.model[:v₀])
             # @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
         else
+            g₂ = Inf
             @error "Wrong status2: $status2"
         end
 
@@ -229,6 +231,7 @@ function solve_DCGLP(
             # push!(conπrays1, @expression(master.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
             # @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
         else
+            g₁ = Inf
             @error "Wrong status1"
         end
 
@@ -252,6 +255,7 @@ function solve_DCGLP(
             # push!(conπrays2, @expression(master.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
             # @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
         else
+            g₂ = Inf
             @error "Wrong status2"
         end
 
