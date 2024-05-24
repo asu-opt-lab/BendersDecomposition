@@ -6,7 +6,7 @@ function run_Benders_callback(
     tic = time()
     set_attribute(master_env.model, MOI.LazyConstraintCallback(), lazy_callback)
     # set_attribute(master_env.model, MOI.UserCutCallback(), user_callback)
-
+    # MOI.set(master_env.model, Gurobi.CallbackFunction(), lazy_callback)
     global Master_env = master_env
     global Sub_env = sub_env
     global Data = data
@@ -15,36 +15,22 @@ function run_Benders_callback(
     global unexplored_nodes = []
     global best_upper_bound = []
 
-
+    global cb_calls = Cint[]
     JuMP.optimize!(master_env.model)
-    
-    # @info explored_nodes
-    # @info unexplored_nodes
-    # @info best_upper_bound
     toc = time()
     @info "Time to compute objective value: $(toc - tic)"
+    
+    x_col = Gurobi.c_column(master_env.model, master_env.model[:t])
+    GRBgetdblattrelement(master_env.model, "LB", x_col, Ref{Cdouble}(NaN))
     return JuMP.objective_value(master_env.model)
 end
 
 function lazy_callback(cb_data)
+
     status = JuMP.callback_node_status(cb_data, Master_env.model)
-    # valueP = Ref{Cdouble}()
-    # ret = CPXcallbackgetinfodbl(cb_data, CPXCALLBACKINFO_BEST_BND, valueP)
-    # @info "Best bound is currently: $(valueP[])"
-    # n1 = Ref{CPXLONG}()
-    # CPXcallbackgetinfolong(cb_data, CPXCALLBACKINFO_NODECOUNT, n1)
-    # n2 = Ref{Cdouble}()
-    # CPXcallbackgetinfodbl(cb_data, CPXCALLBACKINFO_BEST_BND, n2)
-    # n3 = Ref{CPXLONG}()
-    # CPXcallbackgetinfolong(cb_data, CPXCALLBACKINFO_NODESLEFT, n3)
     if status == MOI.CALLBACK_NODE_STATUS_INTEGER
         global number_of_subproblem_solves += 1
         # @info "add"
-        # push!(explored_nodes, n1[])
-        # push!(best_upper_bound, valueP[])
-        # @info valueP[]
-        # push!(unexplored_nodes, n3[])
-        
         # @info "number_of_subproblem_solves = $number_of_subproblem_solves"
         Master_env.value_x = JuMP.callback_value.(cb_data, Master_env.var["cvar"])
 

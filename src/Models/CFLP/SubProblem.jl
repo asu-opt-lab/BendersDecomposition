@@ -76,7 +76,7 @@ function CFLPStandardKNSubEnv(data::CFLPData, algo_params; solver::Symbol=:Gurob
     return CFLPStandardKNSubEnv(model, constr, rhs, cconstr, 0.0, algo_params, data, kanpsack_subproblems)
 end
 
-function generate_CFLP_subproblem(data::CFLPData; solver::Symbol=:Gurobi)
+function generate_CFLP_subproblem(data::CFLPData; solver::Symbol=:CPLEX)
     if solver == :CPLEX
         model =  Model(CPLEX.Optimizer)
         # set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
@@ -135,7 +135,7 @@ mutable struct CFLPBSPEnv <: AbstractSubEnv
     model::Model
 end
 
-function generate_BSPProblem(data::CFLPData; solver::Symbol=:Gurobi)
+function generate_BSPProblem(data::CFLPData; solver::Symbol=:CPLEX)
 
     if solver == :CPLEX
         model = Model(CPLEX.Optimizer)
