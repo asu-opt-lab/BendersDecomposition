@@ -14,12 +14,13 @@ function MasterProblem(data::CFLPData; solver::Symbol=:CPLEX)
 
     if solver == :CPLEX
         model = Model(CPLEX.Optimizer)
+        # set_optimizer_attribute(model, "CPX_PARAM_EPINT", 1e-03)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
         # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     # set_optimizer_attribute(model, MOI.Silent(),true)
-
+    set_time_limit_sec(model, 60)
     # pre
     N = data.n_facilities
     # Variables

@@ -3,11 +3,11 @@ import .SplitBenders
 using JuMP
 
 settings = SplitBenders.parse_commandline()
-# instance = "f100-c100-r5.0-p1"
-# data = SplitBenders.read_random_data(instance)
+instance = "f100-c100-r5.0-p1"
+data = SplitBenders.read_random_data(instance)
 
-instance = "p5"
-data = SplitBenders.read_data(instance)
+# instance = "p70"
+# data = SplitBenders.read_data(instance)
 
 
 algo_params = SplitBenders.AlgorithmParams()
@@ -26,7 +26,6 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 master_env = SplitBenders.MasterProblem(data)
 sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params)
-
 SplitBenders.run_Benders_callback(data,master_env,sub_env)
 
 
