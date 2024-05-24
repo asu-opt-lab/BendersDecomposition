@@ -52,7 +52,7 @@ mutable struct CFLPSplitSubEnv <: AbstractSubEnv
 end
 
 
-function CFLPStandardSubEnv(data::CFLPData, algo_params; solver::Symbol=:Gurobi)
+function CFLPStandardSubEnv(data::CFLPData, algo_params; solver::Symbol=:CPLEX)
     
     model, constr, rhs, cconstr = generate_CFLP_subproblem(data, solver=solver) 
 
@@ -79,7 +79,7 @@ end
 function generate_CFLP_subproblem(data::CFLPData; solver::Symbol=:CPLEX)
     if solver == :CPLEX
         model =  Model(CPLEX.Optimizer)
-        # set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
+        set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
         set_optimizer_attribute(model, "Method", 1)
