@@ -2,7 +2,7 @@ function generate_cut(
     master_env::AbstractMasterEnv,
     sub_env::CFLPSplitSubEnv,
     ::SplitCutStrategy;
-    time_limit::Float64 = 1000.00)
+    time_limit = 1000.00)
 
     # select the index 
     a,b = select_split_set(master_env, sub_env.algo_params.SplitSetSelectionPolicy)
