@@ -20,12 +20,12 @@ function MasterProblem(data::CFLPData; solver::Symbol=:CPLEX)
         # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     # set_optimizer_attribute(model, MOI.Silent(),true)
-    set_time_limit_sec(model, 60)
+    # set_time_limit_sec(model, 60)
     # pre
     N = data.n_facilities
     # Variables
-    @variable(model, x[1:N], Bin)
-    # @variable(model, 0<=x[1:N]<=1)
+    # @variable(model, x[1:N], Bin)
+    @variable(model, 0<=x[1:N]<=1)
     @variable(model, t >= -1e06)
 
     # Objective
