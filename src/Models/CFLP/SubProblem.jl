@@ -52,7 +52,7 @@ mutable struct CFLPSplitSubEnv <: AbstractSubEnv
 end
 
 
-function CFLPStandardSubEnv(data::CFLPData, algo_params; solver::Symbol=:CPLEX)
+function CFLPStandardSubEnv(data::CFLPData, algo_params; solver::Symbol=:Gurobi)
     
     model, constr, rhs, cconstr = generate_CFLP_subproblem(data, solver=solver) 
 

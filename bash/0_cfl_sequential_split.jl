@@ -2,6 +2,11 @@ include("../src/SplitBenders.jl")
 import .SplitBenders
 using JuMP, CSV
 
+
+#-----------------------------------------------------------------------
+solver = :Gurobi
+
+
 settings = SplitBenders.parse_commandline()
 instance = "f200-c200-r5.0-p2"
 data = SplitBenders.read_random_data(instance)

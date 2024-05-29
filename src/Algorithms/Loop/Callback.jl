@@ -18,11 +18,23 @@ function run_Benders_callback(
 
     JuMP.optimize!(master_env.model)
     @info termination_status(master_env.model)
-    @info explored_nodes
-    @info unexplored_nodes
-    @info best_upper_bound
+    # @info explored_nodes
+    # @info unexplored_nodes
+    # @info best_upper_bound
     toc = time()
+    # cpx = JuMP.unsafe_backend(master_env.model)
+    # gap = CPXgetmiprelgap(cpx.env, cpx.lp, Ref{Cdouble}())
+    # obj = CPXgetobjval(cpx.env, cpx.lp, Ref{Cdouble}())
+    @info JuMP.node_count(master_env.model)
+    @info JuMP.objective_bound(master_env.model)
+    @info JuMP.objective_value(master_env.model)
+    @info JuMP.relative_gap(master_env.model)
+    # println("Gap: ", gap[])
+    # println("Objective value: ", obj[])
+    # @info CPXgetnumusercuts(cpx.env, cpx.lp)
     @info "Time to compute objective value: $(toc - tic)"
+
+
     return JuMP.objective_value(master_env.model)
 end
 
@@ -31,16 +43,16 @@ function lazy_callback(cb_data)
     # valueP = Ref{Cdouble}()
     # ret = CPXcallbackgetinfodbl(cb_data, CPXCALLBACKINFO_BEST_BND, valueP)
     # @info "Best bound is currently: $(valueP[])"
-    n1 = Ref{CPXLONG}()
-    CPXcallbackgetinfolong(cb_data, CPXCALLBACKINFO_NODECOUNT, n1)
-    n2 = Ref{Cdouble}()
-    CPXcallbackgetinfodbl(cb_data, CPXCALLBACKINFO_BEST_BND, n2)
-    n3 = Ref{CPXLONG}()
-    CPXcallbackgetinfolong(cb_data, CPXCALLBACKINFO_NODESLEFT, n3)
-    push!(explored_nodes, n1[])
-    push!(best_upper_bound, n2[])
-        # @info valueP[]
-    push!(unexplored_nodes, n3[])
+    # n1 = Ref{CPXLONG}()
+    # CPXcallbackgetinfolong(cb_data, CPXCALLBACKINFO_NODECOUNT, n1)
+    # n2 = Ref{Cdouble}()
+    # CPXcallbackgetinfodbl(cb_data, CPXCALLBACKINFO_BEST_BND, n2)
+    # n3 = Ref{CPXLONG}()
+    # CPXcallbackgetinfolong(cb_data, CPXCALLBACKINFO_NODESLEFT, n3)
+    # push!(explored_nodes, n1[])
+    # push!(best_upper_bound, n2[])
+    #     # @info valueP[]
+    # push!(unexplored_nodes, n3[])
     
     if status == MOI.CALLBACK_NODE_STATUS_INTEGER
         global number_of_subproblem_solves += 1
