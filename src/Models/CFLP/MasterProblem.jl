@@ -25,8 +25,8 @@ function MasterProblem(data::CFLPData; solver::Symbol=:Gurobi)
     # pre
     N = data.n_facilities
     # Variables
-    # @variable(model, x[1:N], Bin)
-    @variable(model, 0<=x[1:N]<=1)
+    @variable(model, x[1:N], Bin)
+    # @variable(model, 0<=x[1:N]<=1)
     @variable(model, t >= -1e06)
 
     # Objective
