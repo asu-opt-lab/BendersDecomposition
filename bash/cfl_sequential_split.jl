@@ -28,6 +28,7 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 
 master_env = SplitBenders.MasterProblem(data; solver=solver)
+relax_integrality(master_env.model)
 sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params; solver=solver)
 
 df = SplitBenders.run_Benders(data,master_env,sub_env,time_limit)

@@ -8,7 +8,7 @@ solver = :Gurobi
 
 
 settings = SplitBenders.parse_commandline()
-instance = "f200-c200-r5.0-p2"
+instance = "f500-c500-r5.0-p2"
 data = SplitBenders.read_random_data(instance)
 
 # instance = "p2"
@@ -43,6 +43,7 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 
 master_env = SplitBenders.MasterProblem(data)
+relax_integrality(master_env.model)
 sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
 
 df = SplitBenders.run_Benders(data,master_env,sub_env)
