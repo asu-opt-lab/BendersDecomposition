@@ -74,7 +74,7 @@ function solve_DCGLP(
 
         k += 1
         main_time_limit = time() - start_time
-        set_time_limit_sec(main_env.model, max(time_limit-main_time_limit,1))
+        # set_time_limit_sec(main_env.model, max(time_limit-main_time_limit,5))
         optimize!(main_env.model)
         k̂₀ = value(main_env.model[:k₀])
         k̂ₓ = value.(main_env.model[:kₓ])
@@ -88,7 +88,7 @@ function solve_DCGLP(
         set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
         set_normalized_rhs(bsp_env.model[:cb], k̂₀)
         bsp_time_limit = time() - start_time
-        set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
+        # set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,5))
         optimize!(bsp_env.model)
         status1 = dual_status(bsp_env.model)
 
@@ -110,7 +110,7 @@ function solve_DCGLP(
         set_normalized_rhs.(bsp_env.model[:cx], v̂ₓ)
         set_normalized_rhs(bsp_env.model[:cb], v̂₀)
         bsp_time_limit = time() - start_time
-        set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
+        # set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,5))
         optimize!(bsp_env.model)
         status2 = dual_status(bsp_env.model)
 
@@ -200,7 +200,7 @@ function solve_DCGLP(
 
         k += 1
         main_time_limit = time() - start_time
-        set_time_limit_sec(main_env.model, max(time_limit-main_time_limit,1))
+        # set_time_limit_sec(main_env.model, max(time_limit-main_time_limit,1))
         optimize!(main_env.model)
         k̂₀ = value(main_env.model[:k₀])
         k̂ₓ = value.(main_env.model[:kₓ])
@@ -215,7 +215,7 @@ function solve_DCGLP(
         set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
         set_normalized_rhs(bsp_env.model[:cb], k̂₀)
         bsp_time_limit = time() - start_time
-        set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
+        # set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
         optimize!(bsp_env.model)
         status1 = dual_status(bsp_env.model)
         
@@ -239,9 +239,10 @@ function solve_DCGLP(
         set_normalized_rhs.(bsp_env.model[:cx], v̂ₓ)
         set_normalized_rhs(bsp_env.model[:cb], v̂₀)
         bsp_time_limit = time() - start_time
-        set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
+        # set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
         optimize!(bsp_env.model)
         status2 = dual_status(bsp_env.model)
+        @info status2
         
         if status2 == FEASIBLE_POINT
             g₂ = objective_value(bsp_env.model)
