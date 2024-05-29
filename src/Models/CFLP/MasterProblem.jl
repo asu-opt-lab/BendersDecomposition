@@ -20,13 +20,13 @@ function MasterProblem(data::CFLPData; solver::Symbol=:Gurobi)
         model = Model(Gurobi.Optimizer)
         # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
-    # set_optimizer_attribute(model, MOI.Silent(),true)
-    set_time_limit_sec(model, 20)
+    set_optimizer_attribute(model, MOI.Silent(),true)
+
     # pre
     N = data.n_facilities
     # Variables
-    @variable(model, x[1:N], Bin)
-    # @variable(model, 0<=x[1:N]<=1)
+    # @variable(model, x[1:N], Bin)
+    @variable(model, 0<=x[1:N]<=1)
     @variable(model, t >= -1e06)
 
     # Objective
