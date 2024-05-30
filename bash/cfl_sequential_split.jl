@@ -4,7 +4,7 @@ using JuMP, CSV
 
 #-----------------------------------------------------------------------
 solver = :Gurobi
-time_limit = 60
+time_limit = 3600
 
 settings = SplitBenders.parse_commandline()
 instance = settings["instance"]
