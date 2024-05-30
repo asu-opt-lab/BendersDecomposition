@@ -52,6 +52,10 @@ function run_Benders(
         remaining_time = time_limit - spend_time         
         if spend_time > time_limit 
             @info "Time limit $time_limit reached"
+            master_time = solve_master!(master_env; time_limit = remaining_time)
+            LB = master_env.obj_value
+            new_row = (iter+1, LB, Inf, Inf, master_time, Inf)
+            push!(df, new_row)  
             break
         end 
 
