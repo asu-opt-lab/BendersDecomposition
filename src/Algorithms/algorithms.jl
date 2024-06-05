@@ -8,6 +8,8 @@ struct KNCutStrategy <: AbstractCutStrategy end
 const KN_CUTSTRATEGY = KNCutStrategy()
 struct SplitCutStrategy <: AbstractCutStrategy end
 const SPLIT_CUTSTRATEGY = SplitCutStrategy()
+struct AdvancedCutStrategy <: AbstractCutStrategy end
+const ADVANCED_CUTSTRATEGY = AdvancedCutStrategy()
 
 # abstract type AbstractNormType end
 # struct StandardNorm <: AbstractNormType end

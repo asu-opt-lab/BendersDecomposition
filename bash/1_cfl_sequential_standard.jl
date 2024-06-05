@@ -3,19 +3,31 @@ import .SplitBenders
 using JuMP, CSV
 
 settings = SplitBenders.parse_commandline()
-instance = "f500-c500-r5.0-p1"
+instance = "f100-c100-r5.0-p1"
 data = SplitBenders.read_random_data(instance)
 
-# instance = "p2"
+# instance = "p70"
 # data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
-cut_strategy = settings["cut_strategy"]
-SplitCGLPNormType = settings["SplitCGLPNormType"]
-SplitSetSelectionPolicy = settings["SplitSetSelectionPolicy"]
-StrengthenCutStrategy = settings["StrengthenCutStrategy"]
-SplitBendersStrategy = settings["SplitBendersStrategy"]
+
+# "ORDINARY_CUTSTRATEGY" "ADVANCED_CUTSTRATEGY" "KN_CUTSTRATEGY"
+cut_strategy = "ADVANCED_CUTSTRATEGY"
+
+# "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
+SplitCGLPNormType = "nothing"
+
+# "MOST_FRAC_INDEX", "RANDOM_INDEX"
+SplitSetSelectionPolicy = "nothing"
+
+# "SPLIT_PURE_CUT_STRATEGY", "SPLIT_STRENGTHEN_CUT_STRATEGY"
+StrengthenCutStrategy = "nothing"
+
+# "NO_SPLIT_BENDERS_STRATEGY", "ALL_SPLIT_BENDERS_STRATEGY", "TIGHT_SPLIT_BENDERS_STRATEGY"
+SplitBendersStrategy = "nothing"
+
+
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractCutStrategy, cut_strategy)
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractNormType, SplitCGLPNormType)
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitSetSelectionPolicy, SplitSetSelectionPolicy)
@@ -24,12 +36,13 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 
 master_env = SplitBenders.MasterProblem(data)
-sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
+
+sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params)
 
 df = SplitBenders.run_Benders(data,master_env,sub_env)
 
 # result post processing
-CSV.write("results/Gurobi/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy).csv", df)
+# CSV.write("results/Gurobi/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy).csv", df)
 
 
 

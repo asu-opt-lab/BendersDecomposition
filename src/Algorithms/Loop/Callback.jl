@@ -4,8 +4,10 @@ function run_Benders_callback(
     sub_env::AbstractSubEnv)
     
     tic = time()
-    set_attribute(master_env.model, MOI.LazyConstraintCallback(), lazy_callback)
-    set_attribute(master_env.model, MOI.UserCutCallback(), user_callback)
+    # set_attribute(master_env.model, MOI.LazyConstraintCallback(), lazy_callback)
+    # set_attribute(master_env.model, MOI.UserCutCallback(), user_callback)
+    set_attribute(master_env.model, MOI.NumberOfThreads(), 1)
+    MOI.set(master_env.model, CPLEX.CallbackFunction(), my_callback_function)
 
     global Master_env = master_env
     global Sub_env = sub_env
@@ -23,15 +25,17 @@ function run_Benders_callback(
     # @info unexplored_nodes
     # @info best_upper_bound
     toc = time()
-    # cpx = JuMP.unsafe_backend(master_env.model)
-    # gap = CPXgetmiprelgap(cpx.env, cpx.lp, Ref{Cdouble}())
-    # obj = CPXgetobjval(cpx.env, cpx.lp, Ref{Cdouble}())
+    cpx = JuMP.unsafe_backend(master_env.model)
+    gap = Ref{Cdouble}()
+    ret = CPXgetmiprelgap(cpx.env, cpx.lp, gap)
+    obj = Ref{Cdouble}()
+    ret2 = CPXgetobjval(cpx.env, cpx.lp, obj)
     @info JuMP.node_count(master_env.model)
     @info JuMP.objective_bound(master_env.model)
     @info JuMP.objective_value(master_env.model)
     @info JuMP.relative_gap(master_env.model)
-    # println("Gap: ", gap[])
-    # println("Objective value: ", obj[])
+    println("Gap: ", gap[])
+    println("Objective value: ", obj[])
     # @info CPXgetnumusercuts(cpx.env, cpx.lp)
     @info "Time to compute objective value: $(toc - tic)"
 
@@ -39,8 +43,8 @@ function run_Benders_callback(
     return JuMP.objective_value(master_env.model)
 end
 
-function lazy_callback(cb_data)
-    status = JuMP.callback_node_status(cb_data, Master_env.model)
+# function lazy_callback(cb_data)
+#     status = JuMP.callback_node_status(cb_data, Master_env.model)
     # valueP = Ref{Cdouble}()
     # ret = CPXcallbackgetinfodbl(cb_data, CPXCALLBACKINFO_BEST_BND, valueP)
     # @info "Best bound is currently: $(valueP[])"
@@ -55,25 +59,43 @@ function lazy_callback(cb_data)
     #     # @info valueP[]
     # push!(unexplored_nodes, n3[])
     
-    if status == MOI.CALLBACK_NODE_STATUS_INTEGER
-        global number_of_subproblem_solves += 1
-        # @info "add"
-        
-        # @info "number_of_subproblem_solves = $number_of_subproblem_solves"
-        Master_env.value_x = JuMP.callback_value.(cb_data, Master_env.var["cvar"])
+    # if status == MOI.CALLBACK_NODE_STATUS_INTEGER
+    #     global number_of_subproblem_solves += 1
+    #     # @info "add"
+    #     N = Data.n_facilities
+    #     lb, ub = fill(NaN, N), fill(NaN, N)
+    #     @info CPLEX.CPXcallbackgetlocallb(cb_data, lb, 0, length(lb) - 1)
+    #     @assert CPLEX.CPXcallbackgetlocallb(cb_data, lb, 0, length(lb) - 1) == 0
+    #     @assert CPLEX.CPXcallbackgetlocalub(cb_data, ub, 0, length(ub) - 1) == 0
+    #     println("There are $(count(lb .≈ ub)) fixed variables")
+    #     # @info "number_of_subproblem_solves = $number_of_subproblem_solves"
+    #     Master_env.value_x = JuMP.callback_value.(cb_data, Master_env.var["cvar"])
 
-        Master_env.value_t = JuMP.callback_value.(cb_data, Master_env.var["t"])
+    #     Master_env.value_t = JuMP.callback_value.(cb_data, Master_env.var["t"])
 
-        _,ex = generate_cut(Master_env, Sub_env, ORDINARY_CUTSTRATEGY)
-        if Master_env.value_t <= Sub_env.obj_value - 1e-06
-            cons = @build_constraint(0>=ex)
-            MOI.submit(Master_env.model, MOI.LazyConstraint(cb_data), cons)
-        end
-        # callback_generate_cut(Master_env, Sub_env, Master_env.value_x,  Data, cb_data, Master_env.value_t)
-        
-    elseif status == MOI.CALLBACK_NODE_STATUS_UNKNOWN
-        @warn "cb status = CALLBACK_NODE_STATUS_UNKNOWN"
+    #     _,ex = generate_cut(Master_env, Sub_env, ORDINARY_CUTSTRATEGY)
+    #     if Master_env.value_t <= Sub_env.obj_value - 1e-06
+    #         cons = @build_constraint(0>=ex)
+    #         MOI.submit(Master_env.model, MOI.LazyConstraint(cb_data), cons)
+    #     end
+    #     # callback_generate_cut(Master_env, Sub_env, Master_env.value_x,  Data, cb_data, Master_env.value_t)
+    #     # @info "lazy end"
+    # elseif status == MOI.CALLBACK_NODE_STATUS_UNKNOWN
+    #     @warn "cb status = CALLBACK_NODE_STATUS_UNKNOWN"
+    # end
+# end
+function my_callback_function(cb_data::CPLEX.CallbackContext, context_id::Clong)
+    N = Data.n_facilities
+    status = JuMP.callback_node_status(cb_data, Master_env.model)
+    if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL
+    # if context_id == CPX_CALLBACKCONTEXT_RELAXATION
+        lb, ub = fill(NaN, N), fill(NaN, N)
+        @assert CPXcallbackgetlocallb(cb_data, lb, 0, length(lb) - 1) == 0
+        @assert CPXcallbackgetlocalub(cb_data, ub, 0, length(ub) - 1) == 0
+        @info lb,ub
+        println("There are $(count(lb .≈ ub)) fixed variables")
     end
+    return
 end
 
 function user_callback(cb_data)
@@ -136,5 +158,5 @@ function generate_cut_callback(
     
     # sub_time,ex = generate_cut(master_env, sub_env, ORDINARY_CUTSTRATEGY)
     
-    return DCGLP_time+sub_time,ex
+    return γ₀, γₓ, γₜ
 end
