@@ -202,6 +202,9 @@ function solve_DCGLP(
         main_time_limit = time() - start_time
         set_time_limit_sec(main_env.model, max(time_limit-main_time_limit,1))
         optimize!(main_env.model)
+        if is_solved_and_feasible(main_env.model) == false
+            break
+        end
         k̂₀ = value(main_env.model[:k₀])
         k̂ₓ = value.(main_env.model[:kₓ])
         k̂ₜ = value(main_env.model[:kₜ])

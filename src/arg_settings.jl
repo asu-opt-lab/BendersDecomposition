@@ -90,6 +90,10 @@ function set_params_attribute(algo_params,::Type{AbstractCutStrategy},s::Abstrac
         algo_params.cut_strategy = ORDINARY_CUTSTRATEGY
     elseif s == "SPLIT_CUTSTRATEGY"
         algo_params.cut_strategy = SPLIT_CUTSTRATEGY
+    elseif s == "KN_CUTSTRATEGY"
+        algo_params.cut_strategy = KN_CUTSTRATEGY
+    elseif s == "ADVANCED_CUTSTRATEGY"
+        algo_params.cut_strategy = ADVANCED_CUTSTRATEGY
     elseif s == "nothing"
         algo_params.cut_strategy = nothing
     else

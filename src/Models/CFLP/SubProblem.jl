@@ -30,6 +30,18 @@ mutable struct CFLPStandardKNSubEnv <: AbstractSubEnv
     knapsack_subproblems
 end
 
+mutable struct CFLPStandardADSubEnv <: AbstractSubEnv
+    model::Model
+    sub_constr::Array
+    sub_rhs::Array
+    cconstr::Array
+    obj_value::Float64
+    obj::AffExpr
+    oconstr::Any
+
+    algo_params
+end
+
 mutable struct SplitInfo 
     # indices
     γ₀s
@@ -75,6 +87,14 @@ function CFLPStandardKNSubEnv(data::CFLPData, algo_params; solver::Symbol=:Gurob
     kanpsack_subproblems = generate_knapsack_subproblems(data)
     return CFLPStandardKNSubEnv(model, constr, rhs, cconstr, 0.0, algo_params, data, kanpsack_subproblems)
 end
+
+function CFLPStandardADSubEnv(data::CFLPData, algo_params; solver::Symbol=:Gurobi)
+    
+    model, constr, rhs, cconstr, obj, oconstr = generate_CFLP_subproblem_Advanced(data, solver=solver) 
+
+    return CFLPStandardADSubEnv(model, constr, rhs, cconstr, 0.0, obj, oconstr, algo_params)
+end
+
 
 function generate_CFLP_subproblem(data::CFLPData; solver::Symbol=:CPLEX)
     if solver == :CPLEX
@@ -191,24 +211,60 @@ end
 
 
 
-# mutable struct CFLPProjectSplitSubEnv <: AbstractSubEnv
-#     model::Model
-#     sub_constr::Array
-#     sub_rhs::Array
-#     cconstr::Array
-#     obj_value::Float64
+function generate_CFLP_subproblem_Advanced(data::CFLPData; solver::Symbol=:CPLEX)
 
-#     algo_params
-#     data
-#     BSPProblem
-#     split_info
-# end
+    if solver == :CPLEX
+        model = Model(CPLEX.Optimizer)
+        # set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
+    elseif solver == :Gurobi
+        model = Model(Gurobi.Optimizer)
+        set_optimizer_attribute(model, "Method", 1)
+        set_optimizer_attribute(model, "InfUnbdInfo", 1)
+    end
+    set_optimizer_attribute(model, MOI.Silent(),true)
 
-# function CFLPProjectSplitSubEnv(data::CFLPData, algo_params; solver::Symbol=:Gurobi)
+    # pre
+    N = data.n_facilities
+    M = data.n_customers
     
-#     model, constr, rhs, cconstr = generate_CFLP_subproblem(data, solver=solver) 
+    @variable(model, y[1:data.n_facilities, 1:data.n_customers] >= 0)
 
-#     BSPProblem = generate_BSPProblem(data)
-#     split_info = split_info([],[],[],[])
-#     return CFLPProjectSplitSubEnv(model, constr, rhs, cconstr, 0.0, algo_params, data, BSPProblem, split_info)
-# end
+    cvar = Dict()
+    cvar["x"] = @variable(model, x[1:data.n_facilities])
+    @variable(model, σ)
+
+    @objective(model, Min, σ)
+
+    @constraint(model, c1[j in 1:M], sum(y[i,j] for i in 1:N) == 1)
+    @constraint(model, c2[i in 1:N], sum(data.demands[j] * y[i,j] for j in 1:M) <= data.capacities[i] * cvar["x"][i])
+    @constraint(model, c3[i in 1:N, j in 1:M], y[i,j] <= cvar["x"][i])
+
+    constr = []
+    rhs = []
+
+    all_affine_constraints = [all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.GreaterThan{Float64});
+                              all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64});
+                              all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.EqualTo{Float64})]
+
+    for (i, c) in enumerate(all_affine_constraints)
+        push!(constr, c)
+        push!(rhs, normalized_rhs(c))
+    end
+
+    cconstr = []
+
+    for i in 1:data.n_facilities
+        push!(cconstr, @constraint(model, cvar["x"][i] + σ >= 0)) #x̂
+    end
+
+    for i in 1:data.n_facilities
+        push!(cconstr, @constraint(model, -cvar["x"][i] + σ >= 0))
+    end
+
+
+    obj = @expression(model, sum(data.costs[i,j] * data.demands[j] * y[i,j] for i in 1:data.n_facilities, j in 1:data.n_customers))
+    oconstr = @constraint(model, -obj + σ >= 0) #-η
+
+
+    return model, constr, rhs, cconstr,obj, oconstr
+end

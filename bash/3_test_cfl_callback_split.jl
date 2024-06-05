@@ -3,15 +3,15 @@ import .SplitBenders
 using JuMP
 
 #-----------------------------------------------------------------------
-solver = :Gurobi
+solver = :CPLEX
 
 
 settings = SplitBenders.parse_commandline()
-instance = "f100-c100-r5.0-p2"
-data = SplitBenders.read_random_data(instance)
+# instance = "f200-c200-r5.0-p2"
+# data = SplitBenders.read_random_data(instance)
 
-# instance = "p2"
-# data = SplitBenders.read_data(instance)
+instance = "p2"
+data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
@@ -42,8 +42,8 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 
 
-master_env = SplitBenders.MasterProblem(data)
-sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
+master_env = SplitBenders.MasterProblem(data; solver = solver)
+sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params; solver = solver)
 SplitBenders.run_Benders_callback(data,master_env,sub_env)
 
 
