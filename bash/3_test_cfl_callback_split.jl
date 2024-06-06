@@ -7,11 +7,11 @@ solver = :CPLEX
 
 
 settings = SplitBenders.parse_commandline()
-# instance = "f200-c200-r5.0-p2"
-# data = SplitBenders.read_random_data(instance)
+instance = "f200-c200-r5.0-p1"
+data = SplitBenders.read_random_data(instance)
 
-instance = "p2"
-data = SplitBenders.read_data(instance)
+# instance = "p35"
+# data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()

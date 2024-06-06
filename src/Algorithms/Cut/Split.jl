@@ -12,16 +12,15 @@ function generate_cut(
     start_time = time()
     solve_DCGLP(master_env, DCGLP_env, sub_env.BSPProblem, sub_env.algo_params.SplitCGLPNormType; time_limit)
     DCGLP_time = time() - start_time
-    
-    # add split cut
-    γ₀, γₓ, γₜ = generate_cut(master_env, DCGLP_env, sub_env.algo_params.StrengthenCutStrategy)
-    @constraint(master_env.model, -γ₀ - γₓ'master_env.model[:x] - γₜ*master_env.model[:t] >= 0) 
-    push!(sub_env.split_info.γ₀s, γ₀)
-    push!(sub_env.split_info.γₓs, γₓ)
-    push!(sub_env.split_info.γₜs, γₜ)
 
     # add benders cut
     if DCGLP_env.ifsolved == true
+        # add split cut
+        γ₀, γₓ, γₜ = generate_cut(master_env, DCGLP_env, sub_env.algo_params.StrengthenCutStrategy)
+        @constraint(master_env.model, -γ₀ - γₓ'master_env.model[:x] - γₜ*master_env.model[:t] >= 0) 
+        push!(sub_env.split_info.γ₀s, γ₀)
+        push!(sub_env.split_info.γₓs, γₓ)
+        push!(sub_env.split_info.γₜs, γₜ)
         generate_cut!(master_env, DCGLP_env, sub_env.algo_params.SplitBendersStrategy)
     else
         generate_cut!(master_env, DCGLP_env, ALL_SPLIT_BENDERS_STRATEGY)
@@ -202,7 +201,7 @@ function solve_DCGLP(
         main_time_limit = time() - start_time
         set_time_limit_sec(main_env.model, max(time_limit-main_time_limit,1))
         optimize!(main_env.model)
-        if is_solved_and_feasible(main_env.model) == false
+        if termination_status(main_env.model) == TIME_LIMIT
             break
         end
         k̂₀ = value(main_env.model[:k₀])

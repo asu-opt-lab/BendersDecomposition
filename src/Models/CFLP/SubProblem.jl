@@ -160,6 +160,7 @@ function generate_BSPProblem(data::CFLPData; solver::Symbol=:CPLEX)
     if solver == :CPLEX
         model = Model(CPLEX.Optimizer)
         # set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
+        set_optimizer_attribute(model, "CPX_PARAM_LPMETHOD", CPX_ALG_DUAL)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
         set_optimizer_attribute(model, "Method", 1)

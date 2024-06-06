@@ -2,6 +2,10 @@ include("../src/SplitBenders.jl")
 import .SplitBenders
 using JuMP, CSV
 
+#-----------------------------------------------------------------------
+solver = :Gurobi
+time_limit = 3600
+
 settings = SplitBenders.parse_commandline()
 instance = settings["instance"]
 data = SplitBenders.read_random_data(instance)
@@ -23,13 +27,13 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitStength
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBendersPolicy, SplitBendersStrategy)
 
 
-master_env = SplitBenders.MasterProblem(data)
-sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
+master_env = SplitBenders.MasterProblem(data; solver=solver)
+sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params; solver=solver)
 
-df = SplitBenders.run_Benders(data,master_env,sub_env)
+df = SplitBenders.run_Benders(data,master_env,sub_env,time_limit)
 
 # result post processing
-CSV.write("results/Gurobi/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy).csv", df)
+CSV.write("results/Gurobi/result_$(instance)_$(cut_strategy).csv", df)
 
 
 
