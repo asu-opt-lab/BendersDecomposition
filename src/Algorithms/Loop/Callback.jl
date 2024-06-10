@@ -60,33 +60,67 @@ function user_callback(cb_data)
     
     depth = Ref{CPXLONG}()
     ret = CPXcallbackgetinfolong(cb_data, CPXCALLBACKINFO_NODEDEPTH, depth)
-    @info "depth = $(depth[])"
-    if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL && number_of_splitproblem_solves <= 1 && depth[] == 5
-        @info "user"
-        
+    # @info "depth = $(depth[])"
+    if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL && number_of_splitproblem_solves <= 1 #&& depth[] == 5
+
         global number_of_splitproblem_solves += 1
         @info "number_of_subproblem_solves = $number_of_subproblem_solves"
         
         Master_env.value_x = JuMP.callback_value.(cb_data, Master_env.var["cvar"])
         Master_env.value_t = JuMP.callback_value.(cb_data, Master_env.var["t"])
-        
+        # @info abs.(Master_env.value_x)
         lb, ub = fill(NaN, Data.n_facilities), fill(NaN, Data.n_facilities)
         @assert CPXcallbackgetlocallb(cb_data, lb, 0, length(lb) - 1) == 0
         @assert CPXcallbackgetlocalub(cb_data, ub, 0, length(ub) - 1) == 0
-        @info lb,ub
+        # @info abs.(lb[2:end])
+        # @info ub[2:end]
         println("There are $(count(lb .≈ ub)) fixed variables")
-        a = Int.(lb .≈ ub)
+        a = Int.(lb .≈ ub)[2:end]
+        push!(a, 0)
         b = Int(count(lb .≈ ub))
-
     
         γ₀, γₓ, γₜ = generate_cut_callback(Master_env, Sub_env, a, b, SPLIT_CUTSTRATEGY)
         ex = @build_constraint(-γ₀ - γₓ'Master_env.model[:x] - γₜ*Master_env.model[:t] >= 0)
         MOI.submit(Master_env.model, MOI.UserCut(cb_data), ex)
-        @info "user end"
     elseif status == MOI.CALLBACK_NODE_STATUS_UNKNOWN
         @warn "cb status = CALLBACK_NODE_STATUS_UNKNOWN"
     end
 end
+
+# function user_callback(cb_data, cb_where)
+#     status = JuMP.callback_node_status(cb_data, Master_env.model)
+    
+#     # depth = Ref{CPXLONG}()
+#     # ret = CPXcallbackgetinfolong(cb_data, CPXCALLBACKINFO_NODEDEPTH, depth)
+#     # @info "depth = $(depth[])"
+#     if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL && number_of_splitproblem_solves <= 1
+#         @info "user"
+        
+#         global number_of_splitproblem_solves += 1
+#         @info "number_of_subproblem_solves = $number_of_subproblem_solves"
+        
+#         Master_env.value_x = JuMP.callback_value.(cb_data, Master_env.var["cvar"])
+#         Master_env.value_t = JuMP.callback_value.(cb_data, Master_env.var["t"])
+        
+#         lb, ub = fill(NaN, Data.n_facilities), fill(NaN, Data.n_facilities)
+#         resultP = Ref{Cint}()
+#         @info GRBcbget(cb_data, cb_where, GRB_CB_MIPNODE_STATUS, resultP)
+#         # @assert MOI.get(grb, Gurobi.VariableAttribute("LB"), index.(Master_env.model[:x][1]))
+#         # @assert MOI.get(grb, Gurobi.VariableAttribute("LB"), index.(Master_env.model[:x]))
+#         @info lb,ub
+#         println("There are $(count(lb .≈ ub)) fixed variables")
+#         a = Int.(lb .≈ ub)
+#         b = Int(count(lb .≈ ub))
+
+    
+#         γ₀, γₓ, γₜ = generate_cut_callback(Master_env, Sub_env, a, b, SPLIT_CUTSTRATEGY)
+#         ex = @build_constraint(-γ₀ - γₓ'Master_env.model[:x] - γₜ*Master_env.model[:t] >= 0)
+#         MOI.submit(Master_env.model, MOI.UserCut(cb_data), ex)
+#         @info "user end"
+#     elseif status == MOI.CALLBACK_NODE_STATUS_UNKNOWN
+#         @warn "cb status = CALLBACK_NODE_STATUS_UNKNOWN"
+#     end
+# end
 
 function generate_cut_callback(
     master_env::AbstractMasterEnv,
@@ -98,8 +132,8 @@ function generate_cut_callback(
 
     # select the index 
     a,b = select_split_set(master_env, sub_env.algo_params.SplitSetSelectionPolicy)
-    a .+= a_fixed
-    b += b_fixed
+    # a .+= a_fixed
+    # b += b_fixed
     DCGLP_env = DCGLP(sub_env, a, b, sub_env.algo_params.SplitCGLPNormType)
 
     start_time = time()
