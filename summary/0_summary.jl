@@ -6,7 +6,7 @@ files = readdir("results/Gurobi")
 cut_strategy = "SPLIT_CUTSTRATEGY"
 
 # "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
-SplitCGLPNormType = "STANDARDNORM"
+SplitCGLPNormType = "LINFGAMMANORM"
 
 # "MOST_FRAC_INDEX", "RANDOM_INDEX"
 SplitSetSelectionPolicy = "RANDOM_INDEX"
@@ -28,11 +28,14 @@ for file in files
             iter = data.iter[end]
             LB = data.LB[end]
             master_time = sum(data.master_time)
-            sub_time = sum(data.sub_time)
+            sub_time = sum(data.sub_time[1:end-1])
             time = master_time + sub_time
             new_row = (filename, iter, LB, master_time, sub_time, time)
             push!(df, new_row)
         end
+    else
+        new_row = (filename, 0, -Inf, 0.0, 0.0, 0.0)
+        push!(df, new_row)
     end
 end
 

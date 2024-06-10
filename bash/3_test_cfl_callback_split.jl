@@ -3,11 +3,11 @@ import .SplitBenders
 using JuMP
 
 #-----------------------------------------------------------------------
+# solver = :Gurobi
 solver = :CPLEX
 
-
 settings = SplitBenders.parse_commandline()
-instance = "f200-c200-r5.0-p1"
+instance = "f500-c500-r5.0-p3"
 data = SplitBenders.read_random_data(instance)
 
 # instance = "p35"
@@ -20,7 +20,7 @@ algo_params = SplitBenders.AlgorithmParams()
 cut_strategy = "SPLIT_CUTSTRATEGY"
 
 # "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
-SplitCGLPNormType = "L1GAMMANORM"
+SplitCGLPNormType = "LINFGAMMANORM"
 
 # "MOST_FRAC_INDEX", "RANDOM_INDEX"
 SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
@@ -43,7 +43,7 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 
 master_env = SplitBenders.MasterProblem(data; solver = solver)
-sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params; solver = solver)
+sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params; solver = :Gurobi)
 SplitBenders.run_Benders_callback(data,master_env,sub_env)
 
 
