@@ -9,8 +9,9 @@ function generate_cut(
 
     DCGLP_env = DCGLP(sub_env, a, b, sub_env.algo_params.SplitCGLPNormType)
 
+    x̂,t̂ = master_env.value_x, master_env.value_t
     start_time = time()
-    solve_DCGLP(master_env, DCGLP_env, sub_env.BSPProblem, sub_env.algo_params.SplitCGLPNormType; time_limit)
+    solve_DCGLP(master_env,x̂,t̂, DCGLP_env, sub_env.BSPProblem, sub_env.algo_params.SplitCGLPNormType; time_limit)
     DCGLP_time = time() - start_time
 
     # add benders cut
@@ -33,7 +34,9 @@ end
 
 
 function solve_DCGLP(
-    master_env::AbstractMasterEnv,
+    master_env,
+    x̂,
+    t̂,
     main_env::AbstractDCGLPEnv, 
     bsp_env::AbstractSubEnv,
     ::AbstractNormType;
@@ -45,13 +48,14 @@ end
 
 
 function solve_DCGLP(
-    master_env::AbstractMasterEnv,
+    master_env,
+    x̂,
+    t̂,
     main_env::AbstractDCGLPEnv, 
     bsp_env::AbstractSubEnv,
     ::StandardNorm;
     time_limit)
 
-    x̂,t̂ = master_env.value_x, master_env.value_t
     k = 0
     LB = -Inf
     UB = Inf
@@ -66,7 +70,13 @@ function solve_DCGLP(
     set_normalized_rhs.(main_env.model[:cont], t̂)
 
     start_time = time()
-    
+    k̂₀s = []
+    k̂ₓs = []
+    k̂ₜs = []
+    v̂₀s = []
+    v̂ₓs = []
+    v̂ₜs = []
+
 
     # println("#####################solving main problem#####################")
     while true
@@ -82,6 +92,14 @@ function solve_DCGLP(
         v̂ₓ = value.(main_env.model[:vₓ])
         v̂ₜ = value(main_env.model[:vₜ])
         τ̂ = value(main_env.model[:τ])
+
+        push!(k̂₀s, k̂₀)
+        push!(k̂ₓs, k̂ₓ)
+        push!(k̂ₜs, k̂ₜ)
+        push!(v̂₀s, v̂₀)
+        push!(v̂ₓs, v̂ₓ)
+        push!(v̂ₜs, v̂ₜ)
+
 
         # BSP1
         set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
@@ -133,7 +151,7 @@ function solve_DCGLP(
 
         LB = τ̂
         UB = min(max(_UB1, _UB2),UB)
-        @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
+        # @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
 
         if (UB - LB) <= 0.01 || (τ̂  >= _UB1 && τ̂  >= _UB2 ) || (UB - LB)/abs(UB) <= 1e-03
             main_env.ifsolved = true
@@ -168,13 +186,15 @@ end
 
 
 function solve_DCGLP(
-    master_env::AbstractMasterEnv,
+    master_env,
+    x̂,
+    t̂,
     main_env::AbstractDCGLPEnv, 
     bsp_env::AbstractSubEnv,
     pConeType::GammaNorm;
     time_limit)
 
-    x̂,t̂ = master_env.value_x, master_env.value_t
+
     k = 0
     LB = -Inf
     UB = Inf
@@ -191,6 +211,15 @@ function solve_DCGLP(
     
     set_normalized_rhs.(main_env.model[:conx], x̂)
     set_normalized_rhs.(main_env.model[:cont], t̂)
+
+    k̂₀s = []
+    k̂ₓs = []
+    k̂ₜs = []
+    v̂₀s = []
+    v̂ₓs = []
+    v̂ₜs = []
+    status1s = []
+    status2s = []
 
     start_time = time()
 
@@ -212,6 +241,13 @@ function solve_DCGLP(
         v̂ₜ = value(main_env.model[:vₜ])
         τ̂ = value(main_env.model[:τ])
         _sx = value.(main_env.model[:sx])
+
+        push!(k̂₀s, k̂₀)
+        push!(k̂ₓs, k̂ₓ)
+        push!(k̂ₜs, k̂ₜ)
+        push!(v̂₀s, v̂₀)
+        push!(v̂ₓs, v̂ₓ)
+        push!(v̂ₜs, v̂ₜ)
 
         # BSP1
         set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
@@ -261,13 +297,16 @@ function solve_DCGLP(
             @error "Wrong status2"
         end
 
+        push!(status1s, status1)
+        push!(status2s, status2)
+
         _UB1 = min(_UB1, g₁ - k̂ₜ)
         _UB2 = min(_UB2, g₂ - v̂ₜ)
          
         LB = τ̂
         UB = update_UB!(UB,_sx,g₁,g₂,t̂, pConeType)
 
-        @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
+        # @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
 
         if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01
             main_env.ifsolved = true
@@ -300,6 +339,15 @@ function solve_DCGLP(
     main_env.masterconπpoints2 = masterconπpoints2
     main_env.conπpoints1 = conπpoints1
     main_env.conπpoints2 = conπpoints2
+
+    # @info status1s
+    # @info status2s
+    for iter in 1:k
+        # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
+        # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
+        @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
+        @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
+    end
 end
 
 function update_UB!(UB,_sx,g₁,g₂,t̂,::L1GammaNorm) return min(UB,norm([ _sx; g₁+g₂-t̂], Inf)) end

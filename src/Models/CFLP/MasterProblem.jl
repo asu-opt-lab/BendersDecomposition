@@ -21,7 +21,7 @@ function MasterProblem(data::CFLPData; solver::Symbol=:Gurobi)
         # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
-    set_time_limit_sec(model, 10)
+    # set_time_limit_sec(model, 10)
     # pre
     N = data.n_facilities
     # Variables
