@@ -81,3 +81,80 @@ function solve_master!(master_env::AbstractMasterEnv; time_limit=1000)
 
     return master_time
 end
+
+function run_Benders_SAA(
+    datas,
+    master_env::AbstractMasterEnv,
+    sub_envs,
+    num_scenario,
+    time_limit = 1200)
+    
+    # Initialize
+    UB = Inf
+    LB = -Inf
+    iter = 1
+
+    algo_start_time = time()
+    remaining_time = time_limit
+
+    df = DataFrame(iter = Int[], LB = Float64[], UB = Float64[], gap = Float64[], master_time = Float64[], sub_time = Float64[])
+
+    while true
+
+        #### Master Part ####
+        master_time = solve_master!(master_env; time_limit = remaining_time)
+        LB = master_env.obj_value
+        
+        #### Sub Part ####
+        remaining_time -= master_time
+        cut_info = []
+        UB_temp = 0
+        sub_times = 0.0
+        for w in 1:num_scenario
+            sub_time,ex = generate_cut(master_env, sub_envs[w], w, sub_envs[w].algo_params.cut_strategy; time_limit = remaining_time)
+            push!(cut_info, ex)
+            UB_temp += sub_envs[w].obj_value 
+            sub_times += sub_time
+        end   
+        # Update Parameters
+        UB_temp /= num_scenario
+        UB_temp += sum(master_env.coef[i] * master_env.value_x[i] for i in eachindex(master_env.value_x))
+
+        UB = min(UB, UB_temp)
+        Gap = 100 * (UB - LB)/ abs(UB) 
+
+        # Store Data
+        new_row = (iter, LB, UB, Gap, master_time, sub_times)
+        push!(df, new_row)  
+        
+        # Add Cut
+        @constraint(master_env.model, 0 .>= cut_info)   
+
+        # Print
+        @printf "%5d     %10.2f   %10.2f    %10.2f  %10.2f  %10.2f\n" iter LB UB Gap master_time sub_times
+
+        # Stopping Criteria
+        # Gap 
+        if Gap < 1e-3
+            break
+        end 
+
+        # Time Limit
+        algo_run_time = time()
+        spend_time = algo_run_time - algo_start_time
+        remaining_time = time_limit - spend_time         
+        if spend_time > time_limit 
+            @info "Time limit $time_limit reached"
+            master_time = solve_master!(master_env; time_limit = remaining_time)
+            LB = master_env.obj_value
+            new_row = (iter+1, LB, Inf, Inf, master_time, Inf)
+            push!(df, new_row)  
+            break
+        end 
+
+        iter += 1
+    end
+
+   
+    return df
+end

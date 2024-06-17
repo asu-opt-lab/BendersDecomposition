@@ -37,7 +37,7 @@ end
 
 function lazy_callback(cb_data)
     status = JuMP.callback_node_status(cb_data, Master_env.model)
-    @info status
+    # @info status
     if status == MOI.CALLBACK_NODE_STATUS_INTEGER
         global number_of_subproblem_solves += 1
         global number_of_splitproblem_solves = 0
@@ -68,12 +68,14 @@ function user_callback(cb_data)
         
         Master_env.value_x = JuMP.callback_value.(cb_data, Master_env.var["cvar"])
         Master_env.value_t = JuMP.callback_value.(cb_data, Master_env.var["t"])
-        # @info abs.(Master_env.value_x)
-        lb, ub = fill(NaN, Data.n_facilities), fill(NaN, Data.n_facilities)
-        @assert CPXcallbackgetlocallb(cb_data, lb, 0, length(lb) - 1) == 0
-        @assert CPXcallbackgetlocalub(cb_data, ub, 0, length(ub) - 1) == 0
-        # @info abs.(lb[2:end])
-        # @info ub[2:end]
+        @info abs.(Master_env.value_x)
+        lb, ub = fill(NaN, Data.n_facilities+1), fill(NaN, Data.n_facilities+1)
+        @assert CPXcallbackgetlocallb(cb_data, lb, 0, length(lb)-1 ) == 0
+        @assert CPXcallbackgetlocalub(cb_data, ub, 0, length(ub)-1 ) == 0
+        @info lb
+        @info ub
+        @info abs.(lb[2:end])
+        @info ub[2:end]
         println("There are $(count(lb .≈ ub)) fixed variables")
         a = Int.(lb .≈ ub)[2:end]
         push!(a, 0)

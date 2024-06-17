@@ -8,10 +8,10 @@ solver = :Gurobi
 
 
 settings = SplitBenders.parse_commandline()
-instance = "f500-c500-r5.0-p2"
+instance = "f200-c200-r5.0-p2"
 data = SplitBenders.read_random_data(instance)
 
-# instance = "p2"
+# instance = "p35"
 # data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------

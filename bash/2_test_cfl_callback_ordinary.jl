@@ -3,7 +3,7 @@ import .SplitBenders
 using JuMP
 
 settings = SplitBenders.parse_commandline()
-instance = "f100-c100-r5.0-p1"
+instance = "f1000-c1000-r5.0-p1"
 data = SplitBenders.read_random_data(instance)
 
 # instance = "p70"
