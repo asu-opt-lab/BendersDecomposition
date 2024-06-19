@@ -2,7 +2,7 @@ function run_Benders(
     data::AbstractData,
     master_env::AbstractMasterEnv,
     sub_env::AbstractSubEnv,
-    time_limit = 3600)
+    time_limit = 1000)
     
     # Initialize
     UB = Inf
@@ -39,7 +39,7 @@ function run_Benders(
 
         # Print
         @printf "%5d     %10.2f   %10.2f    %10.2f  %10.2f  %10.2f\n" iter LB UB Gap master_time sub_time  
-
+        @info "Iter: $iter, LB: $LB, UB: $UB, Gap: $Gap, Master Time: $master_time, Sub Time: $sub_time"
         # Stopping Criteria
         # Gap 
         if Gap < 1e-3
