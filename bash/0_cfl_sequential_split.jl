@@ -1,17 +1,17 @@
 include("../src/SplitBenders.jl")
 import .SplitBenders
-using JuMP, CSV
+using JuMP, CSV, Logging
 
 
 #-----------------------------------------------------------------------
 solver = :Gurobi
-
+# solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
-instance = "f200-c200-r5.0-p2"
+instance = "f500-c500-r5.0-p1"
 data = SplitBenders.read_random_data(instance)
 
-# instance = "p35"
+# instance = "p70"
 # data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------
@@ -21,10 +21,10 @@ algo_params = SplitBenders.AlgorithmParams()
 cut_strategy = "SPLIT_CUTSTRATEGY"
 
 # "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
-SplitCGLPNormType = "L1GAMMANORM"
+SplitCGLPNormType = "LINFGAMMANORM"
 
 # "MOST_FRAC_INDEX", "RANDOM_INDEX"
-SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
+SplitSetSelectionPolicy = "RANDOM_INDEX"
 
 # "SPLIT_PURE_CUT_STRATEGY", "SPLIT_STRENGTHEN_CUT_STRATEGY"
 StrengthenCutStrategy = "SPLIT_PURE_CUT_STRATEGY"
@@ -46,10 +46,21 @@ master_env = SplitBenders.MasterProblem(data)
 relax_integrality(master_env.model)
 sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
 
+# io = open("temp/result$(instance)_1.txt", "w+")
+# logger = SimpleLogger(io)
+# with_logger(logger) do
+#     df = SplitBenders.run_Benders(data,master_env,sub_env)
+# end
+# flush(io)
+# close(io)
+# open("temp/result$instance.txt", "w") do file
+#     df = SplitBenders.run_Benders(data,master_env,sub_env)
+# end
+
 df = SplitBenders.run_Benders(data,master_env,sub_env)
 
 # result post processing
-CSV.write("temp/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy).csv", df)
+# CSV.write("temp/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy).csv", df)
 
 
 

@@ -1,0 +1,72 @@
+┌ Info: distance_inf_1 = 1.137316e6
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_2 = 621500.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_3 = 334621.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_4 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_L2_1 = 1.1373160000039593e6
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_2 = 621500.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_3 = 361700.01039259037
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_4 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: Iter: 1, LB: -998675.3378378379, UB: 387252.7837837837, Gap: 357.887194013157, Master Time: 0.0, Sub Time: 0.18999981880187988
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Loop\Sequential.jl:42
+┌ Info: distance_inf_1 = 68614.367720857
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_2 = 68613.13960313454
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_3 = 0.6370873156259589
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_4 = 137.3761951075391
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_5 = 0.0007593088179420615
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_6 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_L2_1 = 97035.36944533551
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_2 = 97033.6326185261
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_3 = 0.6370873156259589
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_4 = 194.2792783167278
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_5 = 0.0010062264300496754
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_6 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: Iter: 2, LB: 138706.0215319249, UB: 270176.4310423621, Gap: 48.66094684988396, Master Time: 0.0, Sub Time: 0.006000041961669922
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Loop\Sequential.jl:42
+┌ Info: distance_inf_1 = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_2 = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_3 = 0.6353175343658644
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_4 = 0.008292822419216472
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_inf_5 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_L2_1 = 1.7320508075688772
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_2 = 1.0861169256999916
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_3 = 0.6353175343658644
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_4 = 0.008292822419216472
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: distance_L2_5 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: Iter: 3, LB: 139416.0, UB: 195757.0, Gap: 28.781090842217647, Master Time: 0.0009999275207519531, Sub Time: 0.005000114440917969
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Loop\Sequential.jl:42
+┌ Info: distance_inf_1 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:352
+┌ Info: distance_L2_1 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split.jl:361
+┌ Info: Iter: 4, LB: 140316.00000000003, UB: 140316.0, Gap: -2.0741633496346606e-14, Master Time: 0.0, Sub Time: 0.0009999275207519531
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Loop\Sequential.jl:42
