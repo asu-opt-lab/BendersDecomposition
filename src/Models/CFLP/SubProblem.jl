@@ -164,8 +164,9 @@ function generate_BSPProblem(data::CFLPData; solver::Symbol=:CPLEX)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
         # model = Model(Ipopt.Optimizer)
-        # set_optimizer_attribute(model, "Method", 2)
+        set_optimizer_attribute(model, "Method", 1)
         set_optimizer_attribute(model, "InfUnbdInfo", 1)
+        set_optimizer_attribute(model, "LPWarmStart", 0)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
    
@@ -190,7 +191,7 @@ function generate_BSPProblem(data::CFLPData; solver::Symbol=:CPLEX)
     # @constraint(model, cb, b == 0) #b̂
 
 
-    @constraint(model, cb[j in 1:M], sum(y[i,j] for i in 1:N) == 0)
+    @constraint(model, cb[j in 1:M], sum(y[i,j] for i in 1:N) == 1)
     @constraint(model, c2[i in 1:N], sum(data.demands[j] * y[i,j] for j in 1:M) <= data.capacities[i] * x[i])
     @constraint(model, c3[i in 1:N, j in 1:M], y[i,j] <= x[i])
     @constraint(model, cx[i in 1:N], x[i] == 0) #x̂[i]
