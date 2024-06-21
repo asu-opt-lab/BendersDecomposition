@@ -191,7 +191,7 @@ function generate_BSPProblem(data::CFLPData; solver::Symbol=:CPLEX)
     # @constraint(model, cb, b == 0) #b̂
 
 
-    @constraint(model, cb[j in 1:M], sum(y[i,j] for i in 1:N) == 1)
+    @constraint(model, cb[j in 1:M], sum(y[i,j] for i in 1:N) == 0)
     @constraint(model, c2[i in 1:N], sum(data.demands[j] * y[i,j] for j in 1:M) <= data.capacities[i] * x[i])
     @constraint(model, c3[i in 1:N, j in 1:M], y[i,j] <= x[i])
     @constraint(model, cx[i in 1:N], x[i] == 0) #x̂[i]
