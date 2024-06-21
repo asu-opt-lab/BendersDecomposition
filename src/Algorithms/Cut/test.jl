@@ -7,6 +7,7 @@ function solve_DCGLP(
     pConeType::GammaNorm;
     time_limit)
 
+    # @info x̂
     k = 0
     LB = -Inf
     UB = Inf
@@ -41,7 +42,9 @@ function solve_DCGLP(
         k += 1
         main_time_limit = time() - start_time
         set_time_limit_sec(main_env.model, max(time_limit-main_time_limit,1))
+        tt = time()
         optimize!(main_env.model)
+        # @info "main_time = $(time()-tt)"
         if termination_status(main_env.model) == TIME_LIMIT
             break
         end
@@ -63,18 +66,23 @@ function solve_DCGLP(
 
         # BSP1
         set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
+        # set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ./k̂₀)
         set_normalized_rhs.(bsp_env.model[:cb], k̂₀)
-
+        # @info "k̂ₓ = $k̂ₓ"
+        # @info "k̂₀ = $k̂₀"
+        # @info k̂ₓ./k̂₀
 
         # set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
         # set_normalized_rhs.(bsp_env.model[:cb], k̂₀)
 
         bsp_time_limit = time() - start_time
-        @info time_limit-bsp_time_limit
         set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
+        tt = time()
         optimize!(bsp_env.model)
+        # @info "bsp_time1 = $(time()-tt)"
         status1 = dual_status(bsp_env.model)
-        
+        # x1 = value.(bsp_env.model[:x])
+
         if status1 == FEASIBLE_POINT
             g₁ = objective_value(bsp_env.model)
             # ex1 = @expression(main_env.model, g₁ + dual.(bsp_env.model[:cx])⋅(main_env.model[:kₓ]-k̂ₓ) + dual(bsp_env.model[:cb])*(main_env.model[:k₀]-k̂₀) - main_env.model[:kₜ]) 
@@ -96,13 +104,20 @@ function solve_DCGLP(
 
         # BSP2
         set_normalized_rhs.(bsp_env.model[:cx], v̂ₓ)
+        # set_normalized_rhs.(bsp_env.model[:cx], v̂ₓ./v̂₀)
         set_normalized_rhs.(bsp_env.model[:cb], v̂₀)
+        # @info "v̂ₓ = $v̂ₓ"
+        # @info "v̂₀ = $v̂₀"
+        # @info v̂ₓ./v̂₀
+        # @info "diff = $(k̂ₓ./k̂₀ - v̂ₓ./v̂₀)"
         bsp_time_limit = time() - start_time
-        @info time_limit-bsp_time_limit
         set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
+        tt = time()
         optimize!(bsp_env.model)
+        # @info "bsp_time2 = $(time()-tt)"
         status2 = dual_status(bsp_env.model)
-        
+        # x2 = value.(bsp_env.model[:x])
+        # @info "diff = $(x1-x2)"
         if status2 == FEASIBLE_POINT
             g₂ = objective_value(bsp_env.model)
             # ex2 = @expression(main_env.model, g₂ + dual.(bsp_env.model[:cx])⋅(main_env.model[:vₓ]-v̂ₓ) + dual(bsp_env.model[:cb])*(main_env.model[:v₀]-v̂₀) - main_env.model[:vₜ])
@@ -166,25 +181,26 @@ function solve_DCGLP(
     main_env.conπpoints1 = conπpoints1
     main_env.conπpoints2 = conπpoints2
 
+    @info "iteration = $k"
     # @info status1s
     # @info status2s
-    point = [k̂ₓs[end]; v̂ₓs[end] ; k̂ₜs[end] ; v̂ₜs[end]; k̂₀s[end]; v̂₀s[end]]
-    for iter in 1:k
-        # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
-        # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
-        # @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
-        # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
-        point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
-        @info "distance_inf_$iter = $(norm(point_iter - point, Inf))"
-        # println("distance_L2_$iter = $(norm(point_iter - point, 2))")
-    end
-    for iter in 1:k
-        # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
-        # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
-        # @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
-        # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
-        point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
-        @info "distance_L2_$iter = $(norm(point_iter - point, 2))"
-        # println("distance_inf_$iter = $(norm(point_iter - point, Inf))")
-    end
+    # point = [k̂ₓs[end]; v̂ₓs[end] ; k̂ₜs[end] ; v̂ₜs[end]; k̂₀s[end]; v̂₀s[end]]
+    # for iter in 1:k
+    #     # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
+    #     # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
+    #     # @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
+    #     # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
+    #     point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
+    #     @info "distance_inf_$iter = $(norm(point_iter - point, Inf))"
+    #     # println("distance_L2_$iter = $(norm(point_iter - point, 2))")
+    # end
+    # for iter in 1:k
+    #     # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
+    #     # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
+    #     # @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
+    #     # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
+    #     point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
+    #     @info "distance_L2_$iter = $(norm(point_iter - point, 2))"
+    #    # println("distance_inf_$iter = $(norm(point_iter - point, Inf))")
+    # end
 end

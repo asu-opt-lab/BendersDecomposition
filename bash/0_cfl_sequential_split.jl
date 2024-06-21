@@ -8,7 +8,7 @@ solver = :Gurobi
 # solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
-instance = "f500-c500-r5.0-p1"
+instance = "f500-c500-r5.0-p2"
 data = SplitBenders.read_random_data(instance)
 
 # instance = "p70"
@@ -24,7 +24,7 @@ cut_strategy = "SPLIT_CUTSTRATEGY"
 SplitCGLPNormType = "LINFGAMMANORM"
 
 # "MOST_FRAC_INDEX", "RANDOM_INDEX"
-SplitSetSelectionPolicy = "RANDOM_INDEX"
+SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
 
 # "SPLIT_PURE_CUT_STRATEGY", "SPLIT_STRENGTHEN_CUT_STRATEGY"
 StrengthenCutStrategy = "SPLIT_PURE_CUT_STRATEGY"
