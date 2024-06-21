@@ -8,11 +8,11 @@ solver = :Gurobi
 # solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
-instance = "f500-c500-r5.0-p2"
-data = SplitBenders.read_random_data(instance)
+# instance = "f500-c500-r5.0-p2"
+# data = SplitBenders.read_random_data(instance)
 
-# instance = "p70"
-# data = SplitBenders.read_data(instance)
+instance = "p70"
+data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
