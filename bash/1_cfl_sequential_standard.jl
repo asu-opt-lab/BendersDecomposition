@@ -3,17 +3,17 @@ import .SplitBenders
 using JuMP, CSV
 
 settings = SplitBenders.parse_commandline()
-instance = "f200-c200-r5.0-p5"
+instance = "f500-c500-r5.0-p2"
 data = SplitBenders.read_random_data(instance)
 
-# instance = "p70"
+# instance = "p2"
 # data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
 
 # "ORDINARY_CUTSTRATEGY" "ADVANCED_CUTSTRATEGY" "KN_CUTSTRATEGY"
-cut_strategy = "ADVANCED_CUTSTRATEGY"
+cut_strategy = "ORDINARY_CUTSTRATEGY"
 
 # "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
 SplitCGLPNormType = "nothing"
@@ -36,8 +36,9 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 
 master_env = SplitBenders.MasterProblem(data)
-
-sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params)
+relax_integrality(master_env.model)
+sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params)
+# sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params)
 
 df = SplitBenders.run_Benders(data,master_env,sub_env)
 

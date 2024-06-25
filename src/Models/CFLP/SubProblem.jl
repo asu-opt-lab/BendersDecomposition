@@ -61,6 +61,7 @@ mutable struct CFLPSplitSubEnv <: AbstractSubEnv
     data
     BSPProblem
     split_info
+    BSPProblem2
 end
 
 
@@ -76,8 +77,9 @@ function CFLPSplitSubEnv(data::CFLPData, algo_params; solver::Symbol=:Gurobi)
     model, constr, rhs, cconstr = generate_CFLP_subproblem(data; solver=solver) 
     BSPProblem = generate_BSPProblem(data; solver=solver)
     split_info = SplitInfo([],[],[])
+    BSPProblem2 = generate_BSPProblem(data; solver=solver)
     
-    return CFLPSplitSubEnv(model, constr, rhs, cconstr, 0.0, algo_params, data, BSPProblem, split_info)
+    return CFLPSplitSubEnv(model, constr, rhs, cconstr, 0.0, algo_params, data, BSPProblem, split_info, BSPProblem2)
 end
 
 function CFLPStandardKNSubEnv(data::CFLPData, algo_params; solver::Symbol=:Gurobi)
@@ -155,7 +157,7 @@ mutable struct CFLPBSPEnv <: AbstractSubEnv
     model::Model
 end
 
-function generate_BSPProblem(data::CFLPData; solver::Symbol=:CPLEX)
+function generate_BSPProblem(data::CFLPData; solver::Symbol=:Gurobi)
 
     if solver == :CPLEX
         model = Model(CPLEX.Optimizer)
@@ -166,9 +168,9 @@ function generate_BSPProblem(data::CFLPData; solver::Symbol=:CPLEX)
         # model = Model(Ipopt.Optimizer)
         set_optimizer_attribute(model, "Method", 1)
         set_optimizer_attribute(model, "InfUnbdInfo", 1)
-        set_optimizer_attribute(model, "LPWarmStart", 0)
+        # set_optimizer_attribute(model, "LPWarmStart", 0)
     end
-    set_optimizer_attribute(model, MOI.Silent(),true)
+    # set_optimizer_attribute(model, MOI.Silent(),true)
    
     # pre
     N = data.n_facilities

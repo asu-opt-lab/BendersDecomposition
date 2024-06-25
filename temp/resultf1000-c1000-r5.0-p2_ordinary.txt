@@ -1,0 +1,314 @@
+┌ Info: main_time = 0.01699995994567871
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 0.8860759493670886
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.11392405063291144
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 3.2300000190734863
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 260480.02493763715
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 504.75600004196167
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: INFEASIBILITY_CERTIFICATE
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:162
+┌ Info: Iteration 1: LB = 0.0, UB = Inf, _UB1 = 1.2604800249376372e6, _UB2 = Inf
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: add infeasible cut 2
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:231
+┌ Info: main_time = 0.002000093460083008
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 0.8860759493670886
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.11392405063291144
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 0.36100006103515625
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 260480.02493763715
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 9.80400013923645
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 2: LB = 0.08529073309415261, UB = 1.2946489046638787e6, _UB1 = 0.0, _UB2 = 1.2946488193731457e6
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:227
+┌ Info: main_time = 0.003000020980834961
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 0.8860759493670886
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.11392405063291144
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 202.3550000190735
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 231090.71561854647
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 10.682000160217285
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 3: LB = 11.19273876577086, UB = 1.2640604505729715e6, _UB1 = 1.2597756593653616e6, _UB2 = 4273.598468844066
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:227
+┌ Info: main_time = 0.006999969482421875
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 41.65300011634827
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 263429.619829229
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.32200002670288086
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 4: LB = 38.07231595512811, UB = 1.2634676921451841e6, _UB1 = 1.263429619829229e6, _UB2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: main_time = 0.003000020980834961
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 20.78600001335144
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 223034.86359148572
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.315000057220459
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 5: LB = 51.92496482118897, UB = 1.2230867885563069e6, _UB1 = 1.2230348635914857e6, _UB2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: main_time = 0.009000062942504883
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 0.31799983978271484
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 32.22500014305115
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 6: LB = 78.87273642972278, UB = 1.182870229177474e6, _UB1 = 0.0, _UB2 = 1.1827913564410442e6
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:227
+┌ Info: main_time = 0.008999824523925781
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 48.12599992752075
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 250728.7103293474
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.312000036239624
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 7: LB = 100.87653965655028, UB = 1.182870229177474e6, _UB1 = 1.2507287103293473e6, _UB2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: main_time = 0.003999948501586914
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 31.61299991607666
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 210527.16127336118
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.30900001525878906
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 8: LB = 120.12188514421945, UB = 1.182870229177474e6, _UB1 = 1.2105271612733612e6, _UB2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: main_time = 0.006000041961669922
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 19.229999780654907
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 215441.6831390287
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.30699992179870605
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 9: LB = 149.20396846180756, UB = 1.182870229177474e6, _UB1 = 1.2154416831390287e6, _UB2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: main_time = 0.006999969482421875
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 17.102999925613403
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 173037.55585290992
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.31399989128112793
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 10: LB = 184.0918561510969, UB = 1.1732216477090612e6, _UB1 = 1.17303755585291e6, _UB2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: main_time = 0.1230001449584961
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 0.317000150680542
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 1.8469998836517334
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 11: LB = 628439.044417597, UB = 1.0813174478071847e6, _UB1 = 0.0, _UB2 = 452878.4033895877
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:227
+┌ Info: main_time = 0.005000114440917969
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 1.0180001258850098
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 81296.92752335529
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.3059999942779541
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 12: LB = 686495.2798505041, UB = 1.0813174478071847e6, _UB1 = 395595.76159690175, _UB2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: main_time = 0.06100010871887207
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 0.3960001468658447
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 83973.18574443801
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.3080000877380371
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 13: LB = 1.0786548874461488e6, UB = 1.0813174478071847e6, _UB1 = 5807.412222339932, _UB2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: main_time = 0.004999876022338867
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 0.39299988746643066
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 81347.49842402205
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.30900001525878906
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 14: LB = 1.0786702778504274e6, UB = 1.0813174478071847e6, _UB1 = 3183.1967761610285, _UB2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: main_time = 0.006000041961669922
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 0.3880000114440918
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 80577.8776595958
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.3059999942779541
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 15: LB = 1.0787069472702972e6, UB = 1.0811203922366905e6, _UB1 = 2413.44496639329, _UB2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: main_time = 0.009999990463256836
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 0.3880000114440918
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 80019.47987701543
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.31099987030029297
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 16: LB = 1.0787192582326522e6, UB = 1.0805748937648537e6, _UB1 = 1855.635532201588, _UB2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:210
+┌ Info: main_time = 0.06800007820129395
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 0.31399989128112793
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 0.40000009536743164
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Info: Iteration 17: LB = 1.0800857204695437e6, UB = 1.0805748937648537e6, _UB1 = 0.0, _UB2 = 9412.158545047801
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: iteration = 17
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:245
+┌ Info: k̂₀ = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:246
+┌ Info: v̂₀ = 1.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:247
+┌ Info: subObjVal: 294615.305308658
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Ordinary.jl:46
+┌ Info: Iter: 1, LB: -850836.7848101265, UB: 443778.5204985314, Gap: 291.7255445023149, Master Time: 0.0019998550415039062, Sub Time: 963.018000125885
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Loop\Sequential.jl:42
+┌ Info: main_time = 0.01699995994567871
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 0.9090909090909091
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.09090909090909094
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 3.0389997959136963
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 267654.0064302087
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
+┌ Info: bsp_time2 = 43.360000133514404
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:145
+┌ Error: Wrong status2 = NO_SOLUTION
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:171
+┌ Info: Iteration 1: LB = 0.0, UB = Inf, _UB1 = 194849.61152694107, _UB2 = Inf
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:188
+┌ Info: iteration = 1
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:245
+┌ Info: k̂₀ = 0.9090909090909091
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:246
+┌ Info: v̂₀ = 0.09090909090909094
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:247
+┌ Info: subObjVal: 294883.6262873637
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Ordinary.jl:46
+┌ Info: Iter: 2, LB: 229248.10712086712, UB: 443778.5204985314, Gap: 48.34177488731662, Master Time: 0.0, Sub Time: 57.31700015068054
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Loop\Sequential.jl:42
+┌ Info: Time limit 1000 reached
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Loop\Sequential.jl:54

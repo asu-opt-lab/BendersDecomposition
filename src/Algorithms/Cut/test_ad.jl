@@ -72,13 +72,15 @@ function solve_DCGLP(
         # @info "k̂ₜ = $k̂ₜ"
         # @info "v̂ₜ = $v̂ₜ"
         # BSP1
-        # if k̂₀ != 0
-        # if k̂₀<=1e-09
-                
-
-            set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
+        l = length(k̂ₓ)
+            # set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
+            for i in eachindex(k̂ₓ)
+                set_normalized_rhs(bsp_env.cconstr[i], k̂ₓ[i])
+                set_normalized_rhs(bsp_env.cconstr[l+i], -k̂ₓ[i])
+            end
             # set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ./k̂₀)
             set_normalized_rhs.(bsp_env.model[:cb], k̂₀)
+            set_normalized_rhs(bsp_env.oconstr, -k̂ₜ)
             # @info "k̂ₓ = $k̂ₓ"
             # @info "k̂₀ = $k̂₀"
             # @info k̂ₓ./k̂₀
@@ -95,92 +97,70 @@ function solve_DCGLP(
             # x1 = value.(bsp_env.model[:x])
 
             if status1 == FEASIBLE_POINT
-                g₁ = objective_value(bsp_env.model)
-                @info "g₁ = $g₁"
-                # ex1 = @expression(main_env.model, g₁ + dual.(bsp_env.model[:cx])⋅(main_env.model[:kₓ]-k̂ₓ) + dual(bsp_env.model[:cb])*(main_env.model[:k₀]-k̂₀) - main_env.model[:kₜ]) 
-                ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])⋅main_env.model[:kₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:k₀] - main_env.model[:kₜ])
-                _UB1 = g₁ - k̂ₜ
-                # @info "g₁ = $g₁"
-                # @info "k̂ₓ = $k̂ₓ"
-                # @info "k̂ₜ = $k̂ₜ"
-                # @info value.(bsp_env.model[:x])
-                # push!(masterconπpoints1, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
-                push!(masterconπpoints1, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env.model[:cb]))))
-
-            elseif status1 == INFEASIBILITY_CERTIFICATE 
-                @info status1
-                g₁ = Inf
-                # ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:kₓ] + dual(bsp_env.model[:cb])*main_env.model[:k₀])
-                ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:kₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:k₀])
-                # push!(conπrays1, @expression(master.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
-                push!(conπrays1, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env.model[:cb]))))
+                subObjVal = JuMP.objective_value(bsp_env.model) 
+                ex1 = @expression(main_env.model,  
+                subObjVal 
+                - dual(bsp_env.oconstr)*(main_env.model[:kₜ] - k̂ₜ)
+                - sum(dual(bsp_env.cconstr[i]) * (main_env.model[:kₓ][i] - k̂ₓ[i]) for i in eachindex(k̂ₓ)) 
+                - sum(dual(bsp_env.cconstr[l+i]) * (main_env.model[:kₓ][i] - k̂ₓ[i]) for i in eachindex(k̂ₓ))
+                + sum(dual.(bsp_env.model[:cb]))*(main_env.model[:k₀]-k̂₀))   
             else
-                g₁ = Inf
-                @error "Wrong status1 = $status1"
+                @error "dual of sub is neither feasible nor infeasible certificate: $status"
+                throw(-1)
             end
-        # else
-            # @info "k̂ₓ = $k̂ₓ"
-            # @info "k̂₀ = $k̂₀"
-            # g₁ = 0
-        # end
+       
+        if abs(subObjVal) <= 1e-06
+            g₁ = value(bsp_env.obj)#sum(data.costs[i,j] * data.demands[j] * JuMP.value(sub_env.model[:y][i,j]) for i in 1:data.n_facilities, j in 1:data.n_customers)  
+        else 
+            g₁ = Inf
+        end
         _UB1 = min(_UB1, g₁ - k̂ₜ)
 
         # BSP2
-        # if v̂₀ != 0
-        # if v̂₀<=1e-09
-                # @info "v̂₀ = $v̂₀"
-                # @info "v̂ₓ = $v̂ₓ"
-            # end
-            set_normalized_rhs.(bsp_env2.model[:cx], v̂ₓ)
-            # set_normalized_rhs.(bsp_env.model[:cx], v̂ₓ./v̂₀)
+        l = length(v̂ₓ)
+            # set_normalized_rhs.(bsp_env2.model[:cx], v̂ₓ)
+            for i in eachindex(v̂ₓ)
+                set_normalized_rhs(bsp_env2.cconstr[i], v̂ₓ[i])
+                set_normalized_rhs(bsp_env2.cconstr[l+i], -v̂ₓ[i])
+            end
+            # set_normalized_rhs.(bsp_env2.model[:cx], v̂ₓ./v̂₀)
             set_normalized_rhs.(bsp_env2.model[:cb], v̂₀)
+            set_normalized_rhs(bsp_env2.oconstr, -v̂ₜ)
             # @info "v̂ₓ = $v̂ₓ"
             # @info "v̂₀ = $v̂₀"
             # @info v̂ₓ./v̂₀
-            # @info "diff = $(k̂ₓ./k̂₀ - v̂ₓ./v̂₀)"
+
+            # set_normalized_rhs.(bsp_env2.model[:cx], v̂ₓ)
+            # set_normalized_rhs.(bsp_env2.model[:cb], v̂₀)
+
             bsp_time_limit = time() - start_time
             set_time_limit_sec(bsp_env2.model, max(time_limit-bsp_time_limit,1))
             tt = time()
             optimize!(bsp_env2.model)
             @info "bsp_time2 = $(time()-tt)"
             status2 = dual_status(bsp_env2.model)
-            # x2 = value.(bsp_env.model[:x])
-            # @info "diff = $(x1-x2)"
-            if status2 == FEASIBLE_POINT
-                g₂ = objective_value(bsp_env2.model)
-                # @info "g₂ = $g₂"
-                # @info "v̂ₓ = $v̂ₓ"
-                # @info "v̂ₜ = $v̂ₜ"
-                # @info value.(bsp_env.model[:x])
-                # ex2 = @expression(main_env.model, g₂ + dual.(bsp_env.model[:cx])⋅(main_env.model[:vₓ]-v̂ₓ) + dual(bsp_env.model[:cb])*(main_env.model[:v₀]-v̂₀) - main_env.model[:vₜ])
-                ex2 = @expression(main_env.model, dual.(bsp_env2.model[:cx])⋅main_env.model[:vₓ] + sum(dual.(bsp_env2.model[:cb]))*main_env.model[:v₀] - main_env.model[:vₜ])
-                _UB2 = g₂ - v̂ₜ
-                # push!(masterconπpoints2, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
-                # @constraint(master_env.model, master_env.model[:t] >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
-                push!(masterconπpoints2, @expression(master_env.model, dual.(bsp_env2.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env2.model[:cb]))))
-            elseif status2 == INFEASIBILITY_CERTIFICATE     
-                @info status2      
-                g₂ = Inf
-                # ex2 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:vₓ] + dual(bsp_env.model[:cb])*main_env.model[:v₀])
-                ex2 = @expression(main_env.model, dual.(bsp_env2.model[:cx])'main_env.model[:vₓ] + sum(dual.(bsp_env2.model[:cb]))*main_env.model[:v₀])
-                # push!(conπrays2, @expression(master.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
-                # @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
-                push!(conπrays2, @expression(master_env.model, dual.(bsp_env2.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env2.model[:cb]))))
-            else
-                g₂ = Inf
-                @error "Wrong status2 = $status2"
-            end
-        # else
-            # @info "v̂₀ = $v̂₀"
-            # @info "v̂ₓ = $v̂ₓ"
-            # g₂ = 0
-        # end
-        _UB2 = min(_UB2, g₂ - v̂ₜ)
-        # push!(status1s, status1)
-        # push!(status2s, status2)
+            # x2 = value.(bsp_env2.model[:x])
 
-        # _UB1 = min(_UB1, g₁ - k̂ₜ)
-        # _UB2 = min(_UB2, g₂ - v̂ₜ)
+            if status2 == FEASIBLE_POINT
+                subObjVal = JuMP.objective_value(bsp_env2.model) 
+                ex2 = @expression(main_env.model,  
+                subObjVal 
+                - dual(bsp_env2.oconstr)*(main_env.model[:vₜ] - v̂ₜ)
+                - sum(dual(bsp_env2.cconstr[i]) * (main_env.model[:vₓ][i] - v̂ₓ[i]) for i in eachindex(v̂ₓ)) 
+                - sum(dual(bsp_env2.cconstr[l+i]) * (main_env.model[:vₓ][i] - v̂ₓ[i]) for i in eachindex(v̂ₓ))
+                + sum(dual.(bsp_env2.model[:cb]))*(main_env.model[:v₀]-v̂₀))   
+            else
+                @error "dual of sub is neither feasible nor infeasible certificate: $status"
+                throw(-1)
+            end
+
+        if abs(subObjVal) <= 1e-06
+            g₂ = value(bsp_env2.obj)#sum(data.costs[i,j] * data.demands[j] * JuMP.value(sub_env.model[:y][i,j]) for i in 1:data.n_facilities, j in 1:data.n_customers)  
+        else 
+            g₂ = Inf
+        end
+
+        _UB2 = min(_UB2, g₂ - v̂ₜ)
          
         LB = τ̂
         UB = update_UB!(UB,_sx,g₁,g₂,t̂, pConeType)
