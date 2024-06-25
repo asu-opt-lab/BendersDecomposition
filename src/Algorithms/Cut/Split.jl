@@ -11,7 +11,13 @@ function generate_cut(
 
     x̂,t̂ = master_env.value_x, master_env.value_t
     start_time = time()
-    solve_DCGLP(master_env,x̂,t̂, DCGLP_env, sub_env.BSPProblem, sub_env.algo_params.SplitCGLPNormType; time_limit)
+    BSPProblem = generate_BSPProblem(sub_env.data)
+    BSPProblem2 = generate_BSPProblem(sub_env.data)
+    # BSPProblem = generate_BSPProblem_Advanced(sub_env.data)
+    # BSPProblem2 = generate_BSPProblem_Advanced(sub_env.data)
+    # solve_DCGLP(master_env,x̂,t̂, DCGLP_env, sub_env.BSPProblem, sub_env.BSPProblem2, sub_env.algo_params.SplitCGLPNormType; time_limit)
+    solve_DCGLP(master_env,x̂,t̂, DCGLP_env, BSPProblem, BSPProblem2, sub_env.algo_params.SplitCGLPNormType; time_limit)
+
     DCGLP_time = time() - start_time
 
     # add benders cut

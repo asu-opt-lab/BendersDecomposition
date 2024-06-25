@@ -35,7 +35,7 @@ function run_Benders(
         push!(df, new_row)  
         
         # Add Cut
-        @constraint(master_env.model, 0 >= ex)   
+        # @constraint(master_env.model, 0 >= ex)   
 
         # Print
         @printf "%5d     %10.2f   %10.2f    %10.2f  %10.2f  %10.2f\n" iter LB UB Gap master_time sub_time  
