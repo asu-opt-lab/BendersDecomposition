@@ -72,13 +72,14 @@ function solve_DCGLP(
         # @info "k̂ₜ = $k̂ₜ"
         # @info "v̂ₜ = $v̂ₜ"
         # BSP1
-        # if k̂₀ != 0
+        if k̂₀ != 0 || k == 1
         # if k̂₀<=1e-09
                 
-
+        
             set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
             # set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ./k̂₀)
             set_normalized_rhs.(bsp_env.model[:cb], k̂₀)
+        
             # @info "k̂ₓ = $k̂ₓ"
             # @info "k̂₀ = $k̂₀"
             # @info k̂ₓ./k̂₀
@@ -87,7 +88,7 @@ function solve_DCGLP(
             # set_normalized_rhs.(bsp_env.model[:cb], k̂₀)
 
             bsp_time_limit = time() - start_time
-            set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
+            # set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
             tt = time()
             optimize!(bsp_env.model)
             @info "bsp_time1 = $(time()-tt)"
@@ -118,35 +119,39 @@ function solve_DCGLP(
                 g₁ = Inf
                 @error "Wrong status1 = $status1"
             end
-        # else
+        else
             # @info "k̂ₓ = $k̂ₓ"
             # @info "k̂₀ = $k̂₀"
-            # g₁ = 0
-        # end
+            g₁ = 0
+        end
         _UB1 = min(_UB1, g₁ - k̂ₜ)
 
         # BSP2
-        # if v̂₀ != 0
+        if v̂₀ != 0 || k == 1
         # if v̂₀<=1e-09
                 # @info "v̂₀ = $v̂₀"
                 # @info "v̂ₓ = $v̂ₓ"
             # end
+            
             set_normalized_rhs.(bsp_env2.model[:cx], v̂ₓ)
             # set_normalized_rhs.(bsp_env.model[:cx], v̂ₓ./v̂₀)
             set_normalized_rhs.(bsp_env2.model[:cb], v̂₀)
+     
+      
             # @info "v̂ₓ = $v̂ₓ"
             # @info "v̂₀ = $v̂₀"
             # @info v̂ₓ./v̂₀
             # @info "diff = $(k̂ₓ./k̂₀ - v̂ₓ./v̂₀)"
             bsp_time_limit = time() - start_time
-            set_time_limit_sec(bsp_env2.model, max(time_limit-bsp_time_limit,1))
+            # set_time_limit_sec(bsp_env2.model, max(time_limit-bsp_time_limit,1))
             tt = time()
             optimize!(bsp_env2.model)
             @info "bsp_time2 = $(time()-tt)"
             status2 = dual_status(bsp_env2.model)
             # x2 = value.(bsp_env.model[:x])
+            @info termination_status(bsp_env2.model)
             # @info "diff = $(x1-x2)"
-            if status2 == FEASIBLE_POINT
+            if status2 == FEASIBLE_POINT && termination_status(bsp_env2.model) !=  TIME_LIMIT
                 g₂ = objective_value(bsp_env2.model)
                 # @info "g₂ = $g₂"
                 # @info "v̂ₓ = $v̂ₓ"
@@ -158,7 +163,7 @@ function solve_DCGLP(
                 # push!(masterconπpoints2, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
                 # @constraint(master_env.model, master_env.model[:t] >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
                 push!(masterconπpoints2, @expression(master_env.model, dual.(bsp_env2.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env2.model[:cb]))))
-            elseif status2 == INFEASIBILITY_CERTIFICATE     
+            elseif status2 == INFEASIBILITY_CERTIFICATE && termination_status(bsp_env2.model) !=  TIME_LIMIT    
                 @info status2      
                 g₂ = Inf
                 # ex2 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:vₓ] + dual(bsp_env.model[:cb])*main_env.model[:v₀])
@@ -170,11 +175,11 @@ function solve_DCGLP(
                 g₂ = Inf
                 @error "Wrong status2 = $status2"
             end
-        # else
+        else
             # @info "v̂₀ = $v̂₀"
             # @info "v̂ₓ = $v̂ₓ"
-            # g₂ = 0
-        # end
+            g₂ = 0
+        end
         _UB2 = min(_UB2, g₂ - v̂ₜ)
         # push!(status1s, status1)
         # push!(status2s, status2)
@@ -198,12 +203,12 @@ function solve_DCGLP(
         end
 
         
-        # if k̂₀ == 0
-        #     if 1e-3 < _UB1
-        #         push!(conπpoints1, @constraint(main_env.model, 0 >= ex1))
-        #         @info "_add feasible cut 1"
-        #     end
-        # else
+        if k̂₀ == 0
+            if 1e-3 < _UB1
+                push!(conπpoints1, @constraint(main_env.model, 0 >= ex1))
+                @info "_add feasible cut 1"
+            end
+        else
             if status1 == FEASIBLE_POINT 
                 if 1e-3 < _UB1
                     push!(conπpoints1, @constraint(main_env.model, 0 >= ex1))
@@ -213,24 +218,26 @@ function solve_DCGLP(
                 push!(conπrays1, @constraint(main_env.model, 0 >= 10*ex1))
                 @info "add infeasible cut 1"
             end
-        # end
+        end
 
-        # if v̂₀ == 0
-        #     if 1e-3 < _UB2
-        #         push!(conπpoints2, @constraint(main_env.model, 0 >= ex2))
-        #         @info "_add feasible cut 2"
-        #     end
-        # else
-            if status2 == FEASIBLE_POINT
+        if termination_status(bsp_env2.model) !=  TIME_LIMIT
+            if v̂₀ == 0
                 if 1e-3 < _UB2
                     push!(conπpoints2, @constraint(main_env.model, 0 >= ex2))
-                    @info "add feasible cut 2"
+                    @info "_add feasible cut 2"
                 end
-            elseif status2 == INFEASIBILITY_CERTIFICATE
-                push!(conπrays2, @constraint(main_env.model, 0 >= 10*ex2))
-                @info "add infeasible cut 2"
+            else
+                if status2 == FEASIBLE_POINT
+                    if 1e-3 < _UB2
+                        push!(conπpoints2, @constraint(main_env.model, 0 >= ex2))
+                        @info "add feasible cut 2"
+                    end
+                elseif status2 == INFEASIBILITY_CERTIFICATE
+                    push!(conπrays2, @constraint(main_env.model, 0 >= 10*ex2))
+                    @info "add infeasible cut 2"
+                end
             end
-        # end
+        end
         
 
        
@@ -247,7 +254,7 @@ function solve_DCGLP(
     @info "v̂₀ = $(v̂₀s[end])"
     # @info status1s
     # @info status2s
-    # point = [k̂ₓs[end]; v̂ₓs[end] ; k̂ₜs[end] ; v̂ₜs[end]; k̂₀s[end]; v̂₀s[end]]
+    point = [k̂ₓs[end]; v̂ₓs[end] ; k̂ₜs[end] ; v̂ₜs[end]; k̂₀s[end]; v̂₀s[end]]
     # for iter in 1:k
     #     # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
     #     # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
@@ -257,13 +264,15 @@ function solve_DCGLP(
     #     @info "distance_inf_$iter = $(norm(point_iter - point, Inf))"
     #     # println("distance_L2_$iter = $(norm(point_iter - point, 2))")
     # end
-    # for iter in 1:k
-    #     # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
-    #     # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
-    #     # @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
-    #     # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
-    #     point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
-    #     @info "distance_L2_$iter = $(norm(point_iter - point, 2))"
-    #    # println("distance_inf_$iter = $(norm(point_iter - point, Inf))")
-    # end
+    for iter in 2:k
+        # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
+        # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
+        # @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
+        # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
+        point_iter_ = [k̂ₓs[iter-1]; v̂ₓs[iter-1] ; k̂ₜs[iter-1] ; v̂ₜs[iter-1]; k̂₀s[iter-1]; v̂₀s[iter-1]]
+        point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
+        @info "_distance_L2_$iter = $(norm(point_iter - point_iter_, 2))"
+        @info "distance_L2_$iter = $(norm(point_iter - point, 2))"
+       # println("distance_inf_$iter = $(norm(point_iter - point, Inf))")
+    end
 end

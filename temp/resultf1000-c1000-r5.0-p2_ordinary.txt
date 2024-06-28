@@ -4,7 +4,9 @@
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
 ┌ Info: v̂₀ = 0.11392405063291144
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+
 ┌ Info: bsp_time1 = 3.2300000190734863
+
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
 ┌ Info: g₁ = 260480.02493763715
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
@@ -24,7 +26,9 @@
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
 ┌ Info: v̂₀ = 0.11392405063291144
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+
 ┌ Info: bsp_time1 = 0.36100006103515625
+
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
 ┌ Info: g₁ = 260480.02493763715
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99
@@ -40,7 +44,9 @@
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
 ┌ Info: v̂₀ = 0.11392405063291144
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+
 ┌ Info: bsp_time1 = 202.3550000190735
+
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
 ┌ Info: g₁ = 231090.71561854647
 └ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99

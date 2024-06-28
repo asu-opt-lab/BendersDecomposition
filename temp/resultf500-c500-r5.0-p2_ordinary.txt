@@ -1,0 +1,10 @@
+┌ Info: main_time = 0.7259998321533203
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:48
+┌ Info: k̂₀ = 0.38323353293413176
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:69
+┌ Info: v̂₀ = 0.6167664670658682
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:71
+┌ Info: bsp_time1 = 0.6509997844696045
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:93
+┌ Info: g₁ = 80600.08950646108
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\test.jl:99

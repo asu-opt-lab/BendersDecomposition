@@ -13,7 +13,7 @@ data = SplitBenders.read_random_data(instance)
 algo_params = SplitBenders.AlgorithmParams()
 
 # "ORDINARY_CUTSTRATEGY" "ADVANCED_CUTSTRATEGY" "KN_CUTSTRATEGY"
-cut_strategy = "ORDINARY_CUTSTRATEGY"
+cut_strategy = "ADVANCED_CUTSTRATEGY"
 
 # "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
 SplitCGLPNormType = "nothing"
@@ -37,8 +37,8 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 master_env = SplitBenders.MasterProblem(data)
 relax_integrality(master_env.model)
-sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params)
-# sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params)
+# sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params)
+sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params)
 
 df = SplitBenders.run_Benders(data,master_env,sub_env)
 
