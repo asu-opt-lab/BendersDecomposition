@@ -35,14 +35,14 @@ function run_Benders(
         push!(df, new_row)  
         
         # Add Cut
-        # @constraint(master_env.model, 0 >= ex)   
+        @constraint(master_env.model, 0 >= ex)   
 
         # Print
         @printf "%5d     %10.2f   %10.2f    %10.2f  %10.2f  %10.2f\n" iter LB UB Gap master_time sub_time  
         @info "Iter: $iter, LB: $LB, UB: $UB, Gap: $Gap, Master Time: $master_time, Sub Time: $sub_time"
         # Stopping Criteria
         # Gap 
-        if Gap < 1e-3
+        if Gap < 1e-3 
             break
         end 
 
@@ -50,7 +50,7 @@ function run_Benders(
         algo_run_time = time()
         spend_time = algo_run_time - algo_start_time
         remaining_time = time_limit - spend_time         
-        if spend_time > time_limit 
+        if spend_time > time_limit || iter == 2
             @info "Time limit $time_limit reached"
             master_time = solve_master!(master_env; time_limit = remaining_time)
             LB = master_env.obj_value
