@@ -2,6 +2,9 @@ include("../src/SplitBenders.jl")
 import .SplitBenders
 using JuMP, CSV
 
+# solver = :Gurobi
+solver = :CPLEX
+
 settings = SplitBenders.parse_commandline()
 instance = "f500-c500-r5.0-p2"
 data = SplitBenders.read_random_data(instance)
@@ -35,10 +38,11 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitStength
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBendersPolicy, SplitBendersStrategy)
 
 
-master_env = SplitBenders.MasterProblem(data)
+master_env = SplitBenders.MasterProblem(data, solver = solver)
 relax_integrality(master_env.model)
-# sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params)
-sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params)
+# sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params, solver = solver)
+sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params, solver = solver)
+# sub_env = SplitBenders.CFLPStandardKNSubEnv(data,algo_params, solver = solver)
 
 df = SplitBenders.run_Benders(data,master_env,sub_env)
 

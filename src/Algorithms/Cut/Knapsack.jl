@@ -34,6 +34,5 @@ function generate_cut(
 
     sub_env.obj_value = subObjVal
 
-    @info subObjVal
     return time_end,ex
 end

@@ -8,7 +8,7 @@ mutable struct CFLPBSPADEnv <: AbstractSubEnv
     oconstr::Any
 end
 
-function generate_BSPProblem_Advanced(data::CFLPData; solver::Symbol=:CPLEX)
+function generate_BSPProblem_Advanced(data::CFLPData; solver::Symbol=:Gurobi)
 
     if solver == :CPLEX
         model = Model(CPLEX.Optimizer)
@@ -19,7 +19,7 @@ function generate_BSPProblem_Advanced(data::CFLPData; solver::Symbol=:CPLEX)
         # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
-
+    set_time_limit_sec(model, 10)
     # pre
     N = data.n_facilities
     M = data.n_customers
