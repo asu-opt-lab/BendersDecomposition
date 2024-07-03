@@ -97,7 +97,6 @@ function solve_DCGLP(
 
             if status1 == FEASIBLE_POINT
                 g₁ = objective_value(bsp_env.model)
-                @info "g₁ = $g₁"
                 # ex1 = @expression(main_env.model, g₁ + dual.(bsp_env.model[:cx])⋅(main_env.model[:kₓ]-k̂ₓ) + dual(bsp_env.model[:cb])*(main_env.model[:k₀]-k̂₀) - main_env.model[:kₜ]) 
                 ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])⋅main_env.model[:kₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:k₀] - main_env.model[:kₜ])
                 _UB1 = g₁ - k̂ₜ
@@ -132,7 +131,8 @@ function solve_DCGLP(
                 # @info "v̂₀ = $v̂₀"
                 # @info "v̂ₓ = $v̂ₓ"
             # end
-            
+            # @info "v̂₀ = $v̂₀"
+            # @info "v̂ₓ = $v̂ₓ"
             set_normalized_rhs.(bsp_env2.model[:cx], v̂ₓ)
             # set_normalized_rhs.(bsp_env.model[:cx], v̂ₓ./v̂₀)
             set_normalized_rhs.(bsp_env2.model[:cb], v̂₀)
@@ -271,8 +271,8 @@ function solve_DCGLP(
         # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
         point_iter_ = [k̂ₓs[iter-1]; v̂ₓs[iter-1] ; k̂ₜs[iter-1] ; v̂ₜs[iter-1]; k̂₀s[iter-1]; v̂₀s[iter-1]]
         point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
-        @info "_distance_L2_$iter = $(norm(point_iter - point_iter_, 2))"
-        @info "distance_L2_$iter = $(norm(point_iter - point, 2))"
+        # @info "_distance_L2_$iter = $(norm(point_iter - point_iter_, 2))"
+        # @info "distance_L2_$iter = $(norm(point_iter - point, 2))"
        # println("distance_inf_$iter = $(norm(point_iter - point, Inf))")
     end
 end

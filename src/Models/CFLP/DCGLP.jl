@@ -84,6 +84,8 @@ function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::Stan
 
     return CFLPDCGLPEnv(model, false, [], [], [], [])
 end
+    
+
 
 function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::GammaNorm; solver::Symbol=:Gurobi)
 # function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::GammaNorm; solver::Symbol=:CPLEX)
@@ -93,7 +95,7 @@ function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::Gamm
         # set_optimizer_attribute(model, "CPX_PARAM_LPMETHOD", CPX_ALG_BARRIER)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
-        set_optimizer_attribute(model, "InfUnbdInfo", 1)
+        # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
 
     set_optimizer_attribute(model, MOI.Silent(),true)
@@ -125,10 +127,10 @@ function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::Gamm
     @constraint(model, coneta2[j in 1:N], 0 >= -v₀ + vₓ[j])
 
     @constraint(model, conv1[j in 1:N], 0 >= -kₓ[j])
-    @constraint(model, conw1, 0 >= -sum(data.fixed_costs[j]*kₓ[j] for j in 1:N) + total_demands*k₀)
+    @constraint(model, conw1, 0 >= -sum(data.capacities[j]*kₓ[j] for j in 1:N) + total_demands*k₀)
 
     @constraint(model, conv2[j in 1:N], 0 >= -vₓ[j])
-    @constraint(model, conw2, 0 >= -sum(data.fixed_costs[j]*vₓ[j] for j in 1:N) + total_demands*v₀)
+    @constraint(model, conw2, 0 >= -sum(data.capacities[j]*vₓ[j] for j in 1:N) + total_demands*v₀)
 
     @constraint(model, con0, k₀ + v₀ == 1)
     if norm_type == L1GAMMANORM

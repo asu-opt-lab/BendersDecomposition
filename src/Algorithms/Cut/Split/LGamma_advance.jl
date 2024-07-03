@@ -103,7 +103,13 @@ function solve_DCGLP(
                 - dual(bsp_env.oconstr)*(main_env.model[:kₜ] - k̂ₜ)
                 - sum(dual(bsp_env.cconstr[i]) * (main_env.model[:kₓ][i] - k̂ₓ[i]) for i in eachindex(k̂ₓ)) 
                 - sum(dual(bsp_env.cconstr[l+i]) * (main_env.model[:kₓ][i] - k̂ₓ[i]) for i in eachindex(k̂ₓ))
-                + sum(dual.(bsp_env.model[:cb]))*(main_env.model[:k₀]-k̂₀))   
+                + sum(dual.(bsp_env.model[:cb]))*(main_env.model[:k₀]-k̂₀))  
+                push!(masterconπpoints1, @expression(master_env.model,
+                subObjVal
+                - dual(bsp_env.oconstr)*(master_env.var["t"] - k̂ₜ)
+                - sum(dual(bsp_env.cconstr[i]) * (master_env.var["cvar"][i] - k̂ₓ[i]) for i in eachindex(k̂ₓ))
+                - sum(dual(bsp_env.cconstr[l+i]) * (master_env.var["cvar"][i] - k̂ₓ[i]) for i in eachindex(k̂ₓ))
+                + sum(dual.(bsp_env.model[:cb]))*(1-k̂₀))) 
             else
                 @error "dual of sub is neither feasible nor infeasible certificate: $status"
                 throw(-1)
@@ -149,6 +155,12 @@ function solve_DCGLP(
                 - sum(dual(bsp_env2.cconstr[i]) * (main_env.model[:vₓ][i] - v̂ₓ[i]) for i in eachindex(v̂ₓ)) 
                 - sum(dual(bsp_env2.cconstr[l+i]) * (main_env.model[:vₓ][i] - v̂ₓ[i]) for i in eachindex(v̂ₓ))
                 + sum(dual.(bsp_env2.model[:cb]))*(main_env.model[:v₀]-v̂₀))   
+                push!(masterconπpoints1, @expression(master_env.model,
+                subObjVal 
+                - dual(bsp_env2.oconstr)*(master_env.var["t"] - v̂ₜ)
+                - sum(dual(bsp_env2.cconstr[i]) * (master_env.var["cvar"][i] - v̂ₓ[i]) for i in eachindex(v̂ₓ)) 
+                - sum(dual(bsp_env2.cconstr[l+i]) * (master_env.var["cvar"][i] - v̂ₓ[i]) for i in eachindex(v̂ₓ))
+                + sum(dual.(bsp_env2.model[:cb]))*(1-v̂₀)))
             else
                 @error "dual of sub is neither feasible nor infeasible certificate: $status"
                 throw(-1)

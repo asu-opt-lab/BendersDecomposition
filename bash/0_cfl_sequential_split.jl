@@ -4,11 +4,11 @@ using JuMP, CSV, Logging
 
 
 #-----------------------------------------------------------------------
-solver = :Gurobi
-# solver = :CPLEX
+# solver = :Gurobi
+solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
-instance = "f700-c700-r5.0-p2"
+instance = "f500-c500-r5.0-p2"
 data = SplitBenders.read_random_data(instance)
 
 # instance = "p70"
@@ -24,7 +24,7 @@ cut_strategy = "SPLIT_CUTSTRATEGY"
 SplitCGLPNormType = "LINFGAMMANORM"
 
 # "MOST_FRAC_INDEX", "RANDOM_INDEX"
-SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
+SplitSetSelectionPolicy = "RANDOM_INDEX"
 
 # "SPLIT_PURE_CUT_STRATEGY", "SPLIT_STRENGTHEN_CUT_STRATEGY"
 StrengthenCutStrategy = "SPLIT_STRENGTHEN_CUT_STRATEGY"
@@ -43,7 +43,7 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 
 master_env = SplitBenders.MasterProblem(data, solver=solver)
-# relax_integrality(master_env.model)
+relax_integrality(master_env.model)
 sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params, solver=solver)
 # sub_env = SplitBenders.CFLPBSPADEnv(data,algo_params, solver=solver)
 # io = open("temp/result$(instance)_distance.txt", "w+")

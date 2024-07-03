@@ -1,0 +1,306 @@
+WARNING: replacing module SplitBenders.
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+Set parameter Method to value 1
+Set parameter InfUnbdInfo to value 1
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+Set parameter InfUnbdInfo to value 1
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+Set parameter InfUnbdInfo to value 1
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+[ Info: main_time = 0.010999917984008789
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time1 = 1.184999942779541
+[ Info: bsp_time2 = 1.7450001239776611
+[ Info: OPTIMAL
+[ Info: Iteration 1: LB = 0.0, UB = 1.2137219800132993e6, _UB1 = 1.0e6, _UB2 = 213721.98001329915
+[ Info: _add feasible cut 1
+[ Info: add feasible cut 2
+[ Info: main_time = 0.006000041961669922
+[ Info: k̂₀ = 0.6879768280527265
+[ Info: v̂₀ = 0.31202317194727347
+[ Info: bsp_time1 = 49.12299990653992
+[ Info: bsp_time2 = 56.42900013923645
+[ Info: OPTIMAL
+[ Info: Iteration 2: LB = 11.6087878462073, UB = 1.2030419014828594e6, _UB1 = 146461.5871819576, _UB2 = 1.0565687055130554e6
+[ Info: add feasible cut 1
+[ Info: add feasible cut 2
+[ Info: main_time = 0.012000083923339844
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time2 = 0.8930001258850098
+[ Info: OPTIMAL
+[ Info: Iteration 3: LB = 194.64427099858023, UB = 1.1201235316355033e6, _UB1 = 0.0, _UB2 = 1.1199288873645046e6
+[ Info: add feasible cut 2
+[ Info: main_time = 0.019999980926513672
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time2 = 0.27700018882751465
+[ Info: OPTIMAL
+[ Info: Iteration 4: LB = 817705.0174393732, UB = 1.0653857594988004e6, _UB1 = 0.0, _UB2 = 247680.74205942723
+[ Info: add feasible cut 2
+[ Info: main_time = 0.006999969482421875
+[ Info: k̂₀ = 1.0
+[ Info: v̂₀ = 0.0
+[ Info: bsp_time1 = 69.5920000076294
+[ Info: Iteration 5: LB = 1.0000031374265254e6, UB = 1.0653857594988004e6, _UB1 = 197564.96782912014, _UB2 = 0.0
+[ Info: add feasible cut 1
+[ Info: main_time = 0.003000020980834961
+[ Info: k̂₀ = 1.0
+[ Info: v̂₀ = 0.0
+[ Info: bsp_time1 = 6.761999845504761
+[ Info: Iteration 6: LB = 1.0000112021911392e6, UB = 1.0653857594988004e6, _UB1 = 184559.9030136826, _UB2 = 0.0
+[ Info: add feasible cut 1
+[ Info: main_time = 0.003999948501586914
+[ Info: k̂₀ = 1.0
+[ Info: v̂₀ = 0.0
+[ Info: bsp_time1 = 1.371999979019165
+[ Info: Iteration 7: LB = 1.000022866878658e6, UB = 1.0653857594988004e6, _UB1 = 174389.99731993853, _UB2 = 0.0
+[ Info: add feasible cut 1
+[ Info: main_time = 0.005000114440917969
+[ Info: k̂₀ = 1.0
+[ Info: v̂₀ = 0.0
+[ Info: bsp_time1 = 1.4120001792907715
+[ Info: Iteration 8: LB = 1.000036181647263e6, UB = 1.0653857594988004e6, _UB1 = 146081.98162560185, _UB2 = 0.0
+[ Info: add feasible cut 1
+[ Info: main_time = 0.007999897003173828
+[ Info: k̂₀ = 1.0
+[ Info: v̂₀ = 0.0
+[ Info: bsp_time1 = 0.4550001621246338
+[ Info: Iteration 9: LB = 1.0000807584172009e6, UB = 1.0653857594988004e6, _UB1 = 132133.52237068565, _UB2 = 0.0
+[ Info: add feasible cut 1
+[ Info: main_time = 0.00800013542175293
+[ Info: k̂₀ = 1.0
+[ Info: v̂₀ = 0.0
+[ Info: bsp_time1 = 0.3540000915527344
+[ Info: Iteration 10: LB = 1.0001094222695396e6, UB = 1.0653857594988004e6, _UB1 = 106042.76525511465, _UB2 = 0.0
+[ Info: add feasible cut 1
+[ Info: main_time = 0.017999887466430664
+[ Info: k̂₀ = 1.0
+[ Info: v̂₀ = 0.0
+[ Info: bsp_time1 = 0.2539999485015869
+[ Info: Iteration 11: LB = 1.0002218260830462e6, UB = 1.0653857594988004e6, _UB1 = 101022.6847336431, _UB2 = 0.0
+[ Info: add feasible cut 1
+[ Info: main_time = 0.00800013542175293
+[ Info: k̂₀ = 1.0
+[ Info: v̂₀ = 0.0
+[ Info: bsp_time1 = 0.23000001907348633
+[ Info: Iteration 12: LB = 1.0002798254805541e6, UB = 1.0653857594988004e6, _UB1 = 76766.1738097219, _UB2 = 0.0
+[ Info: add feasible cut 1
+[ Info: main_time = 0.031000137329101562
+[ Info: k̂₀ = 1.0
+[ Info: v̂₀ = 0.0
+[ Info: bsp_time1 = 0.19299983978271484
+[ Info: Iteration 13: LB = 1.0469214516988943e6, UB = 1.0653857594988004e6, _UB1 = 26358.457366361123, _UB2 = 0.0
+[ Info: add feasible cut 1
+[ Info: main_time = 0.018999814987182617
+[ Info: k̂₀ = 1.0
+[ Info: v̂₀ = 0.0
+[ Info: bsp_time1 = 0.1830000877380371
+[ Info: Iteration 14: LB = 1.0563489755262127e6, UB = 1.0653857594988004e6, _UB1 = 10516.648415159987, _UB2 = 0.0
+[ Info: add feasible cut 1
+[ Info: main_time = 0.02499985694885254
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time2 = 0.1809999942779541
+[ Info: OPTIMAL
+[ Info: Iteration 15: LB = 1.0665826957515085e6, UB = 1.0653857594988004e6, _UB1 = 0.0, _UB2 = 27.86260998810758
+[ Info: iteration = 15
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: _distance_L2_2 = 1.4142135624029152e6
+[ Info: distance_L2_2 = 1.0662329267201324e6
+[ Info: _distance_L2_3 = 16.696077474635885
+[ Info: distance_L2_3 = 1.0662329266539216e6
+[ Info: _distance_L2_4 = 817170.248507023
+[ Info: distance_L2_4 = 249062.67877988913
+[ Info: _distance_L2_5 = 182829.7537278209
+[ Info: distance_L2_5 = 66232.9304694711
+[ Info: _distance_L2_6 = 3.472717567936487
+[ Info: distance_L2_6 = 66232.93053003006
+[ Info: _distance_L2_7 = 5.638471412030635
+[ Info: distance_L2_7 = 66232.93061843471
+[ Info: _distance_L2_8 = 5.566566204381706
+[ Info: distance_L2_8 = 66232.9307166035
+[ Info: _distance_L2_9 = 10.596279544318246
+[ Info: distance_L2_9 = 66232.93105457856
+[ Info: _distance_L2_10 = 9.948450742449335
+[ Info: distance_L2_10 = 66232.9312703121
+[ Info: _distance_L2_11 = 17.42026803809051
+[ Info: distance_L2_11 = 66232.93211771558
+[ Info: _distance_L2_12 = 10.811390575396148
+[ Info: distance_L2_12 = 66232.93255957411
+[ Info: _distance_L2_13 = 46490.68708009127
+[ Info: distance_L2_13 = 80920.8567852175
+[ Info: _distance_L2_14 = 9457.096231901553
+[ Info: distance_L2_14 = 86700.36869245478
+[ Info: _distance_L2_15 = 86700.36869245478
+[ Info: distance_L2_15 = 0.0
+    1     -889938.31          Inf           NaN        0.00      191.42
+[ Info: Iter: 1, LB: -889938.3076923077, UB: Inf, Gap: NaN, Master Time: 0.0010001659393310547, Sub Time: 191.41599988937378
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+[ Info: main_time = 0.010999917984008789
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time1 = 0.1789999008178711
+[ Info: bsp_time2 = 24.116999864578247
+[ Info: OPTIMAL
+[ Info: Iteration 1: LB = 0.0, UB = 126969.94730893685, _UB1 = -85040.10435692806, _UB2 = 212010.0516658649
+[ Info: add feasible cut 2
+[ Info: main_time = 0.0009999275207519531
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time2 = 0.15000009536743164
+[ Info: OPTIMAL
+[ Info: Iteration 2: LB = 0.0, UB = 126969.94730893685, _UB1 = -85040.10435692806, _UB2 = -159.9955898524786
+[ Info: iteration = 2
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: _distance_L2_2 = 300053.75835837604
+[ Info: distance_L2_2 = 0.0
+    2      208403.95          Inf           NaN        0.00       24.47
+[ Info: Iter: 2, LB: 208403.95091808419, UB: Inf, Gap: NaN, Master Time: 0.0009999275207519531, Sub Time: 24.47099995613098
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+[ Info: main_time = 0.012000083923339844
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time1 = 0.1420001983642578
+[ Info: bsp_time2 = 4.13700008392334
+[ Info: OPTIMAL
+[ Info: Iteration 1: LB = 0.0, UB = 126457.90649289383, _UB1 = -85307.42655226872, _UB2 = 211765.33304516255
+[ Info: add feasible cut 2
+[ Info: main_time = 0.0010001659393310547
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time2 = 0.17300009727478027
+[ Info: OPTIMAL
+[ Info: Iteration 2: LB = 0.0, UB = 126457.90649289383, _UB1 = -85307.42655226872, _UB2 = -986.318761942035
+[ Info: iteration = 2
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: _distance_L2_2 = 300876.2714028857
+[ Info: distance_L2_2 = 0.0
+    3      208410.50          Inf           NaN        0.00        4.48
+[ Info: Iter: 3, LB: 208410.50114078642, UB: Inf, Gap: NaN, Master Time: 0.0009999275207519531, Sub Time: 4.476000070571899
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+[ Info: main_time = 0.012000083923339844
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time1 = 0.15200018882751465
+[ Info: bsp_time2 = 7.835999965667725
+[ Info: OPTIMAL
+[ Info: Iteration 1: LB = 0.0, UB = 126732.72436847954, _UB1 = -84895.52141004358, _UB2 = 211628.24577852312
+[ Info: add feasible cut 2
+[ Info: main_time = 0.0010001659393310547
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time2 = 0.1510000228881836
+[ Info: OPTIMAL
+[ Info: Iteration 2: LB = 0.0, UB = 126732.72436847954, _UB1 = -84895.52141004358, _UB2 = -3320.25803769895
+[ Info: iteration = 2
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: _distance_L2_2 = 303983.0893087062
+[ Info: distance_L2_2 = 0.0
+    4      208427.53          Inf           NaN        0.00        8.16
+[ Info: Iter: 4, LB: 208427.53206720832, UB: Inf, Gap: NaN, Master Time: 0.0010001659393310547, Sub Time: 8.164000034332275
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+[ Info: main_time = 0.012000083923339844
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time1 = 0.1420001983642578
+[ Info: bsp_time2 = 5.486999988555908
+[ Info: OPTIMAL
+[ Info: Iteration 1: LB = 0.0, UB = 124298.01564101024, _UB1 = -85008.01369465042, _UB2 = 209306.02933566066
+[ Info: add feasible cut 2
+[ Info: main_time = 0.0019998550415039062
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time2 = 0.14899992942810059
+[ Info: OPTIMAL
+[ Info: Iteration 2: LB = 0.0, UB = 124298.01564101024, _UB1 = -85008.01369465042, _UB2 = -1590.5943189836398
+[ Info: iteration = 2
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: _distance_L2_2 = 298252.86543109245
+[ Info: distance_L2_2 = 0.0
+    5      208441.93          Inf           NaN        0.00        5.80
+[ Info: Iter: 5, LB: 208441.93217182084, UB: Inf, Gap: NaN, Master Time: 0.0, Sub Time: 5.802999973297119
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+[ Info: main_time = 0.013000011444091797
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time1 = 0.14599990844726562
+[ Info: bsp_time2 = 7.635999917984009
+[ Info: OPTIMAL
+[ Info: Iteration 1: LB = 0.0, UB = 115988.76116804245, _UB1 = -85049.70994827065, _UB2 = 201038.4711163131
+[ Info: add feasible cut 2
+[ Info: main_time = 0.0010001659393310547
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time2 = 0.1550002098083496
+[ Info: OPTIMAL
+[ Info: Iteration 2: LB = 0.0, UB = 115988.76116804245, _UB1 = -85049.70994827065, _UB2 = -1576.4799094244663
+[ Info: iteration = 2
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: _distance_L2_2 = 286540.81168015854
+[ Info: distance_L2_2 = 0.0
+    6      208450.15          Inf           NaN        0.00        7.96
+[ Info: Iter: 6, LB: 208450.15292562667, UB: Inf, Gap: NaN, Master Time: 0.0009999275207519531, Sub Time: 7.961999893188477
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+[ Info: main_time = 0.012000083923339844
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time1 = 0.14300012588500977
+[ Info: bsp_time2 = 4.401000022888184
+[ Info: OPTIMAL
+[ Info: Iteration 1: LB = 0.0, UB = 123191.2320227931, _UB1 = -85074.28785357381, _UB2 = 208265.51987636692
+[ Info: add feasible cut 2
+[ Info: main_time = 0.0010001659393310547
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time2 = 0.15700006484985352
+[ Info: OPTIMAL
+[ Info: Iteration 2: LB = 0.0, UB = 123191.2320227931, _UB1 = -85074.28785357381, _UB2 = -1987.5575366404664
+[ Info: iteration = 2
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: _distance_L2_2 = 297342.7536081553
+[ Info: distance_L2_2 = 0.0
+    7      208465.74          Inf           NaN        0.00        4.73
+[ Info: Iter: 7, LB: 208465.74423952657, UB: Inf, Gap: NaN, Master Time: 0.0, Sub Time: 4.7250001430511475
+Set parameter Username
+Academic license - for non-commercial use only - expires 2025-01-07
+[ Info: main_time = 0.013000011444091797
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time1 = 0.14300012588500977
+[ Info: bsp_time2 = 6.638999938964844
+[ Info: OPTIMAL
+[ Info: Iteration 1: LB = 0.0, UB = 118918.83301958324, _UB1 = -85246.87364290103, _UB2 = 204165.70666248427
+[ Info: add feasible cut 2
+[ Info: main_time = 0.0009999275207519531
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: bsp_time2 = 0.15199995040893555
+[ Info: OPTIMAL
+[ Info: Iteration 2: LB = 0.0, UB = 118918.83301958324, _UB1 = -85246.87364290103, _UB2 = -3945.3449745114194
+[ Info: iteration = 2
+[ Info: k̂₀ = 0.0
+[ Info: v̂₀ = 1.0
+[ Info: _distance_L2_2 = 294313.4717047668
+[ Info: distance_L2_2 = 0.0
+    8      208490.05          Inf           NaN        0.00        6.96
