@@ -28,7 +28,9 @@ function solve_DCGLP(
     set_normalized_rhs.(main_env.model[:conx], x̂)
     set_normalized_rhs.(main_env.model[:cont], t̂)
 
-    I = length(x̂)
+    I = sub_env.data.n_facilities
+    J = sub_env.data.n_customers
+
     k̂₀s = []
     k̂ₓs = []
     k̂ₜs = []
@@ -105,18 +107,19 @@ function solve_DCGLP(
                     optimize!(model)
                     KP[i] = objective_value(model)
                 end
-                ex1 = @expression(main_env.model, k̂₀.*(sum(u) + sum(KP[i] * main_env.model[:kₓ][i] for i in 1:I)))
-                ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])⋅main_env.model[:kₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:k₀] - main_env.model[:kₜ])
-                _UB1 = g₁ - k̂ₜ
-               push!(masterconπpoints1, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env.model[:cb]))))
+                ex1 = @expression(main_env.model, main_env.model[:k₀]*sum(u) + sum(KP[i] * main_env.model[:kₓ][i] for i in 1:I) - main_env.model[:kₜ])
+                # ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])⋅main_env.model[:kₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:k₀] - main_env.model[:kₜ])
+                _UB1 = k̂₀*g₁ - k̂ₜ
+            #    push!(masterconπpoints1, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env.model[:cb]))))
 
             elseif status1 == INFEASIBILITY_CERTIFICATE 
                 @info status1
                 g₁ = Inf
+                ex1 = @expression(main_env.model, main_env.model[:k₀]*sum(u) + sum(KP[i] * main_env.model[:kₓ][i] for i in 1:I))
                 # ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:kₓ] + dual(bsp_env.model[:cb])*main_env.model[:k₀])
-                ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:kₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:k₀])
+                # ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:kₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:k₀])
                 # push!(conπrays1, @expression(master.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
-                push!(conπrays1, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env.model[:cb]))))
+                # push!(conπrays1, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env.model[:cb]))))
             else
                 g₁ = Inf
                 @error "Wrong status1 = $status1"
@@ -136,9 +139,9 @@ function solve_DCGLP(
             # end
             # @info "v̂₀ = $v̂₀"
             # @info "v̂ₓ = $v̂ₓ"
-            set_normalized_rhs.(bsp_env2.model[:cx], v̂ₓ)
-            # set_normalized_rhs.(bsp_env.model[:cx], v̂ₓ./v̂₀)
-            set_normalized_rhs.(bsp_env2.model[:cb], v̂₀)
+            # set_normalized_rhs.(bsp_env2.model[:cx], v̂ₓ)
+            set_normalized_rhs.(bsp_env.model[:cx], v̂ₓ./v̂₀)
+            # set_normalized_rhs.(bsp_env2.model[:cb], v̂₀)
      
       
             # @info "v̂ₓ = $v̂ₓ"
@@ -156,24 +159,34 @@ function solve_DCGLP(
             # @info "diff = $(x1-x2)"
             if status2 == FEASIBLE_POINT && termination_status(bsp_env2.model) !=  TIME_LIMIT
                 g₂ = objective_value(bsp_env2.model)
+                u = dual.(bsp_env2.model[:c1])
+                KP = zeros(I)
+                for i in 1:I
+                    model = bsp_env2.knapsack_subproblems[i]
+                    @objective(model, Min, sum((sub_env.data.demands[j] * sub_env.data.costs[i,j] - u[j]) * model[:z][j] for j in 1:J))
+                    optimize!(model)
+                    KP[i] = objective_value(model)
+                end
+                ex2 = @expression(main_env.model, main_env.model[:v₀]*sum(u) + sum(KP[i] * main_env.model[:vₓ][i] for i in 1:I) - main_env.model[:vₜ])
                 # @info "g₂ = $g₂"
                 # @info "v̂ₓ = $v̂ₓ"
                 # @info "v̂ₜ = $v̂ₜ"
                 # @info value.(bsp_env.model[:x])
                 # ex2 = @expression(main_env.model, g₂ + dual.(bsp_env.model[:cx])⋅(main_env.model[:vₓ]-v̂ₓ) + dual(bsp_env.model[:cb])*(main_env.model[:v₀]-v̂₀) - main_env.model[:vₜ])
-                ex2 = @expression(main_env.model, dual.(bsp_env2.model[:cx])⋅main_env.model[:vₓ] + sum(dual.(bsp_env2.model[:cb]))*main_env.model[:v₀] - main_env.model[:vₜ])
-                _UB2 = g₂ - v̂ₜ
+                # ex2 = @expression(main_env.model, dual.(bsp_env2.model[:cx])⋅main_env.model[:vₓ] + sum(dual.(bsp_env2.model[:cb]))*main_env.model[:v₀] - main_env.model[:vₜ])
+                _UB2 = v̂₀*g₂ - v̂ₜ
                 # push!(masterconπpoints2, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
                 # @constraint(master_env.model, master_env.model[:t] >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
                 push!(masterconπpoints2, @expression(master_env.model, dual.(bsp_env2.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env2.model[:cb]))))
             elseif status2 == INFEASIBILITY_CERTIFICATE && termination_status(bsp_env2.model) !=  TIME_LIMIT    
                 @info status2      
                 g₂ = Inf
+                ex2 = @expression(main_env.model, main_env.model[:v₀]*sum(u) + sum(KP[i] * main_env.model[:vₓ][i] for i in 1:I))
                 # ex2 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:vₓ] + dual(bsp_env.model[:cb])*main_env.model[:v₀])
-                ex2 = @expression(main_env.model, dual.(bsp_env2.model[:cx])'main_env.model[:vₓ] + sum(dual.(bsp_env2.model[:cb]))*main_env.model[:v₀])
+                # ex2 = @expression(main_env.model, dual.(bsp_env2.model[:cx])'main_env.model[:vₓ] + sum(dual.(bsp_env2.model[:cb]))*main_env.model[:v₀])
                 # push!(conπrays2, @expression(master.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
                 # @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
-                push!(conπrays2, @expression(master_env.model, dual.(bsp_env2.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env2.model[:cb]))))
+                # push!(conπrays2, @expression(master_env.model, dual.(bsp_env2.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env2.model[:cb]))))
             else
                 g₂ = Inf
                 @error "Wrong status2 = $status2"

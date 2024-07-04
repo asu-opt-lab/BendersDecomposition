@@ -87,8 +87,8 @@ end
     
 
 
-function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::GammaNorm; solver::Symbol=:Gurobi)
-# function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::GammaNorm; solver::Symbol=:CPLEX)
+# function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::GammaNorm; solver::Symbol=:Gurobi)
+function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::GammaNorm; solver::Symbol=:CPLEX)
     data = sub_env.data
     if solver == :CPLEX
         model = Model(CPLEX.Optimizer)

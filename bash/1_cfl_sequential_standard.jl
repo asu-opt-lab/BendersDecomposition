@@ -2,21 +2,21 @@ include("../src/SplitBenders.jl")
 import .SplitBenders
 using JuMP, CSV
 
-# solver = :Gurobi
-solver = :CPLEX
+solver = :Gurobi
+# solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
-instance = "f500-c500-r5.0-p2"
+instance = "f700-c700-r5.0-p2"
 data = SplitBenders.read_random_data(instance)
 
-# instance = "p2"
+# instance = "p70"
 # data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
 
 # "ORDINARY_CUTSTRATEGY" "ADVANCED_CUTSTRATEGY" "KN_CUTSTRATEGY"
-cut_strategy = "ADVANCED_CUTSTRATEGY"
+cut_strategy = "ORDINARY_CUTSTRATEGY"
 
 # "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
 SplitCGLPNormType = "nothing"
@@ -40,8 +40,8 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 master_env = SplitBenders.MasterProblem(data, solver = solver)
 relax_integrality(master_env.model)
-# sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params, solver = solver)
-sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params, solver = solver)
+sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params, solver = solver)
+# sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params, solver = solver)
 # sub_env = SplitBenders.CFLPStandardKNSubEnv(data,algo_params, solver = solver)
 
 df = SplitBenders.run_Benders(data,master_env,sub_env)

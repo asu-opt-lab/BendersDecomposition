@@ -1,12 +1,12 @@
 
-function generate_CFLP_subproblem(data::CFLPData; solver::Symbol=:CPLEX)
+function generate_CFLP_subproblem(data::CFLPData; solver::Symbol=:Gurobi)
     if solver == :CPLEX
         model =  Model(CPLEX.Optimizer)
-        set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
+        # set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
         # set_optimizer_attribute(model, "Method", 1)
-        set_optimizer_attribute(model, "InfUnbdInfo", 1)
+        # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
 
