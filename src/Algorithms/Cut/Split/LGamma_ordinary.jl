@@ -3,8 +3,8 @@ function solve_DCGLP(
     x̂,
     t̂,
     main_env::AbstractDCGLPEnv, 
-    bsp_env::AbstractSubEnv,
-    bsp_env2::AbstractSubEnv,
+    bsp_env::CFLPBSPEnv,
+    bsp_env2::CFLPBSPEnv,
     pConeType::GammaNorm;
     time_limit)
 

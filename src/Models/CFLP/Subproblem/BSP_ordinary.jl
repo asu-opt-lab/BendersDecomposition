@@ -18,7 +18,7 @@ function generate_BSPProblem(data::CFLPData; solver::Symbol=:Gurobi)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
         # model = Model(Ipopt.Optimizer)
-        set_optimizer_attribute(model, "Method", 2)
+        set_optimizer_attribute(model, "Method", 1)
         set_optimizer_attribute(model, "InfUnbdInfo", 1)
         # set_optimizer_attribute(model, "LPWarmStart", 0)
     end
