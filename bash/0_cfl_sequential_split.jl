@@ -4,8 +4,8 @@ using JuMP, CSV, Logging
 
 
 #-----------------------------------------------------------------------
-# solver = :Gurobi
-solver = :CPLEX
+solver = :Gurobi
+# solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
 instance = "f500-c500-r5.0-p2"
@@ -41,13 +41,13 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitSetSele
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitStengtheningPolicy, StrengthenCutStrategy)
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBendersPolicy, SplitBendersStrategy)
 
-master_env = SplitBenders.MasterProblem(data)
+# master_env = SplitBenders.MasterProblem(data)
 # relax_integrality(master_env.model)
-sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
+# sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
 
-# master_env = SplitBenders.MasterProblem(data, solver=solver)
+master_env = SplitBenders.MasterProblem(data, solver=solver)
 # relax_integrality(master_env.model)
-# sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params, solver=solver)
+sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params, solver=solver)
 # sub_env = SplitBenders.CFLPBSPADEnv(data,algo_params, solver=solver)
 # io = open("temp/result$(instance)_distance.txt", "w+")
 # logger = SimpleLogger(io)

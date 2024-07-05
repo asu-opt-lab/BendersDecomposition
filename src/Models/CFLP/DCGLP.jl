@@ -68,10 +68,10 @@ function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::Stan
     @constraint(model, coneta2[j in 1:N], τ >= -v₀ + vₓ[j])
 
     @constraint(model, conv1[j in 1:N], τ >= -kₓ[j])
-    @constraint(model, conw1, τ >= -sum(data.fixed_costs[j]*kₓ[j] for j in 1:N) + total_demands*k₀)
+    @constraint(model, conw1, τ >= -sum(data.capacities[j]*kₓ[j] for j in 1:N) + total_demands*k₀)
 
     @constraint(model, conv2[j in 1:N], τ >= -vₓ[j])
-    @constraint(model, conw2, τ >= -sum(data.fixed_costs[j]*vₓ[j] for j in 1:N) + total_demands*v₀)
+    @constraint(model, conw2, τ >= -sum(data.capacities[j]*vₓ[j] for j in 1:N) + total_demands*v₀)
 
     @constraint(model, con0, k₀ + v₀ == 1)
     @constraint(model, conx[i=1:N], kₓ[i] .+ vₓ[i] == 0)  #-x̂
@@ -145,10 +145,10 @@ function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::Gamm
     @constraint(model, cont, kₜ + vₜ - st == 0) #t̂
     
     
-    for i in eachindex(sub_env.split_info.γ₀s)
-        @constraint(model, sub_env.split_info.γ₀s[i]*k₀ + sub_env.split_info.γₓs[i]'kₓ + sub_env.split_info.γₜs[i]*kₜ <= 0)
-        @constraint(model, sub_env.split_info.γ₀s[i]*v₀ + sub_env.split_info.γₓs[i]'vₓ + sub_env.split_info.γₜs[i]*vₜ <= 0)
-    end
+    # for i in eachindex(sub_env.split_info.γ₀s)
+    #     @constraint(model, sub_env.split_info.γ₀s[i]*k₀ + sub_env.split_info.γₓs[i]'kₓ + sub_env.split_info.γₜs[i]*kₜ <= 0)
+    #     @constraint(model, sub_env.split_info.γ₀s[i]*v₀ + sub_env.split_info.γₓs[i]'vₓ + sub_env.split_info.γₜs[i]*vₜ <= 0)
+    # end
 
     return CFLPDCGLPEnv(model, false, [], [], [], [])
 end
