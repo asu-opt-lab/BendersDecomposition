@@ -39,7 +39,7 @@ function generate_cut(
     end
     
     sub_time,ex = generate_cut(master_env, sub_env, ORDINARY_CUTSTRATEGY)
-    # sub_time,ex = 0,[]
+    # sub_time,ex = 0,0
     # sub_env.obj_value = Inf
     return DCGLP_time+sub_time,ex
 end

@@ -18,8 +18,8 @@ function generate_BSPProblem(data::CFLPData; solver::Symbol=:Gurobi)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
         # model = Model(Ipopt.Optimizer)
-        set_optimizer_attribute(model, "Method", 1)
-        set_optimizer_attribute(model, "InfUnbdInfo", 1)
+        # set_optimizer_attribute(model, "Method", 2)
+        # set_optimizer_attribute(model, "InfUnbdInfo", 1)
         # set_optimizer_attribute(model, "LPWarmStart", 0)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
@@ -30,7 +30,7 @@ function generate_BSPProblem(data::CFLPData; solver::Symbol=:Gurobi)
     M = data.n_customers
     
     # Variables
-    @variable(model, 1>=y[1:N,1:M]>=0)
+    @variable(model, y[1:N,1:M]>=0)
     @variable(model, x[1:N])
     # @variable(model, b)
 

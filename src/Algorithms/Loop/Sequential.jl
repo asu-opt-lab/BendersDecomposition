@@ -2,7 +2,7 @@ function run_Benders(
     data::AbstractData,
     master_env::AbstractMasterEnv,
     sub_env::AbstractSubEnv,
-    time_limit = 3600)
+    time_limit = 1000)
     
     # Initialize
     UB = Inf
@@ -14,6 +14,7 @@ function run_Benders(
 
     df = DataFrame(iter = Int[], LB = Float64[], UB = Float64[], gap = Float64[], master_time = Float64[], sub_time = Float64[])
 
+    ssub_env = SplitBenders.CFLPStandardADSubEnv(data,ADVANCED_CUTSTRATEGY, solver = :Gurobi)
     while true
 
         #### Master Part ####
@@ -22,10 +23,21 @@ function run_Benders(
         
         #### Sub Part ####
         remaining_time -= master_time
+        
+        # if iter <= 5
+        #     sub_time,ex = generate_cut(master_env, ssub_env, ADVANCED_CUTSTRATEGY; time_limit = remaining_time)
+        # else
+        #     sub_time,ex = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
+        # end
         sub_time,ex = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
 
         # Update Parameters
         UB_temp = sum(master_env.coef[i] * master_env.value_x[i] for i in eachindex(master_env.value_x))
+        # if iter <= 5
+        #     UB_temp += ssub_env.obj_value
+        # else
+        #     UB_temp += sub_env.obj_value
+        # end
         UB_temp += sub_env.obj_value    
         UB = min(UB, UB_temp)
         Gap = 100 * (UB - LB)/ abs(UB) 
