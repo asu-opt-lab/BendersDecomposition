@@ -13,6 +13,6 @@ echo "module load julia" >> willdelete/jobscript_hm_$1.sh
 echo "module load cplex" >> willdelete/jobscript_hm_$1.sh
 echo "module load gurobi" >> willdelete/jobscript_hm_$1.sh
 
-echo "julia --project=. bash/cfl_sequential_standard.jl --instance $1" >> willdelete/jobscript_hm_$1.sh
+echo "julia --project=. bash/1_cfl_sequential_standard.jl --instance $1" >> willdelete/jobscript_hm_$1.sh
 
 sbatch willdelete/jobscript_hm_$1.sh
