@@ -9,6 +9,7 @@ function generate_CFLP_subproblem(data::CFLPData; solver::Symbol=:Gurobi)
         # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
+    println("Ordinary Subproblem")
 
     # pre
     N = data.n_facilities
@@ -80,10 +81,11 @@ function generate_CFLP_subproblem_Advanced(data::CFLPData; solver::Symbol=:CPLEX
         # set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
-        set_optimizer_attribute(model, "Method", 1)
-        set_optimizer_attribute(model, "InfUnbdInfo", 1)
+        # set_optimizer_attribute(model, "Method", 1)
+        # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
+    println("Advanced Subproblem")
 
     # pre
     N = data.n_facilities

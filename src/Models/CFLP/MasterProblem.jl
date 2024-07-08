@@ -22,6 +22,8 @@ function MasterProblem(data::CFLPData; solver::Symbol=:Gurobi)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
     # set_time_limit_sec(model, 10)
+
+    println("Master Problem")
     # pre
     N = data.n_facilities
     # Variables
@@ -59,7 +61,7 @@ function MasterProblem(data::UFLPData; solver::Symbol=:Gurobi)
         model = Model(Gurobi.Optimizer)
         # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
-    set_optimizer_attribute(model, MOI.Silent(),true)
+    # set_optimizer_attribute(model, MOI.Silent(),true)
 
     # pre
     N = data.n_facilities
