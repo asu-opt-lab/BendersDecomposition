@@ -11,7 +11,7 @@ function generate_cut(
     end
     
     start_time = time()
-    # set_time_limit_sec(sub_env.model, time_limit)
+    set_time_limit_sec(sub_env.model, max(time_limit,60))
     JuMP.optimize!(sub_env.model)
     sub_time = time() - start_time
 
@@ -39,7 +39,9 @@ function generate_cut(
         subObjVal = 1e+99
     else
         @error "dual of sub is neither feasible nor infeasible certificate: $status"
-        throw(-1)
+        # throw(-1)
+        ex = 0
+        subObjVal = -Inf
     end         
 
 

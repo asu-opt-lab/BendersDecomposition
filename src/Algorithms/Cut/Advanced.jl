@@ -14,6 +14,7 @@ function generate_cut(
     end
     set_normalized_rhs(sub_env.oconstr, -master_env.value_t)
 
+    set_time_limit_sec(sub_env.model, max(time_limit,60))
     start_time = time()
     JuMP.optimize!(sub_env.model)
     sub_time = time() - start_time

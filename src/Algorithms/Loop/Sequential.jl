@@ -14,7 +14,7 @@ function run_Benders(
 
     df = DataFrame(iter = Int[], LB = Float64[], UB = Float64[], gap = Float64[], master_time = Float64[], sub_time = Float64[])
 
-    ssub_env = SplitBenders.CFLPStandardADSubEnv(data,ADVANCED_CUTSTRATEGY, solver = :Gurobi)
+    # ssub_env = SplitBenders.CFLPStandardADSubEnv(data,ADVANCED_CUTSTRATEGY, solver = :Gurobi)
     while true
 
         #### Master Part ####
@@ -64,10 +64,10 @@ function run_Benders(
         remaining_time = time_limit - spend_time         
         if spend_time > time_limit #|| iter == 1
             @info "Time limit $time_limit reached"
-            master_time = solve_master!(master_env; time_limit = remaining_time)
-            LB = master_env.obj_value
-            new_row = (iter+1, LB, Inf, Inf, master_time, Inf)
-            push!(df, new_row)  
+            # master_time = solve_master!(master_env; time_limit = remaining_time)
+            # LB = master_env.obj_value
+            # new_row = (iter+1, LB, Inf, Inf, master_time, Inf)
+            # push!(df, new_row)  
             break
         end 
 
@@ -83,7 +83,7 @@ end
 function solve_master!(master_env::AbstractMasterEnv; time_limit=1000)
 
     start_time = time()
-    # set_time_limit_sec(master_env.model, time_limit)
+    set_time_limit_sec(master_env.model, max(time_limit,10))
     JuMP.optimize!(master_env.model)
     master_time = time() - start_time
 

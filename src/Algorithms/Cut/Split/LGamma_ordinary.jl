@@ -47,6 +47,7 @@ function solve_DCGLP(
         optimize!(main_env.model)
         @info "main_time = $(time()-tt)"
         if termination_status(main_env.model) == TIME_LIMIT
+            k -= 1
             break
         end
         k̂₀ = value(main_env.model[:k₀])
