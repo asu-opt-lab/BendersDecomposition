@@ -19,7 +19,7 @@ data = SplitBenders.read_random_data(instance)
 algo_params = SplitBenders.AlgorithmParams()
 
 # "ORDINARY_CUTSTRATEGY" "ADVANCED_CUTSTRATEGY" "KN_CUTSTRATEGY"
-cut_strategy = "ORDINARY_CUTSTRATEGY"
+cut_strategy = "ADVANCED_CUTSTRATEGY"
 
 # "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
 SplitCGLPNormType = "nothing"
@@ -43,16 +43,16 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 master_env = SplitBenders.MasterProblem(data, solver = solver)
 # relax_integrality(master_env.model)
-sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params, solver = solver)
-# sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params, solver = solver)
+# sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params, solver = solver)
+sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params, solver = solver)
 # sub_env = SplitBenders.CFLPStandardKNSubEnv(data,algo_params, solver = solver)
 
 df = SplitBenders.run_Benders(data,master_env,sub_env)
 
 # result post processing
 # CSV.write("results/Gurobi/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy).csv", df)
-CSV.write("results2/Ordinary/result_$(instance).csv", df)
-# CSV.write("results2/Advanced/result_$(instance).csv", df)
+# CSV.write("results2/Ordinary/result_$(instance).csv", df)
+CSV.write("results2/Advanced/result_$(instance).csv", df)
 
 
 # cut_strategy = settings["cut_strategy"]
