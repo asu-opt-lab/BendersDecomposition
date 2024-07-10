@@ -8,8 +8,8 @@ solver = :Gurobi
 # solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
-instance = settings["instance"]
-# instance = "f500-c500-r5.0-p2"
+# instance = settings["instance"]
+instance = "f700-c700-r5.0-p10"
 data = SplitBenders.read_random_data(instance)
 
 # instance = "p2"
@@ -47,18 +47,18 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 # sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
 
 master_env = SplitBenders.MasterProblem(data, solver=solver)
-# relax_integrality(master_env.model)
+relax_integrality(master_env.model)
 sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params, solver=solver)
 # sub_env = SplitBenders.CFLPBSPADEnv(data,algo_params, solver=solver)
-io = open("results2/Split_all_mip/result_$(instance).txt", "w+")
-logger = SimpleLogger(io)
-with_logger(logger) do
-    df = SplitBenders.run_Benders(data,master_env,sub_env)
-    CSV.write("results2/Split_all_mip/result_$(instance).csv", df)
-end
-flush(io)
-close(io)
-
+# io = open("results2/Split_all_mip/result_$(instance).txt", "w+")
+# logger = SimpleLogger(io)
+# with_logger(logger) do
+#     df = SplitBenders.run_Benders(data,master_env,sub_env)
+#     CSV.write("results2/Split_all_mip/result_$(instance).csv", df)
+# end
+# flush(io)
+# close(io)
+df = SplitBenders.run_Benders(data,master_env,sub_env)
 
 # result post processing
 # CSV.write("temp/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy)_2.csv", df)
