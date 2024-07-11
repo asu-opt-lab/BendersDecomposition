@@ -4,12 +4,12 @@ using JuMP, CSV, Logging
 
 
 #-----------------------------------------------------------------------
-solver = :Gurobi
-# solver = :CPLEX
+# solver = :Gurobi
+solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
 # instance = settings["instance"]
-instance = "f700-c700-r5.0-p10"
+instance = "f700-c700-r5.0-p3"
 data = SplitBenders.read_random_data(instance)
 
 # instance = "p70"
@@ -22,7 +22,7 @@ algo_params = SplitBenders.AlgorithmParams()
 cut_strategy = "SPLIT_CUTSTRATEGY"
 
 # "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
-SplitCGLPNormType = "LINFGAMMANORM"
+SplitCGLPNormType = "L1GAMMANORM"
 
 # "MOST_FRAC_INDEX", "RANDOM_INDEX"
 SplitSetSelectionPolicy = "MOST_FRAC_INDEX"

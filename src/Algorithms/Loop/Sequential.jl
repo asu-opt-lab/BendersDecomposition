@@ -57,9 +57,16 @@ function run_Benders(
         # Store Data
         new_row = (iter, LB, UB, Gap, master_time, sub_time)
         push!(df, new_row)  
-        
+
+        # _,ex2 = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
+        # _,ex3 = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
+        # _,ex4 = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
+        # @constraint(master_env.model, 0 >= ex2) 
+        # @constraint(master_env.model, 0 >= ex3) 
+        # @constraint(master_env.model, 0 >= ex4) 
         # Add Cut
         @constraint(master_env.model, 0 >= ex)   
+
 
         # Print
         @printf "%5d     %10.2f   %10.2f    %10.2f  %10.2f  %10.2f\n" iter LB UB Gap master_time sub_time  
@@ -76,10 +83,10 @@ function run_Benders(
         remaining_time = time_limit - spend_time         
         if spend_time > time_limit #|| iter == 1
             @info "Time limit $time_limit reached"
-            # master_time = solve_master!(master_env; time_limit = remaining_time)
-            # LB = master_env.obj_value
-            # new_row = (iter+1, LB, Inf, Inf, master_time, Inf)
-            # push!(df, new_row)  
+            master_time = solve_master!(master_env; time_limit = remaining_time)
+            LB = master_env.obj_value
+            new_row = (iter+1, LB, Inf, Inf, master_time, Inf)
+            push!(df, new_row)  
             break
         end 
 
