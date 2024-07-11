@@ -12,7 +12,7 @@ settings = SplitBenders.parse_commandline()
 instance = "f700-c700-r5.0-p10"
 data = SplitBenders.read_random_data(instance)
 
-# instance = "p2"
+# instance = "p70"
 # data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------
