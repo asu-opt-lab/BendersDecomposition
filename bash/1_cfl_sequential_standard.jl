@@ -2,18 +2,18 @@ include("../src/SplitBenders.jl")
 import .SplitBenders
 using JuMP, CSV
 
-solver = :Gurobi
-# solver = :CPLEX
+# solver = :Gurobi
+solver = :CPLEX
 time_limit = 1000
 
 settings = SplitBenders.parse_commandline()
-instance = settings["instance"]
-data = SplitBenders.read_random_data(instance)
-instance = "f700-c700-r5.0-p10"
-data = SplitBenders.read_random_data(instance)
+# instance = settings["instance"]
+# data = SplitBenders.read_random_data(instance)
+# instance = "f700-c700-r5.0-p10"
+# data = SplitBenders.read_random_data(instance)
 
-# instance = "p70"
-# data = SplitBenders.read_data(instance)
+instance = "p70"
+data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
