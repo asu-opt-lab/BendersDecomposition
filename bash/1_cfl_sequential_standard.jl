@@ -4,13 +4,13 @@ using JuMP, CSV
 
 solver = :Gurobi
 # solver = :CPLEX
-time_limit = 100
+time_limit = 1000
 
 settings = SplitBenders.parse_commandline()
 instance = settings["instance"]
 data = SplitBenders.read_random_data(instance)
-# instance = "f500-c500-r5.0-p2"
-# data = SplitBenders.read_random_data(instance)
+instance = "f700-c700-r5.0-p10"
+data = SplitBenders.read_random_data(instance)
 
 # instance = "p70"
 # data = SplitBenders.read_data(instance)
@@ -42,7 +42,7 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 
 master_env = SplitBenders.MasterProblem(data, solver = solver)
-# relax_integrality(master_env.model)
+relax_integrality(master_env.model)
 # sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params, solver = solver)
 sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params, solver = solver)
 # sub_env = SplitBenders.CFLPStandardKNSubEnv(data,algo_params, solver = solver)
@@ -52,7 +52,7 @@ df = SplitBenders.run_Benders(data,master_env,sub_env)
 # result post processing
 # CSV.write("results/Gurobi/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy).csv", df)
 # CSV.write("results2/Ordinary/result_$(instance).csv", df)
-CSV.write("results2/Advanced/result_$(instance).csv", df)
+# CSV.write("results2/Advanced/result_$(instance).csv", df)
 
 
 # cut_strategy = settings["cut_strategy"]

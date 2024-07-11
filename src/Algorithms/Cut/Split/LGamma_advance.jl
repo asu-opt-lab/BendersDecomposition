@@ -104,6 +104,12 @@ function solve_DCGLP(
                 - sum(dual(bsp_env.cconstr[i]) * (main_env.model[:kₓ][i] - k̂ₓ[i]) for i in eachindex(k̂ₓ)) 
                 - sum(dual(bsp_env.cconstr[l+i]) * (main_env.model[:kₓ][i] - k̂ₓ[i]) for i in eachindex(k̂ₓ))
                 + sum(dual.(bsp_env.model[:cb]))*(main_env.model[:k₀]-k̂₀))  
+                @constraint(main_env.model, 
+                subObjVal - dual(bsp_env.oconstr)*(main_env.model[:vₜ] - v̂ₜ)
+                - sum(dual(bsp_env.cconstr[i]) * (main_env.model[:vₓ][i] - v̂ₓ[i]) for i in eachindex(v̂ₓ))
+                - sum(dual(bsp_env.cconstr[l+i]) * (main_env.model[:vₓ][i] - v̂ₓ[i]) for i in eachindex(v̂ₓ))
+                + sum(dual.(bsp_env.model[:cb]))*(main_env.model[:v₀]-v̂₀) <= 0)
+                
                 push!(masterconπpoints1, @expression(master_env.model,
                 subObjVal
                 - dual(bsp_env.oconstr)*(master_env.var["t"] - k̂ₜ)
@@ -155,6 +161,12 @@ function solve_DCGLP(
                 - sum(dual(bsp_env2.cconstr[i]) * (main_env.model[:vₓ][i] - v̂ₓ[i]) for i in eachindex(v̂ₓ)) 
                 - sum(dual(bsp_env2.cconstr[l+i]) * (main_env.model[:vₓ][i] - v̂ₓ[i]) for i in eachindex(v̂ₓ))
                 + sum(dual.(bsp_env2.model[:cb]))*(main_env.model[:v₀]-v̂₀))   
+                @constraint(main_env.model,
+                subObjVal - dual(bsp_env2.oconstr)*(main_env.model[:kₜ] - k̂ₜ)
+                - sum(dual(bsp_env2.cconstr[i]) * (main_env.model[:kₓ][i] - k̂ₓ[i]) for i in eachindex(k̂ₓ))
+                - sum(dual(bsp_env2.cconstr[l+i]) * (main_env.model[:kₓ][i] - k̂ₓ[i]) for i in eachindex(k̂ₓ))
+                + sum(dual.(bsp_env2.model[:cb]))*(main_env.model[:k₀]-k̂₀) <= 0)
+
                 push!(masterconπpoints1, @expression(master_env.model,
                 subObjVal 
                 - dual(bsp_env2.oconstr)*(master_env.var["t"] - v̂ₜ)

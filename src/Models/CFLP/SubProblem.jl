@@ -75,16 +75,19 @@ end
 function CFLPSplitSubEnv(data::CFLPData, algo_params; solver::Symbol=:Gurobi)
     
     model, constr, rhs, cconstr = generate_CFLP_subproblem(data; solver=solver) 
+
     BSPProblem = generate_BSPProblem(data; solver=solver)
     BSPProblem2 = generate_BSPProblem(data; solver=solver)
-    split_info = SplitInfo([],[],[])
-    
     println("Split SubProblem")
+
     # BSPProblem = generate_BSPProblem_Advanced(data; solver=solver)
     # BSPProblem2 = generate_BSPProblem_Advanced(data; solver=solver)
+    # println("Split Advanced SubProblem")
     
     # BSPProblem = generate_BSPProblem_KN(data; solver=solver)
     # BSPProblem2 = generate_BSPProblem_KN(data; solver=solver)
+
+    split_info = SplitInfo([],[],[])
     
     return CFLPSplitSubEnv(model, constr, rhs, cconstr, 0.0, algo_params, data, BSPProblem, split_info, BSPProblem2)
 end

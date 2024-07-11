@@ -106,10 +106,10 @@ function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::Gamm
     
     # Variables
     @variable(model, τ)
-    @variable(model, k₀>=0)
+    @variable(model, k₀)
     @variable(model, kₓ[1:N])
     @variable(model, kₜ)
-    @variable(model, v₀>=0)
+    @variable(model, v₀)
     @variable(model, vₓ[1:N])
     @variable(model, vₜ)
     @variable(model, sx[i = 1:N])

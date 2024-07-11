@@ -11,7 +11,8 @@ function run_Benders(
 
     algo_start_time = time()
     remaining_time = time_limit
-
+    # DCGLP_env = DCGLP(sub_env, zeros(Int64,sub_env.data.n_facilities), 0, sub_env.algo_params.SplitCGLPNormType)
+    
     df = DataFrame(iter = Int[], LB = Float64[], UB = Float64[], gap = Float64[], master_time = Float64[], sub_time = Float64[])
 
     # ssub_env = SplitBenders.CFLPStandardADSubEnv(data,ADVANCED_CUTSTRATEGY, solver = :Gurobi)
@@ -30,6 +31,17 @@ function run_Benders(
         #     sub_time,ex = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
         # end
         sub_time,ex = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
+        
+        # a,b = select_split_set(master_env, sub_env.algo_params.SplitSetSelectionPolicy)
+        # delete(DCGLP_env.model, DCGLP_env.model[:consigma1])
+        # delete(DCGLP_env.model, DCGLP_env.model[:consigma2])
+        # unregister(DCGLP_env.model, :consigma1)
+        # unregister(DCGLP_env.model, :consigma2)
+        # @constraint(DCGLP_env.model, consigma1, 0 >= DCGLP_env.model[:k₀]*(b+1) - a'DCGLP_env.model[:kₓ])
+        # @constraint(DCGLP_env.model, consigma2, 0 >= -DCGLP_env.model[:v₀]*b + a'DCGLP_env.model[:vₓ])
+
+
+        # sub_time,ex = generate_cut(master_env, sub_env, DCGLP_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
 
         # Update Parameters
         UB_temp = sum(master_env.coef[i] * master_env.value_x[i] for i in eachindex(master_env.value_x))

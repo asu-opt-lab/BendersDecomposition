@@ -101,6 +101,7 @@ function solve_DCGLP(
                 # ex1 = @expression(main_env.model, g₁ + dual.(bsp_env.model[:cx])⋅(main_env.model[:kₓ]-k̂ₓ) + dual(bsp_env.model[:cb])*(main_env.model[:k₀]-k̂₀) - main_env.model[:kₜ]) 
                 ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])⋅main_env.model[:kₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:k₀] - main_env.model[:kₜ])
                 _UB1 = g₁ - k̂ₜ
+                @constraint(main_env.model, dual.(bsp_env.model[:cx])⋅main_env.model[:vₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:v₀] - main_env.model[:vₜ] <= 0)
                 # @info "g₁ = $g₁"
                 # @info "k̂ₓ = $k̂ₓ"
                 # @info "k̂ₜ = $k̂ₜ"
@@ -161,6 +162,7 @@ function solve_DCGLP(
                 # ex2 = @expression(main_env.model, g₂ + dual.(bsp_env.model[:cx])⋅(main_env.model[:vₓ]-v̂ₓ) + dual(bsp_env.model[:cb])*(main_env.model[:v₀]-v̂₀) - main_env.model[:vₜ])
                 ex2 = @expression(main_env.model, dual.(bsp_env2.model[:cx])⋅main_env.model[:vₓ] + sum(dual.(bsp_env2.model[:cb]))*main_env.model[:v₀] - main_env.model[:vₜ])
                 _UB2 = g₂ - v̂ₜ
+                @constraint(main_env.model, dual.(bsp_env2.model[:cx])⋅main_env.model[:kₓ] + sum(dual.(bsp_env2.model[:cb]))*main_env.model[:k₀] - main_env.model[:kₜ] <= 0)
                 # push!(masterconπpoints2, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
                 # @constraint(master_env.model, master_env.model[:t] >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
                 push!(masterconπpoints2, @expression(master_env.model, dual.(bsp_env2.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env2.model[:cb]))))
@@ -193,7 +195,7 @@ function solve_DCGLP(
 
         @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
 
-        if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01
+        if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 || k >= 100
             main_env.ifsolved = true
             break
         end
