@@ -12,8 +12,8 @@ data = SplitBenders.read_random_data(instance)
 # instance = "f700-c700-r5.0-p10"
 # data = SplitBenders.read_random_data(instance)
 
-instance = "p70"
-data = SplitBenders.read_data(instance)
+# instance = "p70"
+# data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
@@ -49,7 +49,7 @@ sub_env = SplitBenders.CFLPStandardADSubEnv(data,algo_params, solver = solver)
 
 df = SplitBenders.run_Benders(data,master_env,sub_env)
 
-# result post processing
+
 # CSV.write("results/Gurobi/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy).csv", df)
 # CSV.write("results2/Ordinary/result_$(instance).csv", df)
 CSV.write("results3/Advanced/result_$(instance).csv", df)
