@@ -1,0 +1,4 @@
+sbatch: error: invalid partition specified: grp_gbyeon
+sbatch: error: Batch job submission failed: Invalid partition name specified
+sbatch: error: invalid partition specified: grp_gbyeon
+sbatch: error: Batch job submission failed: Invalid partition name specified

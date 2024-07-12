@@ -1,6 +1,6 @@
 Manifest.toml
 Project.toml
-willdelete/
+# willdelete/
 *.csv
-*.out
+# *.out
 test1/0_test1.jl
