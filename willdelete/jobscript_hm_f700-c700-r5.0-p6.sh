@@ -1,5 +1,4 @@
 #!/bin/bash
-#SBATCH -p grp_gbyeon
 #SBATCH -N 1
 #SBATCH -n 28
 #SBATCH -t 0-02:00:00
