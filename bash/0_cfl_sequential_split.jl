@@ -50,11 +50,11 @@ master_env = SplitBenders.MasterProblem(data, solver=solver)
 relax_integrality(master_env.model)
 sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params, solver=solver)
 # sub_env = SplitBenders.CFLPBSPADEnv(data,algo_params, solver=solver)
-io = open("results3/Split_all_L1_cplex/result_$(instance).txt", "w+")
+io = open("results3/NoSplit_all_L1_cplex/result_$(instance).txt", "w+")
 logger = SimpleLogger(io)
 with_logger(logger) do
     df = SplitBenders.run_Benders(data,master_env,sub_env)
-    CSV.write("results3/Split_all_L1_cplex/result_$(instance).csv", df)
+    CSV.write("results3/NoSplit_all_L1_cplex/result_$(instance).csv", df)
 end
 flush(io)
 close(io)
