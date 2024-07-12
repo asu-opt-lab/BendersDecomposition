@@ -1,0 +1,1624 @@
+┌ Info: main_time = 1.9385478496551514
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.7814266432016549
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.2185733567983451
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 9.555986881256104
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.003332138061523
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 1: LB = 0.0003615544442584687, UB = 1.2635786411129422e6, _UB1 = 1.2055935794877582e6, _UB2 = 57985.061263629694
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.24720501899719238
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 37.55158805847168
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: Iteration 2: LB = 0.5880051283256694, UB = 1.0926854923923e6, _UB1 = 1.0926849043871716e6, _UB2 = 0.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: main_time = 0.1625659465789795
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 1.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time2 = 6.23174786567688
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 3: LB = 1.0747482728261952e6, UB = 1.0874551766088326e6, _UB1 = 0.0, _UB2 = 12706.903782637499
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.020244121551513672
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 1.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time2 = 1.1810710430145264
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 4: LB = 1.0747482728261952e6, UB = 1.0805440246880914e6, _UB1 = 0.0, _UB2 = 5795.751861896162
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.08026790618896484
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.240535020828247
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: Iteration 5: LB = 1.0750732713031326e6, UB = 1.078718232874408e6, _UB1 = 3644.961571275242, _UB2 = 0.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: main_time = 0.04733014106750488
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.3671321868896484
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: Iteration 6: LB = 1.0779366155827085e6, UB = 1.078718232874408e6, _UB1 = 3668.4970795429545, _UB2 = 0.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: iteration = 6
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:255
+┌ Info: k̂₀ = 1.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:256
+┌ Info: v̂₀ = 0.0
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:257
+┌ Info: Iter: 1, LB: -849878.0887573964, UB: 414143.0423896285, Gap: 305.2136585112121, Master Time: 1.8724660873413086, Sub Time: 80.1510591506958
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Loop/Sequential.jl:73
+┌ Info: main_time = 0.0407109260559082
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.6316763788711369
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.3683236211288631
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 3.4700028896331787
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 40.318912982940674
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 1: LB = 0.00041883113668989735, UB = 166601.4001528903, _UB1 = 96560.64522837536, _UB2 = 70040.7545056838
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.15380096435546875
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.6724387040451784
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.32756129595482164
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 7.424993991851807
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 19.356757164001465
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 2: LB = 0.04118115631073138, UB = 93528.48903109928, _UB1 = 59790.845202776734, _UB2 = 33737.60264716623
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.02685999870300293
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.7291821470327545
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.27081785296724564
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 10.597893953323364
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 6.7250590324401855
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 3: LB = 0.0979245992983075, UB = 60819.88213816626, _UB1 = 45186.465101087175, _UB2 = 15633.319112479778
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.2766151428222656
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.6005725727547055
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.39942742724529445
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 7.9021852016448975
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.008729219436646
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 4: LB = 0.18187244801854938, UB = 60819.88213816626, _UB1 = 39153.25987232443, _UB2 = 30612.74032354565
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.07046985626220703
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5762465535633248
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.42375344643667523
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 7.3170530796051025
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 8.368524074554443
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 5: LB = 0.18334555510109882, UB = 60819.88213816626, _UB1 = 36712.57008925118, _UB2 = 29328.446763230102
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.1112210750579834
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.6052569285492382
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.3947430714507618
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 8.060939073562622
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 7.547425031661987
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 6: LB = 0.17971459446142632, UB = 59204.38419598335, _UB1 = 40519.745811920366, _UB2 = 18684.458669468542
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.21126103401184082
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.4487364368819108
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.5512635631180892
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 4.43520188331604
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 7.258311033248901
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 7: LB = 0.18252111085253622, UB = 59204.38419598335, _UB1 = 46036.24463996514, _UB2 = 21615.768864180158
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.365217924118042
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.836158304029756
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.16384169597024398
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 9.185649156570435
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 6.579071998596191
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 8: LB = 0.20490075629530902, UB = 34350.556617020804, _UB1 = 23310.74330989094, _UB2 = 11039.608406373554
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.45368504524230957
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5037631492634177
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.4962368507365823
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.9594759941101074
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.323760032653809
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 9: LB = 0.3041315697766917, UB = 20056.866400569037, _UB1 = 14945.518831348832, _UB2 = 5111.043437650427
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.09283995628356934
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.6958684302233085
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.3041315697766915
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.470133066177368
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 3.1524200439453125
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 10: LB = 0.3041315697766915, UB = 13261.072329940594, _UB1 = 6436.783580946663, _UB2 = 6823.984617424154
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.5562179088592529
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5901406749706481
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.40985932502935174
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.151176929473877
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.8807599544525146
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 11: LB = 0.30413156977669176, UB = 13261.072329940594, _UB1 = 7061.748543532653, _UB2 = 6946.809382441039
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.06032896041870117
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.621590514865634
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.378409485134366
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.559333086013794
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 2.0421788692474365
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 12: LB = 0.30413156977669176, UB = 13261.072329940594, _UB1 = 6755.522093855594, _UB2 = 7726.040954054624
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.5711719989776611
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5304198707293604
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.46958012927063963
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.1484789848327637
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 2.6872918605804443
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 13: LB = 0.3041315697766919, UB = 13261.072329940594, _UB1 = 8514.192544024554, _UB2 = 5822.992992749205
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.5571060180664062
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.3874216637478516
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.6125783362521484
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 8.284820795059204
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.6396729946136475
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 14: LB = 0.30414565469292804, UB = 13261.072329940594, _UB1 = 17970.736461122106, _UB2 = 8516.037738900231
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.1393439769744873
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.3430733918292397
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.6569266081707603
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 9.396687030792236
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.5168628692626953
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 15: LB = 0.30414539366242876, UB = 13261.072329940594, _UB1 = 15228.02068791072, _UB2 = 8256.357784796055
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.8115520477294922
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.4860144910323001
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.5139855089676999
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 7.49478006362915
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.9608559608459473
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 16: LB = 0.30413156977669187, UB = 13261.072329940594, _UB1 = 7557.158994448713, _UB2 = 6519.274036535004
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.0506289005279541
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5795962397077234
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.4204037602922766
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.5863730907440186
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.4726479053497314
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 17: LB = 0.3041315697766917, UB = 13261.072329940594, _UB1 = 7781.922627392814, _UB2 = 6389.081617819793
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.08532404899597168
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.49155113707852505
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.508448862921475
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.723737955093384
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.4463679790496826
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 18: LB = 0.3041315697766921, UB = 13261.072329940594, _UB1 = 9982.955571898055, _UB2 = 6742.071215307085
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.7943780422210693
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.49765835235955524
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.5023416476404448
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.7098238468170166
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.6596918106079102
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 19: LB = 0.30413156977669187, UB = 13261.072329940594, _UB1 = 7549.903810434735, _UB2 = 6308.89876720171
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.6077640056610107
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5209150105125364
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.4790849894874636
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.6055669784545898
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.7454519271850586
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 20: LB = 0.3041315697766919, UB = 13261.072329940594, _UB1 = 7483.166917721421, _UB2 = 6752.6321244072315
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.10242486000061035
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.48647523881363886
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.5135247611863611
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4508981704711914
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 2.8472418785095215
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 21: LB = 0.30413156977669176, UB = 13261.072329940594, _UB1 = 8944.895162515044, _UB2 = 9954.39848530446
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.6853878498077393
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5265728608036785
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.4734271391963215
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.5151691436767578
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 2.4069440364837646
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 22: LB = 0.30413156977669187, UB = 13261.072329940594, _UB1 = 6386.407611972194, _UB2 = 7606.439563158667
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.09034204483032227
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.562866287276508
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.437133712723492
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.9333059787750244
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 2.0706307888031006
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 23: LB = 0.3041315697766917, UB = 13261.072329940594, _UB1 = 8551.256604749651, _UB2 = 9079.017118975491
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.8908729553222656
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5247308465288081
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.4752691534711919
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.684262990951538
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.9494929313659668
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 24: LB = 0.30413156977669176, UB = 12731.319567926621, _UB1 = 6482.684089961869, _UB2 = 6248.331346394974
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.18052411079406738
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5050474688796474
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.49495253112035265
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 8.321919202804565
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.4484429359436035
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 25: LB = 0.30414190990616674, UB = 12731.319567926621, _UB1 = 11703.125214496358, _UB2 = 6982.846188590913
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.130295991897583
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.40856121303562154
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.5914387869643785
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 3.983459949493408
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.4595229625701904
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 26: LB = 0.3041319433291056, UB = 12731.319567926621, _UB1 = 10330.136103532728, _UB2 = 6742.1661099416015
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.14713597297668457
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.327125774695608
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.672874225304392
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.6279709339141846
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.6703541278839111
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 27: LB = 0.304131773038839, UB = 12731.319567926621, _UB1 = 9686.327518916038, _UB2 = 6405.393391405392
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.1774449348449707
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5007563785527452
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.49924362144725476
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.5233731269836426
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 2.138864040374756
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 28: LB = 0.3041315697766917, UB = 12731.319567926621, _UB1 = 6967.985063076856, _UB2 = 6579.240725653763
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.3731091022491455
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5670337107321055
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.4329662892678945
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.536125898361206
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.7228929996490479
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 29: LB = 0.30413156977669165, UB = 12731.319567926621, _UB1 = 7380.242973408291, _UB2 = 7084.892203742005
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.4018678665161133
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.6572782335509104
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.3427217664490896
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 6.4893341064453125
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 3.435487985610962
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 30: LB = 0.3041386077634696, UB = 12731.319567926621, _UB1 = 13918.21765725447, _UB2 = 10666.589828657103
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.8347611427307129
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.612079129202852
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.38792087079714793
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 3.627943992614746
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.852187156677246
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 31: LB = 0.30413194332910587, UB = 12731.319567926621, _UB1 = 10049.726141699335, _UB2 = 7637.127335299025
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.7158291339874268
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5226069514524927
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.4773930485475073
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.8002498149871826
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 2.1305880546569824
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 32: LB = 0.30414154429941526, UB = 12731.319567926621, _UB1 = 9564.625956394644, _UB2 = 7976.840814752206
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.34569382667541504
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.37940888799318206
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.6205911120068179
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 5.076333045959473
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 2.2319939136505127
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 33: LB = 0.3041447968952591, UB = 12731.319567926621, _UB1 = 11432.137438879, _UB2 = 8679.732646477089
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.165619134902954
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.46391960954259615
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.5360803904574039
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 3.168083906173706
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 2.6742780208587646
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 34: LB = 0.30413194540332955, UB = 12731.319567926621, _UB1 = 10851.537456742859, _UB2 = 7403.148448770102
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.1816229820251465
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.3271258076677161
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.6728741923322838
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 3.4605469703674316
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 2.3666019439697266
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 35: LB = 0.3041317400667309, UB = 12731.319567926621, _UB1 = 9707.298529380576, _UB2 = 7122.680941241808
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.7972109317779541
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.34832134705378603
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.651678652946214
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 4.771284818649292
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.658186912536621
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 36: LB = 0.30413194332910565, UB = 12731.319567926621, _UB1 = 9260.904281240073, _UB2 = 6273.225621912206
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.1431360244750977
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.33020117498422663
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.6697988250157734
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 6.695803880691528
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.6015868186950684
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 37: LB = 0.30413174006673166, UB = 12731.319567926621, _UB1 = 10359.48139982703, _UB2 = 6072.833410746694
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.8915581703186035
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.3824888032658391
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.6175111967341609
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 3.681652069091797
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.4409570693969727
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 38: LB = 0.3041317751130617, UB = 12731.319567926621, _UB1 = 9564.005812472009, _UB2 = 5478.66450755277
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.5392701625823975
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.3317005279327989
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.6682994720672012
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.8380250930786133
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.6099059581756592
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 39: LB = 0.304131740066731, UB = 12731.319567926621, _UB1 = 8320.392440473683, _UB2 = 4419.51524237277
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 2.1998448371887207
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.6417593523933415
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.3582406476066585
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 3.7076339721679688
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 3.3552968502044678
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 40: LB = 0.3073848056322928, UB = 12731.319567926621, _UB1 = 11527.385859338872, _UB2 = 8262.63841849388
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.2113590240478516
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.5764461581060071
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.4235538418939929
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.012586832046509
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 3.7774229049682617
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 41: LB = 0.30743997277778834, UB = 12731.319567926621, _UB1 = 11046.691319029283, _UB2 = 10045.874825314946
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.3707079887390137
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.6716114617387119
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.3283885382612881
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.41723895072937
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 3.28501296043396
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 42: LB = 0.3073595908854497, UB = 12731.319567926621, _UB1 = 12229.057882698296, _UB2 = 7620.554705847237
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.5111470222473145
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.7090991096261747
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.29090089037382527
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.077871084213257
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 5.115110874176025
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 43: LB = 0.307328190188184, UB = 12731.319567926621, _UB1 = 10626.368908124641, _UB2 = 8126.8063123489555
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 2.319783926010132
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9383918011523306
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.06160819884766948
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.9636809825897217
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 7.406098127365112
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 44: LB = 0.3071342534178836, UB = 6778.08868689934, _UB1 = 4965.088329548569, _UB2 = 1812.6932230973543
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.34828782081604
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9722746683697853
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02772533163021477
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.659121036529541
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.537776947021484
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 45: LB = 0.3410171206353383, UB = 3178.9055864537077, _UB1 = 1908.7343552598468, _UB2 = 1269.830214073228
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.1152338981628418
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9728645459453245
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.027135454054675514
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4388489723205566
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.339968919754028
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 46: LB = 0.3416069982108775, UB = 1718.4585054323397, _UB1 = 511.3183991838014, _UB2 = 1206.7984992503357
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.153836965560913
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9758422492085371
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02415775079146291
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4784789085388184
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 9.296500205993652
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 47: LB = 0.34458470147409015, UB = 1071.0292703379964, _UB1 = 323.0158024876728, _UB2 = 747.6688831488364
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.3435981273651123
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9770217203670862
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022978279632913733
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4502780437469482
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 7.834702014923096
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 48: LB = 0.34576417263263926, UB = 999.7610336351645, _UB1 = 110.13741936233419, _UB2 = 889.2778501002053
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.224297046661377
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9773459349763266
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022654065023673436
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4513700008392334
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 8.485355138778687
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 49: LB = 0.3460883872418796, UB = 970.2522002066107, _UB1 = 78.04616561587318, _UB2 = 891.8599462035027
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.16538405418396
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9773801022902885
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02261989770971153
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4737370014190674
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 7.709558010101318
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 50: LB = 0.3461225545558415, UB = 906.0805220865295, _UB1 = 75.46096434198262, _UB2 = 830.273435189989
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.4931590557098389
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590437435056
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022440956256494404
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.455725908279419
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 11.829576969146729
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 51: LB = 0.3463014960090586, UB = 906.0805220865295, _UB1 = 150.46123924918356, _UB2 = 1077.2393496704171
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.3860809803009033
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590437435062
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022440956256493855
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4569330215454102
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 7.725951910018921
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 52: LB = 0.3463014960090592, UB = 906.0805220865295, _UB1 = 101.66654785313585, _UB2 = 940.3732548145108
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.3312931060791016
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590437435063
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022440956256493685
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4415669441223145
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 9.844846963882446
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 53: LB = 0.34630149600905935, UB = 906.0805220865295, _UB1 = 130.27780476919725, _UB2 = 929.9197222911885
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.6273491382598877
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9767473955977062
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02325260440229386
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4476890563964844
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 9.835762023925781
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 54: LB = 0.34630149600905913, UB = 906.0805220865295, _UB1 = 96.81150552137115, _UB2 = 1080.4877469949724
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.8231010437011719
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9769458492114155
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.023054150788584523
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4666969776153564
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 17.669546842575073
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 55: LB = 0.34630152958808225, UB = 906.0805220865295, _UB1 = 98.8861782920867, _UB2 = 2073.9712505789435
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.831794023513794
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9773897054429954
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02261029455700459
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4103238582611084
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 12.432766914367676
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 56: LB = 0.34630149600905863, UB = 906.0805220865295, _UB1 = 88.71862809566665, _UB2 = 1054.0440745093497
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.2011640071868896
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590705497558
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02244092945024423
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4339540004730225
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 9.661995887756348
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 57: LB = 0.3463015228153088, UB = 906.0805220865295, _UB1 = 81.98444318126712, _UB2 = 1071.986103464394
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.4944581985473633
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590437435047
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022440956256495337
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4525978565216064
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 13.424288034439087
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 58: LB = 0.3463014960090577, UB = 906.0805220865295, _UB1 = 89.98367177172622, _UB2 = 977.2640693325625
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.4457869529724121
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.724180578320448
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.2758194216795519
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4812710285186768
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 6.872874975204468
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 59: LB = 0.346301496009059, UB = 906.0805220865295, _UB1 = 1474.8218068258866, _UB2 = 12038.200189170348
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.6334259510040283
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590437435058
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022440956256494175
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.47586989402771
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 9.69887900352478
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 60: LB = 0.34630149600905874, UB = 906.0805220865295, _UB1 = 88.85077939396433, _UB2 = 948.6660084132923
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.8776969909667969
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590437435057
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022440956256494338
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4369020462036133
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.714884996414185
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 61: LB = 0.3463014960090587, UB = 906.0805220865295, _UB1 = 89.56866171679576, _UB2 = 1069.0552846190071
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.5499160289764404
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590666832639
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02244093331673613
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.453005075454712
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 9.107906103134155
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 62: LB = 0.3463015189488169, UB = 906.0805220865295, _UB1 = 99.24086992965022, _UB2 = 955.9873611077314
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.8411509990692139
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590437435062
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022440956256494463
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.462242841720581
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 9.74890398979187
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 63: LB = 0.3463014960090592, UB = 906.0805220865295, _UB1 = 79.24652569995669, _UB2 = 1110.185943810899
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 2.0653810501098633
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9774055400888143
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02259445991118572
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.403527021408081
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 13.824468851089478
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 64: LB = 0.3463014960090591, UB = 906.0805220865295, _UB1 = 88.36130262124061, _UB2 = 1069.4169292901338
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 2.3344149589538574
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9755050395193987
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.024494960480601246
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4173479080200195
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.097325801849365
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 65: LB = 0.3463014960090589, UB = 906.0805220865295, _UB1 = 90.9962508775061, _UB2 = 1341.5473316440243
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.8489599227905273
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590437435056
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022440956256494393
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4391310214996338
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 11.129958152770996
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 66: LB = 0.34630149600905863, UB = 906.0805220865295, _UB1 = 79.7445689655724, _UB2 = 1959.7261401411633
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.5744860172271729
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590437435058
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02244095625649415
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4213449954986572
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 7.636927843093872
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 67: LB = 0.34630149600905885, UB = 906.0805220865295, _UB1 = 62.73551022968604, _UB2 = 1755.9598183070993
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 2.3635470867156982
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9768725803159825
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.023127419684017537
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.432919979095459
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 8.033699035644531
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 68: LB = 0.3463014960090593, UB = 906.0805220865295, _UB1 = 77.56623587582726, _UB2 = 1558.2687303205516
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.4329349994659424
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590437435053
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02244095625649467
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.3801970481872559
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.432141065597534
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 69: LB = 0.34630149600905835, UB = 906.0805220865295, _UB1 = 64.41452029401262, _UB2 = 1415.7027499186788
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.6805648803710938
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590702622864
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02244092973771361
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4130620956420898
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 11.41261601448059
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 70: LB = 0.3463015225278394, UB = 906.0805220865295, _UB1 = 71.07821466436144, _UB2 = 1263.8484337398872
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.6006741523742676
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.977529060864389
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022470939135611098
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4300220012664795
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 9.070892095565796
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 71: LB = 0.3463014960090593, UB = 906.0805220865295, _UB1 = 51.8739250433282, _UB2 = 1157.6232023641173
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 2.4325668811798096
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9775590534999498
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.0224409465000501
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4611530303955078
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.795009851455688
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 72: LB = 0.3463015057655028, UB = 906.0805220865295, _UB1 = 62.64151594930445, _UB2 = 1121.4945595959312
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.4836540222167969
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9764415686704976
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.023558431329502416
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4407939910888672
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 8.69572901725769
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 73: LB = 0.3463014960090589, UB = 906.0805220865295, _UB1 = 60.98088468340575, _UB2 = 1075.8844517116631
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 2.6677029132843018
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9760329731537193
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.023967026846280753
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4581220149993896
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.77940320968628
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 74: LB = 0.3464100631614524, UB = 906.0805220865295, _UB1 = 88.23730015232286, _UB2 = 1207.2159168408743
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 2.153409004211426
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.973460471253023
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.02653952874697701
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.3610458374023438
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.540817022323608
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 75: LB = 0.3464100898664239, UB = 906.0805220865295, _UB1 = 87.19171051461308, _UB2 = 1320.0260657373615
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 2.2821621894836426
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9776676093285908
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.022332390671409297
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4263310432434082
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 10.664852142333984
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 76: LB = 0.3464100615941437, UB = 906.0805220865295, _UB1 = 72.5909624430642, _UB2 = 1232.5826833606593
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.6613771915435791
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.9714970093983212
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.028502990601678862
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.4616458415985107
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 9.079499959945679
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 77: LB = 0.34641007994944323, UB = 906.0805220865295, _UB1 = 65.4300551314227, _UB2 = 1523.361969434247
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 5.749074935913086
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.4296710401866566
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.5703289598133434
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 2.070849895477295
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 8.26897406578064
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 78: LB = 0.3464098373025298, UB = 906.0805220865295, _UB1 = 5933.089506189695, _UB2 = 3220.0131082744047
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.5733819007873535
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.34640983730253344
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.6535901626974665
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.800367832183838
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.3522980213165283
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 79: LB = 0.34640983730253344, UB = 906.0805220865295, _UB1 = 5381.454845311484, _UB2 = 4081.5961450644827
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 2.681874990463257
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.36958937076804604
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.630410629231954
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 6.907360076904297
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.4966228008270264
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 80: LB = 0.3464099933302827, UB = 906.0805220865295, _UB1 = 12162.729541892055, _UB2 = 4345.013666524115
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.9231791496276855
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.391816392594613
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.608183607405387
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 4.727997064590454
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.3833200931549072
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 81: LB = 0.3464099933302824, UB = 906.0805220865295, _UB1 = 10337.877853850085, _UB2 = 3761.45860819643
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 1.799490213394165
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.37917125047518585
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.6208287495248141
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 3.8852920532226562
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.4841828346252441
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 82: LB = 0.3464116032733113, UB = 906.0805220865295, _UB1 = 10271.982394690916, _UB2 = 3639.0737672526157
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 2.20096492767334
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.37479658208566174
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.6252034179143382
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 3.956808090209961
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.3106658458709717
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 83: LB = 0.34640983730252967, UB = 906.0805220865295, _UB1 = 10005.937962160147, _UB2 = 3468.458974483059
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 5.234174966812134
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.46046518413056803
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.539534815869432
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 3.881791830062866
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.4005119800567627
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 84: LB = 0.3464098373025294, UB = 906.0805220865295, _UB1 = 5782.322615953242, _UB2 = 2623.0751413038306
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: add feasible cut 1
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:218
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:236
+┌ Info: main_time = 0.4869089126586914
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:48
+┌ Info: k̂₀ = 0.4650100699842079
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:70
+┌ Info: v̂₀ = 0.5349899300157921
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:72
+┌ Info: bsp_time1 = 1.6040430068969727
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:95
+┌ Info: bsp_time2 = 1.4055910110473633
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:151
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:154
+┌ Info: Iteration 85: LB = 0.34640983730252933, UB = 906.0805220865295, _UB1 = 5684.2617980711075, _UB2 = 3183.6775605398216
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:196
+┌ Info: iteration = 85
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:255
+┌ Info: k̂₀ = 0.4650100699842079
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:256
+┌ Info: v̂₀ = 0.5349899300157921
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Cut/Split/LGamma_ordinary.jl:257
+┌ Info: Iter: 2, LB: 261714.09837513845, UB: 414143.0423896285, Gap: 36.80586860398922, Master Time: 0.0010800361633300781, Sub Time: 914.8248829841614
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Loop/Sequential.jl:73
+┌ Info: Time limit 1000 reached
+└ @ Main.SplitBenders /home/kfang11/SplitBenders/src/Algorithms/Loop/Sequential.jl:85

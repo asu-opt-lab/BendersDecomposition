@@ -8,4 +8,4 @@ module purge
 module load julia
 module load cplex
 module load gurobi
-julia --project=. bash/0_cfl_sequential_split.jl --instance f700-c700-r5.0-p2
+julia --project=. bash/1_cfl_sequential_standard.jl --instance f700-c700-r5.0-p2
