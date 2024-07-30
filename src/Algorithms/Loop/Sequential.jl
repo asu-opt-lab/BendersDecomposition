@@ -2,7 +2,7 @@ function run_Benders(
     data::AbstractData,
     master_env::AbstractMasterEnv,
     sub_env::AbstractSubEnv,
-    time_limit = 1000)
+    time_limit = 3600*2)
     
     # Initialize
     UB = Inf
@@ -65,7 +65,7 @@ function run_Benders(
         # @constraint(master_env.model, 0 >= ex3) 
         # @constraint(master_env.model, 0 >= ex4) 
         # Add Cut
-        @constraint(master_env.model, 0 >= ex)   
+        # @constraint(master_env.model, 0 >= ex)   
 
 
         # Print
@@ -83,7 +83,8 @@ function run_Benders(
         remaining_time = time_limit - spend_time         
         if spend_time > time_limit #|| iter == 1
             @info "Time limit $time_limit reached"
-            master_time = solve_master!(master_env; time_limit = remaining_time)
+            # set_binary.(master_env.model[:x])
+            master_time = solve_master!(master_env; time_limit = 1000)
             LB = master_env.obj_value
             new_row = (iter+1, LB, Inf, Inf, master_time, Inf)
             push!(df, new_row)  

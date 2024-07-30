@@ -4,7 +4,7 @@ using JuMP, CSV
 
 solver = :Gurobi
 # solver = :CPLEX
-time_limit = 1000
+# time_limit = 1000
 
 settings = SplitBenders.parse_commandline()
 instance = settings["instance"]
@@ -51,8 +51,8 @@ df = SplitBenders.run_Benders(data,master_env,sub_env)
 
 
 # CSV.write("results/Gurobi/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy).csv", df)
-# CSV.write("results2/Ordinary/result_$(instance).csv", df)
-CSV.write("results3/Advanced/result_$(instance).csv", df)
+CSV.write("results3/Advanced_lp_2hr/result_$(instance).csv", df)
+# CSV.write("results3/Advanced_4hr/result_$(instance).csv", df)
 
 
 # cut_strategy = settings["cut_strategy"]

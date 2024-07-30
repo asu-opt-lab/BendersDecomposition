@@ -29,10 +29,10 @@ function generate_cut(
     if DCGLP_env.ifsolved == true
         # add split cut
         γ₀, γₓ, γₜ = generate_cut(master_env, DCGLP_env, sub_env.algo_params.StrengthenCutStrategy)
-        # @constraint(master_env.model, -γ₀ - γₓ'master_env.model[:x] - γₜ*master_env.model[:t] >= 0) 
-        # push!(sub_env.split_info.γ₀s, γ₀)
-        # push!(sub_env.split_info.γₓs, γₓ)
-        # push!(sub_env.split_info.γₜs, γₜ)
+        @constraint(master_env.model, -γ₀ - γₓ'master_env.model[:x] - γₜ*master_env.model[:t] >= 0) 
+        push!(sub_env.split_info.γ₀s, γ₀)
+        push!(sub_env.split_info.γₓs, γₓ)
+        push!(sub_env.split_info.γₜs, γₜ)
         generate_cut!(master_env, DCGLP_env, sub_env.algo_params.SplitBendersStrategy)
     else
         generate_cut!(master_env, DCGLP_env, ALL_SPLIT_BENDERS_STRATEGY)

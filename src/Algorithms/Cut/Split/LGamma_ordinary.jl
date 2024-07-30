@@ -195,7 +195,7 @@ function solve_DCGLP(
 
         @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
 
-        if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 #|| k >= 100
+        if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 #|| k >= 15
             main_env.ifsolved = true
             break
         end
@@ -257,25 +257,25 @@ function solve_DCGLP(
     @info "v̂₀ = $(v̂₀s[end])"
     # @info status1s
     # @info status2s
-    point = [k̂ₓs[end]; v̂ₓs[end] ; k̂ₜs[end] ; v̂ₜs[end]; k̂₀s[end]; v̂₀s[end]]
-    # for iter in 1:k
+    # point = [k̂ₓs[end]; v̂ₓs[end] ; k̂ₜs[end] ; v̂ₜs[end]; k̂₀s[end]; v̂₀s[end]]
+    # # for iter in 1:k
+    # #     # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
+    # #     # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
+    # #     # @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
+    # #     # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
+    # #     point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
+    # #     @info "distance_inf_$iter = $(norm(point_iter - point, Inf))"
+    # #     # println("distance_L2_$iter = $(norm(point_iter - point, 2))")
+    # # end
+    # for iter in 2:k
     #     # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
     #     # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
     #     # @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
     #     # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
+    #     point_iter_ = [k̂ₓs[iter-1]; v̂ₓs[iter-1] ; k̂ₜs[iter-1] ; v̂ₜs[iter-1]; k̂₀s[iter-1]; v̂₀s[iter-1]]
     #     point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
-    #     @info "distance_inf_$iter = $(norm(point_iter - point, Inf))"
-    #     # println("distance_L2_$iter = $(norm(point_iter - point, 2))")
+    #     # @info "_distance_L2_$iter = $(norm(point_iter - point_iter_, 2))"
+    #     # @info "distance_L2_$iter = $(norm(point_iter - point, 2))"
+    #    # println("distance_inf_$iter = $(norm(point_iter - point, Inf))")
     # end
-    for iter in 2:k
-        # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
-        # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
-        # @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
-        # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
-        point_iter_ = [k̂ₓs[iter-1]; v̂ₓs[iter-1] ; k̂ₜs[iter-1] ; v̂ₜs[iter-1]; k̂₀s[iter-1]; v̂₀s[iter-1]]
-        point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
-        # @info "_distance_L2_$iter = $(norm(point_iter - point_iter_, 2))"
-        # @info "distance_L2_$iter = $(norm(point_iter - point, 2))"
-       # println("distance_inf_$iter = $(norm(point_iter - point, Inf))")
-    end
 end
