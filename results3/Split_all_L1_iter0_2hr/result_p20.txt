@@ -1,0 +1,41 @@
+┌ Info: main_time = 0.07999992370605469
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:47
+me1 = 0.032000064849853516
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:77
+┌ Error: Wrong status1 = NO_SOLUTION
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:94
+┌ Info: bsp_time2 = 0.003000020980834961
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:112
+┌ Info: INFEASIBLE
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:114
+┌ Info: INFEASIBILITY_CERTIFICATE
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:123
+┌ Info: Iteration 1: LB = 0.005928946381702287, UB = Inf, _UB1 = Inf, _UB2 = Inf
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:142
+rd_ordinary.jl:142
+┌ Info: add infeasible cut 2
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:190
+┌ Info: main_time = 0.0009999275207519531
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:47
+┌ Info: bsp_time1 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:77
+┌ Error: Wrong status1 = NO_SOLUTION
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:94
+┌ Info: bsp_time2 = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:112
+┌ Info: OPTIMAL
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:114
+┌ Info: Iteration 2: LB = 0.00592968750000001, UB = Inf, _UB1 = Inf, _UB2 = 344367.43603125017
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:142
+┌ Info: add feasible cut 2
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:186
+┌ Info: main_time = 0.0
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:47
+┌ Info: bsp_time2 = 0.0009999275207519531
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:112
+┌ Info: INFEASIBLE
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:114
+┌ Info: INFEASIBILITY_CERTIFICATE
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:123
+┌ Info: Iteration 3: LB = 0.8418129689696003, UB = 1.0e6, _UB1 = 1.0e6, _UB2 = 344367.43603125017
+└ @ Main.SplitBenders C:\cc\asu_opt_lab\SplitBenders\src\Algorithms\Cut\Split\LStandard_ordinary.jl:142

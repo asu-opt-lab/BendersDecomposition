@@ -14,6 +14,8 @@ function solve_DCGLP(
     conπpoints2 = []
     conπrays1 = []
     conπrays2 = []
+    masterconπpoints1 = []
+    masterconπpoints2 = []
     _UB1 = Inf
     _UB2 = Inf
     
@@ -36,6 +38,9 @@ function solve_DCGLP(
         main_time_limit = time() - start_time
         set_time_limit_sec(main_env.model, max(time_limit-main_time_limit,5))
         optimize!(main_env.model)
+        if termination_status(main_env.model) == TIME_LIMIT
+            break
+        end
         k̂₀ = value(main_env.model[:k₀])
         k̂ₓ = value.(main_env.model[:kₓ])
         k̂ₜ = value(main_env.model[:kₜ])
@@ -55,6 +60,8 @@ function solve_DCGLP(
         # BSP1
         set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
         set_normalized_rhs(bsp_env.model[:cb], k̂₀)
+
+
         bsp_time_limit = time() - start_time
         set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,5))
         optimize!(bsp_env.model)
@@ -64,11 +71,11 @@ function solve_DCGLP(
             g₁ = objective_value(bsp_env.model)
             ex1 = @expression(main_env.model,  -main_env.model[:τ] + g₁ + dual.(bsp_env.model[:cx])⋅(main_env.model[:kₓ]-k̂ₓ) + dual(bsp_env.model[:cb])*(main_env.model[:k₀]-k̂₀) - main_env.model[:kₜ]) 
             _UB1 = g₁ - k̂ₜ
-            # @constraint(master_env.model, master_env.model[:t] >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
+            push!(masterconπpoints1, @expression(master_env.model, master_env.model[:t] >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
         elseif status1 == INFEASIBILITY_CERTIFICATE
             g₁ = Inf
             ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:kₓ] + dual(bsp_env.model[:cb])*main_env.model[:k₀])
-            # @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
+            @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
         else
             g₁ = Inf
             @error "Wrong status1: $status1"
@@ -86,11 +93,11 @@ function solve_DCGLP(
             g₂ = objective_value(bsp_env.model)
             ex2 = @expression(main_env.model, -main_env.model[:τ] + g₂ + dual.(bsp_env.model[:cx])⋅(main_env.model[:vₓ]-v̂ₓ) + dual(bsp_env.model[:cb])*(main_env.model[:v₀]-v̂₀) - main_env.model[:vₜ])
             _UB2 = g₂ - v̂ₜ
-            # @constraint(master_env.model, master_env.model[:t] >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
+            @constraint(master_env.model, master_env.model[:t] >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
         elseif status2 == INFEASIBILITY_CERTIFICATE           
             g₂ = Inf
             ex2 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:vₓ] + dual(bsp_env.model[:cb])*main_env.model[:v₀])
-            # @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
+            @constraint(master_env.model, 0 >= dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb]))
         else
             g₂ = Inf
             @error "Wrong status2: $status2"
