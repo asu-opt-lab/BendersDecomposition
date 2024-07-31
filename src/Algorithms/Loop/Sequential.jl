@@ -73,9 +73,9 @@ function run_Benders(
         @info "Iter: $iter, LB: $LB, UB: $UB, Gap: $Gap, Master Time: $master_time, Sub Time: $sub_time"
         # Stopping Criteria
         # Gap 
-        if Gap < 1e-3 
-            break
-        end 
+        # if Gap < 1e-3 
+        #     break
+        # end 
 
         # Time Limit
         algo_run_time = time()
