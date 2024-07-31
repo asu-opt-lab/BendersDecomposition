@@ -68,8 +68,7 @@ function solve_DCGLP(
         ##################### BSP1 #####################
         if k̂₀ != 0 || k == 1
                 
-            set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ)
-            set_normalized_rhs.(bsp_env.model[:cb], k̂₀)
+            set_normalized_rhs.(bsp_env.model[:cx], k̂ₓ./k̂₀)
 
             bsp_time_limit = time() - start_time
             # set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))
@@ -80,9 +79,9 @@ function solve_DCGLP(
 
             if status1 == FEASIBLE_POINT
                 g₁ = objective_value(bsp_env.model)
-                ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])⋅main_env.model[:kₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:k₀] - main_env.model[:kₜ])
+                ex1 = @expression(main_env.model, g₁*main_env.model[:k₀] + dual.(bsp_env.model[:cx])⋅(main_env.model[:kₓ]-k̂ₓ./k̂₀*main_env.model[:k₀]) - main_env.model[:kₜ])
                 _UB1 = g₁ - k̂ₜ
-                push!(masterconπpoints1, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env.model[:cb]))))
+                push!(masterconπpoints1, @expression(master_env.model, g₁*k̂₀ + dual.(bsp_env.model[:cx])⋅(master.model[:x]-x̂)))
 
             elseif status1 == INFEASIBILITY_CERTIFICATE 
                 @info status1

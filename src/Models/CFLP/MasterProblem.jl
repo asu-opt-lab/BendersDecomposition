@@ -23,7 +23,7 @@ function MasterProblem(data::CFLPData; solver::Symbol=:Gurobi)
     set_optimizer_attribute(model, MOI.Silent(),true)
     # set_time_limit_sec(model, 10)
 
-    println("Master Problem")
+    println("########### Building Master Problem ###########")
     # pre
     N = data.n_facilities
     # Variables

@@ -9,7 +9,7 @@ function generate_CFLP_subproblem(data::CFLPData; solver::Symbol=:Gurobi)
         # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
-    println("Ordinary Subproblem")
+    println("########### Building Ordinary Subproblem ###########")
 
     # pre
     N = data.n_facilities

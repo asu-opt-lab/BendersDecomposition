@@ -5,7 +5,7 @@ function solve_DCGLP(
     main_env::AbstractDCGLPEnv, 
     bsp_env::CFLPBSPEnv,
     bsp_env2::CFLPBSPEnv,
-    pConeType::GammaNorm;
+    pConeType::StandardNorm;
     time_limit)
 
     # @info x̂
@@ -56,7 +56,6 @@ function solve_DCGLP(
         v̂ₓ = value.(main_env.model[:vₓ])
         v̂ₜ = value(main_env.model[:vₜ])
         τ̂ = value(main_env.model[:τ])
-        _sx = value.(main_env.model[:sx])
 
         # push!(k̂₀s, k̂₀)
         # push!(k̂ₓs, k̂ₓ)
@@ -77,17 +76,18 @@ function solve_DCGLP(
             optimize!(bsp_env.model)
             @info "bsp_time1 = $(time()-tt)"
             status1 = dual_status(bsp_env.model)
-
-            if status1 == FEASIBLE_POINT
+            @info status1
+            if status1 == FEASIBLE_POINT && termination_status(bsp_env.model) !=  TIME_LIMIT
                 g₁ = objective_value(bsp_env.model)
-                ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])⋅main_env.model[:kₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:k₀] - main_env.model[:kₜ])
+                ex1 = @expression(main_env.model,  -main_env.model[:τ] + g₁ + dual.(bsp_env.model[:cx])⋅(main_env.model[:kₓ]-k̂ₓ) + dual(bsp_env.model[:cb])*(main_env.model[:k₀]-k̂₀) - main_env.model[:kₜ]) 
                 _UB1 = g₁ - k̂ₜ
-                push!(masterconπpoints1, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env.model[:cb]))))
+                push!(masterconπpoints1, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + dual(bsp_env.model[:cb])))
+                @constraint(main_env.model, dual.(bsp_env.model[:cx])⋅main_env.model[:vₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:v₀] - main_env.model[:vₜ] <= 0)
 
-            elseif status1 == INFEASIBILITY_CERTIFICATE 
+            elseif status1 == INFEASIBILITY_CERTIFICATE && termination_status(bsp_env.model) !=  TIME_LIMIT
                 @info status1
                 g₁ = Inf
-                ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:kₓ] + sum(dual.(bsp_env.model[:cb]))*main_env.model[:k₀])
+                ex1 = @expression(main_env.model, dual.(bsp_env.model[:cx])'main_env.model[:kₓ] + dual(bsp_env.model[:cb])*main_env.model[:k₀])
                 push!(conπrays1, @expression(master_env.model, dual.(bsp_env.model[:cx])'master_env.model[:x] + sum(dual.(bsp_env.model[:cb]))))
             else
                 g₁ = Inf
@@ -137,13 +137,13 @@ function solve_DCGLP(
 
         ##################### LB and UB #####################
         LB = τ̂
-        UB = update_UB!(UB,_sx,g₁,g₂,t̂, pConeType)
+        UB = min(max(_UB1, _UB2),UB)
 
         @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
 
 
         ##################### check termination #####################
-        if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 || k >= 30
+        if ((UB - LB)/abs(UB) <= 1e-3 || (τ̂  >= _UB1 && τ̂  >= _UB2 )) || (UB - LB) <= 0.01 || k >= 30
             main_env.ifsolved = true
             break
         end
@@ -156,13 +156,13 @@ function solve_DCGLP(
         ##################### add cuts into DCGLP and master problem #####################
         if termination_status(bsp_env.model) !=  TIME_LIMIT
             if k̂₀ == 0
-                if 1e-3 < _UB1
+                if τ̂  < _UB1
                     push!(conπpoints1, @constraint(main_env.model, 0 >= ex1))
                     @info "_add feasible cut 1"
                 end
             else
                 if status1 == FEASIBLE_POINT 
-                    if 1e-3 < _UB1
+                    if τ̂  < _UB1
                         push!(conπpoints1, @constraint(main_env.model, 0 >= ex1))
                         @info "add feasible cut 1"
                     end
@@ -175,13 +175,13 @@ function solve_DCGLP(
 
         if termination_status(bsp_env2.model) !=  TIME_LIMIT
             if v̂₀ == 0
-                if 1e-3 < _UB2
+                if τ̂  < _UB2
                     push!(conπpoints2, @constraint(main_env.model, 0 >= ex2))
                     @info "_add feasible cut 2"
                 end
             else
                 if status2 == FEASIBLE_POINT
-                    if 1e-3 < _UB2
+                    if τ̂  < _UB2
                         push!(conπpoints2, @constraint(main_env.model, 0 >= ex2))
                         @info "add feasible cut 2"
                     end
@@ -201,8 +201,8 @@ function solve_DCGLP(
     main_env.conπpoints2 = conπpoints2
 
     @info "iteration = $k"
-    # @info "k̂₀ = $(k̂₀s[end])"
-    # @info "v̂₀ = $(v̂₀s[end])"
+    @info "k̂₀ = $(k̂₀s[end])"
+    @info "v̂₀ = $(v̂₀s[end])"
 end
 
 

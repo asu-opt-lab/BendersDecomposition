@@ -8,12 +8,12 @@ using JuMP, CSV, Logging
 solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
-instance = settings["instance"]
+# instance = settings["instance"]
 # instance = "f700-c700-r5.0-p3"
-data = SplitBenders.read_random_data(instance)
+# data = SplitBenders.read_random_data(instance)
 
-# instance = "p20"
-# data = SplitBenders.read_data(instance)
+instance = "p71"
+data = SplitBenders.read_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
@@ -50,15 +50,15 @@ master_env = SplitBenders.MasterProblem(data, solver=solver)
 relax_integrality(master_env.model)
 sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params, solver=solver)
 # sub_env = SplitBenders.CFLPBSPADEnv(data,algo_params, solver=solver)
-io = open("results3/Split_all_L1_iter0_2hr/result_$(instance).txt", "w+")
-logger = SimpleLogger(io)
-with_logger(logger) do
-    df = SplitBenders.run_Benders(data,master_env,sub_env)
-    CSV.write("results3/Split_all_L1_iter0_2hr/result_$(instance).csv", df)
-end
-flush(io)
-close(io)
-# df = SplitBenders.run_Benders(data,master_env,sub_env)
+# io = open("results3/Split_all_L1_iter0_2hr/result_$(instance).txt", "w+")
+# logger = SimpleLogger(io)
+# with_logger(logger) do
+#     df = SplitBenders.run_Benders(data,master_env,sub_env)
+#     CSV.write("results3/Split_all_L1_iter0_2hr/result_$(instance).csv", df)
+# end
+# flush(io)
+# close(io)
+df = SplitBenders.run_Benders(data,master_env,sub_env)
 
 # result post processing
 # CSV.write("temp/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy)_2.csv", df)
