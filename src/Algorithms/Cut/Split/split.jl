@@ -1,6 +1,7 @@
 # include("LGamma.jl")
 # include("LStandard.jl")
-include("LGamma_ordinary.jl")
+# include("LGamma_ordinary.jl")
+include("LGamma_ordinary_.jl")
 # include("LGamma_advance.jl")
 # include("LGamma_kn.jl")
 include("LStandard_ordinary.jl")
