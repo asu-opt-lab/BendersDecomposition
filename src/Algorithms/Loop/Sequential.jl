@@ -45,11 +45,7 @@ function run_Benders(
 
         # Update Parameters
         UB_temp = sum(master_env.coef[i] * master_env.value_x[i] for i in eachindex(master_env.value_x))
-        # if iter <= 5
-        #     UB_temp += ssub_env.obj_value
-        # else
-        #     UB_temp += sub_env.obj_value
-        # end
+        @info "UB_temp: $UB_temp"
         UB_temp += sub_env.obj_value    
         UB = min(UB, UB_temp)
         Gap = 100 * (UB - LB)/ abs(UB) 
@@ -73,15 +69,15 @@ function run_Benders(
         @info "Iter: $iter, LB: $LB, UB: $UB, Gap: $Gap, Master Time: $master_time, Sub Time: $sub_time"
         # Stopping Criteria
         # Gap 
-        # if Gap < 1e-3 
-        #     break
-        # end 
+        if Gap < 1e-3 
+            break
+        end 
 
         # Time Limit
         algo_run_time = time()
         spend_time = algo_run_time - algo_start_time
         remaining_time = time_limit - spend_time         
-        if spend_time > time_limit #|| iter == 1
+        if spend_time > time_limit 
             @info "Time limit $time_limit reached"
             # set_binary.(master_env.model[:x])
             master_time = solve_master!(master_env; time_limit = 1000)

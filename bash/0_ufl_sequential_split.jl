@@ -1,42 +1,73 @@
 include("../src/SplitBenders.jl")
 import .SplitBenders
-using JuMP, CSV
+using JuMP, CSV, Logging
+
 
 #-----------------------------------------------------------------------
 solver = :Gurobi
-time_limit = 1000
+# solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
-instance = settings["instance"]
-data = SplitBenders.read_random_data(instance)
+# instance = settings["instance"]
+# instance = "f700-c700-r5.0-p3"
+# data = SplitBenders.read_random_data(instance)
 
-# instance = "p2"
-# data = SplitBenders.read_data(instance)
+instance = "ga500a-1"
+data = SplitBenders.read_data_UFL(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
-cut_strategy = settings["cut_strategy"]
-SplitCGLPNormType = settings["SplitCGLPNormType"]
-SplitSetSelectionPolicy = settings["SplitSetSelectionPolicy"]
-StrengthenCutStrategy = settings["StrengthenCutStrategy"]
-SplitBendersStrategy = settings["SplitBendersStrategy"]
+
+# "SPLIT_CUTSTRATEGY"
+cut_strategy = "SPLIT_CUTSTRATEGY"
+
+# "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
+SplitCGLPNormType = "L1GAMMANORM"
+
+# "MOST_FRAC_INDEX", "RANDOM_INDEX"
+SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
+
+# "SPLIT_PURE_CUT_STRATEGY", "SPLIT_STRENGTHEN_CUT_STRATEGY"
+StrengthenCutStrategy = "SPLIT_STRENGTHEN_CUT_STRATEGY"
+
+# "NO_SPLIT_BENDERS_STRATEGY", "ALL_SPLIT_BENDERS_STRATEGY", "TIGHT_SPLIT_BENDERS_STRATEGY"
+SplitBendersStrategy = "ALL_SPLIT_BENDERS_STRATEGY"
+
+
+
+
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractCutStrategy, cut_strategy)
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractNormType, SplitCGLPNormType)
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitSetSelectionPolicy, SplitSetSelectionPolicy)
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitStengtheningPolicy, StrengthenCutStrategy)
 SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBendersPolicy, SplitBendersStrategy)
 
+# master_env = SplitBenders.MasterProblem(data)
+# relax_integrality(master_env.model)
+# sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
 
-master_env = SplitBenders.MasterProblem(data; solver=solver)
-sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params; solver=solver)
-
-df = SplitBenders.run_Benders(data,master_env,sub_env,time_limit)
+master_env = SplitBenders.UFLPMasterProblem(data, solver=solver)
+relax_integrality(master_env.model)
+sub_env = SplitBenders.UFLPSplitSubEnv(data,algo_params, solver=solver)
+# sub_env = SplitBenders.CFLPBSPADEnv(data,algo_params, solver=solver)
+# io = open("results3/Split_all_L1_iter0_2hr/result_$(instance).txt", "w+")
+# logger = SimpleLogger(io)
+# with_logger(logger) do
+#     df = SplitBenders.run_Benders(data,master_env,sub_env)
+#     CSV.write("results3/Split_all_L1_iter0_2hr/result_$(instance).csv", df)
+# end
+# flush(io)
+# close(io)
+df = SplitBenders.run_Benders(data,master_env,sub_env)
 
 # result post processing
-CSV.write("results1/Ordinary/result_$(instance)_$(cut_strategy).csv", df)
+# CSV.write("temp/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy)_2.csv", df)
 
 
 
+
+
+#--------------------------------------------------------------
 # cut_strategy = settings["cut_strategy"]
 # SplitCGLPNormType = settings["SplitCGLPNormType"]
 # SplitSetSelectionPolicy = settings["SplitSetSelectionPolicy"]
@@ -52,7 +83,7 @@ CSV.write("results1/Ordinary/result_$(instance)_$(cut_strategy).csv", df)
 # )
 
 # master_env = SplitBenders.MasterProblem(data)
-# sub_env = SplitBenders.CFLPStandardSubEnv(data,algo_params)
+# sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
 
 # df = SplitBenders.run_Benders(data,master_env,sub_env)
 

@@ -3,8 +3,8 @@ function solve_DCGLP(
     x̂,
     t̂,
     main_env::AbstractDCGLPEnv, 
-    bsp_env1::CFLPBSPEnv,
-    bsp_env2::CFLPBSPEnv,
+    bsp_env1::AbstractSubEnv,
+    bsp_env2::AbstractSubEnv,
     pConeType::GammaNorm;
     time_limit)
 
@@ -134,8 +134,8 @@ function solve_DCGLP(
                 + dual.(bsp_env2.cconstr)'main_env.model[:vₓ])
                 push!(conπrays2, @expression(master_env.model, dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs + dual.(bsp_env2.cconstr)'master_env.model[:x]))
             else
-                g₁ = Inf
-                @error "Wrong status1 = $status1"
+                g₂ = Inf
+                @error "Wrong status2 = $status2"
             end
         else
             g₂ = 0
@@ -165,10 +165,10 @@ function solve_DCGLP(
         ##################### add cuts into DCGLP and master problem #####################
         if termination_status(bsp_env1.model) !=  TIME_LIMIT
             if k̂₀ == 0
-                if 1e-3 < _UB1 && k != 1 
-                    push!(conπpoints1, @constraint(main_env.model, 0 >= ex1))
-                    @info "_add feasible cut 1"
-                end
+                # if 1e-3 < _UB1 && k != 1 
+                #     push!(conπpoints1, @constraint(main_env.model, 0 >= ex1))
+                #     @info "_add feasible cut 1"
+                # end
             else
                 if status1 == FEASIBLE_POINT 
                     if 1e-3 < _UB1
@@ -184,10 +184,10 @@ function solve_DCGLP(
 
         if termination_status(bsp_env2.model) !=  TIME_LIMIT
             if v̂₀ == 0
-                if 1e-3 < _UB2 && k != 1 
-                    push!(conπpoints2, @constraint(main_env.model, 0 >= ex2))
-                    @info "_add feasible cut 2"
-                end
+                # if 1e-3 < _UB2 && k != 1 
+                #     push!(conπpoints2, @constraint(main_env.model, 0 >= ex2))
+                #     @info "_add feasible cut 2"
+                # end
             else
                 if status2 == FEASIBLE_POINT
                     if 1e-3 < _UB2
