@@ -1,6 +1,6 @@
 function generate_cut(
     master_env::AbstractMasterEnv,
-    sub_env::CFLPSplitSubEnv,
+    sub_env::AbstractSubEnv,
     ::SplitCutStrategy;
     time_limit = 1000.00)
 

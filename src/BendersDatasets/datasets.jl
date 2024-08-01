@@ -45,9 +45,7 @@ function generate_capacited_facility_location(
     total_capacity = sum(capacities)
 
     # transportation costs
-    trans_costs = sqrt.(
-        (c_x .- f_x') .^ 2 .+ (c_y .- f_y') .^ 2
-    ) .* 10 .* demands
+    trans_costs = sqrt.((c_x .- f_x') .^ 2 .+ (c_y .- f_y') .^ 2) .* 10 .* demands
     
 
     return CFLPData(n_facilities, n_customers, capacities, demands, fixed_costs, trans_costs)

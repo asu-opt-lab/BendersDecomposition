@@ -44,8 +44,6 @@ function generate_cut(
         subObjVal = -Inf
     end         
 
-
-
     sub_env.obj_value = subObjVal
     # @info "subObjVal: $subObjVal"
     return sub_time,ex

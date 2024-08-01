@@ -1,4 +1,4 @@
-export SubProblem
+export UFLPSplitSubEnv
 
 mutable struct UFLPStandardSubEnv <: AbstractSubEnv
     model::Model
@@ -10,16 +10,43 @@ mutable struct UFLPStandardSubEnv <: AbstractSubEnv
     algo_params
 end
 
+mutable struct UFLPSplitSubEnv <: AbstractSubEnv
+    model::Model
+    sub_constr::Array
+    sub_rhs::Array
+    cconstr::Array
+    obj_value::Float64
+
+    algo_params
+    data
+    BSPProblem
+    split_info
+    BSPProblem2
+end
+
 
 function UFLPStandardSubEnv(data::UFLPData, algo_params; solver::Symbol=:Gurobi)
     
-    model, constr, rhs, cconstr = generate_UFLP_subproblem(data, solver=solver)
+    model, constr, rhs, cconstr = generate_UFLP_subproblem(data, solver=solver) 
 
     return UFLPStandardSubEnv(model, constr, rhs, cconstr, 0.0, algo_params)
 end
 
+function UFLPSplitSubEnv(data::UFLPData, algo_params; solver::Symbol=:Gurobi)
+    
+    model, constr, rhs, cconstr = generate_UFLP_subproblem(data; solver=solver) 
 
-function generate_UFLP_subproblem(data::UFLPData; solver::Symbol=:Gurobi)
+    BSPProblem = generate_BSPProblem(data; solver=solver)
+    BSPProblem2 = generate_BSPProblem(data; solver=solver)
+    println("########### Building two Split SubProblems ###########")
+
+    split_info = SplitInfo([],[],[])
+    
+    return UFLPSplitSubEnv(model, constr, rhs, cconstr, 0.0, algo_params, data, BSPProblem, split_info, BSPProblem2)
+end
+
+
+function generate_UFLP_subproblem(data::Union{UFLPData,CFLPData}; solver::Symbol=:Gurobi)
     if solver == :CPLEX
         model =  Model(CPLEX.Optimizer)
         # set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
@@ -69,6 +96,8 @@ function generate_UFLP_subproblem(data::UFLPData; solver::Symbol=:Gurobi)
 
     return model, constr, rhs, cconstr
 end
+
+
 
 
 

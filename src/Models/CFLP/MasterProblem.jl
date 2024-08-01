@@ -9,7 +9,7 @@ mutable struct CFLPMasterEnv <: AbstractMasterEnv
     obj_value::Float64
 end
 
-function MasterProblem(data::CFLPData; solver::Symbol=:Gurobi)
+function CFLPMasterProblem(data::CFLPData; solver::Symbol=:Gurobi)
 
 
     if solver == :CPLEX
@@ -52,7 +52,7 @@ mutable struct UFLPMasterEnv <: AbstractMasterEnv
     obj_value::Float64
 end
 
-function MasterProblem(data::UFLPData; solver::Symbol=:Gurobi)
+function CFLPMasterProblem(data::UFLPData; solver::Symbol=:Gurobi)
 
 
     if solver == :CPLEX

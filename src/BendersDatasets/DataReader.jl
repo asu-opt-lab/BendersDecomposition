@@ -1,4 +1,4 @@
-export read_data, read_data_CUFL
+export read_data, read_orlib_file
 
 function read_random_data(filename::AbstractString;filepath="src/BendersDatasets/random_data/"::AbstractString)
     fullpath = joinpath(filepath, join([filename, ".json"]))
@@ -69,7 +69,7 @@ function read_data(filename::AbstractString;filepath="src/BendersDatasets/locssa
 end
 
 
-function read_data_UFL(filename::AbstractString;filepath="src/BendersDatasets/B"::AbstractString)
+function read_data_UFL(filename::AbstractString;filepath="src/BendersDatasets"::AbstractString)
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
 
@@ -96,4 +96,34 @@ function read_data_UFL(filename::AbstractString;filepath="src/BendersDatasets/B"
 
     demands = ones(Int,n_customers)
     return UFLPData(n_facilities, n_customers, demands, fixed_costs, costs)
+end
+
+function read_orlib_file(filename::String;filepath="src/BendersDatasets"::AbstractString)
+    open(filename, "r") do file
+        # Read the first line to get n and m
+        line = readline(file)
+        n, m = parse.(Int, split(line))
+
+        # Initialize arrays to store capacities, opening costs, demands, and allocation costs
+        capacities = zeros(Int, n)
+        opening_costs = zeros(Float64, n)
+        demands = zeros(Int, m)
+        allocation_costs = zeros(Float64, m, n)
+
+        # Read the capacities and opening costs for each facility
+        for i in 1:n
+            line = readline(file)
+            capacity, opening_cost = parse.(Float64, split(line))
+            capacities[i] = capacity
+            opening_costs[i] = opening_cost
+        end
+
+        # Read the demands and allocation costs for each city
+        for j in 1:m
+            demands[j] = parse(Int, readline(file))
+            allocation_costs[j, :] = parse.(Float64, split(readline(file)))
+        end
+
+        return n, m, capacities, opening_costs, demands, allocation_costs
+    end
 end
