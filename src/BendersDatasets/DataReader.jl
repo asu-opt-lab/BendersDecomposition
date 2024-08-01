@@ -1,6 +1,6 @@
-export read_data, read_orlib_file
+export read_benchmark_data, read_orlib_file
 
-function read_random_data(filename::AbstractString;filepath="src/BendersDatasets/random_data/"::AbstractString)
+function read_GK_data(filename::AbstractString;filepath="src/BendersDatasets/random_data/"::AbstractString)
     fullpath = joinpath(filepath, join([filename, ".json"]))
     loaded_json = open(fullpath, "r") do file
        read(file, String)
@@ -16,7 +16,7 @@ function read_random_data(filename::AbstractString;filepath="src/BendersDatasets
     return CFLPData(n_facilities, n_customers, capacities, demands, fixed_costs, costs)
 end
 
-function read_data(filename::AbstractString;filepath="src/BendersDatasets/locssall/"::AbstractString)
+function read_benchmark_data(filename::AbstractString;filepath="src/BendersDatasets/locssall/"::AbstractString)
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
 
@@ -69,7 +69,7 @@ function read_data(filename::AbstractString;filepath="src/BendersDatasets/locssa
 end
 
 
-function read_data_UFL(filename::AbstractString;filepath="src/BendersDatasets"::AbstractString)
+function read_Simple_data(filename::AbstractString;filepath="src/BendersDatasets"::AbstractString)
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
 
@@ -98,8 +98,9 @@ function read_data_UFL(filename::AbstractString;filepath="src/BendersDatasets"::
     return UFLPData(n_facilities, n_customers, demands, fixed_costs, costs)
 end
 
-function read_orlib_file(filename::String;filepath="src/BendersDatasets"::AbstractString)
-    open(filename, "r") do file
+function read_Orlib_data(filename::String;filepath="src/BendersDatasets/M/R"::AbstractString)
+    fullpath = joinpath(filepath, filename)
+    open(fullpath, "r") do file
         # Read the first line to get n and m
         line = readline(file)
         n, m = parse.(Int, split(line))

@@ -11,17 +11,8 @@ function generate_cut(
 
     x̂,t̂ = master_env.value_x, master_env.value_t
     start_time = time()
-    # BSPProblem = generate_BSPProblem(sub_env.data, solver=:Gurobi)
-    # BSPProblem2 = generate_BSPProblem(sub_env.data, solver=:Gurobi)
-    # BSPProblem = generate_BSPProblem_Advanced(sub_env.data)
-    # BSPProblem2 = generate_BSPProblem_Advanced(sub_env.data)
-
-    # solve_DCGLP(master_env,x̂,t̂, DCGLP_env, sub_env.BSPProblem, sub_env.algo_params.SplitCGLPNormType; time_limit)
-    # solve_DCGLP(master_env,x̂,t̂, DCGLP_env, sub_env.BSPProblem, sub_env.BSPProblem2, sub_env.algo_params.SplitCGLPNormType; time_limit)
-    # solve_DCGLP(master_env,x̂,t̂, DCGLP_env, BSPProblem, BSPProblem2, sub_env.algo_params.SplitCGLPNormType; time_limit)
 
     solve_DCGLP(master_env,x̂,t̂, DCGLP_env, sub_env.BSPProblem, sub_env.BSPProblem2, sub_env.algo_params.SplitCGLPNormType; time_limit)
-    # solve_DCGLP(master_env,x̂,t̂, DCGLP_env, sub_env, sub_env.algo_params.SplitCGLPNormType; time_limit)
 
     DCGLP_time = time() - start_time
 
@@ -43,24 +34,6 @@ function generate_cut(
     # sub_env.obj_value = Inf
     return DCGLP_time+sub_time,ex
 end
-
-
-# function solve_DCGLP(
-#     master_env,
-#     x̂,
-#     t̂,
-#     main_env::AbstractDCGLPEnv, 
-#     bsp_env::AbstractSubEnv,
-#     ::AbstractNormType;
-#     time_limit)
-
-#     @error "wrong type set"
-
-# end
-
-
-
-
 
 
 

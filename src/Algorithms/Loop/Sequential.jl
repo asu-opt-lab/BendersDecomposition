@@ -25,23 +25,7 @@ function run_Benders(
         #### Sub Part ####
         remaining_time -= master_time
         
-        # if iter <= 5
-        #     sub_time,ex = generate_cut(master_env, ssub_env, ADVANCED_CUTSTRATEGY; time_limit = remaining_time)
-        # else
-        #     sub_time,ex = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
-        # end
         sub_time,ex = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
-        
-        # a,b = select_split_set(master_env, sub_env.algo_params.SplitSetSelectionPolicy)
-        # delete(DCGLP_env.model, DCGLP_env.model[:consigma1])
-        # delete(DCGLP_env.model, DCGLP_env.model[:consigma2])
-        # unregister(DCGLP_env.model, :consigma1)
-        # unregister(DCGLP_env.model, :consigma2)
-        # @constraint(DCGLP_env.model, consigma1, 0 >= DCGLP_env.model[:k₀]*(b+1) - a'DCGLP_env.model[:kₓ])
-        # @constraint(DCGLP_env.model, consigma2, 0 >= -DCGLP_env.model[:v₀]*b + a'DCGLP_env.model[:vₓ])
-
-
-        # sub_time,ex = generate_cut(master_env, sub_env, DCGLP_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
 
         # Update Parameters
         UB_temp = sum(master_env.coef[i] * master_env.value_x[i] for i in eachindex(master_env.value_x))
@@ -54,12 +38,6 @@ function run_Benders(
         new_row = (iter, LB, UB, Gap, master_time, sub_time)
         push!(df, new_row)  
 
-        # _,ex2 = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
-        # _,ex3 = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
-        # _,ex4 = generate_cut(master_env, sub_env, sub_env.algo_params.cut_strategy; time_limit = remaining_time)
-        # @constraint(master_env.model, 0 >= ex2) 
-        # @constraint(master_env.model, 0 >= ex3) 
-        # @constraint(master_env.model, 0 >= ex4) 
         # Add Cut
         # @constraint(master_env.model, 0 >= ex)   
 
@@ -68,6 +46,7 @@ function run_Benders(
         @printf "%5d     %10.2f   %10.2f    %10.2f  %10.2f  %10.2f\n" iter LB UB Gap master_time sub_time  
         @info "Iter: $iter, LB: $LB, UB: $UB, Gap: $Gap, Master Time: $master_time, Sub Time: $sub_time"
         # Stopping Criteria
+
         # Gap 
         if Gap < 1e-3 
             break
@@ -108,81 +87,4 @@ function solve_master!(master_env::AbstractMasterEnv; time_limit=1000)
     master_env.value_x = JuMP.value.(master_env.var["cvar"])
 
     return master_time
-end
-
-function run_Benders_SAA(
-    datas,
-    master_env::AbstractMasterEnv,
-    sub_envs,
-    num_scenario,
-    time_limit = 1200)
-    
-    # Initialize
-    UB = Inf
-    LB = -Inf
-    iter = 1
-
-    algo_start_time = time()
-    remaining_time = time_limit
-
-    df = DataFrame(iter = Int[], LB = Float64[], UB = Float64[], gap = Float64[], master_time = Float64[], sub_time = Float64[])
-
-    while true
-
-        #### Master Part ####
-        master_time = solve_master!(master_env; time_limit = remaining_time)
-        LB = master_env.obj_value
-        
-        #### Sub Part ####
-        remaining_time -= master_time
-        cut_info = []
-        UB_temp = 0
-        sub_times = 0.0
-        for w in 1:num_scenario
-            sub_time,ex = generate_cut(master_env, sub_envs[w], w, sub_envs[w].algo_params.cut_strategy; time_limit = remaining_time)
-            push!(cut_info, ex)
-            UB_temp += sub_envs[w].obj_value 
-            sub_times += sub_time
-        end   
-        # Update Parameters
-        UB_temp /= num_scenario
-        UB_temp += sum(master_env.coef[i] * master_env.value_x[i] for i in eachindex(master_env.value_x))
-
-        UB = min(UB, UB_temp)
-        Gap = 100 * (UB - LB)/ abs(UB) 
-
-        # Store Data
-        new_row = (iter, LB, UB, Gap, master_time, sub_times)
-        push!(df, new_row)  
-        
-        # Add Cut
-        @constraint(master_env.model, 0 .>= cut_info)   
-
-        # Print
-        @printf "%5d     %10.2f   %10.2f    %10.2f  %10.2f  %10.2f\n" iter LB UB Gap master_time sub_times
-
-        # Stopping Criteria
-        # Gap 
-        if Gap < 1e-3
-            break
-        end 
-
-        # Time Limit
-        algo_run_time = time()
-        spend_time = algo_run_time - algo_start_time
-        remaining_time = time_limit - spend_time         
-        if spend_time > time_limit 
-            @info "Time limit $time_limit reached"
-            master_time = solve_master!(master_env; time_limit = remaining_time)
-            LB = master_env.obj_value
-            new_row = (iter+1, LB, Inf, Inf, master_time, Inf)
-            push!(df, new_row)  
-            break
-        end 
-
-        iter += 1
-    end
-
-   
-    return df
 end

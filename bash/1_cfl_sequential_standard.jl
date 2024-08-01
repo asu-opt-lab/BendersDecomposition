@@ -8,12 +8,12 @@ solver = :Gurobi
 
 settings = SplitBenders.parse_commandline()
 instance = settings["instance"]
-data = SplitBenders.read_random_data(instance)
+data = SplitBenders.read_GK_data(instance)
 # instance = "f700-c700-r5.0-p10"
-# data = SplitBenders.read_random_data(instance)
+# data = SplitBenders.read_GK_data(instance)
 
 # instance = "p70"
-# data = SplitBenders.read_data(instance)
+# data = SplitBenders.read_benchmark_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
