@@ -10,10 +10,10 @@ solver = :CPLEX
 settings = SplitBenders.parse_commandline()
 # instance = settings["instance"]
 # instance = "f700-c700-r5.0-p3"
-# data = SplitBenders.read_random_data(instance)
+# data = SplitBenders.read_GK_data(instance)
 
 instance = "p71"
-data = SplitBenders.read_data(instance)
+data = SplitBenders.read_benchmark_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()

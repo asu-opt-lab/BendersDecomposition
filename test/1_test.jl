@@ -45,7 +45,7 @@ check_df = DataFrame(Instance = String[], Check = Bool[])
 for i in 25:25
     instance = "p$i"
     @info "Instance: $instance"
-    data = SplitBenders.read_data(instance)
+    data = SplitBenders.read_benchmark_data(instance)
 
     master_env = SplitBenders.UFLPMasterProblem(data, solver=solver)
     relax_integrality(master_env.model)
