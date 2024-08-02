@@ -1,11 +1,9 @@
 include("MasterProblem.jl")
 
-
-
-
-include("Subproblem/subproblem.jl")
+include("BSP_ordinary.jl")
+include("Sub.jl")
 include("SubProblem.jl")
 
-
 include("DCGLP.jl")
-include("Mip.jl")
+
+include("MIP.jl")

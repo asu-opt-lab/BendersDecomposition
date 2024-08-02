@@ -124,7 +124,11 @@ function read_Orlib_data(filename::String;filepath="src/BendersDatasets/M/R"::Ab
             demands[j] = parse(Int, readline(file))
             allocation_costs[j, :] = parse.(Float64, split(readline(file)))
         end
-
-        return n, m, capacities, opening_costs, demands, allocation_costs
+        
+        if capacities[1] != 0
+            return CFLPData(n, m, capacities, demands, opening_costs, allocation_costs)
+        else
+            return UFLPData(n, m, demands, opening_costs, allocation_costs)
+        end
     end
 end

@@ -3,13 +3,13 @@ export UFLPMasterProblem
 mutable struct UFLPMasterEnv <: AbstractMasterEnv
     model::Model
     var::Dict
-    coef::Vector{Int}
+    coef::Vector{Float64}
     value_x::Vector{Float64}
     value_t::Float64
     obj_value::Float64
 end
 
-function UFLPMasterProblem(data::Union{UFLPData,CFLPData}; solver::Symbol=:Gurobi)
+function UFLPMasterProblem(data::UFLPData; solver::Symbol=:Gurobi)
 
 
     if solver == :CPLEX

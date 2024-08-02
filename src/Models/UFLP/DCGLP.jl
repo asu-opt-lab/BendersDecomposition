@@ -139,6 +139,6 @@ function DCGLP(sub_env::UFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::Gamm
         @constraint(model, sub_env.split_info.γ₀s[i]*v₀ + sub_env.split_info.γₓs[i]'vₓ + sub_env.split_info.γₜs[i]*vₜ <= 0)
     end
 
-    return CFLPDCGLPEnv(model, false, [], [], [], [])
+    return UFLPDCGLPEnv(model, false, [], [], [], [])
 end
 

@@ -5,18 +5,18 @@ abstract type AbstractData end
 struct CFLPData <: AbstractData
     n_facilities::Int
     n_customers::Int
-    capacities::Vector{Float32}
-    demands::Vector{Float32}
-    fixed_costs::Vector{Float32}
-    costs::Matrix{Float32}
+    capacities::Vector{Float64}
+    demands::Vector{Float64}
+    fixed_costs::Vector{Float64}
+    costs::Matrix{Float64}
 end
 
 struct UFLPData <: AbstractData
     n_facilities::Int
     n_customers::Int
-    demands::Vector{Int}
-    fixed_costs::Vector{Int}
-    costs::Matrix{Int}
+    demands::Vector{Float64}
+    fixed_costs::Vector{Float64}
+    costs::Matrix{Float64}
 end
 
 function generate_capacited_facility_location(

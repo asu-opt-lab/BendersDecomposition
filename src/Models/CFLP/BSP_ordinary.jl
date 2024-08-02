@@ -16,7 +16,7 @@ function generate_BSPProblem(data::CFLPData; solver::Symbol=:Gurobi)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
         # set_optimizer_attribute(model, "Method", 1)
-        # set_optimizer_attribute(model, "InfUnbdInfo", 1)
+        set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
     println("########### Building BSP Problem ###########")

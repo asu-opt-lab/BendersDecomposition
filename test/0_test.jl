@@ -4,8 +4,8 @@ using JuMP, CSV, Logging, DataFrames, CPLEX, Gurobi
 
 
 #-----------------------------------------------------------------------
-# solver = :Gurobi
-solver = :CPLEX
+solver = :Gurobi
+# solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
 
@@ -16,7 +16,7 @@ algo_params = SplitBenders.AlgorithmParams()
 cut_strategy = "SPLIT_CUTSTRATEGY"
 
 # "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
-SplitCGLPNormType = "L1GAMMANORM"
+SplitCGLPNormType = "STANDARDNORM"
 
 # "MOST_FRAC_INDEX", "RANDOM_INDEX"
 SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
@@ -25,7 +25,7 @@ SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
 StrengthenCutStrategy = "SPLIT_PURE_CUT_STRATEGY"
 
 # "NO_SPLIT_BENDERS_STRATEGY", "ALL_SPLIT_BENDERS_STRATEGY", "TIGHT_SPLIT_BENDERS_STRATEGY"
-SplitBendersStrategy = "NO_SPLIT_BENDERS_STRATEGY"
+SplitBendersStrategy = "ALL_SPLIT_BENDERS_STRATEGY"
 
 
 
@@ -40,14 +40,14 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 # relax_integrality(master_env.model)
 # sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
 check_df = DataFrame(Instance = String[], Check = Bool[])
-# for i in 1:66
+for i in 1:66
 # for i in 67:71
-for i in 30:30
+# for i in 30:30
     instance = "p$i"
     @info "Instance: $instance"
     data = SplitBenders.read_benchmark_data(instance)
 
-    master_env = SplitBenders.MasterProblem(data, solver=solver)
+    master_env = SplitBenders.CFLPMasterProblem(data, solver=solver)
     relax_integrality(master_env.model)
     sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params, solver=solver) 
     df = SplitBenders.run_Benders(data,master_env,sub_env)
@@ -62,7 +62,7 @@ for i in 30:30
     if !check @error "Instance: $instance: Mismatch in objective values: $obj_split vs $obj_mip" end
 end
 
-# CSV.write("test/check.csv", check_df)
+CSV.write("test/check.csv", check_df)
 
 
 
