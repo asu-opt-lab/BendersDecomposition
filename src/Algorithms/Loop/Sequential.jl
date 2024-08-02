@@ -2,7 +2,7 @@ function run_Benders(
     data::AbstractData,
     master_env::AbstractMasterEnv,
     sub_env::AbstractSubEnv,
-    time_limit = 3600*2)
+    time_limit = 600)
     
     # Initialize
     UB = Inf
