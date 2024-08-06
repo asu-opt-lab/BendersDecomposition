@@ -6,7 +6,7 @@ function solve_DCGLP(
     bsp_env1::AbstractSubEnv,
     bsp_env2::AbstractSubEnv,
     pConeType::GammaNorm;
-    time_limit)
+    time_limit=100)
 
     # @info x̂
     k = 0
@@ -152,7 +152,7 @@ function solve_DCGLP(
 
 
         ##################### check termination #####################
-        if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 || k >= 50
+        if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 || k >= 30
             main_env.ifsolved = true
             break
         end

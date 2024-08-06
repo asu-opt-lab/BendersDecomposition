@@ -10,7 +10,7 @@ function CFLPMipEnv(data; is_CPLEX=true)
         model =  Model(Gurobi.Optimizer)
         set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
-    set_optimizer_attribute(model, MOI.Silent(),true)
+    # set_optimizer_attribute(model, MOI.Silent(),true)
 
     @variable(model, x[1:data.n_facilities], Bin)
     # @variable(model, 0<=x[1:data.n_facilities]<=1)
