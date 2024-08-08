@@ -9,7 +9,7 @@ solver = :Gurobi
 # @info "Instance: $instance"
 # data = SplitBenders.read_Orlib_data(instance; filepath = "src/BendersDatasets/M/O")
 
-instance = "ga250a-3"
+instance = "KoerkelGhosh-asym/250/a/ga250a-3"
 @info "Instance: $instance"
 data = SplitBenders.read_Simple_data(instance; filepath = "src/BendersDatasets")
 
