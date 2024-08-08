@@ -9,7 +9,7 @@ solver = :Gurobi
 
 settings = SplitBenders.parse_commandline()
 instance = settings["instance"]
-data = SplitBenders.read_Simple_data(instance; filepath = "src/BendersDatasets")
+data = SplitBenders.read_Simple_data(instance; filepath = "src/BendersDatasets/KoerkelGhosh-asym/")
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
@@ -46,7 +46,7 @@ master_env = SplitBenders.UFLPMasterProblem(data, solver=solver)
 relax_integrality(master_env.model)
 sub_env = SplitBenders.UFLPSplitSubEnv(data,algo_params, solver=solver)
 # sub_env = SplitBenders.CFLPBSPADEnv(data,algo_params, solver=solver)
-io = open("results3/Split_all_L1_iter0_2hr/result_$(instance).txt", "w+")
+io = open("results4/Split_all_L1_iter50_2hr/result_$(instance).txt", "w+")
 logger = SimpleLogger(io)
 with_logger(logger) do
     df = SplitBenders.run_Benders(data,master_env,sub_env)

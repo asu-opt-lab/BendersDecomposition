@@ -2,7 +2,7 @@ function run_Benders(
     data::AbstractData,
     master_env::AbstractMasterEnv,
     sub_env::AbstractSubEnv,
-    time_limit = 600)
+    time_limit = 7200)
     
     # Initialize
     UB = Inf
@@ -56,7 +56,7 @@ function run_Benders(
         algo_run_time = time()
         spend_time = algo_run_time - algo_start_time
         remaining_time = time_limit - spend_time         
-        if spend_time > time_limit || iter >= 5
+        if spend_time > time_limit #|| iter >= 5
             @info "Time limit $time_limit reached"
             # set_binary.(master_env.model[:x])
             master_time = solve_master!(master_env; time_limit = 1000)
