@@ -19,8 +19,10 @@ function master(c)
     num = length(c)
     # @variable(m, x, Bin)
     @variable(m, 0<=x<=1)
-    @variable(m, t>=-1e10)
+    @variable(m, t>=-1e06)
     @objective(m, Min, c*x+t)
+    # @constraint(m, t +15x >= 8)
+    # @constraint(m, t -35x >= -24.5)
     return m
 end
 
@@ -164,20 +166,23 @@ function run_Benders_split(c, d, A, B, b)
     extreme_points = []
     extreme_rays = []
     iter = 1
+    DCGLP = _DCGLP()
     while true
         optimize!(master_problem)
         x̂ = value.(master_problem[:x])
         t̂ = value(master_problem[:t])
         LB = JuMP.objective_value(master_problem)
         @info "x̂ = $x̂"
+        @info "master_problem"
+        @info master_problem
 
-        DCGLP = _DCGLP()
         set_normalized_rhs.(DCGLP[:conx], x̂)
         set_normalized_rhs.(DCGLP[:cont], t̂)
         _UB1 = Inf  
         _UB2 = Inf
         k = 1
         while true
+            @info DCGLP
             optimize!(DCGLP)
             k̂₀ = value(DCGLP[:k₀])
             k̂ₓ = value.(DCGLP[:kₓ])
@@ -212,7 +217,7 @@ function run_Benders_split(c, d, A, B, b)
             else
                 g₁ = 0
             end
-            _UB1 = min(_UB1, g₁ - k̂ₜ)
+            _UB1 = min(_UB1, k̂₀*g₁ - k̂ₜ)
 
             if v̂₀ != 0
                 set_normalized_rhs(sub_problem[:conx], v̂ₓ./v̂₀)
@@ -238,14 +243,15 @@ function run_Benders_split(c, d, A, B, b)
             else
                 g₂ = 0
             end
-            _UB2 = min(_UB2, g₂ - v̂ₜ)
+            _UB2 = min(_UB2, v̂₀*g₂ - v̂ₜ)
 
             LB = τ̂
             # UB = min(UB,norm([ _sx; g₁+g₂-t̂], Inf))
             UB = min(UB,norm([ _sx; g₁+g₂-t̂], 1))
 
             @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
-            if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 || k >= 5
+            if ((UB - LB)/abs(UB) <= 1e-6 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 || k >= 5
+                @info DCGLP
                 break
             end
 
@@ -256,15 +262,17 @@ function run_Benders_split(c, d, A, B, b)
                     @constraint(DCGLP, 0 >= const_term2*DCGLP[:k₀] + extreme_ray2 * DCGLP[:kₓ])
                 end
             else
-                @constraint(DCGLP, 0 >= ex1)
+                # @constraint(DCGLP, 0 >= ex1)
                 if status1 == FEASIBLE_POINT
                     if 1e-3 < _UB1
                         @constraint(DCGLP, 0 >= ex1)
                         push!(extreme_points, [extreme_point, const_term])
+                        # @constraint(master_problem, master_problem[:t] >= const_term + extreme_point * master_problem[:x])
                     end
                 else
                     @constraint(DCGLP, 0 >= ex1)
                     push!(extreme_rays, [extreme_ray, const_term])
+                    # @constraint(master_problem, 0 >= const_term + extreme_ray * master_problem[:x])
                 end
             end
 
@@ -275,15 +283,17 @@ function run_Benders_split(c, d, A, B, b)
                     @constraint(DCGLP, 0 >= const_term*DCGLP[:v₀] + extreme_ray * DCGLP[:vₓ])
                 end
             else
-                @constraint(DCGLP, 0 >= ex2)
+                # @constraint(DCGLP, 0 >= ex2)
                 if status2 == FEASIBLE_POINT
                     if 1e-3 < _UB2
                         @constraint(DCGLP, 0 >= ex2)
                         push!(extreme_points, [extreme_point2, const_term2])
+                        # @constraint(master_problem, master_problem[:t] >= const_term2 + extreme_point2 * master_problem[:x])
                     end
                 else
                     @constraint(DCGLP, 0 >= ex2)
                     push!(extreme_rays, [extreme_ray2, const_term2])
+                    # @constraint(master_problem, 0 >= const_term2 + extreme_ray2 * master_problem[:x])
                 end
             end
 
@@ -297,7 +307,7 @@ function run_Benders_split(c, d, A, B, b)
         @constraint(master_problem, -γ₀ - γₓ*master_problem[:x] - γₜ*master_problem[:t] >= 0) 
         @info master_problem
 
-        if iter >= 5
+        if iter >= 2
             break
         end
         # UB = min(UB, c*x̂ + subObjVal)
@@ -319,7 +329,7 @@ function run_Benders_split(c, d, A, B, b)
 
 
     optimize!(master_problem)
-    @info JuMP.objective_value(master_problem)
+    @info JuMP.objective_value(master_problem), value(master_problem[:x]), value(master_problem[:t])
 
     return extreme_points, extreme_rays
 end
