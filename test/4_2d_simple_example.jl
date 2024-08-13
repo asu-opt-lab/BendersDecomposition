@@ -1,12 +1,13 @@
 using JuMP, Gurobi, LinearAlgebra, Plots
+# using PlotlyJS
 # define the problem
-c = 0
+c = [1,1]
 d = 1
-A = [15, 10, 10, -10, -70]
+A = [15 10 10 -10 -70; 45 7 16 35 26]
 # B = [1, 3, 1, 2, 2]
 # B = [2, 3, 4, 2, 5] # correct 
 B = [10, 6, 4, 7, 9]
-b = [8, 13, 7, -1, -49]
+b = [8, 17, 9, 1, 49]
 
 # function mip(d, A, B, b, c)
 #     m = Model(Gurobi.Optimizer)
@@ -20,9 +21,9 @@ function master(c)
     set_optimizer_attribute(m, MOI.Silent(),true)
     num = length(c)
     # @variable(m, x, Bin)
-    @variable(m, 0<=x<=3)
+    @variable(m, 0<=x[1:2]<=1)
     @variable(m, t>=-1e06)
-    @objective(m, Min, c*x+t)
+    @objective(m, Min, c'x+t)
     # @constraint(m, t +15x >= 8)
     # @constraint(m, t -35x >= -24.5)
     return m
@@ -35,9 +36,9 @@ function sub(d, A, B, b)
     set_optimizer_attribute(model, MOI.Silent(),true)
     # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     @variable(model, y >= 0)
-    @variable(model, x)
-    @constraint(model, con, A.*x + B.*y .>= b)
-    @constraint(model, conx, x==0)
+    @variable(model, x[1:2])
+    @constraint(model, con, A'x + B.*y .>= b)
+    @constraint(model, conx, x.==0)
     @objective(model, Min, d*y)
     return model
 end
@@ -52,10 +53,10 @@ function _DCGLP()
     # Variables
     @variable(model, τ)
     @variable(model, k₀>=0)
-    @variable(model, kₓ)
+    @variable(model, kₓ[1:2])
     @variable(model, kₜ)
     @variable(model, v₀>=0)
-    @variable(model, vₓ)
+    @variable(model, vₓ[1:2])
     @variable(model, vₜ)
     @variable(model, sx)
     @variable(model, st)
@@ -65,13 +66,13 @@ function _DCGLP()
     
 
     # Constraints
-    @constraint(model, consigma1, 0 >= 2*k₀ - kₓ) 
-    @constraint(model, coneta1, 0 >= -k₀ + kₓ) 
-    @constraint(model, consigma2, 0 >= -1*v₀ + vₓ) 
-    @constraint(model, coneta2, 0 >= -v₀ + vₓ)
+    @constraint(model, consigma1, 0 .>= 1*k₀ .- kₓ) 
+    @constraint(model, coneta1, 0 .>= -k₀ .+ kₓ) 
+    @constraint(model, consigma2, 0 .>= -0*v₀ .+ vₓ) 
+    @constraint(model, coneta2, 0 .>= -v₀ .+ vₓ)
 
-    @constraint(model, conv1, 0 >= -kₓ)
-    @constraint(model, conv2, 0 >= -vₓ)
+    @constraint(model, conv1, 0 .>= -kₓ)
+    @constraint(model, conv2, 0 .>= -vₓ)
 
     @constraint(model, con0, k₀ + v₀ == 1)
     
@@ -79,7 +80,7 @@ function _DCGLP()
     @constraint(model, concone, [τ; sx ; st] in MOI.NormOneCone(2 + 1))
 
     
-    @constraint(model, conx, kₓ .+ vₓ .- sx == 0)  #x̂
+    @constraint(model, conx, kₓ .+ vₓ .- sx .== 0)  #x̂
     @constraint(model, cont, kₜ + vₜ - st == 0) #t̂
     
     
@@ -108,21 +109,21 @@ function run_Benders(c, d, A, B, b)
         LB = JuMP.objective_value(master_problem)
         @info "x̂ = $x̂"
 
-        set_normalized_rhs(sub_problem[:conx], x̂)
+        set_normalized_rhs.(sub_problem[:conx], x̂)
         optimize!(sub_problem)
         @info value(sub_problem[:y])
         status = dual_status(sub_problem)
         if status == FEASIBLE_POINT
             subObjVal = JuMP.objective_value(sub_problem)
-            extreme_point = dual(sub_problem[:conx])
-            const_term = subObjVal - extreme_point * x̂
-            ex = @expression(master_problem, -master_problem[:t] + subObjVal + extreme_point * (master_problem[:x] - x̂) )
+            extreme_point = dual.(sub_problem[:conx])
+            const_term = subObjVal - extreme_point'x̂
+            ex = @expression(master_problem, -master_problem[:t] + subObjVal + extreme_point'(master_problem[:x] .- x̂) )
         elseif status == INFEASIBILITY_CERTIFICATE
             if has_duals(sub_problem)
                 subObjVal = JuMP.objective_value(sub_problem)
-                extreme_ray = dual(sub_problem[:conx])
+                extreme_ray = dual.(sub_problem[:conx])
                 const_term = dual.(sub_problem[:con])'b
-                ex = @expression(master_problem, extreme_ray * master_problem[:x] + const_term)
+                ex = @expression(master_problem, extreme_ray'master_problem[:x] + const_term)
             else
                 @error "infeasible sub has no infeasible ray"
                 throw(-1)
@@ -175,7 +176,38 @@ end
 function run_Benders_split(c, d, A, B, b)
 
     figure = plot()
-    x = range(0,3, length=10)
+    x1 = range(0,3, length=10)
+    x2 = range(0,3, length=10)
+    # layout = Layout(
+    #     title="Mt Bruno Elevation",
+    #     autosize=false,
+    #     width=500,
+    #     height=500,
+    #     margin=attr(l=65, r=50, b=65, t=90)
+    # )
+    # layout = Layout(
+    #     scene=attr(
+    #         xaxis=attr(
+    #             nticks=4,
+    #             range=[0,1]
+    #         ),
+    #         yaxis=attr(
+    #             nticks=4,
+    #             range=[-0,1]
+    #         ),
+    #         zaxis=attr(
+    #             nticks=4,
+    #             range=[-50,50]
+    #         ),
+    #     ),
+    #     width=700,
+    #     margin=attr(
+    #         r=20,
+    #         l=10,
+    #         b=10,
+    #         t=10
+    #     ),
+    # )
     master_problem = master(c)
     sub_problem = sub(d, A, B, b)
     num = length(c)
@@ -214,21 +246,21 @@ function run_Benders_split(c, d, A, B, b)
             _sx = value(DCGLP[:sx])
             @info "k̂₀ = $k̂₀, v̂₀ = $v̂₀, k̂ₓ = $k̂ₓ, v̂ₓ = $v̂ₓ, k̂ₜ = $k̂ₜ, v̂ₜ = $v̂ₜ"
             if k̂₀ != 0
-                set_normalized_rhs(sub_problem[:conx], k̂ₓ./k̂₀)
+                set_normalized_rhs.(sub_problem[:conx], k̂ₓ./k̂₀)
                 optimize!(sub_problem)
                 status1 = dual_status(sub_problem)
                 if status1 == FEASIBLE_POINT
                     g₁ = JuMP.objective_value(sub_problem)
-                    extreme_point = dual(sub_problem[:conx])
+                    extreme_point = dual.(sub_problem[:conx])
                     const_term = dual.(sub_problem[:con])'b
-                    ex1 = @expression(DCGLP, -DCGLP[:kₜ] + const_term*DCGLP[:k₀] + extreme_point * DCGLP[:kₓ] )
+                    ex1 = @expression(DCGLP, -DCGLP[:kₜ] + const_term*DCGLP[:k₀] + extreme_point'DCGLP[:kₓ] )
                     # push!(extreme_points, [extreme_point, const_term])
                     _UB1 = g₁ - k̂ₜ
                 elseif status1 == INFEASIBILITY_CERTIFICATE
                     g₁ = Inf
-                    extreme_ray = dual(sub_problem[:conx])
+                    extreme_ray = dual.(sub_problem[:conx])
                     const_term = dual.(sub_problem[:con])'b
-                    ex1 = @expression(DCGLP, const_term*DCGLP[:k₀] + extreme_ray * DCGLP[:kₓ])
+                    ex1 = @expression(DCGLP, const_term*DCGLP[:k₀] + extreme_ray'DCGLP[:kₓ])
                     # push!(extreme_rays, [extreme_ray, const_term])
                 else
                     g₁ = Inf
@@ -240,21 +272,21 @@ function run_Benders_split(c, d, A, B, b)
             _UB1 = min(_UB1, k̂₀*g₁ - k̂ₜ)
 
             if v̂₀ != 0
-                set_normalized_rhs(sub_problem[:conx], v̂ₓ./v̂₀)
+                set_normalized_rhs.(sub_problem[:conx], v̂ₓ./v̂₀)
                 optimize!(sub_problem)
                 status2 = dual_status(sub_problem)
                 if status2 == FEASIBLE_POINT
                     g₂ = JuMP.objective_value(sub_problem)
-                    extreme_point2 = dual(sub_problem[:conx])
+                    extreme_point2 = dual.(sub_problem[:conx])
                     const_term2 = dual.(sub_problem[:con])'b
-                    ex2 = @expression(DCGLP, -DCGLP[:vₜ] + const_term2*DCGLP[:v₀] + extreme_point2 * DCGLP[:vₓ] )
+                    ex2 = @expression(DCGLP, -DCGLP[:vₜ] + const_term2*DCGLP[:v₀] + extreme_point2'DCGLP[:vₓ] )
                     _UB2 = g₂ - v̂ₜ
                     # push!(extreme_points, [extreme_point2, const_term2])
                 elseif status2 == INFEASIBILITY_CERTIFICATE
                     g₂ = Inf
-                    extreme_ray2 = dual(sub_problem[:conx])
+                    extreme_ray2 = dual.(sub_problem[:conx])
                     const_term2 = dual.(sub_problem[:con])'b
-                    ex2 = @expression(DCGLP, const_term2*DCGLP[:v₀] + extreme_ray2 * DCGLP[:vₓ])
+                    ex2 = @expression(DCGLP, const_term2*DCGLP[:v₀] + extreme_ray2'DCGLP[:vₓ])
                     # push!(extreme_rays, [extreme_ray2, const_term2])
                 else
                     g₂ = Inf
@@ -277,9 +309,9 @@ function run_Benders_split(c, d, A, B, b)
 
             if k̂₀ == 0
                 if status2 == FEASIBLE_POINT
-                    @constraint(DCGLP, 0 >= -DCGLP[:kₜ] + const_term2*DCGLP[:k₀] + extreme_point2 * DCGLP[:kₓ])
+                    @constraint(DCGLP, 0 >= -DCGLP[:kₜ] + const_term2*DCGLP[:k₀] + extreme_point2'DCGLP[:kₓ])
                 else
-                    @constraint(DCGLP, 0 >= const_term2*DCGLP[:k₀] + extreme_ray2 * DCGLP[:kₓ])
+                    @constraint(DCGLP, 0 >= const_term2*DCGLP[:k₀] + extreme_ray2'DCGLP[:kₓ])
                 end
             else
                 # @constraint(DCGLP, 0 >= ex1)
@@ -298,9 +330,9 @@ function run_Benders_split(c, d, A, B, b)
 
             if v̂₀ == 0
                 if status1 == FEASIBLE_POINT
-                    @constraint(DCGLP, 0 >= -DCGLP[:vₜ] + const_term*DCGLP[:v₀] + extreme_point * DCGLP[:vₓ])
+                    @constraint(DCGLP, 0 >= -DCGLP[:vₜ] + const_term*DCGLP[:v₀] + extreme_point'DCGLP[:vₓ])
                 else
-                    @constraint(DCGLP, 0 >= const_term*DCGLP[:v₀] + extreme_ray * DCGLP[:vₓ])
+                    @constraint(DCGLP, 0 >= const_term*DCGLP[:v₀] + extreme_ray'DCGLP[:vₓ])
                 end
             else
                 # @constraint(DCGLP, 0 >= ex2)
@@ -322,13 +354,26 @@ function run_Benders_split(c, d, A, B, b)
 
         γₜ = dual(DCGLP[:cont])
         γ₀ = dual(DCGLP[:con0])
-        γₓ = dual(DCGLP[:conx])
+        γₓ = dual.(DCGLP[:conx])
         @info "γ₀ = $γ₀, γₓ = $γₓ, γₜ = $γₜ"
-        @constraint(master_problem, -γ₀ - γₓ*master_problem[:x] - γₜ*master_problem[:t] >= 0) 
+        @constraint(master_problem, -γ₀ - γₓ'master_problem[:x] - γₜ*master_problem[:t] >= 0) 
         @info master_problem
-        y = -γ₀/γₜ .- γₓ/γₜ*x
-        plot!(figure, x, y, label="gamma_$iter", width = 2)
-        if iter >= 3
+        f(x1,x2)= -γ₀/γₜ .- γₓ[1]/γₜ*x1 .- γₓ[2]/γₜ*x2
+        plot!(figure, x1, x2, f, st=:surface,label="gamma_$iter")
+        # @info f
+        display(figure)
+        # p = plot(surface(zdata=f,x=x1,y=x2), layout)
+        # p = plot(mesh3d(x = (x1), y = (x2), z = (f.(x1,x2))), layout)
+        # p = plot(mesh3d(
+        #     x=(0.7 .* randn(10)),
+        #     y=(0.55 .* randn(10)),
+        #     z=(0.40 .* randn(10)),
+        #     color="rgba(244,22,100,0.6)"
+        # ),
+        # layout,)
+        # p = surface(x=x1, y=x2, z=f)
+        # display(p)
+        if iter >= 4
             break
         end
         
@@ -349,10 +394,11 @@ function run_Benders_split(c, d, A, B, b)
     for i in 1:length(extreme_points)
         extreme_point = extreme_points[i][1]
         const_term = extreme_points[i][2]
-        y = const_term .+ extreme_point * x
-        plot!(figure, x, y, label="extreme_point_$i")
+        g(x1,x2) = const_term .+ extreme_point[1] * x1 .+ extreme_point[2] * x2
+        plot!(figure, x1, x2, g, st=:surface,label="extreme_point_$i")
     end
-    savefig("split_benders.png")
+    savefig("split_benders_3d.png")
+    # figure
     return extreme_points, extreme_rays
 end
 
