@@ -1,9 +1,9 @@
 using JuMP, Gurobi, LinearAlgebra, Plots
-# using PlotlyJS
+using PlotlyJS
 # define the problem
 c = [1,1]
 d = 1
-A = [15 10 10 -10 -70; 45 7 16 35 26]
+A = [15 10 10 -10 -70; 45 7 -16 35 26]
 # B = [1, 3, 1, 2, 2]
 # B = [2, 3, 4, 2, 5] # correct 
 B = [10, 6, 4, 7, 9]
@@ -175,7 +175,7 @@ end
 
 function run_Benders_split(c, d, A, B, b)
 
-    figure = plot()
+    figure = plot(xlims=(0,1), ylims=(0,1), zlims=(-50,50), camera=(-10,-10,-5))
     x1 = range(0,3, length=10)
     x2 = range(0,3, length=10)
     # layout = Layout(
@@ -185,29 +185,29 @@ function run_Benders_split(c, d, A, B, b)
     #     height=500,
     #     margin=attr(l=65, r=50, b=65, t=90)
     # )
-    # layout = Layout(
-    #     scene=attr(
-    #         xaxis=attr(
-    #             nticks=4,
-    #             range=[0,1]
-    #         ),
-    #         yaxis=attr(
-    #             nticks=4,
-    #             range=[-0,1]
-    #         ),
-    #         zaxis=attr(
-    #             nticks=4,
-    #             range=[-50,50]
-    #         ),
-    #     ),
-    #     width=700,
-    #     margin=attr(
-    #         r=20,
-    #         l=10,
-    #         b=10,
-    #         t=10
-    #     ),
-    # )
+    layout = Layout(
+        scene=attr(
+            xaxis=attr(
+                nticks=4,
+                range=[0,1]
+            ),
+            yaxis=attr(
+                nticks=4,
+                range=[-0,1]
+            ),
+            zaxis=attr(
+                nticks=4,
+                range=[-50,50]
+            ),
+        ),
+        width=700,
+        margin=attr(
+            r=20,
+            l=10,
+            b=10,
+            t=10
+        ),
+    )
     master_problem = master(c)
     sub_problem = sub(d, A, B, b)
     num = length(c)
@@ -372,8 +372,10 @@ function run_Benders_split(c, d, A, B, b)
         # ),
         # layout,)
         # p = surface(x=x1, y=x2, z=f)
+        # z_data = [f(x1_, x2_) for x1_ in x1, x2_ in x2]
+        # p = plot(surface(x=x1, y=x2, z=z_data), layout)
         # display(p)
-        if iter >= 4
+        if iter >= 3
             break
         end
         
