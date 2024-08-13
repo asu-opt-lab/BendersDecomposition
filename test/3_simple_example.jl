@@ -20,7 +20,7 @@ function master(c)
     set_optimizer_attribute(m, MOI.Silent(),true)
     num = length(c)
     # @variable(m, x, Bin)
-    @variable(m, 0<=x<=3)
+    @variable(m, 0<=x<=1)
     @variable(m, t>=-1e06)
     @objective(m, Min, c*x+t)
     # @constraint(m, t +15x >= 8)
@@ -65,9 +65,9 @@ function _DCGLP()
     
 
     # Constraints
-    @constraint(model, consigma1, 0 >= 2*k₀ - kₓ) 
+    @constraint(model, consigma1, 0 >= 1*k₀ - kₓ) 
     @constraint(model, coneta1, 0 >= -k₀ + kₓ) 
-    @constraint(model, consigma2, 0 >= -1*v₀ + vₓ) 
+    @constraint(model, consigma2, 0 >= -0*v₀ + vₓ) 
     @constraint(model, coneta2, 0 >= -v₀ + vₓ)
 
     @constraint(model, conv1, 0 >= -kₓ)
@@ -175,7 +175,7 @@ end
 function run_Benders_split(c, d, A, B, b)
 
     figure = plot()
-    x = range(0,3, length=10)
+    x = range(0,1, length=10)
     master_problem = master(c)
     sub_problem = sub(d, A, B, b)
     num = length(c)
@@ -327,7 +327,7 @@ function run_Benders_split(c, d, A, B, b)
         @constraint(master_problem, -γ₀ - γₓ*master_problem[:x] - γₜ*master_problem[:t] >= 0) 
         @info master_problem
         y = -γ₀/γₜ .- γₓ/γₜ*x
-        plot!(figure, x, y, label="gamma_$iter", width = 2)
+        plot!(figure, x, y, label="gamma_$iter", width = 4)
         if iter >= 3
             break
         end
