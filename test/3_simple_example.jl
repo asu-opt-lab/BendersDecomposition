@@ -357,6 +357,6 @@ function run_Benders_split(c, d, A, B, b)
 end
 
 
-run_Benders_split(c, d, A, B, b)
+# run_Benders_split(c, d, A, B, b)
 # extreme_points, extreme_rays = run_Benders(c, d, A, B, b)
 # txfigure(extreme_points, extreme_rays)

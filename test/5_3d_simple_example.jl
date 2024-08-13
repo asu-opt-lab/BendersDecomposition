@@ -7,7 +7,15 @@ A = [0.6 -0.3; 0.9 -0.7]
 # B = [1, 3, 1, 2, 2]
 # B = [2, 3, 4, 2, 5] # correct 
 B = [0 -1 -0.4 0.8; -1 0 -1.3 -0.6]
-b = [0.4, 0.6]
+b = [0.5, 0.6]
+
+# c = [1,1]
+# d = [1,1,1,1]
+# A = [10 6; 4 7]
+# # B = [1, 3, 1, 2, 2]
+# # B = [2, 3, 4, 2, 5] # correct 
+# B = [15 10 -10 -70; 45 -16 35 26]
+# b = [8, 17]
 
 # function mip(d, A, B, b, c)
 #     m = Model(Gurobi.Optimizer)
@@ -56,7 +64,7 @@ function sub(d, A, B, b)
     return model
 end
 
-function _DCGLP()
+function _DCGLP(vector_a)
 
     # model = Model(CPLEX.Optimizer)
     model = Model(Gurobi.Optimizer)
@@ -71,7 +79,7 @@ function _DCGLP()
     @variable(model, v₀>=0)
     @variable(model, vₓ[1:2])
     @variable(model, vₜ)
-    @variable(model, sx)
+    @variable(model, sx[1:2])
     @variable(model, st)
 
     # Objective
@@ -79,9 +87,9 @@ function _DCGLP()
     
 
     # Constraints
-    @constraint(model, consigma1, 0 .>= 1*k₀ .- [0,1]'kₓ) 
+    @constraint(model, consigma1, 0 >= 1*k₀ - vector_a'kₓ) 
     @constraint(model, coneta1, 0 .>= -k₀ .+ kₓ) 
-    @constraint(model, consigma2, 0 .>= -0*v₀ .+ [0,1]'vₓ) 
+    @constraint(model, consigma2, 0 >= -0*v₀ + vector_a'vₓ) 
     @constraint(model, coneta2, 0 .>= -v₀ .+ vₓ)
 
     @constraint(model, conv1, 0 .>= -kₓ)
@@ -90,7 +98,7 @@ function _DCGLP()
     @constraint(model, con0, k₀ + v₀ == 1)
     
     # @constraint(model, concone, [τ; sx ; st] in MOI.NormInfinityCone(2 + 1))
-    @constraint(model, concone, [τ; sx ; st] in MOI.NormOneCone(2 + 1))
+    @constraint(model, concone, [τ; sx ; st] in MOI.NormOneCone(2 + 2))
 
     
     @constraint(model, conx, kₓ .+ vₓ .- sx .== 0)  #x̂
@@ -232,7 +240,7 @@ function run_Benders_split(c, d, A, B, b)
     extreme_points = []
     extreme_rays = []
     iter = 1
-    DCGLP = _DCGLP()
+
 
     while true
         optimize!(master_problem)
@@ -243,6 +251,11 @@ function run_Benders_split(c, d, A, B, b)
         @info "master_problem"
         @info master_problem
 
+        gap_x = abs.(x̂ .- 0.5)
+        index = findmin(gap_x)[2]
+        a = zeros(Int, length(x̂))
+        a[index] = 1
+        DCGLP = _DCGLP(a)
         set_normalized_rhs.(DCGLP[:conx], x̂)
         set_normalized_rhs.(DCGLP[:cont], t̂)
         _UB1 = Inf  
@@ -258,7 +271,7 @@ function run_Benders_split(c, d, A, B, b)
             v̂ₓ = value.(DCGLP[:vₓ])
             v̂ₜ = value(DCGLP[:vₜ])
             τ̂ = value(DCGLP[:τ])
-            _sx = value(DCGLP[:sx])
+            _sx = value.(DCGLP[:sx])
             @info "k̂₀ = $k̂₀, v̂₀ = $v̂₀, k̂ₓ = $k̂ₓ, v̂ₓ = $v̂ₓ, k̂ₜ = $k̂ₜ, v̂ₜ = $v̂ₜ"
             if k̂₀ != 0
                 set_normalized_rhs.(sub_problem[:conx], k̂ₓ./k̂₀)
@@ -285,6 +298,7 @@ function run_Benders_split(c, d, A, B, b)
                 g₁ = 0
             end
             _UB1 = min(_UB1, k̂₀*g₁ - k̂ₜ)
+            # _UB1 = k̂₀*g₁ - k̂ₜ
 
             if v̂₀ != 0
                 set_normalized_rhs.(sub_problem[:conx], v̂ₓ./v̂₀)
@@ -311,23 +325,24 @@ function run_Benders_split(c, d, A, B, b)
                 g₂ = 0
             end
             _UB2 = min(_UB2, v̂₀*g₂ - v̂ₜ)
+            # _UB2 = v̂₀*g₂ - v̂ₜ
 
             LB = τ̂
             # UB = min(UB,norm([ _sx; g₁+g₂-t̂], Inf))
-            UB = min(UB,norm([ _sx; g₁+g₂-t̂], 1))
+            UB = min(UB,norm([ _sx;  k̂₀*g₁+v̂₀*g₂-t̂], 1))
 
             @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
-            if ((UB - LB)/abs(UB) <= 1e-6 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 || k >= 5
+            if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 #|| k >= 5
                 @info DCGLP
                 break
             end
 
             if k̂₀ == 0
-                # if status2 == FEASIBLE_POINT
-                #     @constraint(DCGLP, 0 >= -DCGLP[:kₜ] + const_term2*DCGLP[:k₀] + extreme_point2'DCGLP[:kₓ])
-                # else
-                #     @constraint(DCGLP, 0 >= const_term2*DCGLP[:k₀] + extreme_ray2'DCGLP[:kₓ])
-                # end
+                if status2 == FEASIBLE_POINT
+                    @constraint(DCGLP, 0 >= -DCGLP[:kₜ] + const_term2*DCGLP[:k₀] + extreme_point2'DCGLP[:kₓ])
+                else
+                    @constraint(DCGLP, 0 >= const_term2*DCGLP[:k₀] + extreme_ray2'DCGLP[:kₓ])
+                end
             else
                 # @constraint(DCGLP, 0 >= ex1)
                 if status1 == FEASIBLE_POINT
@@ -344,11 +359,11 @@ function run_Benders_split(c, d, A, B, b)
             end
 
             if v̂₀ == 0
-                # if status1 == FEASIBLE_POINT
-                #     @constraint(DCGLP, 0 >= -DCGLP[:vₜ] + const_term*DCGLP[:v₀] + extreme_point'DCGLP[:vₓ])
-                # else
-                #     @constraint(DCGLP, 0 >= const_term*DCGLP[:v₀] + extreme_ray'DCGLP[:vₓ])
-                # end
+                if status1 == FEASIBLE_POINT
+                    @constraint(DCGLP, 0 >= -DCGLP[:vₜ] + const_term*DCGLP[:v₀] + extreme_point'DCGLP[:vₓ])
+                else
+                    @constraint(DCGLP, 0 >= const_term*DCGLP[:v₀] + extreme_ray'DCGLP[:vₓ])
+                end
             else
                 # @constraint(DCGLP, 0 >= ex2)
                 if status2 == FEASIBLE_POINT
@@ -390,7 +405,7 @@ function run_Benders_split(c, d, A, B, b)
         # z_data = [f(x1_, x2_) for x1_ in x1, x2_ in x2]
         # p = plot(surface(x=x1, y=x2, z=z_data), layout)
         # display(p)
-        if iter >= 3
+        if iter >= 4
             break
         end
         
@@ -421,6 +436,6 @@ function run_Benders_split(c, d, A, B, b)
 end
 
 
-run_Benders_split(c, d, A, B, b)
-# extreme_points, extreme_rays = run_Benders(c, d, A, B, b)
+# run_Benders_split(c, d, A, B, b)
+extreme_points, extreme_rays = run_Benders(c, d, A, B, b)
 # txfigure(extreme_points, extreme_rays)
