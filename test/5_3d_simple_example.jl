@@ -198,7 +198,7 @@ end
 
 function run_Benders_split(c, d, A, B, b)
 
-    figure = plot(xlims=(0,1), ylims=(0,1), zlims=(-50,50), camera=(-10,-10,-5))
+    figure = plot(xlims=(0,1), ylims=(0,1), zlims=(-1,1), camera=(0.5,10,0.5))
     x1 = range(0,3, length=10)
     x2 = range(0,3, length=10)
     # layout = Layout(
@@ -388,10 +388,10 @@ function run_Benders_split(c, d, A, B, b)
         @info "γ₀ = $γ₀, γₓ = $γₓ, γₜ = $γₜ"
         @constraint(master_problem, -γ₀ - γₓ'master_problem[:x] - γₜ*master_problem[:t] >= 0) 
         @info master_problem
-        # f(x1,x2)= -γ₀/γₜ .- γₓ[1]/γₜ*x1 .- γₓ[2]/γₜ*x2
-        # plot!(figure, x1, x2, f, st=:surface,label="gamma_$iter")
+        f(x1,x2)= -γ₀/γₜ .- γₓ[1]/γₜ*x1 .- γₓ[2]/γₜ*x2
+        plot!(figure, x1, x2, f, st=:surface,label="gamma_$iter")
         # # @info f
-        # display(figure)
+        display(figure)
         # p = plot(surface(zdata=f,x=x1,y=x2), layout)
         # p = plot(mesh3d(x = (x1), y = (x2), z = (f.(x1,x2))), layout)
         # p = plot(mesh3d(
@@ -437,5 +437,20 @@ end
 
 
 # run_Benders_split(c, d, A, B, b)
-extreme_points, extreme_rays = run_Benders(c, d, A, B, b)
+# extreme_points, extreme_rays = run_Benders(c, d, A, B, b)
+# @info extreme_points
+using Polyhedra
+h1 = HalfSpace([-1.345,0.925,0], -0.975)
+h2 = HalfSpace([0,0,-1], 0)
+h3 = HalfSpace([-0.345,0.1725,-1], -0.2875)
+h = h1 ∩ h2 ∩ h3
+# h = h1  ∩ h3
+p = polyhedron(h)
+@info p
+m = Polyhedra.Mesh(p)
+using MeshCat
+vis = Visualizer()
+setobject!(vis, m)
+open(vis)
+# plot(p, ratio=:equal)
 # txfigure(extreme_points, extreme_rays)
