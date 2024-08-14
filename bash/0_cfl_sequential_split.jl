@@ -4,15 +4,15 @@ using JuMP, CSV, Logging
 
 
 #-----------------------------------------------------------------------
-# solver = :Gurobi
-solver = :CPLEX
+solver = :Gurobi
+# solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
 # instance = settings["instance"]
-# instance = "f700-c700-r5.0-p3"
+# instance = "f700-c700-r5.0-p1"
 # data = SplitBenders.read_GK_data(instance)
 
-instance = "p71"
+instance = "p10"
 data = SplitBenders.read_benchmark_data(instance)
 
 #-----------------------------------------------------------------------
@@ -46,7 +46,7 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 # relax_integrality(master_env.model)
 # sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
 
-master_env = SplitBenders.MasterProblem(data, solver=solver)
+master_env = SplitBenders.CFLPMasterProblem(data, solver=solver)
 relax_integrality(master_env.model)
 sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params, solver=solver)
 # sub_env = SplitBenders.CFLPBSPADEnv(data,algo_params, solver=solver)

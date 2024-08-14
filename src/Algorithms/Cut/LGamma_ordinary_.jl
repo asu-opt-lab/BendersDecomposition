@@ -18,8 +18,8 @@ function solve_DCGLP(
     conπrays2 = []
     masterconπpoints1 = []
     masterconπpoints2 = []
-    # masterconπrays1 = []
-    # masterconπrays2 = []
+    masterconπrays1 = []
+    masterconπrays2 = []
     _UB1 = Inf
     _UB2 = Inf
     
@@ -82,20 +82,21 @@ function solve_DCGLP(
 
             if status1 == FEASIBLE_POINT
                 g₁ = objective_value(bsp_env1.model)
-                ex1 = @expression(main_env.model, 
-                dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs*main_env.model[:k₀]
-                + dual.(bsp_env1.cconstr)'main_env.model[:kₓ]
-                - main_env.model[:kₜ])
-                _UB1 = g₁ - k̂ₜ
-                push!(masterconπpoints1, @expression(master_env.model, dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs + dual.(bsp_env1.cconstr)'master_env.model[:x]))
+                push!(conπpoints1, [dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs,dual.(bsp_env1.cconstr)])
+                # ex1 = @expression(main_env.model, 
+                # dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs*main_env.model[:k₀]
+                # + dual.(bsp_env1.cconstr)'main_env.model[:kₓ]
+                # - main_env.model[:kₜ])
+                # push!(masterconπpoints1, @expression(master_env.model, dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs + dual.(bsp_env1.cconstr)'master_env.model[:x]))
 
             elseif status1 == INFEASIBILITY_CERTIFICATE 
                 @info status1
                 g₁ = Inf
-                ex1 = @expression(main_env.model, 
-                dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs*main_env.model[:k₀]
-                + dual.(bsp_env1.cconstr)'main_env.model[:kₓ])
-                push!(conπrays1, @expression(master_env.model, dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs + dual.(bsp_env1.cconstr)'master_env.model[:x]))
+                push!(conπrays1, [dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs,dual.(bsp_env1.cconstr)])
+                # ex1 = @expression(main_env.model, 
+                # dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs*main_env.model[:k₀]
+                # + dual.(bsp_env1.cconstr)'main_env.model[:kₓ])
+                # push!(conπrays1, @expression(master_env.model, dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs + dual.(bsp_env1.cconstr)'master_env.model[:x]))
             else
                 g₁ = Inf
                 @error "Wrong status1 = $status1"
@@ -103,7 +104,7 @@ function solve_DCGLP(
         else
             g₁ = 0
         end
-        _UB1 = min(_UB1, g₁ - k̂ₜ)
+        _UB1 = min(_UB1, k̂₀*g₁ - k̂ₜ)
 
 
         ##################### BSP2 #####################
@@ -121,18 +122,19 @@ function solve_DCGLP(
 
             if status2 == FEASIBLE_POINT && termination_status(bsp_env2.model) !=  TIME_LIMIT
                 g₂ = objective_value(bsp_env2.model)
-                ex2 = @expression(main_env.model, 
-                dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs*main_env.model[:v₀]
-                + dual.(bsp_env2.cconstr)'main_env.model[:vₓ]
-                - main_env.model[:vₜ])
-                _UB2 = g₂ - v̂ₜ
-                push!(masterconπpoints2, @expression(master_env.model, dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs + dual.(bsp_env2.cconstr)'master_env.model[:x]))
+                push!(conπpoints2, [dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs,dual.(bsp_env2.cconstr)])
+                # ex2 = @expression(main_env.model, 
+                # dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs*main_env.model[:v₀]
+                # + dual.(bsp_env2.cconstr)'main_env.model[:vₓ]
+                # - main_env.model[:vₜ])
+                # push!(masterconπpoints2, @expression(master_env.model, dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs + dual.(bsp_env2.cconstr)'master_env.model[:x]))
             elseif status2 == INFEASIBILITY_CERTIFICATE && termination_status(bsp_env2.model) !=  TIME_LIMIT
                 g₂ = Inf
-                ex2 = @expression(main_env.model, 
-                dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs*main_env.model[:v₀]
-                + dual.(bsp_env2.cconstr)'main_env.model[:vₓ])
-                push!(conπrays2, @expression(master_env.model, dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs + dual.(bsp_env2.cconstr)'master_env.model[:x]))
+                push!(conπrays2, [dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs,dual.(bsp_env2.cconstr)])
+                # ex2 = @expression(main_env.model, 
+                # dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs*main_env.model[:v₀]
+                # + dual.(bsp_env2.cconstr)'main_env.model[:vₓ])
+                # push!(conπrays2, @expression(master_env.model, dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs + dual.(bsp_env2.cconstr)'master_env.model[:x]))
             else
                 g₂ = Inf
                 @error "Wrong status2 = $status2"
@@ -140,13 +142,13 @@ function solve_DCGLP(
         else
             g₂ = 0
         end
-        _UB2 = min(_UB2, g₂ - v̂ₜ)
+        _UB2 = min(_UB2, v̂₀*g₂ - v̂ₜ)
          
 
 
         ##################### LB and UB #####################
         LB = τ̂
-        UB = update_UB!(UB,_sx,g₁,g₂,t̂, pConeType)
+        UB = update_UB!(UB,_sx,k̂₀*g₁,v̂₀*g₂,t̂, pConeType)
 
         @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
 
@@ -165,18 +167,23 @@ function solve_DCGLP(
         ##################### add cuts into DCGLP and master problem #####################
         if termination_status(bsp_env1.model) !=  TIME_LIMIT
             if k̂₀ == 0
-                # if 1e-3 < _UB1 && k != 1 
-                #     push!(conπpoints1, @constraint(main_env.model, 0 >= ex1))
-                #     @info "_add feasible cut 1"
-                # end
+                if status2 == FEASIBLE_POINT
+                    @constraint(main_env.model, main_env.model[:kₜ] >= conπpoints2[end][1]*main_env.model[:k₀] + conπpoints2[end][2]'main_env.model[:kₓ])
+                elseif status2 == INFEASIBILITY_CERTIFICATE
+                    @constraint(main_env.model, 0 >= conπrays2[end][1]*main_env.model[:k₀] + conπrays2[end][2]'main_env.model[:kₓ])
+                end
             else
                 if status1 == FEASIBLE_POINT 
                     if 1e-3 < _UB1
-                        push!(conπpoints1, @constraint(main_env.model, 0 >= ex1))
+                        @constraint(main_env.model, main_env.model[:kₜ] >= conπpoints1[end][1]*main_env.model[:k₀] + conπpoints1[end][2]'main_env.model[:kₓ])
+                        @constraint(main_env.model, main_env.model[:vₜ] >= conπpoints1[end][1]*main_env.model[:v₀] + conπpoints1[end][2]'main_env.model[:vₓ])
+                        push!(masterconπpoints1, @expression(master_env.model, - master_env.model[:t] + conπpoints1[end][1] + conπpoints1[end][2]'master_env.model[:x]))
                         @info "add feasible cut 1"
                     end
                 elseif status1 == INFEASIBILITY_CERTIFICATE
-                    push!(conπrays1, @constraint(main_env.model, 0 >= ex1))  # 10*ex1
+                    @constraint(main_env.model, 0 >= conπrays1[end][1]*main_env.model[:k₀] + conπrays1[end][2]'main_env.model[:kₓ])
+                    # @constraint(main_env.model, 0 >= conπrays1[end][1]*main_env.model[:v₀] + conπrays1[end][2]'main_env.model[:vₓ])
+                    push!(masterconπrays1, @expression(master_env.model, conπrays1[end][1] + conπrays1[end][2]'master_env.model[:x]))
                     @info "add infeasible cut 1"
                 end
             end
@@ -184,18 +191,23 @@ function solve_DCGLP(
 
         if termination_status(bsp_env2.model) !=  TIME_LIMIT
             if v̂₀ == 0
-                # if 1e-3 < _UB2 && k != 1 
-                #     push!(conπpoints2, @constraint(main_env.model, 0 >= ex2))
-                #     @info "_add feasible cut 2"
-                # end
+                if status1 == FEASIBLE_POINT
+                    @constraint(main_env.model, main_env.model[:vₜ] >= conπpoints1[end][1]*main_env.model[:v₀] + conπpoints1[end][2]'main_env.model[:vₓ])
+                elseif status1 == INFEASIBILITY_CERTIFICATE
+                    @constraint(main_env.model, 0 >= conπrays1[end][1]*main_env.model[:v₀] + conπrays1[end][2]'main_env.model[:vₓ])
+                end
             else
                 if status2 == FEASIBLE_POINT
                     if 1e-3 < _UB2
-                        push!(conπpoints2, @constraint(main_env.model, 0 >= ex2))
+                        @constraint(main_env.model, main_env.model[:vₜ] >= conπpoints2[end][1]*main_env.model[:v₀] + conπpoints2[end][2]'main_env.model[:vₓ])
+                        @constraint(main_env.model, main_env.model[:kₜ] >= conπpoints2[end][1]*main_env.model[:k₀] + conπpoints2[end][2]'main_env.model[:kₓ])
+                        push!(masterconπpoints2, @expression(master_env.model, -master_env.model[:t] + conπpoints2[end][1] + conπpoints2[end][2]'master_env.model[:x]))
                         @info "add feasible cut 2"
                     end
                 elseif status2 == INFEASIBILITY_CERTIFICATE
-                    push!(conπrays2, @constraint(main_env.model, 0 >= ex2))  # 10*ex2
+                    @constraint(main_env.model, 0 >= conπrays2[end][1]*main_env.model[:v₀] + conπrays2[end][2]'main_env.model[:vₓ])
+                    @constraint(main_env.model, 0 >= conπrays2[end][1]*main_env.model[:k₀] + conπrays2[end][2]'main_env.model[:kₓ])
+                    push!(masterconπrays2, @expression(master_env.model, conπrays2[end][1] + conπrays2[end][2]'master_env.model[:x]))
                     @info "add infeasible cut 2"
                 end
             end
@@ -206,8 +218,6 @@ function solve_DCGLP(
     ##################### update #####################
     main_env.masterconπpoints1 = masterconπpoints1
     main_env.masterconπpoints2 = masterconπpoints2
-    @info "masterconπpoints1 = $(masterconπpoints1)"
-    @info "masterconπpoints2 = $(masterconπpoints2)"
     main_env.conπpoints1 = conπpoints1  # calculate dual value later need
     main_env.conπpoints2 = conπpoints2
 
@@ -225,26 +235,3 @@ function update_UB!(UB,_sx,g₁,g₂,t̂,::LInfGammaNorm) return min(UB,norm([ _
 
 
 
-# @info status1s
-    # @info status2s
-    # point = [k̂ₓs[end]; v̂ₓs[end] ; k̂ₜs[end] ; v̂ₜs[end]; k̂₀s[end]; v̂₀s[end]]
-    # # for iter in 1:k
-    # #     # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
-    # #     # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
-    # #     # @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
-    # #     # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
-    # #     point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
-    # #     @info "distance_inf_$iter = $(norm(point_iter - point, Inf))"
-    # #     # println("distance_L2_$iter = $(norm(point_iter - point, 2))")
-    # # end
-    # for iter in 2:k
-    #     # @info "k̂ₓs[$iter] = $(k̂ₓs[iter])"
-    #     # @info "v̂ₓs[$iter] = $(v̂ₓs[iter])"
-    #     # @info "distance_k_$iter = $(norm(k̂ₓs[iter] - k̂ₓs[end], 2))"
-    #     # @info "distance_v_$iter = $(norm(v̂ₓs[iter] - v̂ₓs[end], 2))"
-    #     point_iter_ = [k̂ₓs[iter-1]; v̂ₓs[iter-1] ; k̂ₜs[iter-1] ; v̂ₜs[iter-1]; k̂₀s[iter-1]; v̂₀s[iter-1]]
-    #     point_iter = [k̂ₓs[iter]; v̂ₓs[iter] ; k̂ₜs[iter] ; v̂ₜs[iter]; k̂₀s[iter]; v̂₀s[iter]]
-    #     # @info "_distance_L2_$iter = $(norm(point_iter - point_iter_, 2))"
-    #     # @info "distance_L2_$iter = $(norm(point_iter - point, 2))"
-    #    # println("distance_inf_$iter = $(norm(point_iter - point, Inf))")
-    # end
