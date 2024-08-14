@@ -86,7 +86,7 @@ function solve_DCGLP(
                 dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs*main_env.model[:k₀]
                 + dual.(bsp_env1.cconstr)'main_env.model[:kₓ]
                 - main_env.model[:kₜ])
-                _UB1 = g₁ - k̂ₜ
+                _UB1 = k̂₀*g₁ - k̂ₜ
                 push!(masterconπpoints1, @expression(master_env.model, dual.(bsp_env1.sub_constr)'bsp_env1.sub_rhs + dual.(bsp_env1.cconstr)'master_env.model[:x]))
 
             elseif status1 == INFEASIBILITY_CERTIFICATE 
@@ -103,7 +103,7 @@ function solve_DCGLP(
         else
             g₁ = 0
         end
-        _UB1 = min(_UB1, g₁ - k̂ₜ)
+        _UB1 = min(_UB1, k̂₀*g₁ - k̂ₜ)
 
 
         ##################### BSP2 #####################
@@ -125,7 +125,7 @@ function solve_DCGLP(
                 dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs*main_env.model[:v₀]
                 + dual.(bsp_env2.cconstr)'main_env.model[:vₓ]
                 - main_env.model[:vₜ])
-                _UB2 = g₂ - v̂ₜ
+                _UB2 = v̂₀*g₂ - v̂ₜ
                 push!(masterconπpoints2, @expression(master_env.model, dual.(bsp_env2.sub_constr)'bsp_env2.sub_rhs + dual.(bsp_env2.cconstr)'master_env.model[:x]))
             elseif status2 == INFEASIBILITY_CERTIFICATE && termination_status(bsp_env2.model) !=  TIME_LIMIT
                 g₂ = Inf
@@ -140,13 +140,14 @@ function solve_DCGLP(
         else
             g₂ = 0
         end
-        _UB2 = min(_UB2, g₂ - v̂ₜ)
+        _UB2 = min(_UB2, v̂₀*g₂ - v̂ₜ)
          
 
 
         ##################### LB and UB #####################
         LB = τ̂
-        UB = update_UB!(UB,_sx,g₁,g₂,t̂, pConeType)
+        UB = update_UB!(UB,_sx,k̂₀*g₁,v̂₀*g₂,t̂, pConeType)
+        # UB = update_UB!(UB,_sx,g₁,g₂,t̂, pConeType)
 
         @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
 
