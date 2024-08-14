@@ -89,13 +89,13 @@ end
 
 function generate_cut!(master_env::AbstractMasterEnv,main_env::AbstractDCGLPEnv,::AllSplitBendersStrategy)
     for ex1 in main_env.masterconπpoints1
-        # @constraint(master_env.model,master_env.model[:t] >= ex1)
-        @constraint(master_env.model,0 >= ex1)
+        @constraint(master_env.model,master_env.model[:t] >= ex1)
+        # @constraint(master_env.model,0 >= ex1)
         # @info ex1
     end
     for ex2 in main_env.masterconπpoints2
-        # @constraint(master_env.model,master_env.model[:t] >= ex2)
-        @constraint(master_env.model,0 >= ex2)
+        @constraint(master_env.model,master_env.model[:t] >= ex2)
+        # @constraint(master_env.model,0 >= ex2)
         # @info ex2
     end
 end

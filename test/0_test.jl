@@ -4,8 +4,8 @@ using JuMP, CSV, Logging, DataFrames, CPLEX, Gurobi
 
 
 #-----------------------------------------------------------------------
-solver = :Gurobi
-# solver = :CPLEX
+# solver = :Gurobi
+solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
 
@@ -25,7 +25,7 @@ SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
 StrengthenCutStrategy = "SPLIT_PURE_CUT_STRATEGY"
 
 # "NO_SPLIT_BENDERS_STRATEGY", "ALL_SPLIT_BENDERS_STRATEGY", "TIGHT_SPLIT_BENDERS_STRATEGY"
-SplitBendersStrategy = "NO_SPLIT_BENDERS_STRATEGY"
+SplitBendersStrategy = "ALL_SPLIT_BENDERS_STRATEGY"
 
 
 
@@ -40,7 +40,7 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 # relax_integrality(master_env.model)
 # sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params)
 check_df = DataFrame(Instance = String[], Check = Bool[])
-for i in 1:66
+for i in 25:25
 # for i in 67:71
 # for i in 30:30
     instance = "p$i"
@@ -56,7 +56,7 @@ for i in 1:66
     mip_env = SplitBenders.CFLPMipEnv(data)
     optimize!(mip_env.model)
     obj_mip = objective_value(mip_env.model)
-
+    @info "Instance: $instance: Split: $obj_split, MIP: $obj_mip"
     check = obj_split ≈ obj_mip
     push!(check_df, (instance, check))
     if !check @error "Instance: $instance: Mismatch in objective values: $obj_split vs $obj_mip" end

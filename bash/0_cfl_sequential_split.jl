@@ -4,16 +4,16 @@ using JuMP, CSV, Logging
 
 
 #-----------------------------------------------------------------------
-solver = :Gurobi
-# solver = :CPLEX
+# solver = :Gurobi
+solver = :CPLEX
 
 settings = SplitBenders.parse_commandline()
 # instance = settings["instance"]
-# instance = "f700-c700-r5.0-p1"
-# data = SplitBenders.read_GK_data(instance)
+instance = "f1000-c1000-r5.0-p1"
+data = SplitBenders.read_GK_data(instance)
 
-instance = "p10"
-data = SplitBenders.read_benchmark_data(instance)
+# instance = "p10"
+# data = SplitBenders.read_benchmark_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
