@@ -6,10 +6,11 @@ using JuMP, CSV, Logging
 #-----------------------------------------------------------------------
 # solver = :Gurobi
 solver = :CPLEX
+time_limit = 600
 
 settings = SplitBenders.parse_commandline()
-# instance = settings["instance"]
-instance = "f1000-c1000-r5.0-p1"
+instance = settings["instance"]
+# instance = "f1000-c1000-r5.0-p1"
 data = SplitBenders.read_GK_data(instance)
 
 # instance = "p10"
@@ -50,14 +51,14 @@ master_env = SplitBenders.CFLPMasterProblem(data, solver=solver)
 relax_integrality(master_env.model)
 sub_env = SplitBenders.CFLPSplitSubEnv(data,algo_params, solver=solver)
 # sub_env = SplitBenders.CFLPBSPADEnv(data,algo_params, solver=solver)
-# io = open("results3/Split_all_L1_iter0_2hr/result_$(instance).txt", "w+")
-# logger = SimpleLogger(io)
-# with_logger(logger) do
-#     df = SplitBenders.run_Benders(data,master_env,sub_env)
-#     CSV.write("results3/Split_all_L1_iter0_2hr/result_$(instance).csv", df)
-# end
-# flush(io)
-# close(io)
+io = open("results3/Split_all_L1_iter50_2hr_/result_$(instance).txt", "w+")
+logger = SimpleLogger(io)
+with_logger(logger) do
+    df = SplitBenders.run_Benders(data,master_env,sub_env)
+    CSV.write("results3/Split_all_L1_iter50_2hr_/result_$(instance).csv", df)
+end
+flush(io)
+close(io)
 df = SplitBenders.run_Benders(data,master_env,sub_env)
 
 # result post processing
