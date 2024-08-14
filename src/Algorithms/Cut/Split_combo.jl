@@ -89,32 +89,32 @@ end
 
 function generate_cut!(master_env::AbstractMasterEnv,main_env::AbstractDCGLPEnv,::AllSplitBendersStrategy)
     for ex1 in main_env.masterconπpoints1
-        @constraint(master_env.model,master_env.model[:t] >= ex1)
-        # @constraint(master_env.model,0 >= ex1)
+        # @constraint(master_env.model,master_env.model[:t] >= ex1)
+        @constraint(master_env.model,0 >= ex1)
         # @info ex1
     end
     for ex2 in main_env.masterconπpoints2
-        @constraint(master_env.model,master_env.model[:t] >= ex2)
-        # @constraint(master_env.model,0 >= ex2)
+        # @constraint(master_env.model,master_env.model[:t] >= ex2)
+        @constraint(master_env.model,0 >= ex2)
         # @info ex2
     end
 end
 
 
-function generate_cut!(master_env::AbstractMasterEnv,main_env::AbstractDCGLPEnv,::TightSplitBendersStrategy)
-    λ₁ = dual.(main_env.conπpoints1)
-    λ₂ = dual.(main_env.conπpoints2)
-    for i in eachindex(λ₁)
-        if λ₁[i] > 1e-05
-            @constraint(master_env.model, master_env.model[:t] >= main_env.masterconπpoints1[i])
-        end
-    end
-    for i in eachindex(λ₂)
-        if λ₂[i] > 1e-05
-            @constraint(master_env.model, master_env.model[:t] >= main_env.masterconπpoints2[i])
-        end
-    end
-end
+# function generate_cut!(master_env::AbstractMasterEnv,main_env::AbstractDCGLPEnv,::TightSplitBendersStrategy)
+#     λ₁ = dual.(main_env.conπpoints1)
+#     λ₂ = dual.(main_env.conπpoints2)
+#     for i in eachindex(λ₁)
+#         if λ₁[i] > 1e-05
+#             @constraint(master_env.model, master_env.model[:t] >= main_env.masterconπpoints1[i])
+#         end
+#     end
+#     for i in eachindex(λ₂)
+#         if λ₂[i] > 1e-05
+#             @constraint(master_env.model, master_env.model[:t] >= main_env.masterconπpoints2[i])
+#         end
+#     end
+# end
 
 #############################################
 

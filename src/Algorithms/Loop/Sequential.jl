@@ -49,6 +49,10 @@ function run_Benders(
 
         # Gap 
         if Gap < 1e-3 
+            master_time = solve_master!(master_env; time_limit = 1000)
+            LB = master_env.obj_value
+            new_row = (iter+1, LB, Inf, Inf, master_time, Inf)
+            push!(df, new_row)  
             break
         end 
 
@@ -81,7 +85,7 @@ function solve_master!(master_env::AbstractMasterEnv; time_limit=1000)
     set_time_limit_sec(master_env.model, max(time_limit,10))
     JuMP.optimize!(master_env.model)
     master_time = time() - start_time
-
+    @info termination_status(master_env.model)
     master_env.obj_value = JuMP.objective_value(master_env.model)
     master_env.value_t = JuMP.value.(master_env.var["t"])
     master_env.value_x = JuMP.value.(master_env.var["cvar"])

@@ -16,7 +16,7 @@ algo_params = SplitBenders.AlgorithmParams()
 cut_strategy = "SPLIT_CUTSTRATEGY"
 
 # "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
-SplitCGLPNormType = "STANDARDNORM"
+SplitCGLPNormType = "L1GAMMANORM"
 
 # "MOST_FRAC_INDEX", "RANDOM_INDEX"
 SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
@@ -25,7 +25,7 @@ SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
 StrengthenCutStrategy = "SPLIT_PURE_CUT_STRATEGY"
 
 # "NO_SPLIT_BENDERS_STRATEGY", "ALL_SPLIT_BENDERS_STRATEGY", "TIGHT_SPLIT_BENDERS_STRATEGY"
-SplitBendersStrategy = "ALL_SPLIT_BENDERS_STRATEGY"
+SplitBendersStrategy = "NO_SPLIT_BENDERS_STRATEGY"
 
 
 
