@@ -207,8 +207,8 @@ function solve_DCGLP(
     ##################### update #####################
     main_env.masterconπpoints1 = masterconπpoints1
     main_env.masterconπpoints2 = masterconπpoints2
-    @info "masterconπpoints1 = $(masterconπpoints1)"
-    @info "masterconπpoints2 = $(masterconπpoints2)"
+    # @info "masterconπpoints1 = $(masterconπpoints1)"
+    # @info "masterconπpoints2 = $(masterconπpoints2)"
     main_env.conπpoints1 = conπpoints1  # calculate dual value later need
     main_env.conπpoints2 = conπpoints2
 

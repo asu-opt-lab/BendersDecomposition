@@ -160,18 +160,18 @@ function solve_DCGLP(
         end
 
         if time_limit <= time() - start_time
-            main_env.ifsolved = false
+            main_env.ifsolved = true
             break
         end
 
         ##################### add cuts into DCGLP and master problem #####################
         if termination_status(bsp_env1.model) !=  TIME_LIMIT
             if k̂₀ == 0
-                if status2 == FEASIBLE_POINT
-                    @constraint(main_env.model, main_env.model[:kₜ] >= conπpoints2[end][1]*main_env.model[:k₀] + conπpoints2[end][2]'main_env.model[:kₓ])
-                elseif status2 == INFEASIBILITY_CERTIFICATE
-                    @constraint(main_env.model, 0 >= conπrays2[end][1]*main_env.model[:k₀] + conπrays2[end][2]'main_env.model[:kₓ])
-                end
+                # if status2 == FEASIBLE_POINT
+                #     @constraint(main_env.model, main_env.model[:kₜ] >= conπpoints2[end][1]*main_env.model[:k₀] + conπpoints2[end][2]'main_env.model[:kₓ])
+                # elseif status2 == INFEASIBILITY_CERTIFICATE
+                #     @constraint(main_env.model, 0 >= conπrays2[end][1]*main_env.model[:k₀] + conπrays2[end][2]'main_env.model[:kₓ])
+                # end
             else
                 if status1 == FEASIBLE_POINT 
                     if 1e-3 < _UB1
@@ -191,16 +191,16 @@ function solve_DCGLP(
 
         if termination_status(bsp_env2.model) !=  TIME_LIMIT
             if v̂₀ == 0
-                if status1 == FEASIBLE_POINT
-                    @constraint(main_env.model, main_env.model[:vₜ] >= conπpoints1[end][1]*main_env.model[:v₀] + conπpoints1[end][2]'main_env.model[:vₓ])
-                elseif status1 == INFEASIBILITY_CERTIFICATE
-                    @constraint(main_env.model, 0 >= conπrays1[end][1]*main_env.model[:v₀] + conπrays1[end][2]'main_env.model[:vₓ])
-                end
+                # if status1 == FEASIBLE_POINT
+                #     @constraint(main_env.model, main_env.model[:vₜ] >= conπpoints1[end][1]*main_env.model[:v₀] + conπpoints1[end][2]'main_env.model[:vₓ])
+                # elseif status1 == INFEASIBILITY_CERTIFICATE
+                #     @constraint(main_env.model, 0 >= conπrays1[end][1]*main_env.model[:v₀] + conπrays1[end][2]'main_env.model[:vₓ])
+                # end
             else
                 if status2 == FEASIBLE_POINT
                     if 1e-3 < _UB2
                         @constraint(main_env.model, main_env.model[:vₜ] >= conπpoints2[end][1]*main_env.model[:v₀] + conπpoints2[end][2]'main_env.model[:vₓ])
-                        # @constraint(main_env.model, main_env.model[:kₜ] >= conπpoints2[end][1]*main_env.model[:k₀] + conπpoints2[end][2]'main_env.model[:kₓ])
+                        @constraint(main_env.model, main_env.model[:kₜ] >= conπpoints2[end][1]*main_env.model[:k₀] + conπpoints2[end][2]'main_env.model[:kₓ])
                         @info "add feasible cut 2"
                     end
                     # push!(masterconπpoints2, @expression(master_env.model, -master_env.model[:t] + conπpoints2[end][1] + conπpoints2[end][2]'master_env.model[:x]))
