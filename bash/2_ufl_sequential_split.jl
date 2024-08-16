@@ -9,6 +9,7 @@ solver = :Gurobi
 
 settings = SplitBenders.parse_commandline()
 instance = settings["instance"]
+instance = "ga500c-1"
 data = SplitBenders.read_Simple_data(instance; filepath = "src/BendersDatasets/KoerkelGhosh-asym/")
 
 #-----------------------------------------------------------------------
@@ -27,7 +28,7 @@ SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
 StrengthenCutStrategy = "SPLIT_STRENGTHEN_CUT_STRATEGY"
 
 # "NO_SPLIT_BENDERS_STRATEGY", "ALL_SPLIT_BENDERS_STRATEGY", "TIGHT_SPLIT_BENDERS_STRATEGY"
-SplitBendersStrategy = "ALL_SPLIT_BENDERS_STRATEGY"
+SplitBendersStrategy = "NO_SPLIT_BENDERS_STRATEGY"
 
 
 
@@ -46,15 +47,15 @@ master_env = SplitBenders.UFLPMasterProblem(data, solver=solver)
 relax_integrality(master_env.model)
 sub_env = SplitBenders.UFLPSplitSubEnv(data,algo_params, solver=solver)
 # sub_env = SplitBenders.CFLPBSPADEnv(data,algo_params, solver=solver)
-io = open("results4/Split_all_L1_iter50_2hr_/result_$(instance).txt", "w+")
-logger = SimpleLogger(io)
-with_logger(logger) do
-    df = SplitBenders.run_Benders(data,master_env,sub_env)
-    CSV.write("results4/Split_all_L1_iter50_2hr_/result_$(instance).csv", df)
-end
-flush(io)
-close(io)
-# df = SplitBenders.run_Benders(data,master_env,sub_env)
+# io = open("results4/Split_all_L1_iter50_2hr_/result_$(instance).txt", "w+")
+# logger = SimpleLogger(io)
+# with_logger(logger) do
+#     df = SplitBenders.run_Benders(data,master_env,sub_env)
+#     CSV.write("results4/Split_all_L1_iter50_2hr_/result_$(instance).csv", df)
+# end
+# flush(io)
+# close(io)
+df = SplitBenders.run_Benders(data,master_env,sub_env)
 
 # result post processing
 # CSV.write("temp/result_$(instance)_$(cut_strategy)_$(SplitCGLPNormType)_$(SplitSetSelectionPolicy)_$(StrengthenCutStrategy)_$(SplitBendersStrategy)_2.csv", df)
