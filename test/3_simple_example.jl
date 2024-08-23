@@ -3,9 +3,9 @@ using JuMP, Gurobi, LinearAlgebra, Plots
 c = 0
 d = 1
 A = [15, 10, 10, -10, -70]
-# B = [1, 3, 1, 2, 2]
+B = [1, 3, 1, 2, 2]
 # B = [2, 3, 4, 2, 5] # correct 
-B = [10, 6, 4, 7, 9]
+# B = [10, 6, 4, 7, 9]
 b = [8, 13, 7, -1, -49]
 
 # function mip(d, A, B, b, c)
@@ -271,6 +271,7 @@ function run_Benders_split(c, d, A, B, b)
 
             @info "Iteration $k: LB = $LB, UB = $UB, _UB1 = $_UB1, _UB2 = $_UB2"
             if ((UB - LB)/abs(UB) <= 1e-6 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 || k >= 5
+                @info "k̂₀ = $k̂₀, v̂₀ = $v̂₀, k̂ₓ = $k̂ₓ, v̂ₓ = $v̂ₓ, k̂ₜ = $k̂ₜ, v̂ₜ = $v̂ₜ"
                 @info DCGLP
                 break
             end
@@ -323,6 +324,7 @@ function run_Benders_split(c, d, A, B, b)
         γₜ = dual(DCGLP[:cont])
         γ₀ = dual(DCGLP[:con0])
         γₓ = dual(DCGLP[:conx])
+        
         @info "γ₀ = $γ₀, γₓ = $γₓ, γₜ = $γₜ"
         @constraint(master_problem, -γ₀ - γₓ*master_problem[:x] - γₜ*master_problem[:t] >= 0) 
         @info master_problem
@@ -357,6 +359,6 @@ function run_Benders_split(c, d, A, B, b)
 end
 
 
-# run_Benders_split(c, d, A, B, b)
+run_Benders_split(c, d, A, B, b)
 # extreme_points, extreme_rays = run_Benders(c, d, A, B, b)
 # txfigure(extreme_points, extreme_rays)
