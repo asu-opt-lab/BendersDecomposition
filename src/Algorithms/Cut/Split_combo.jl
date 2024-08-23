@@ -9,7 +9,18 @@ function generate_cut(
 
     DCGLP_env = DCGLP(sub_env, a, b, sub_env.algo_params.SplitCGLPNormType)
 
-    x̂,t̂ = master_env.value_x, master_env.value_t
+    _x̂,_t̂ = master_env.value_x, master_env.value_t
+    # x_best,t_best = master_env.best_solution[1], master_env.best_solution[2]
+    random_number = rand(length(_x̂))
+    # @info random_number
+    _x̂ = _x̂ .+ random_number*0.1
+    _x̂ = min.(_x̂,1)
+    _x̂ = min.(_x̂,0)
+    x̂ = _x̂
+    t̂ = _t̂
+    # t̂ = 0.3*min(sub_env.obj_value,1e10) + 0.7*_t̂
+    @info sub_env.obj_value,_t̂,t̂
+    # x̂,t̂ = master_env.value_x, master_env.value_t
     start_time = time()
 
     solve_DCGLP(master_env,x̂,t̂, DCGLP_env, sub_env.BSPProblem, sub_env.BSPProblem, sub_env.algo_params.SplitCGLPNormType; time_limit)

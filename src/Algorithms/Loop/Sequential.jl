@@ -30,7 +30,10 @@ function run_Benders(
         # Update Parameters
         UB_temp = sum(master_env.coef[i] * master_env.value_x[i] for i in eachindex(master_env.value_x))
         @info "UB_temp: $UB_temp"
-        UB_temp += sub_env.obj_value    
+        UB_temp += sub_env.obj_value 
+        if UB >= UB_temp  
+            master_env.best_solution = [master_env.value_x, sub_env.obj_value] 
+        end
         UB = min(UB, UB_temp)
         Gap = 100 * (UB - LB)/ abs(UB) 
 

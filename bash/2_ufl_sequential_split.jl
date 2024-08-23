@@ -9,7 +9,7 @@ solver = :Gurobi
 
 settings = SplitBenders.parse_commandline()
 instance = settings["instance"]
-instance = "ga500c-1"
+instance = "ga500b-1"
 data = SplitBenders.read_Simple_data(instance; filepath = "src/BendersDatasets/KoerkelGhosh-asym/")
 
 #-----------------------------------------------------------------------
@@ -28,7 +28,7 @@ SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
 StrengthenCutStrategy = "SPLIT_STRENGTHEN_CUT_STRATEGY"
 
 # "NO_SPLIT_BENDERS_STRATEGY", "ALL_SPLIT_BENDERS_STRATEGY", "TIGHT_SPLIT_BENDERS_STRATEGY"
-SplitBendersStrategy = "NO_SPLIT_BENDERS_STRATEGY"
+SplitBendersStrategy = "ALL_SPLIT_BENDERS_STRATEGY"
 
 
 
