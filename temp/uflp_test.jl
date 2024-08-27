@@ -9,9 +9,8 @@ solver = :Gurobi
 # @info "Instance: $instance"
 # data = SplitBenders.read_Orlib_data(instance; filepath = "src/BendersDatasets/M/O")
 
-instance = "KoerkelGhosh-asym/250/a/ga250a-3"
-@info "Instance: $instance"
-data = SplitBenders.read_Simple_data(instance; filepath = "src/BendersDatasets")
+instance = "ga500a-5"
+data = SplitBenders.read_Simple_data(instance; filepath = "src/BendersDatasets/KoerkelGhosh-asym/")
 
 
 #-----------------------------------------------------------------------
@@ -19,7 +18,7 @@ algo_params = SplitBenders.AlgorithmParams()
 # "SPLIT_CUTSTRATEGY"
 cut_strategy = "SPLIT_CUTSTRATEGY"
 # "L1GAMMANORM", "L2GAMMANORM", "LINFGAMMANORM" "STANDARDNORM"
-SplitCGLPNormType = "L1GAMMANORM"
+SplitCGLPNormType = "L2GAMMANORM"
 # "MOST_FRAC_INDEX", "RANDOM_INDEX"
 SplitSetSelectionPolicy = "MOST_FRAC_INDEX"
 # "SPLIT_PURE_CUT_STRATEGY", "SPLIT_STRENGTHEN_CUT_STRATEGY"

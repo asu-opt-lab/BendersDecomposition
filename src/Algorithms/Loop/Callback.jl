@@ -6,9 +6,9 @@ function run_Benders_callback(
     tic = time()
     set_attribute(master_env.model, MOI.LazyConstraintCallback(), lazy_callback)
     # set_attribute(master_env.model, MOI.LazyConstraintCallback(), my_callback_function)
-    # set_attribute(master_env.model, MOI.UserCutCallback(), user_callback)
+    set_attribute(master_env.model, MOI.UserCutCallback(), user_callback)
     # set_attribute(master_env.model, MOI.NumberOfThreads(), 1)
-    set_time_limit_sec(master_env.model, 300)
+    set_time_limit_sec(master_env.model, 600)
     set_optimizer_attribute(master_env.model, MOI.Silent(),false)
 
     global Master_env = master_env
@@ -62,7 +62,7 @@ function user_callback(cb_data)
     depth = Ref{CPXLONG}()
     ret = CPXcallbackgetinfolong(cb_data, CPXCALLBACKINFO_NODEDEPTH, depth)
     # @info "depth = $(depth[])"
-    if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL && number_of_splitproblem_solves <= 1 && depth[] == 2
+    if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL && number_of_splitproblem_solves <= 1 && depth[] <= 5
 
         global number_of_splitproblem_solves += 1
         @info "number_of_subproblem_solves = $number_of_subproblem_solves"
