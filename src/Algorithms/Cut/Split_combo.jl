@@ -9,20 +9,32 @@ function generate_cut(
 
     DCGLP_env = DCGLP(sub_env, a, b, sub_env.algo_params.SplitCGLPNormType)
 
-    _x̂,_t̂ = master_env.value_x, master_env.value_t
+    # x_out,t_out = master_env.value_x, master_env.value_t
+    # x_in,t_in = master_env.solution_in[1], master_env.solution_in[2]
+
+    # x_in_new,t_in_new = (x_out+x_in)/2, (t_out+t_in)/2
+    # master_env.solution_in = [x_in_new,t_in_new]
+    # x_sep,t_sep = 0.8*x_out+0.2*x_in_new, 0.8*t_out+0.2*t_in_new
+    # x̂,t̂ = x_sep,t_sep
     # x_best,t_best = master_env.best_solution[1], master_env.best_solution[2]
-    random_number = rand(length(_x̂))
-    # @info random_number
-    _x̂ = _x̂ .+ random_number*0.1
-    _x̂ = min.(_x̂,1)
-    _x̂ = min.(_x̂,0)
-    x̂ = _x̂
-    t̂ = _t̂
-    # t̂ = 0.3*min(sub_env.obj_value,1e10) + 0.7*_t̂
-    @info sub_env.obj_value,_t̂,t̂
+
+    # master_env.best_solution = [0.5*x_best+0.5*_x̂, 0.5*t_best+0.5*_t̂]
+    # x̂ = 0.5*x_best+0.5*_x̂
+    # t̂ = 0.5*t_best+0.5*_t̂
+    # random_number = randn(length(_x̂))
+    # # @info random_number
+    # _x̂ = _x̂ .+ random_number*0.1
+    # _x̂ = min.(_x̂,1)
+    # _x̂ = max.(_x̂,0)
+    # x̂ = _x̂
+    # # t̂ = _t̂
+    # t̂ = 0.2*min(sub_env.obj_value,1e10) + 0.8*_t̂
+    # @info x̂
+    # @info sub_env.obj_value,_t̂,t̂
     # x̂,t̂ = master_env.value_x, master_env.value_t
     start_time = time()
 
+    x̂,t̂ = master_env.value_x, master_env.value_t
     solve_DCGLP(master_env,x̂,t̂, DCGLP_env, sub_env.BSPProblem, sub_env.BSPProblem, sub_env.algo_params.SplitCGLPNormType; time_limit)
 
     # solve_DCGLP(master_env,x̂,t̂, DCGLP_env, sub_env.BSPProblem, sub_env.BSPProblem2, sub_env.algo_params.SplitCGLPNormType; time_limit)

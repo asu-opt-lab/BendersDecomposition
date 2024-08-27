@@ -23,6 +23,7 @@ function solve_DCGLP(
     _UB1 = Inf
     _UB2 = Inf
     
+    
     set_normalized_rhs.(main_env.model[:conx], x̂)
     set_normalized_rhs.(main_env.model[:cont], t̂)
 
@@ -70,7 +71,7 @@ function solve_DCGLP(
 
         ##################### BSP1 #####################
         if k̂₀ != 0 #|| k == 1
-            
+            @info "k̂ₜ/k̂₀ = $(k̂ₜ/k̂₀)"
             set_normalized_rhs.(bsp_env1.cconstr, k̂ₓ./k̂₀)
 
             bsp_time_limit = time() - start_time
@@ -109,7 +110,7 @@ function solve_DCGLP(
 
         ##################### BSP2 #####################
         if v̂₀ != 0 #|| k == 1
-
+            @info "v̂ₜ/v̂₀ = $(v̂ₜ/v̂₀)"
             set_normalized_rhs.(bsp_env2.cconstr, v̂ₓ./v̂₀)
 
             bsp_time_limit = time() - start_time
@@ -154,7 +155,7 @@ function solve_DCGLP(
 
 
         ##################### check termination #####################
-        if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 || k >= 30
+        if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 || k >= 50
             main_env.ifsolved = true
             break
         end
@@ -224,6 +225,7 @@ function solve_DCGLP(
     main_env.conπpoints2 = conπpoints2
 
     @info "iteration = $k"
+    @info "t̂ = $t̂"
     # @info "k̂₀ = $(k̂₀s[end])"
     # @info "v̂₀ = $(v̂₀s[end])"
 end

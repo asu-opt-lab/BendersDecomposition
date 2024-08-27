@@ -63,19 +63,19 @@ function run_Benders(
         algo_run_time = time()
         spend_time = algo_run_time - algo_start_time
         remaining_time = time_limit - spend_time         
-        if spend_time > time_limit #|| iter >= 5
+        if spend_time > time_limit || iter >= 20
             @info "Time limit $time_limit reached"
             # set_binary.(master_env.model[:x])
-            master_time = solve_master!(master_env; time_limit = 1000)
-            LB = master_env.obj_value
-            sub_time,ex = generate_cut(master_env, sub_env, ORDINARY_CUTSTRATEGY)
-            UB_temp = sum(master_env.coef[i] * master_env.value_x[i] for i in eachindex(master_env.value_x))
-            @info "UB_temp: $UB_temp"
-            UB_temp += sub_env.obj_value    
-            UB = min(UB, UB_temp)
-            Gap = 100 * (UB - LB)/ abs(UB)
-            new_row = (iter+1, LB, UB, Gap, master_time, sub_time)
-            push!(df, new_row)  
+            # master_time = solve_master!(master_env; time_limit = 1000)
+            # LB = master_env.obj_value
+            # sub_time,ex = generate_cut(master_env, sub_env, ORDINARY_CUTSTRATEGY)
+            # UB_temp = sum(master_env.coef[i] * master_env.value_x[i] for i in eachindex(master_env.value_x))
+            # @info "UB_temp: $UB_temp"
+            # UB_temp += sub_env.obj_value    
+            # UB = min(UB, UB_temp)
+            # Gap = 100 * (UB - LB)/ abs(UB)
+            # new_row = (iter+1, LB, UB, Gap, master_time, sub_time)
+            # push!(df, new_row)  
             break
         end 
 
