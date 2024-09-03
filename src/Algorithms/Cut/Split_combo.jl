@@ -149,13 +149,16 @@ function select_split_set(master_env::AbstractMasterEnv, ::MostFracIndex)
     index = findmin(gap_x)[2]
     a = zeros(Int, length(master_env.value_x))
     a[index] = 1
+    @info "index = $index"
     return a, 0
 end
 
 
 function select_split_set(master_env::AbstractMasterEnv, ::RandomIndex)
     a = zeros(Int, length(master_env.value_x))
-    a[rand(1:length(master_env.value_x))] = 1
+    index = rand(1:length(master_env.value_x))
+    a[index] = 1
+    @info "index = $index"
     return a, 0
 end
 

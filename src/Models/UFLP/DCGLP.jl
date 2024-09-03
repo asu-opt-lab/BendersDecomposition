@@ -17,62 +17,62 @@ function DCGLP(sub_env::AbstractSubEnv, a::Vector{Int}, b::Int, norm_type::Abstr
     @error "wrong type set"
 end
 
-# function DCGLP(sub_env::UFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::StandardNorm; solver::Symbol=:Gurobi) 
+function DCGLP(sub_env::UFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::StandardNorm; solver::Symbol=:Gurobi) 
 
-#     data = sub_env.data
-#     if solver == :CPLEX
-#         model = Model(CPLEX.Optimizer)
-#         # set_optimizer_attribute(model, "CPX_PARAM_LPMETHOD", CPX_ALG_DUAL)
-#     else
-#         model = Model(Gurobi.Optimizer)
-#         # set_optimizer_attribute(model, "InfUnbdInfo", 1)
-#     end
-#     model =  Model(CPLEX.Optimizer)
+    data = sub_env.data
+    if solver == :CPLEX
+        model = Model(CPLEX.Optimizer)
+        # set_optimizer_attribute(model, "CPX_PARAM_LPMETHOD", CPX_ALG_DUAL)
+    else
+        model = Model(Gurobi.Optimizer)
+        # set_optimizer_attribute(model, "InfUnbdInfo", 1)
+    end
+    model =  Model(CPLEX.Optimizer)
 
-#     set_optimizer_attribute(model, MOI.Silent(),true)
+    set_optimizer_attribute(model, MOI.Silent(),true)
 
-#     # pre
-#     N = data.n_facilities
-#     M = data.n_customers
+    # pre
+    N = data.n_facilities
+    M = data.n_customers
     
-#     # Variables
-#     @variable(model, τ)
-#     @variable(model, k₀>=0)
-#     @variable(model, kₓ[1:N])
-#     @variable(model, kₜ)
-#     @variable(model, v₀>=0)
-#     @variable(model, vₓ[1:N])
-#     @variable(model, vₜ)
+    # Variables
+    @variable(model, τ)
+    @variable(model, k₀>=0)
+    @variable(model, kₓ[1:N])
+    @variable(model, kₜ)
+    @variable(model, v₀>=0)
+    @variable(model, vₓ[1:N])
+    @variable(model, vₜ)
 
-#     # Objective
-#     @objective(model, Min, τ)
+    # Objective
+    @objective(model, Min, τ)
 
 
-#     # Constraints
-#     total_demands = sum(data.demands)
+    # Constraints
+    total_demands = sum(data.demands)
 
-#     @constraint(model, consigma1, τ >= k₀*(b+1) - a'kₓ) 
-#     @constraint(model, coneta1[j in 1:N], τ >= -k₀ + kₓ[j]) 
-#     @constraint(model, consigma2, τ >= -v₀*b + a'vₓ ) 
-#     @constraint(model, coneta2[j in 1:N], τ >= -v₀ + vₓ[j])
+    @constraint(model, consigma1, τ >= k₀*(b+1) - a'kₓ) 
+    @constraint(model, coneta1[j in 1:N], τ >= -k₀ + kₓ[j]) 
+    @constraint(model, consigma2, τ >= -v₀*b + a'vₓ ) 
+    @constraint(model, coneta2[j in 1:N], τ >= -v₀ + vₓ[j])
 
-#     @constraint(model, conv1[j in 1:N], τ >= -kₓ[j])
-#     @constraint(model, conw1, τ >= -sum(data.capacities[j]*kₓ[j] for j in 1:N) + total_demands*k₀)
+    @constraint(model, conv1[j in 1:N], τ >= -kₓ[j])
+    # @constraint(model, conw1, τ >= -sum(data.capacities[j]*kₓ[j] for j in 1:N) + total_demands*k₀)
 
-#     @constraint(model, conv2[j in 1:N], τ >= -vₓ[j])
-#     @constraint(model, conw2, τ >= -sum(data.capacities[j]*vₓ[j] for j in 1:N) + total_demands*v₀)
+    @constraint(model, conv2[j in 1:N], τ >= -vₓ[j])
+    # @constraint(model, conw2, τ >= -sum(data.capacities[j]*vₓ[j] for j in 1:N) + total_demands*v₀)
 
-#     @constraint(model, con0, k₀ + v₀ == 1)
-#     @constraint(model, conx[i=1:N], kₓ[i] .+ vₓ[i] == 0)  #-x̂
-#     @constraint(model, cont, kₜ + vₜ == 0) #-t̂
+    @constraint(model, con0, k₀ + v₀ == 1)
+    @constraint(model, conx[i=1:N], kₓ[i] .+ vₓ[i] == 0)  #-x̂
+    @constraint(model, cont, kₜ + vₜ == 0) #-t̂
     
-#     for i in eachindex(sub_env.split_info.γ₀s)
-#         @constraint(model, sub_env.split_info.γ₀s[i]*k₀ + sub_env.split_info.γₓs[i]'kₓ + sub_env.split_info.γₜs[i]*kₜ <= 0)
-#         @constraint(model, sub_env.split_info.γ₀s[i]*v₀ + sub_env.split_info.γₓs[i]'vₓ + sub_env.split_info.γₜs[i]*vₜ <= 0)
-#     end
+    # for i in eachindex(sub_env.split_info.γ₀s)
+    #     @constraint(model, sub_env.split_info.γ₀s[i]*k₀ + sub_env.split_info.γₓs[i]'kₓ + sub_env.split_info.γₜs[i]*kₜ <= 0)
+    #     @constraint(model, sub_env.split_info.γ₀s[i]*v₀ + sub_env.split_info.γₓs[i]'vₓ + sub_env.split_info.γₜs[i]*vₜ <= 0)
+    # end
 
-#     return CFLPDCGLPEnv(model, false, [], [], [], [])
-# end
+    return CFLPDCGLPEnv(model, false, [], [], [], [])
+end
     
 
 
