@@ -3,10 +3,10 @@ function solve_DCGLP(
     x̂,
     t̂,
     main_env::AbstractDCGLPEnv, 
-    bsp_env::CFLPBSPEnv,
-    bsp_env2::CFLPBSPEnv,
+    bsp_env::AbstractSubEnv,
+    bsp_env2::AbstractSubEnv,
     pConeType::StandardNorm;
-    time_limit)
+    time_limit=100)
 
     # @info x̂
     k = 0
@@ -203,6 +203,20 @@ function solve_DCGLP(
     @info "iteration = $k"
     @info "k̂₀ = $(k̂₀s[end])"
     @info "v̂₀ = $(v̂₀s[end])"
+    optimize!(main_env.model)
+    k̂₀ = value(main_env.model[:k₀])
+    k̂ₓ = value.(main_env.model[:kₓ])
+    k̂ₜ = value(main_env.model[:kₜ])
+    v̂₀ = value(main_env.model[:v₀])
+    v̂ₓ = value.(main_env.model[:vₓ])
+    v̂ₜ = value(main_env.model[:vₜ])
+    γₜ = dual(main_env.model[:cont])
+    γ₀ = dual(main_env.model[:con0])
+    γₓ = dual.(main_env.model[:conx])
+    value_κ = -γₜ*k̂ₜ/k̂₀ - γₓ'k̂ₓ/k̂₀ - γ₀
+    value_ν = -γₜ*v̂ₜ/v̂₀ - γₓ'v̂ₓ/v̂₀ - γ₀
+    @info "value_κ = $value_κ"
+    @info "value_ν = $value_ν"
 end
 
 

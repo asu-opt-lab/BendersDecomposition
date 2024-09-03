@@ -26,7 +26,7 @@ function solve_DCGLP(
     
     set_normalized_rhs.(main_env.model[:conx], x̂)
     set_normalized_rhs.(main_env.model[:cont], t̂)
-
+    
     # k̂₀s = []
     # k̂ₓs = []
     # k̂ₜs = []
@@ -38,7 +38,16 @@ function solve_DCGLP(
 
     # println("#####################solving main problem#####################")
     while true
-
+        if k>=1
+            if 1<=k<=50
+                delta = 1000
+            elseif 51<=k<=100
+                delta = 100
+            elseif 101<=k<=150
+                delta = 10
+            end
+            @constraint(main_env.model, trust_region, [delta; main_env.model[:kₓ] .- k̂ₓ; main_env.model[:vₓ].-v̂ₓ; main_env.model[:k₀]- k̂₀;main_env.model[:v₀]-v̂₀] in MOI.NormInfinityCone(3 + 2*length(x̂)))
+        end
         ##################### DCGLP #####################
         k += 1
         main_time_limit = time() - start_time
@@ -58,7 +67,8 @@ function solve_DCGLP(
         v̂ₜ = value(main_env.model[:vₜ])
         τ̂ = value(main_env.model[:τ])
         _sx = value.(main_env.model[:sx])
-
+        # @info main_env.model[:trust_region]
+        
         @info "k̂₀ = $k̂₀"
         @info "v̂₀ = $v̂₀"
 
@@ -155,7 +165,7 @@ function solve_DCGLP(
 
 
         ##################### check termination #####################
-        if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 || k >= 50
+        if ((UB - LB)/abs(UB) <= 1e-3 || (1e-3 >= _UB1 && 1e-3 >= _UB2 )) || (UB - LB) <= 0.01 #|| k >= 30
             main_env.ifsolved = true
             break
         end
@@ -213,7 +223,10 @@ function solve_DCGLP(
                 end
             end
         end
-        
+        if k>=2
+            delete(main_env.model, main_env.model[:trust_region])
+            unregister(main_env.model, :trust_region)
+        end
     end
 
     ##################### update #####################
@@ -228,6 +241,21 @@ function solve_DCGLP(
     @info "t̂ = $t̂"
     # @info "k̂₀ = $(k̂₀s[end])"
     # @info "v̂₀ = $(v̂₀s[end])"
+
+    optimize!(main_env.model)
+    k̂₀ = value(main_env.model[:k₀])
+    k̂ₓ = value.(main_env.model[:kₓ])
+    k̂ₜ = value(main_env.model[:kₜ])
+    v̂₀ = value(main_env.model[:v₀])
+    v̂ₓ = value.(main_env.model[:vₓ])
+    v̂ₜ = value(main_env.model[:vₜ])
+    γₜ = dual(main_env.model[:cont])
+    γ₀ = dual(main_env.model[:con0])
+    γₓ = dual.(main_env.model[:conx])
+    value_κ = -γₜ*k̂ₜ/k̂₀ - γₓ'k̂ₓ/k̂₀ - γ₀
+    value_ν = -γₜ*v̂ₜ/v̂₀ - γₓ'v̂ₓ/v̂₀ - γ₀
+    @info "value_κ = $value_κ"
+    @info "value_ν = $value_ν"
 end
 
 function update_UB!(UB,_sx,g₁,g₂,t̂,::L1GammaNorm) return min(UB,norm([ _sx; g₁+g₂-t̂], Inf)) end
