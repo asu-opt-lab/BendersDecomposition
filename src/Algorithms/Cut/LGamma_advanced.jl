@@ -92,6 +92,7 @@ function solve_DCGLP(
         if k̂₀ != 0 #|| k == 1
             @info "k̂ₜ/k̂₀ = $(k̂ₜ/k̂₀)"
             set_normalized_rhs.(bsp_env1.cconstr, k̂ₓ./k̂₀)
+            set_normalized_rhs(sub_env.oconstr, -k̂ₜ)
 
             bsp_time_limit = time() - start_time
             # set_time_limit_sec(bsp_env.model, max(time_limit-bsp_time_limit,1))

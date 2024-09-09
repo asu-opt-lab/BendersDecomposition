@@ -9,6 +9,7 @@ mutable struct UFLPMasterEnv <: AbstractMasterEnv
     obj_value::Float64
     best_solution
     solution_in
+    data
 end
 
 function UFLPMasterProblem(data::UFLPData; solver::Symbol=:Gurobi)
@@ -32,6 +33,6 @@ function UFLPMasterProblem(data::UFLPData; solver::Symbol=:Gurobi)
     # Objective
     @objective(model, Min, sum(data.fixed_costs[i] * x[i] for i in 1:N) + t)
 
-    return UFLPMasterEnv(model, Dict("cvar"=>x, "t"=>t), data.fixed_costs, zeros(N), 0.0, 0.0, [zeros(N), 0], [ones(N), 1e08])
+    return UFLPMasterEnv(model, Dict("cvar"=>x, "t"=>t), data.fixed_costs, zeros(N), 0.0, 0.0, [zeros(N), 0], [ones(N), 1e08],data)
     
 end
