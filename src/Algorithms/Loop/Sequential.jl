@@ -42,7 +42,7 @@ function run_Benders(
         push!(df, new_row)  
 
         # Add Cut
-        # @constraint(master_env.model, 0 >= ex)   
+        @constraint(master_env.model, 0 >= ex)   
 
 
         # Print
@@ -63,7 +63,7 @@ function run_Benders(
         algo_run_time = time()
         spend_time = algo_run_time - algo_start_time
         remaining_time = time_limit - spend_time         
-        if spend_time > time_limit || iter >= 20
+        if spend_time > time_limit || iter >= 200
             @info "Time limit $time_limit reached"
             # set_binary.(master_env.model[:x])
             # master_time = solve_master!(master_env; time_limit = 1000)

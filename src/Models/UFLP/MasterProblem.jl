@@ -12,8 +12,8 @@ mutable struct UFLPMasterEnv <: AbstractMasterEnv
     data
 end
 
-function UFLPMasterProblem(data::UFLPData; solver::Symbol=:Gurobi)
-
+# function UFLPMasterProblem(data::UFLPData; solver::Symbol=:Gurobi)
+function UFLPMasterProblem(data; solver::Symbol=:Gurobi)
 
     if solver == :CPLEX
         model = Model(CPLEX.Optimizer)
