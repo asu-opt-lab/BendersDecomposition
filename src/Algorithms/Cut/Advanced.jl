@@ -53,9 +53,15 @@ function generate_cut(
 
     cVal = master_env.value_x
     l = length(cVal)    
-    for i in eachindex(cVal)
-        set_normalized_rhs(sub_env.cconstr[i], cVal[i])
+    # for i in eachindex(cVal)
+    #     set_normalized_rhs(sub_env.cconstr[i], cVal[i])
+    # end
+    for i in length(cVal)
+        for j in length(sub_env.model[:cb])
+            set_normalized_rhs(sub_env.model[:c3][i,j], -cVal[i])
+        end
     end
+    # set_normalized_rhs.(sub_env.model[:c3], -cVal)
     set_normalized_rhs(sub_env.oconstr, -master_env.value_t)
 
     # set_time_limit_sec(sub_env.model, max(time_limit,100))
@@ -72,8 +78,8 @@ function generate_cut(
         # subObjVal 
         # - dual(sub_env.oconstr)*(master_env.var["t"] - master_env.value_t)
         # + sum(dual(sub_env.cconstr[i]) * (master_env.var["cvar"][i] - cVal[i]) for i in eachindex(cVal)))    
-        ex = @expression(master_env.model, -sum(dual.(sub_env.model[:cb])) + dual.(sub_env.cconstr)'master_env.var["cvar"] - dual(sub_env.oconstr)*master_env.var["t"])
-        # @info ex
+        ex = @expression(master_env.model, -sum(dual.(sub_env.model[:cb])) - sum(dual.(sub_env.model[:c3][i])*master_env.model[:x][i] for i in eachindex(cVal)) - dual(sub_env.oconstr)*master_env.model[:t])
+        @info ex
         # @info ex1
     else
         @error "dual of sub is neither feasible nor infeasible certificate: $status"

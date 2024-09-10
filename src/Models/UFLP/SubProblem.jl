@@ -127,7 +127,7 @@ function generate_UFLP_subproblem_Advanced(data; solver::Symbol=:Gurobi)
         # set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
-        # set_optimizer_attribute(model, "Method", 1)
+        set_optimizer_attribute(model, "Method", 1)
         set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
@@ -139,32 +139,32 @@ function generate_UFLP_subproblem_Advanced(data; solver::Symbol=:Gurobi)
     @variable(model, y[1:data.n_facilities, 1:data.n_customers] >= 0)
 
     cvar = Dict()
-    cvar["x"] = @variable(model, x[1:data.n_facilities])
+    # cvar["x"] = @variable(model, x[1:data.n_facilities])
     @variable(model, σ)
 
     @objective(model, Min, σ)
 
     @constraint(model, cb[j in 1:M], -sum(y[i,j] for i in 1:N) + σ == -1)
     # @constraint(model, c2[i in 1:N], sum(data.demands[j] * y[i,j] for j in 1:M) <= data.capacities[i] * cvar["x"][i])
-    @constraint(model, c3[i in 1:N, j in 1:M], -y[i,j] + σ >= -cvar["x"][i])
-
+    # @constraint(model, c3[i in 1:N, j in 1:M], -y[i,j] + σ >= -cvar["x"][i])
+    @constraint(model, c3[i in 1:N, j in 1:M], -y[i,j] + σ >= 0)
     constr = []
     rhs = []
 
-    all_affine_constraints = [all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.GreaterThan{Float64});
-                              all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64});
-                              all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.EqualTo{Float64})]
+    # all_affine_constraints = [all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.GreaterThan{Float64});
+    #                           all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64});
+    #                           all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.EqualTo{Float64})]
 
-    for (i, c) in enumerate(all_affine_constraints)
-        push!(constr, c)
-        push!(rhs, normalized_rhs(c))
-    end
+    # for (i, c) in enumerate(all_affine_constraints)
+    #     push!(constr, c)
+    #     push!(rhs, normalized_rhs(c))
+    # end
 
     cconstr = []
 
-    for i in 1:data.n_facilities
-        push!(cconstr, @constraint(model, cvar["x"][i] == 0)) #x̂
-    end
+    # for i in 1:data.n_facilities
+    #     push!(cconstr, @constraint(model, cvar["x"][i] == 0)) #x̂
+    # end
 
 
     obj = @expression(model, sum(data.costs[i,j] * data.demands[j] * y[i,j] for i in 1:data.n_facilities, j in 1:data.n_customers))
