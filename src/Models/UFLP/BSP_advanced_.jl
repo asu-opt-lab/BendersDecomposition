@@ -8,18 +8,18 @@ mutable struct UFLPBSPADEnv <: AbstractSubEnv
     oconstr::Any
 end
 
-function generate_BSPProblem_Advanced(data::UFLPData; solver::Symbol=:Gurobi)
+function generate_BSPProblem_Advanced(data; solver::Symbol=:Gurobi)
 
     if solver == :CPLEX
         model = Model(CPLEX.Optimizer)
         # set_optimizer_attribute(model, "CPX_PARAM_REDUCE", 0)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
-        # set_optimizer_attribute(model, "Method", 1)
+        set_optimizer_attribute(model, "Method", 1)
         set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
     set_optimizer_attribute(model, MOI.Silent(),true)
-    set_time_limit_sec(model, 10)
+    # set_time_limit_sec(model, 10)
     # pre
     N = data.n_facilities
     M = data.n_customers
@@ -32,9 +32,10 @@ function generate_BSPProblem_Advanced(data::UFLPData; solver::Symbol=:Gurobi)
 
     @objective(model, Min, σ)
 
-    @constraint(model, cb[j in 1:M], sum(y[i,j] for i in 1:N) + σ == 1)
+    @constraint(model, cb[j in 1:M], sum(y[i,j] for i in 1:N) + σ >= 1)
+    @constraint(model, cbb[j in 1:M], -sum(y[i,j] for i in 1:N) + σ >= -1)
     # @constraint(model, c2[i in 1:N], sum(data.demands[j] * y[i,j] for j in 1:M) <= data.capacities[i] * cvar["x"][i])
-    @constraint(model, c3[i in 1:N, j in 1:M], y[i,j] + σ <= cvar["x"][i])
+    @constraint(model, c3[i in 1:N, j in 1:M], -y[i,j] + σ >= -cvar["x"][i])
 
     constr = []
     rhs = []
@@ -61,3 +62,5 @@ function generate_BSPProblem_Advanced(data::UFLPData; solver::Symbol=:Gurobi)
 
     return UFLPBSPADEnv(model, constr, rhs, cconstr,obj, oconstr)
 end
+
+

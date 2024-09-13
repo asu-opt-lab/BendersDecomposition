@@ -12,11 +12,11 @@ settings = SplitBenders.parse_commandline()
 # instance = "f700-c700-r5.0-p10"
 # data = SplitBenders.read_GK_data(instance)
 
-# instance = "ga250a-1"
-# data = SplitBenders.read_Simple_data(instance; filepath = "src/BendersDatasets/KoerkelGhosh-asym/")
+instance = "ga500a-1"
+data = SplitBenders.read_Simple_data(instance; filepath = "src/BendersDatasets/KoerkelGhosh-asym/")
 
-instance = "p10"
-data = SplitBenders.read_benchmark_data(instance)
+# instance = "p20"
+# data = SplitBenders.read_benchmark_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
@@ -46,8 +46,13 @@ SplitBenders.set_params_attribute(algo_params, SplitBenders.AbstractSplitBenders
 
 master_env = SplitBenders.UFLPMasterProblem(data, solver = solver)
 relax_integrality(master_env.model)
+if cut_strategy == "ORDINARY_CUTSTRATEGY"
+    sub_env = SplitBenders.UFLPStandardSubEnv(data,algo_params, solver = solver)
+elseif cut_strategy == "ADVANCED_CUTSTRATEGY"
+    sub_env = SplitBenders.UFLPStandardADSubEnv(data,algo_params, solver = solver)
+end
 # sub_env = SplitBenders.UFLPStandardSubEnv(data,algo_params, solver = solver)
-sub_env = SplitBenders.UFLPStandardADSubEnv(data,algo_params, solver = solver)
+# sub_env = SplitBenders.UFLPStandardADSubEnv(data,algo_params, solver = solver)
 # sub_env = SplitBenders.CFLPStandardKNSubEnv(data,algo_params, solver = solver)
 
 df = SplitBenders.run_Benders(data,master_env,sub_env)
