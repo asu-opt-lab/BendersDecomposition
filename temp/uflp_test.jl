@@ -12,6 +12,8 @@ solver = :Gurobi
 instance = "ga500a-1"
 data = SplitBenders.read_Simple_data(instance; filepath = "src/BendersDatasets/KoerkelGhosh-asym/")
 
+# instance = "p10"
+# data = SplitBenders.read_benchmark_data(instance)
 
 #-----------------------------------------------------------------------
 algo_params = SplitBenders.AlgorithmParams()
@@ -36,5 +38,5 @@ master_env = SplitBenders.UFLPMasterProblem(data, solver=solver)
 relax_integrality(master_env.model)
 sub_env = SplitBenders.UFLPSplitSubEnv(data,algo_params, solver=solver)
 SplitBenders.run_Benders(data,master_env,sub_env)
-set_binary.(master_env.model[:x])
-SplitBenders.run_Benders_callback(data,master_env,sub_env)
+# set_binary.(master_env.model[:x])
+# SplitBenders.run_Benders_callback(data,master_env,sub_env)
