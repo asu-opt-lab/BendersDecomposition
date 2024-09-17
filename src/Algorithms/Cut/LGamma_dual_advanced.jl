@@ -60,6 +60,7 @@ function solve_DCGLP(
         tt = time()
         optimize!(main_env.model)
         @info "main_time = $(time()-tt)"
+        @info termination_status(main_env.model)
         if termination_status(main_env.model) == TIME_LIMIT
             k -= 1
             break
@@ -214,6 +215,7 @@ function solve_DCGLP(
                     # @info conπpoints1[end][4]*main_env.model[:kₜ]
                     # N,M = size(bsp1.model[:π3])
                         @constraint(main_env.model, 0>= sum(conπpoints1[end][1])*main_env.model[:k₀] - sum(conπpoints1[end][2])*main_env.model[:k₀] - sum(main_env.model[:kₓ][i]*conπpoints1[end][3][i,j] for i in 1:N, j in 1:M) - conπpoints1[end][4]*main_env.model[:kₜ])
+                        @constraint(main_env.model, 0>= sum(conπpoints1[end][1])*main_env.model[:v₀] - sum(conπpoints1[end][2])*main_env.model[:v₀] - sum(main_env.model[:vₓ][i]*conπpoints1[end][3][i,j] for i in 1:N, j in 1:M) - conπpoints1[end][4]*main_env.model[:vₜ])
                         # @constraint(main_env.model, main_env.model[:vₜ] >= conπpoints1[end][1]*main_env.model[:v₀] + conπpoints1[end][2]'main_env.model[:vₓ])
                         @info "add feasible cut 1"
                     # end
@@ -239,7 +241,8 @@ function solve_DCGLP(
                     # if 1e-3 < _UB2
                     # N,M = size(bsp2.model[:π3])
                     @constraint(main_env.model, 0 >= sum(conπpoints2[end][1])*main_env.model[:v₀] - sum(conπpoints2[end][2])*main_env.model[:v₀] - sum(main_env.model[:vₓ][i]*conπpoints2[end][3][i,j] for i in 1:N, j in 1:M) - conπpoints2[end][4]*main_env.model[:vₜ])
-                        # @constraint(main_env.model, 0 >= sum(conπpoints2[end][1])*main_env.model[:v₀] - sum(conπpoints2[end][2])*main_env.model[:v₀] + conπpoints2[end][3]'main_env.model[:vₓ] - conπpoints2[end][4]*main_env.model[:vₜ])
+                    @constraint(main_env.model, 0 >= sum(conπpoints2[end][1])*main_env.model[:k₀] - sum(conπpoints2[end][2])*main_env.model[:k₀] - sum(main_env.model[:kₓ][i]*conπpoints2[end][3][i,j] for i in 1:N, j in 1:M) - conπpoints2[end][4]*main_env.model[:kₜ])
+                    # @constraint(main_env.model, 0 >= sum(conπpoints2[end][1])*main_env.model[:v₀] - sum(conπpoints2[end][2])*main_env.model[:v₀] + conπpoints2[end][3]'main_env.model[:vₓ] - conπpoints2[end][4]*main_env.model[:vₜ])
                         # @constraint(main_env.model, main_env.model[:kₜ] >= conπpoints2[end][1]*main_env.model[:k₀] + conπpoints2[end][2]'main_env.model[:kₓ])
                         @info "add feasible cut 2"
                     # end

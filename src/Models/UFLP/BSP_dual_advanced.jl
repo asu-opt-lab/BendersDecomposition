@@ -28,7 +28,9 @@ function generate_UFLP_dualsubproblem_Advanced(data; solver::Symbol=:Gurobi)
 
     @constraint(model, con[i=1:N, j=1:M], π1[j] - π2[j] - π3[i,j] <= data.costs[i,j] * data.demands[j] * π0)
 
-    @constraint(model, sum(π1) + sum(π2) + sum(π3) + π0 == 1)
+    # @constraint(model, sum(π1) + sum(π2) + sum(π3) + π0 == 1)
+
+    @constraint(model, sum(π3) + π0 == 1)
 
     return UFLPBSPADEnv(model)
 end
