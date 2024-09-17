@@ -66,14 +66,14 @@ function UFLPSplitSubEnv(data, algo_params; solver::Symbol=:Gurobi)
     
     model, constr, rhs, cconstr = generate_UFLP_subproblem(data; solver=solver) 
 
-    # BSPProblem = generate_BSPProblem(data; solver=solver)
-    # BSPProblem2 = generate_BSPProblem(data; solver=solver)
+    BSPProblem = generate_BSPProblem(data; solver=solver)
+    BSPProblem2 = generate_BSPProblem(data; solver=solver)
 
     # BSPProblem = generate_BSPProblem_Advanced(data; solver=solver)
     # BSPProblem2 = generate_BSPProblem_Advanced(data; solver=solver)
 
-    BSPProblem = generate_UFLP_dualsubproblem_Advanced(data; solver=solver)
-    BSPProblem2 = generate_UFLP_dualsubproblem_Advanced(data; solver=solver)
+    # BSPProblem = generate_UFLP_dualsubproblem_Advanced(data; solver=solver)
+    # BSPProblem2 = generate_UFLP_dualsubproblem_Advanced(data; solver=solver)
     println("########### Building two Split SubProblems ###########")
 
     split_info = SplitInfo([],[],[])

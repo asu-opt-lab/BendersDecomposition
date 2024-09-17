@@ -25,9 +25,9 @@ function DCGLP(sub_env::UFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::Stan
         # set_optimizer_attribute(model, "CPX_PARAM_LPMETHOD", CPX_ALG_DUAL)
     else
         model = Model(Gurobi.Optimizer)
-        # set_optimizer_attribute(model, "InfUnbdInfo", 1)
+        set_optimizer_attribute(model, "Method", 1)
+        set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
-    model =  Model(CPLEX.Optimizer)
 
     set_optimizer_attribute(model, MOI.Silent(),true)
 
@@ -84,6 +84,8 @@ function DCGLP(sub_env::UFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::Gamm
         # set_optimizer_attribute(model, "CPX_PARAM_LPMETHOD", CPX_ALG_BARRIER)
     elseif solver == :Gurobi
         model = Model(Gurobi.Optimizer)
+        # set_optimizer_attribute(model, "Method", 1)
+        # set_optimizer_attribute(model, "InfUnbdInfo", 1)
         # set_optimizer_attribute(model, "InfUnbdInfo", 1)
     end
 
