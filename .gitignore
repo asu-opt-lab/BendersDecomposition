@@ -1,11 +1,1 @@
 Manifest.toml
-Project.toml
-willdelete/
-*.csv
-*.out
-test1/0_test1.jl
-results/
-results2/
-results3/
-results4/
-results5/
