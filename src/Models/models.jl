@@ -1,17 +1,18 @@
+# include("CFLP/cflp.jl")
+include("UFLP/uflp.jl")
 
-# Abstract types
-abstract type AbstractMasterEnv end
-abstract type AbstractDCGLPEnv end
-abstract type AbstractSubEnv end
-abstract type AbstractMipEnv end
+export create_master_problem, create_sub_problem, create_dcglp
 
-mutable struct SplitInfo 
-    # indices
-    γ₀s
-    γₓs
-    γₜs
-    # ifaddall::Bool
+
+function create_master_problem(data::AbstractData, cut_strategy::CutGenerationStrategy)
+    error("Unsupported cut strategy: $(typeof(cut_strategy))")
 end
 
-include("CFLP/cflp.jl")
-include("UFLP/uflp.jl")
+function create_sub_problem(data::AbstractData, cut_strategy::CutGenerationStrategy)
+    error("Unsupported cut strategy: $(typeof(cut_strategy))")
+end
+
+function create_dcglp(data::AbstractData, disjunctive_inequality::Tuple{Vector{Float64}, Float64}, _cut_strategy::CutGenerationStrategy, norm_type::AbstractNormType)
+    error("Unsupported cut strategy: $(typeof(_cut_strategy))")
+end
+

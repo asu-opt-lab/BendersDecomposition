@@ -1,145 +1,167 @@
-import Dualization
-import SCS
-import Ipopt
-
-export DCGLP
-
-mutable struct UFLPDCGLPEnv <: AbstractDCGLPEnv
+export UFLPDCGLP
+# Mutable struct representing the DCGLP (Disjunctive Cut Generating Linear Program) for UFLP
+mutable struct UFLPDCGLP <: AbstractDCGLP
     model::Model
-    ifsolved::Bool
-    masterconπpoints1
-    masterconπpoints2
-    conπpoints1
-    conπpoints2
+    γconstraints::Dict{Symbol,Any}
 end
 
-function DCGLP(sub_env::AbstractSubEnv, a::Vector{Int}, b::Int, norm_type::AbstractNormType; solver::Symbol=:Gurobi)
-    @error "wrong type set"
+# Function to create the DCGLP model
+function create_dcglp(
+    data::UFLPData,
+    disjunctive_inequality::Tuple{Vector{Int}, Int},
+    _cut_strategy::CutGenerationStrategy,
+    norm_type::AbstractNormType
+)
+    # Create base model
+    model,γ₀constarint,γₓconstarint = create_base_model(data, disjunctive_inequality,norm_type)
+    # Add t constraints
+    γₜconstarint = add_t_constraints!(model, data, _cut_strategy, norm_type)
+    # Add norm-specific components
+    add_norm_specific_components!(model, data, _cut_strategy, norm_type)
+    # Return UFLPDCGLP struct
+    return UFLPDCGLP(model, Dict(:γ₀=>γ₀constarint,:γₓ=>γₓconstarint,:γₜ=>γₜconstarint))
 end
 
-function DCGLP(sub_env::UFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::StandardNorm; solver::Symbol=:Gurobi) 
+# Function to create the base model for StandardNorm
+function create_base_model(data::UFLPData, disjunctive_inequality::Tuple{Vector{Int}, Int}, ::StandardNorm)
 
-    data = sub_env.data
-    if solver == :CPLEX
-        model = Model(CPLEX.Optimizer)
-        # set_optimizer_attribute(model, "CPX_PARAM_LPMETHOD", CPX_ALG_DUAL)
-    else
-        model = Model(Gurobi.Optimizer)
-        set_optimizer_attribute(model, "Method", 1)
-        set_optimizer_attribute(model, "InfUnbdInfo", 1)
-    end
+    coef,constant = disjunctive_inequality
 
-    set_optimizer_attribute(model, MOI.Silent(),true)
+    model = Model()
 
-    # pre
+    # Set optimizer to silent mode
+    set_optimizer_attribute(model, MOI.Silent(), true)
+
+    # Define problem dimensions
     N = data.n_facilities
-    M = data.n_customers
-    
-    # Variables
+
+    # Define variables
     @variable(model, τ)
-    @variable(model, k₀>=0)
+    @variable(model, k₀ >= 0)
     @variable(model, kₓ[1:N])
-    @variable(model, kₜ)
-    @variable(model, v₀>=0)
+    @variable(model, v₀ >= 0)
     @variable(model, vₓ[1:N])
-    @variable(model, vₜ)
 
-    # Objective
-    @objective(model, Min, τ)
-
-
-    # Constraints
     total_demands = sum(data.demands)
 
-    @constraint(model, consigma1, τ >= k₀*(b+1) - a'kₓ) 
+    # Add constraints
+    @constraint(model, consigma1, τ >= k₀*(constant+1) - coef'kₓ) 
     @constraint(model, coneta1[j in 1:N], τ >= -k₀ + kₓ[j]) 
-    @constraint(model, consigma2, τ >= -v₀*b + a'vₓ ) 
+    @constraint(model, consigma2, τ >= -v₀*constant + coef'vₓ ) 
     @constraint(model, coneta2[j in 1:N], τ >= -v₀ + vₓ[j])
-
     @constraint(model, conv1[j in 1:N], τ >= -kₓ[j])
-    # @constraint(model, conw1, τ >= -sum(data.capacities[j]*kₓ[j] for j in 1:N) + total_demands*k₀)
-
     @constraint(model, conv2[j in 1:N], τ >= -vₓ[j])
-    # @constraint(model, conw2, τ >= -sum(data.capacities[j]*vₓ[j] for j in 1:N) + total_demands*v₀)
 
-    @constraint(model, con0, k₀ + v₀ == 1)
-    @constraint(model, conx[i=1:N], kₓ[i] .+ vₓ[i] == 0)  #-x̂
-    @constraint(model, cont, kₜ + vₜ == 0) #-t̂
-    
-    # for i in eachindex(sub_env.split_info.γ₀s)
-    #     @constraint(model, sub_env.split_info.γ₀s[i]*k₀ + sub_env.split_info.γₓs[i]'kₓ + sub_env.split_info.γₜs[i]*kₜ <= 0)
-    #     @constraint(model, sub_env.split_info.γ₀s[i]*v₀ + sub_env.split_info.γₓs[i]'vₓ + sub_env.split_info.γₜs[i]*vₜ <= 0)
-    # end
+    # Add γ constraints
+    γ₀constarint = @constraint(model, con0, k₀ + v₀ == 1)
+    γₓconstarint = @constraint(model, conx[i=1:N], kₓ[i] + vₓ[i] == 0)  #-x̂
 
-    return CFLPDCGLPEnv(model, false, [], [], [], [])
+    return model,γ₀constarint,γₓconstarint
 end
-    
 
+# Function to create the base model for LNorm
+function create_base_model(data::UFLPData, disjunctive_inequality::Tuple{Vector{Int}, Int}, ::LNorm)
 
-# function DCGLP(sub_env::CFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::GammaNorm; solver::Symbol=:Gurobi)
-function DCGLP(sub_env::UFLPSplitSubEnv, a::Vector{Int}, b::Int, norm_type::GammaNorm; solver::Symbol=:CPLEX)
-    data = sub_env.data
-    if solver == :CPLEX
-        model = Model(CPLEX.Optimizer)
-        # set_optimizer_attribute(model, "CPX_PARAM_LPMETHOD", CPX_ALG_BARRIER)
-    elseif solver == :Gurobi
-        model = Model(Gurobi.Optimizer)
-        # set_optimizer_attribute(model, "Method", 1)
-        # set_optimizer_attribute(model, "InfUnbdInfo", 1)
-        # set_optimizer_attribute(model, "InfUnbdInfo", 1)
-    end
+    coef,constant = disjunctive_inequality
 
-    set_optimizer_attribute(model, MOI.Silent(),true)
+    # Create model with specified solver
+    model = Model()
 
-    # pre
+    # Define problem dimensions
     N = data.n_facilities
-    M = data.n_customers
-    
-    # Variables
+
+    # Define variables
     @variable(model, τ)
     @variable(model, k₀>=0)
     @variable(model, kₓ[1:N])
-    @variable(model, kₜ)
     @variable(model, v₀>=0)
     @variable(model, vₓ[1:N])
-    @variable(model, vₜ)
     @variable(model, sx[i = 1:N])
-    @variable(model, st)
 
-    # Objective
+    # Set objective
     @objective(model, Min, τ)
-    
-    total_demands = sum(data.demands)
 
-    # Constraints
-    @constraint(model, consigma1, 0 >= k₀*(b+1) - a'kₓ) 
+    # Add constraints
+    @constraint(model, consigma1, 0 >= k₀*(constant+1) - coef'kₓ) 
     @constraint(model, coneta1[j in 1:N], 0 >= -k₀ + kₓ[j]) 
-    @constraint(model, consigma2, 0 >= -v₀*b + a'vₓ) 
+    @constraint(model, consigma2, 0 >= -v₀*constant + coef'vₓ) 
     @constraint(model, coneta2[j in 1:N], 0 >= -v₀ + vₓ[j])
-
     @constraint(model, conv1[j in 1:N], 0 >= -kₓ[j])
-    # @constraint(model, conw1, 0 >= -sum(data.capacities[j]*kₓ[j] for j in 1:N) + total_demands*k₀)
-
     @constraint(model, conv2[j in 1:N], 0 >= -vₓ[j])
-    # @constraint(model, conw2, 0 >= -sum(data.capacities[j]*vₓ[j] for j in 1:N) + total_demands*v₀)
 
-    @constraint(model, con0, k₀ + v₀ == 1)
-    if norm_type == L1GAMMANORM
-        @constraint(model, concone, [τ; sx ; st] in MOI.NormInfinityCone(2 + N))
-    elseif norm_type == L2GAMMANORM
-        @constraint(model, concone, [τ; sx ; st] in MOI.SecondOrderCone(2 + N))
-    elseif norm_type == LINFGAMMANORM
-        @constraint(model, concone, [τ; sx ; st] in MOI.NormOneCone(2 + N))
+    # Add γ constraints
+    γ₀constarint = @constraint(model, con0, k₀ + v₀ == 1)
+    γₓconstarint = @constraint(model, conx[i=1:N], kₓ[i] + vₓ[i] - sx[i] == 0)  #x̂
+
+    return model,γ₀constarint,γₓconstarint
+end
+
+# Generic function to add t constraints
+function add_t_constraints!(model::Model, ::UFLPData, ::CutGenerationStrategy, ::StandardNorm)
+    
+    @variable(model, kₜ)
+    @variable(model, vₜ)
+    γₜconstarint = @constraint(model, cont, kₜ + vₜ == 0)
+    return γₜconstarint
+end
+
+function add_t_constraints!(model::Model, ::UFLPData, ::CutGenerationStrategy, ::LNorm)
+    @variable(model, kₜ)
+    @variable(model, vₜ)
+    @variable(model, st)
+    γₜconstarint = @constraint(model, cont, kₜ + vₜ - st == 0)
+    return γₜconstarint
+end
+
+# for multiple t variables
+function add_t_constraints!(model::Model, data::UFLPData, ::FatKnapsackCut, ::StandardNorm)
+    M = data.n_customers
+    @variable(model, kₜ[1:M])
+    @variable(model, vₜ[1:M])
+    γₜconstarint = @constraint(model, cont[i=1:M], kₜ[i] + vₜ[i] == 0)
+    return γₜconstarint
+end
+
+function add_t_constraints!(model::Model, data::UFLPData, ::FatKnapsackCut, ::LNorm)
+    
+    M = data.n_customers
+    @variable(model, kₜ[1:M])
+    @variable(model, vₜ[1:M])
+    @variable(model, st[1:M])
+    γₜconstarint = @constraint(model, cont[i=1:M], kₜ[i] + vₜ[i] - st[i] == 0)
+    return γₜconstarint
+end
+
+# Function to add norm-specific components for StandardNorm
+function add_norm_specific_components!(model::Model, data::UFLPData, ::CutGenerationStrategy, norm_type::StandardNorm)
+end
+
+# Function to add norm-specific components for LNorm (ScalarDimension)
+function add_norm_specific_components!(model::Model, data::UFLPData, ::CutGenerationStrategy, norm_type::LNorm)
+    N = data.n_facilities
+    if norm_type == L1Norm()
+        @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.NormInfinityCone(1 + N + 1))
+    elseif norm_type == L2Norm()
+        @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.SecondOrderCone(1 + N + 1))
+    elseif norm_type == LInfNorm()
+        @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.NormInfinityCone(1 + N + 1))
+    else
+        error("Unsupported norm type: $(typeof(norm_type))")
     end
-    
-    @constraint(model, conx[i=1:N], kₓ[i] .+ vₓ[i] .- sx[i] == 0)  #x̂
-    @constraint(model, cont, kₜ + vₜ - st == 0) #t̂
-    
-    # for i in eachindex(sub_env.split_info.γ₀s)
-    #     @constraint(model, sub_env.split_info.γ₀s[i]*k₀ + sub_env.split_info.γₓs[i]'kₓ + sub_env.split_info.γₜs[i]*kₜ <= 0)
-    #     @constraint(model, sub_env.split_info.γ₀s[i]*v₀ + sub_env.split_info.γₓs[i]'vₓ + sub_env.split_info.γₜs[i]*vₜ <= 0)
-    # end
+end
 
-    return UFLPDCGLPEnv(model, false, [], [], [], [])
+# Function to add norm-specific components for FatKnapsackCut
+function add_norm_specific_components!(model::Model, data::UFLPData, ::FatKnapsackCut, norm_type::LNorm)
+    N = data.n_facilities
+    M = data.n_customers
+    if norm_type == L1Norm()
+        @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.NormInfinityCone(1 + N + M))
+    elseif norm_type == L2Norm()
+        @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.SecondOrderCone(1 + N + M))
+    elseif norm_type == LInfNorm()
+        @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.NormInfinityCone(1 + N + M))
+    else
+        error("Unsupported norm type: $(typeof(norm_type))")
+    end
 end
 
