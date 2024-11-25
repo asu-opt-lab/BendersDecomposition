@@ -5,24 +5,22 @@ using JuMP, CPLEX, Gurobi
 
 # Include supporting files
 include("types.jl")
-include("models/models.jl")
+include("models/models.jl") 
 include("utils/utils.jl")
 
-
 """
-    BendersParams
+    BendersParams(time_limit, gap_tolerance, solver, master_attributes, sub_attributes, dcglp_attributes, verbose)
 
-Configuration parameters for the Benders Decomposition algorithm.
+Parameters for configuring the Benders decomposition algorithm.
 
-# Fields
-- `time_limit::Float64`: Maximum execution time
-- `gap_tolerance::Float64`: Convergence tolerance
-- `main_verbose::Bool`: Enable main algorithm logging
-- `dcglp_verbose::Bool`: Enable DCGLP logging
-- `solver::Symbol`: Selected optimization solver
-- `master_attributes::Dict{Symbol,Any}`: Master problem solver attributes
-- `sub_attributes::Dict{Symbol,Any}`: Sub problem solver attributes
-- `dcglp_attributes::Dict{Symbol,Any}`: DCGLP solver attributes
+# Arguments
+- `time_limit::Float64`: Maximum allowed runtime in seconds
+- `gap_tolerance::Float64`: Optimality gap tolerance for convergence
+- `solver::Symbol`: Optimization solver to use (e.g. :CPLEX, :Gurobi)
+- `master_attributes::Dict{Symbol,Any}`: Solver-specific attributes for master problem
+- `sub_attributes::Dict{Symbol,Any}`: Solver-specific attributes for subproblem
+- `dcglp_attributes::Dict{Symbol,Any}`: Solver-specific attributes for DCGLP
+- `verbose::Bool`: Whether to print detailed progress information
 """
 struct BendersParams
     time_limit::Float64
@@ -36,17 +34,15 @@ end
 export BendersParams
 
 """
-    BendersEnv
+    BendersEnv(data, master, sub, dcglp)
 
-Main structure for the Benders Decomposition algorithm.
+Environment containing all components needed for Benders decomposition.
 
-# Fields
-- `data::D`: Problem data
-- `loop_strategy::L`: Strategy for main algorithm loop
-- `cut_strategy::C`: Strategy for generating Benders cuts
+# Arguments
+- `data::AbstractData`: Problem instance data
 - `master::AbstractMasterProblem`: Master problem formulation
-- `sub::AbstractSubProblem`: Sub problem formulation
-- `dcglp::Union{Nothing, DCGLP}`: Optional DCGLP component
+- `sub::AbstractSubProblem`: Subproblem formulation  
+- `dcglp::Union{Nothing,DCGLP}`: Optional DCGLP component for cut generation
 """
 mutable struct BendersEnv
     data::AbstractData
@@ -55,8 +51,17 @@ mutable struct BendersEnv
     dcglp::Union{Nothing, DCGLP}  # Optional component
 end
 
-function BendersEnv(data::AbstractData, cut_strategy::CutStrategy
-, params::BendersParams)
+"""
+    BendersEnv(data, cut_strategy, params)
+
+Construct a BendersEnv with the given problem data and configuration.
+
+# Arguments
+- `data::AbstractData`: Problem instance data
+- `cut_strategy::CutStrategy`: Strategy for generating Benders cuts
+- `params::BendersParams`: Algorithm parameters
+"""
+function BendersEnv(data::AbstractData, cut_strategy::CutStrategy, params::BendersParams)
     master = create_master_problem(data, cut_strategy)
     assign_attributes!(master.model, params.master_attributes)
     sub = create_sub_problem(data, cut_strategy)
@@ -72,18 +77,18 @@ end
 export BendersEnv
 
 """
-    run_Benders(data::D, loop_strategy::L, cut_strategy::C, params::BendersParams)
+    run_Benders(data, loop_strategy, cut_strategy, params)
 
-Execute the Benders Decomposition algorithm with the given configuration.
+Execute Benders decomposition algorithm to solve the given problem instance.
 
 # Arguments
-- `data::D`: Problem instance data
-- `loop_strategy::L`: Strategy for main algorithm loop
-- `cut_strategy::C`: Strategy for generating Benders cuts
+- `data::AbstractData`: Problem instance data
+- `loop_strategy::SolutionProcedure`: Strategy for main algorithm loop (Sequential or Callback)
+- `cut_strategy::CutStrategy`: Strategy for generating Benders cuts
 - `params::BendersParams`: Algorithm parameters
 
 # Returns
-- Solution from the Benders Decomposition algorithm
+- `DataFrame`: Solution statistics including bounds and timing information
 """
 function run_Benders(data::AbstractData, loop_strategy::SolutionProcedure, cut_strategy::CutStrategy, params::BendersParams)
     env = BendersEnv(data, cut_strategy, params)
