@@ -1,23 +1,3 @@
-include("datareader.jl")
-export CFLPData, UFLPData
-
-struct CFLPData <: AbstractData
-    n_facilities::Int
-    n_customers::Int
-    capacities::Vector{Float64}
-    demands::Vector{Float64}
-    fixed_costs::Vector{Float64}
-    costs::Matrix{Float64}
-end
-
-struct UFLPData <: AbstractData
-    n_facilities::Int
-    n_customers::Int
-    demands::Vector{Float64}
-    fixed_costs::Vector{Float64}
-    costs::Matrix{Float64}
-end
-
 function generate_capacited_facility_location(
     n_facilities::Int,
     n_customers::Int,

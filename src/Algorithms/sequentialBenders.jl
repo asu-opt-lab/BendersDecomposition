@@ -1,105 +1,83 @@
-export SequentialBenders, solve!
-
-struct SequentialBenders <: AbstractBendersAlgorithm
-    data::Any
-    master::AbstractMasterProblem
-    sub::AbstractSubProblem
-    cut_strategy::CutGenerationStrategy
-    params::BendersParams
-    iteration_data::DataFrame  
-end
-
-
-function SequentialBenders(data, master, sub, cut_strategy, params)
-    iteration_data = DataFrame(
-        iter = Int[], 
-        LB = Float64[], 
-        UB = Float64[], 
-        gap = Float64[], 
-        master_time = Float64[], 
-        sub_time = Float64[], 
-        elapsed_time = Float64[]
-    )
-    return SequentialBenders(data, master, sub, cut_strategy, params, iteration_data)
-end
-
-function solve!(algo::SequentialBenders)
-    UB, LB = Inf, -Inf
-    iter = 0
-    start_time = time()
-    master_time, sub_time = 0.0, 0.0
+"""
+Solve the Benders decomposition algorithm
+"""
+function solve!(env::BendersEnv, ::Sequential, cut_strategy::CutStrategy, params::BendersParams)
+    log = BendersIterationLog()
+    state = BendersState()
     
     while true
-        iter += 1
+        state.iteration += 1
         
-        # Solve master problem and record time
-        master_start = time()
-        solve_master!(algo.master)
-        master_time += time() - master_start
+        # Solve master problem
+        master_time = @elapsed begin
+            solve_master!(env.master)
+            state.LB = env.master.obj_value
+        end
+        log.master_time += master_time
         
-        # Solve sub problem and record time
-        sub_start = time()
-        solve_sub!(algo.sub, algo.master)
-        sub_time += time() - sub_start
+        # Solve sub problem
+        sub_time = @elapsed begin
+            solve_sub!(env.sub, env.master.x_value)
+            cuts, sub_obj_val = generate_cuts(env, cut_strategy)
+            update_upper_bound_and_gap!(state, env, sub_obj_val)
+        end
+        log.sub_time += sub_time
         
-        cuts, sub_obj_value = generate_cuts(algo, algo.cut_strategy)
-        @constraint(algo.master.model, cuts .<= 0)
+        # Update state and record information
+        record_iteration!(log, state)
 
-        # Update bounds
-        LB = algo.master.obj_value
-        UB_temp = sum(algo.data.fixed_costs .* algo.master.x_value) + sub_obj_value
-        UB = min(UB, UB_temp)
-        
-        # Calculate gap and elapsed time
-        gap = (UB - LB) / UB * 100
-        elapsed_time = time() - start_time
-        
-        # Store iteration data
-        push!(algo.iteration_data, (
-            iter = iter,
-            LB = LB,
-            UB = UB,
-            gap = gap,
-            master_time = master_time,
-            sub_time = sub_time,
-            elapsed_time = elapsed_time
-        ))
-        
-        # Print iteration information
-
-        # @printf("Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.2f%% | Time: (M: %6.2f, S: %6.2f) | Elapsed: %6.2f\n",
-        #            iter, LB, UB, gap, master_time, sub_time, elapsed_time)
+        params.verbose && print_iteration_info(state, log)
 
         # Check termination criteria
-        if gap < algo.params.gap_tolerance || elapsed_time > algo.params.time_limit
-            break
+        is_terminated(state, params, log) && break
+
+        # Generate and add cuts
+        for cut in cuts
+            @constraint(env.master.model, 0 >= cut)
         end
     end
-
-    # Print final time breakdown
-    # @printf("Total time: %.2f s (Master: %.2f s, Sub: %.2f s)\n", 
-    #         time() - start_time, master_time, sub_time)
-
-    return algo.iteration_data
+    
+    return to_dataframe(log)
 end
 
-# solve master problem
+"""
+Solve the master problem
+"""
 function solve_master!(master::AbstractMasterProblem)
     optimize!(master.model)
-    master.obj_value = objective_value(master.model)
+    master.obj_value = JuMP.objective_value(master.model)
     master.x_value = value.(master.var[:x])
+    master.t_value = value(master.var[:t])
 end
 
-# solve sub problem
-function solve_sub!(sub::AbstractSubProblem, master::AbstractMasterProblem)
-
-    set_normalized_rhs.(sub.fixed_x_constraints, master.x_value)
+"""
+Solve the sub problem
+"""
+function solve_sub!(sub::AbstractSubProblem, x_value::Vector{Float64})
+    set_normalized_rhs.(sub.fixed_x_constraints, x_value)
     optimize!(sub.model)
 end
 
-function solve_sub!(sub::KnapsackUFLPSubProblem, master::AbstractMasterProblem)
-    # no need to solve sub problem (knapsack)
+"""
+Special case for knapsack sub problem - no need to solve
+"""
+function solve_sub!(sub::KnapsackUFLPSubProblem, x_value::Vector{Float64})
+    # No need to solve sub problem (knapsack)
 end
 
 
+"""
+Print iteration information if verbose mode is on
+"""
+function print_iteration_info(state::BendersState, log::BendersIterationLog)
+    @printf("Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.3f%% | Time: (M: %6.2f, S: %6.2f) | Elapsed: %6.2f\n",
+           state.iteration, state.LB, state.UB, state.gap, 
+           log.master_time, log.sub_time, get_total_time(log))
+end
 
+"""
+Check termination criteria based on gap and time limit
+"""
+function is_terminated(state::BendersState, params::BendersParams, log::BendersIterationLog)
+    return state.gap <= params.gap_tolerance || get_total_time(log) >= params.time_limit #|| state.iteration >= 2
+end

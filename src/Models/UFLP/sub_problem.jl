@@ -14,11 +14,11 @@ mutable struct KnapsackUFLPSubProblem <: AbstractUFLPSubProblem
 end
 
 
-function create_sub_problem(data::UFLPData, ::StandardCut)
+function create_sub_problem(data::UFLPData, ::ClassicalCut)
     
     model = Model()
     
-    @info "Building Subproblem for UFLP (Standard)"
+    @debug "Building Subproblem for UFLP (Standard)"
 
     # Extract problem dimensions
     N, M = data.n_facilities, data.n_customers
@@ -44,7 +44,7 @@ end
 
 function create_sub_problem(data::UFLPData, cut_strategy::Union{FatKnapsackCut, SlimKnapsackCut})
     
-    @info "Building Subproblem for UFLP ($(typeof(cut_strategy)))"
+    @debug "Building Subproblem for UFLP ($(typeof(cut_strategy)))"
     cost_demands = [data.costs[:,j] .* data.demands[j] for j in 1:data.n_customers]
     sorted_indices = [sortperm(cost_demands[j]) for j in 1:data.n_customers]
     sorted_cost_demands = [cost_demands[j][sorted_indices[j]] for j in 1:data.n_customers]

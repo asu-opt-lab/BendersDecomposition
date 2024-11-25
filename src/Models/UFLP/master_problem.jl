@@ -11,7 +11,8 @@ mutable struct UFLPMasterProblem <: AbstractUFLPMasterProblem
 end
 
 
-function create_master_problem(data::UFLPData, cut_strategy::CutGenerationStrategy)
+function create_master_problem(data::UFLPData, cut_strategy::CutStrategy
+)
 
     model = Model()
 
@@ -26,12 +27,4 @@ function create_master_problem(data::UFLPData, cut_strategy::CutGenerationStrate
     return UFLPMasterProblem(model, Dict(:x => x, :t => t), 0.0, zeros(N))
 end
 
-# Helper functions for variable creation
-function create_t_variable(model::Model, ::CutGenerationStrategy, data::UFLPData) 
-    @variable(model, t >= -1e6)
-end
 
-function create_t_variable(model::Model, ::FatKnapsackCut, data::UFLPData)
-    M = data.n_customers
-    @variable(model, t[1:M] >= -1e6)
-end
