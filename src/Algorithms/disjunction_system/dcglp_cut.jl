@@ -1,119 +1,98 @@
-export DisjunctionSystem
+function generate_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
 
-mutable struct DisjunctionSystem <: CutGenerationStrategy
-    norm_type::AbstractNormType
-    _cut_strategy::CutGenerationStrategy
+    sub_obj_val = get_subproblem_value(env) #checked
+
+    disjunctive_inequality = select_disjunctive_inequality(env.master.x_value)
+
+    update_dcglp!(env.dcglp, disjunctive_inequality, cut_strategy)
+    
+    solve_dcglp!(env, cut_strategy)
+    
+    cuts = merge_cuts(env, cut_strategy)
+
+    return cuts, sub_obj_val
 end
 
-function generate_cuts(algo::AbstractBendersAlgorithm, disjunction_system::DisjunctionSystem)
-    disjunctive_inequality = select_disjunctive_inequality(algo.master.x_value)
-    dcglp_problem = create_dcglp(algo.data, disjunctive_inequality, disjunction_system._cut_strategy, disjunction_system.norm_type)
-    assign_solver!(dcglp_problem.model, :CPLEX)
-    solve!(dcglp_problem, algo)
+function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
 
-    γ₀, γₓ, γₜ = dual(dcglp_problem.γconstraints[:γ₀]), dual.(dcglp_problem.γconstraints[:γₓ]), dual.(dcglp_problem.γconstraints[:γₜ])
-    cut = @expression(algo.master.model, γ₀ + γₓ'algo.master.model[:x] + γₜ'algo.master.model[:t])
+    log = DCGLPIterationLog()
+    state = DCGLPState()
 
-    _, obj_value = generate_cuts(algo, disjunction_system._cut_strategy)
-    return cut, obj_value
-end
+    x_value, t_value = env.master.x_value, env.master.t_value
+    set_normalized_rhs.(env.dcglp.model[:conx], x_value)
+    set_normalized_rhs.(env.dcglp.model[:cont], t_value)
+    log.start_time = time()
 
-function solve!(dcglp_problem::AbstractDCGLP, algo::AbstractBendersAlgorithm)
-    LB, UB = -Inf, Inf
-    LBs = []
-    iter = 0
-    x_value = algo.master.x_value
-    t_value = value.(algo.master.var[:t])
-    set_normalized_rhs.(dcglp_problem.model[:conx], x_value)
-    set_normalized_rhs.(dcglp_problem.model[:cont], t_value)
-    start_time = time()
     while true
 
-        iter += 1
-        optimize!(dcglp_problem.model)
-        k̂₀ = value(dcglp_problem.model[:k₀])
-        k̂ₓ = value.(dcglp_problem.model[:kₓ])
-        k̂ₜ = value.(dcglp_problem.model[:kₜ])
-        v̂₀ = value(dcglp_problem.model[:v₀])
-        v̂ₓ = value.(dcglp_problem.model[:vₓ])
-        v̂ₜ = value.(dcglp_problem.model[:vₜ])
-        τ̂ = value(dcglp_problem.model[:τ])
-        _sx = value.(dcglp_problem.model[:sx])
+        state.iteration += 1
 
-        obj_value_k, obj_value_v = Inf, Inf
-        if k̂₀ != 0 
-            dual_values_k, obj_value_k = generate_cut_coefficients(algo.sub, k̂ₓ./k̂₀, algo.cut_strategy._cut_strategy)
+        master_time = @elapsed begin
+            k_values, v_values, other_values = solve_and_get_dcglp_values(env.dcglp.model, cut_strategy.norm_type)
         end
+        log.master_time += master_time
 
-        if v̂₀ != 0 
-            dual_values_v, obj_value_v = generate_cut_coefficients(algo.sub, v̂ₓ./v̂₀, algo.cut_strategy._cut_strategy)
+        sub_k_time = @elapsed begin
+            if_add_cuts_k, dual_info_k, obj_value_k = generate_cut_coefficients(env.sub, k_values, cut_strategy.base_cut_strategy)
         end
-
-
-        ##################### LB and UB #####################
-        LB = τ̂
-        UB = update_UB!(UB,_sx,obj_value_k,obj_value_v,t_value, algo.cut_strategy.norm_type)
-        push!(LBs, LB)
-
-        @info "Iteration $iter: LB = $LB, UB = $UB, _UB1 = $obj_value_k, _UB2 = $obj_value_v"
-
-
-        ##################### check termination #####################
-        if (UB - LB)/abs(UB) <= 1e-2 || (UB - LB) <= 0.01
-            @info "Optimal solution found"
-            break
+        log.sub_k_time += sub_k_time
+        
+        sub_v_time = @elapsed begin
+            if_add_cuts_v, dual_info_v, obj_value_v = generate_cut_coefficients(env.sub, v_values, cut_strategy.base_cut_strategy)
         end
+        log.sub_v_time += sub_v_time
 
-        if iter >= 5 && all(LBs[end] - LB <= 1e-05 for LB in LBs[end-4:end-1]) || 200 <= time() - start_time
-            @info "Time limit reached"
-            break
+        update_bounds!(state, k_values, v_values, other_values, obj_value_k, obj_value_v, t_value, cut_strategy.norm_type)
+        
+        record_iteration!(log, state)
+
+        cut_strategy.verbose && print_dcglp_iteration_info(state, log)
+
+        is_terminated(state, log) && break
+        
+        if if_add_cuts_k
+            add_cuts_k!(env, dual_info_k, cut_strategy)
         end
-
-        ##################### add cuts into DCGLP and master problem #####################
-        if k̂₀ != 0
-            if obj_value_k >= 1e-3
-                cuts_k, cuts_v, cuts_master = build_cuts(dcglp_problem, algo.master, algo.sub, dual_values_k, algo.cut_strategy._cut_strategy)
-                @constraint(dcglp_problem.model, 0 .>= cuts_k)
-                @constraint(dcglp_problem.model, 0 .>= cuts_v)
-                @constraint(algo.master.model, 0 .>= cuts_master)
-            end
-        end
-
-        if v̂₀ != 0
-            if obj_value_v >= 1e-3
-                cuts_k, cuts_v, cuts_master = build_cuts(dcglp_problem, algo.master, algo.sub, dual_values_v, algo.cut_strategy._cut_strategy)
-                @constraint(dcglp_problem.model, 0 .>= cuts_k)
-                @constraint(dcglp_problem.model, 0 .>= cuts_v)
-                @constraint(algo.master.model, 0 .>= cuts_master)
-            end
+        if if_add_cuts_v
+            add_cuts_v!(env, dual_info_v, cut_strategy)
         end
         
     end
 
-    ##################### update #####################
-
 end
 
-function update_UB!(UB,_sx,obj_value_k,obj_value_v,t_value,::L1Norm) return min(UB,norm([ _sx; obj_value_k .+ obj_value_v .- t_value], Inf)) end
-function update_UB!(UB,_sx,obj_value_k,obj_value_v,t_value,::L2Norm) return min(UB,norm([ _sx; obj_value_k .+ obj_value_v .- t_value], 2)) end
-function update_UB!(UB,_sx,obj_value_k,obj_value_v,t_value,::LInfNorm) return min(UB,norm([ _sx; obj_value_k .+ obj_value_v .- t_value], 1)) end
+
+function is_terminated(state, log)
+    return state.gap <= 1e-3 || log.master_time >= 200 || state.UB - state.LB <= 1e-03 || (state.UB_k <= 1e-6 && state.UB_v <= 1e-6) #|| state.iteration >= 5
+end
 
 
-function select_disjunctive_inequality(x_value)
-    # Calculate the gap between each x value and 0.5
-    gap_x = abs.(x_value .- 0.5)
-    
-    # Find the index of the x value closest to 0.5
-    index = argmin(gap_x)
-    
-    # Create a vector 'a' with zeros, except for a 1 at the found index
-    a = zeros(Int, length(x_value))
-    a[index] = 1
-    
-    # Log the selected index for debugging
-    @debug "Selected disjunction index: $index"
-    
-    # Return the disjunction vector 'a' and the right-hand side 0
-    return a, 0
+function print_dcglp_iteration_info(state, log)
+    @printf("   Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.2f%% | UB_k: %11.4f | UB_v: %11.4f \n",
+           state.iteration, state.LB, state.UB, state.gap, state.UB_k, state.UB_v)
+end
+
+function update_bounds!(state, k_values, v_values, other_values, obj_value_k, obj_value_v, t_value, norm_type::LNorm)
+    state.LB = other_values.τ
+    diff_st = obj_value_k .+ obj_value_v .- t_value
+    state.UB = update_UB!(state.UB, other_values.sx, diff_st, norm_type)
+    state.UB_k = obj_value_k - k_values.t
+    state.UB_v = obj_value_v - v_values.t
+    state.gap = (state.UB - state.LB)/abs(state.UB) * 100
+end
+
+update_UB!(UB,_sx,diff_st,::L1Norm) = min(UB,norm([ _sx; diff_st], Inf))
+update_UB!(UB,_sx,diff_st,::L2Norm) = min(UB,norm([ _sx; diff_st], 2))
+update_UB!(UB,_sx,diff_st,::LInfNorm) = min(UB,norm([ _sx; diff_st], 1))
+
+function merge_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
+    γ₀, γₓ, γₜ = generate_strengthened_cuts(env.dcglp, cut_strategy.cut_strengthening_type)
+    push!(env.dcglp.γ_values, (γ₀, γₓ, γₜ))
+    master_disjunctive_cut = @expression(env.master.model, γ₀ + dot(γₓ, env.master.var[:x]) + γₜ * env.master.var[:t])
+    if cut_strategy.include_master_cuts
+        push!(env.dcglp.master_cuts, [master_disjunctive_cut])
+        return env.dcglp.master_cuts
+    end
+    return master_disjunctive_cut
 end
 

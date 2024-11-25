@@ -1,56 +1,46 @@
-abstract type AbstractCFLPSubProblem end
+export StandardCFLPSubProblem
 
-struct CFLPStandardSubProblem <: AbstractCFLPSubProblem
+abstract type AbstractCFLPSubProblem <: AbstractSubProblem end
+
+mutable struct StandardCFLPSubProblem <: AbstractCFLPSubProblem
     model::Model
-    constraints::Dict{Symbol, Vector{ConstraintRef}}
-    variables::Dict{Symbol, Vector{VariableRef}}
-    objective::AffExpr
-    data::Any
-    solution::Dict{Symbol, Any}
+    fixed_x_constraints::Vector{ConstraintRef}
+    other_constraints::Vector{ConstraintRef}
 end
 
-struct CFLPNormalizedSubProblem <: AbstractCFLPSubProblem
+struct FacilityKnapsackInfo
+    costs::Matrix{Float64}
+    demands::Vector{Float64}
+    capacity::Vector{Float64}
+end
+
+mutable struct KnapsackCFLPSubProblem <: AbstractCFLPSubProblem
     model::Model
-    constraints::Dict{Symbol, Vector{ConstraintRef}}
-    variables::Dict{Symbol, Vector{VariableRef}}
-    objective::AffExpr
-    data::Any
-    solution::Dict{Symbol, Any}
+    fixed_x_constraints::Vector{ConstraintRef}
+    other_constraints::Vector{ConstraintRef}
+    demand_constraints::Vector{ConstraintRef}
+    facility_knapsack_info::FacilityKnapsackInfo
 end
 
-struct CFLPNoModelSubProblem <: AbstractCFLPSubProblem
-    data::Any
-    solution::Dict{Symbol, Any}
+
+
+# Specialized create_sub_problem functions
+function create_sub_problem(data::CFLPData, ::ClassicalCut)
+    @debug "Building Subproblem for CFLP (Standard)"
+    model, fixed_x, other = _create_base_sub_problem(data)
+    return StandardCFLPSubProblem(model, fixed_x, other)
 end
 
-function create_sub_problem(::Type{T}, data::CFLPData, args...; kwargs...) where T <: AbstractCFLPSubProblem
-    if T == CFLPStandardSubProblem
-        return create_standard_sub_problem(data, args...; kwargs...)
-    elseif T == CFLPNormalizedSubProblem
-        return create_normalized_sub_problem(data, args...; kwargs...)
-    elseif T == CFLPNoModelSubProblem
-        return create_no_model_sub_problem(data, args...; kwargs...)
-    else
-        error("Unknown sub-problem type: $T")
-    end
+function create_sub_problem(data::CFLPData, ::KnapsackCut)
+    @debug "Building Subproblem for CFLP (Knapsack)"
+    model, fixed_x, other, demand = _create_base_sub_problem(data)
+    facility_knapsack_info = FacilityKnapsackInfo(data.costs, data.demands, data.capacities)
+    return KnapsackCFLPSubProblem(model, fixed_x, other, demand, facility_knapsack_info)
 end
 
-function create_standard_sub_problem(data::CFLPData, x::Vector{Float64}, solver::Symbol=:Gurobi)
-    # Create the model with the specified solver
-    model = if solver == :CPLEX
-        Model(CPLEX.Optimizer)
-    elseif solver == :Gurobi
-        Model(Gurobi.Optimizer)
-    else
-        error("Unsupported solver: $solver")
-    end
-    
-    # Set the optimizer to silent mode
-    set_optimizer_attribute(model, MOI.Silent(), true)
-    
-    println("########### Building Standard Subproblem ###########")
-
-    # Extract problem dimensions
+# Create a base function for common setup logic
+function _create_base_sub_problem(data::CFLPData)
+    model = Model()
     N, M = data.n_facilities, data.n_customers
     
     # Define variables
@@ -58,50 +48,22 @@ function create_standard_sub_problem(data::CFLPData, x::Vector{Float64}, solver:
     @variable(model, x[1:N])
 
     # Set objective
-    @objective(model, Min, sum(data.costs[i,j] * data.demands[j] * y[i,j] for i in 1:N, j in 1:M))
+    cost_demands = data.costs .* data.demands'
+    @objective(model, Min, sum(cost_demands .* y))
 
-    # Add constraints
-    @constraint(model, demand_satisfaction[j in 1:M], sum(y[i,j] for i in 1:N) == 1)
-    @constraint(model, capacity[i in 1:N], sum(data.demands[j] * y[i,j] for j in 1:M) <= data.capacities[i] * x[i])
-    @constraint(model, facility_open[i in 1:N, j in 1:M], y[i,j] <= x[i])
+    # Add common constraints
+    demand_constraints = @constraint(model, demand_satisfaction[j in 1:M], sum(y[:,j]) == 1)
+    @constraint(model, facility_open, y .<= x)
+    @constraint(model, capacity[i in 1:N], sum(data.demands[:] .* y[i,:]) <= data.capacities[i] * x[i])
 
-    # Store all affine constraints
-    all_constraints = [
-        all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.GreaterThan{Float64});
-        all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64});
-        all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.EqualTo{Float64});
-    ]
+    # Add initial x constraints
+    fixed_x_constraints = @constraint(model, x .== 0)
 
-    # Initialize constraint and RHS vectors
-    constraints = ConstraintRef[]
-    rhs = Float64[]
+    # Store other constraints
+    other_constraints = Vector{ConstraintRef}()
+    append!(other_constraints, model[:demand_satisfaction])
+    append!(other_constraints, vec(model[:facility_open]))
+    append!(other_constraints, model[:capacity])
 
-    # Populate constraint and RHS vectors
-    for c in all_constraints
-        push!(constraints, c)
-        push!(rhs, normalized_rhs(c))
-    end
-
-    # Add constraints to fix x variables
-    fixed_x_constraints = @constraint(model, [i in 1:N], x[i] == 0)
-
-    # Create and return the CFLPStandardSubProblem struct
-    return CFLPStandardSubProblem(
-        model,
-        Dict(:all => constraints, :fixed_x => fixed_x_constraints),
-        Dict(:y => y, :x => x),
-        objective_function(model),
-        data,
-        Dict{Symbol, Any}()
-    )
-end
-
-function create_normalized_sub_problem(data::CFLPData, solver::Symbol=:Gurobi)
-    # Implementation for normalized sub-problem
-    # ...
-end
-
-function create_no_model_sub_problem(data::CFLPData, args...; kwargs...)
-    # Implementation for sub-problem without modeling
-    return CFLPNoModelSubProblem(data, Dict{Symbol, Any}())
+    return model, fixed_x_constraints, other_constraints, demand_constraints
 end
