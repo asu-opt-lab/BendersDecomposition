@@ -1,6 +1,6 @@
 function get_subproblem_value(env::BendersEnv)
     
-    # Check if master.x_value is close enough to integer values
+    # # Check if master.x_value is close enough to integer values
     if !all(x -> isapprox(x, round(x), atol=1e-4), env.master.x_value)
         return Inf
     end
@@ -62,11 +62,14 @@ end
 function add_disjunctive_cut!(dcglp::DCGLP)
     if !isempty(dcglp.γ_values)
         γ₀, γₓ, γₜ = dcglp.γ_values[end]
-        @constraint(dcglp.model, γ₀*dcglp.model[:k₀] + sum(γₓ.*dcglp.model[:kₓ]) + γₜ*dcglp.model[:kₜ] <= 0)
-        @constraint(dcglp.model, γ₀*dcglp.model[:v₀] + sum(γₓ.*dcglp.model[:vₓ]) + γₜ*dcglp.model[:vₜ] <= 0)
+        # const_factor = 1e02
+        # @constraint(dcglp.model, const_factor*(γ₀*dcglp.model[:k₀] + dot(γₓ, dcglp.model[:kₓ]) + dot(γₜ, dcglp.model[:kₜ])) <= const_factor*1e-06)
+        # @constraint(dcglp.model, const_factor*(γ₀*dcglp.model[:v₀] + dot(γₓ, dcglp.model[:vₓ]) + dot(γₜ, dcglp.model[:vₜ])) <= const_factor*1e-06)
+        @constraint(dcglp.model, γ₀*dcglp.model[:k₀] + dot(γₓ, dcglp.model[:kₓ]) + dot(γₜ, dcglp.model[:kₜ]) <= 0)
+        @constraint(dcglp.model, γ₀*dcglp.model[:v₀] + dot(γₓ, dcglp.model[:vₓ]) + dot(γₜ, dcglp.model[:vₜ]) <= 0)    
+
     end
 end
-
 
 
 

@@ -27,7 +27,7 @@ end
 # Specialized create_sub_problem functions
 function create_sub_problem(data::CFLPData, ::ClassicalCut)
     @debug "Building Subproblem for CFLP (Standard)"
-    model, fixed_x, other = _create_base_sub_problem(data)
+    model, fixed_x, other, _ = _create_base_sub_problem(data)
     return StandardCFLPSubProblem(model, fixed_x, other)
 end
 

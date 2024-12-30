@@ -1,8 +1,9 @@
-export read_GK_data, read_cflp_benchmark_data, read_uflp_benchmark_data, read_Simple_data, read_Orlib_data
+export read_GK_data, read_cflp_benchmark_data, read_uflp_benchmark_data, read_Simple_data, read_Orlib_data, read_stochastic_capacited_facility_location_problem
+export read_mcndp_instance
 
-
-function read_GK_data(filename::AbstractString;filepath="data/random_data/"::AbstractString)
+function read_GK_data(filename::AbstractString;filepath="data/CFLP/random_data/"::AbstractString)
     fullpath = joinpath(filepath, join([filename, ".json"]))
+    # fullpath = joinpath(filepath, filename)
     loaded_json = open(fullpath, "r") do file
        read(file, String)
     end
@@ -182,5 +183,82 @@ function read_Orlib_data(filename::String;filepath="data/M/R"::AbstractString)
         else
             return UFLPData(n, m, demands, opening_costs, allocation_costs)
         end
+    end
+end
+
+
+function read_stochastic_capacited_facility_location_problem(filename::String;filepath="data/SCFLP/"::AbstractString)
+    fullpath = joinpath(filepath, join([filename, ".json"]))
+    loaded_json = open(fullpath, "r") do file
+        read(file, String)
+    end
+    loaded_data_string = JSON.parse(loaded_json)
+    n_facilities = loaded_data_string["n_facilities"]
+    n_customers = loaded_data_string["n_customers"]
+    n_scenarios = loaded_data_string["n_scenarios"]
+    capacities = loaded_data_string["capacities"]
+    demands = loaded_data_string["demands"]
+    fixed_costs = loaded_data_string["fixed_costs"]
+    costs = loaded_data_string["costs"]
+    costs = reduce(hcat,costs)'
+    return SCFLPData(n_facilities, n_customers, n_scenarios, capacities, demands, fixed_costs, costs)
+end
+
+
+function read_mcndp_instance(filename::String;filepath="data/NDR/"::AbstractString)
+    fullpath = joinpath(filepath, filename)
+    open(fullpath, "r") do f
+        # Skip the filename line
+        readline(f)
+        
+        # Read problem dimensions
+        dims = split(readline(f))
+        num_nodes = parse(Int, dims[1])
+        num_arcs = parse(Int, dims[2])
+        num_commodities = parse(Int, dims[3])
+        
+        # Initialize data structures
+        arcs = Tuple{Int,Int}[]
+        fixed_costs = Float64[]
+        variable_costs = Float64[]
+        capacities = Float64[]
+        demands = Tuple{Int,Int,Float64}[]
+        
+        # Read main data section: arc information
+        for i in 1:num_arcs
+            line = split(readline(f))
+            i_from = parse(Int, line[1])
+            i_to = parse(Int, line[2])
+            fixed = parse(Float64, line[5])
+            var_cost = parse(Float64, line[3])
+            capacity = parse(Float64, line[4])
+            
+            push!(arcs, (i_from, i_to))
+            push!(fixed_costs, fixed)
+            push!(variable_costs, var_cost)
+            push!(capacities, capacity)
+        end
+        
+        # Read commodity demand information
+        while !eof(f)
+            line = split(readline(f))
+            if length(line) >= 3
+                origin = parse(Int, line[1])
+                dest = parse(Int, line[2])
+                demand = parse(Float64, line[3])
+                push!(demands, (origin, dest, demand))
+            end
+        end
+        
+        return MCNDPData(
+            num_nodes,
+            num_arcs,
+            num_commodities,
+            arcs,
+            fixed_costs,
+            variable_costs,
+            capacities,
+            demands
+        )
     end
 end

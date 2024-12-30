@@ -19,7 +19,14 @@ solver = "Gurobi"
 
 # Cut strategy configuration
 [cut_strategy]
-type = "KNAPSACK_CUT"
+type = "DISJUNCTIVE_CUT"
+base_cut_strategy = "KNAPSACK_CUT"
+norm_type = "LINFNORM"
+cut_strengthening = "PURE_DISJUNCTION"
+use_two_sided_cuts = true
+include_master_cuts = false
+reuse_dcglp = false
+verbose = true
 
 
 

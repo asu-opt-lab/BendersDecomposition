@@ -14,11 +14,23 @@ function generate_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
 end
 
 function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
-
+    # set_optimizer_attribute(env.dcglp.model, MOI.Silent(), false)
     log = DCGLPIterationLog()
     state = DCGLPState()
 
     x_value, t_value = env.master.x_value, env.master.t_value
+    # @info "old: $(dot(env.data.fixed_costs, x_value))"
+    # @info "x_value: $x_value"
+    # for i in 1:length(x_value)
+    #     if x_value[i] == 0
+    #         x_value[i] += 0.2
+    #     elseif x_value[i] == 1
+    #         x_value[i] -= 0.2
+    #     end
+    # end
+    # @info "new: $(dot(env.data.fixed_costs, x_value))"
+    # @info "x_value: $x_value"
+    # t_value *= 0.5
     set_normalized_rhs.(env.dcglp.model[:conx], x_value)
     set_normalized_rhs.(env.dcglp.model[:cont], t_value)
     log.start_time = time()
@@ -63,7 +75,7 @@ end
 
 
 function is_terminated(state, log)
-    return state.gap <= 1e-3 || log.master_time >= 200 || state.UB - state.LB <= 1e-03 || (state.UB_k <= 1e-6 && state.UB_v <= 1e-6) #|| state.iteration >= 5
+    return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || (state.UB_k <= 1e-3 && state.UB_v <= 1e-3) || get_total_time(log) >= 200 || state.iteration >= 50
 end
 
 
@@ -76,8 +88,8 @@ function update_bounds!(state, k_values, v_values, other_values, obj_value_k, ob
     state.LB = other_values.τ
     diff_st = obj_value_k .+ obj_value_v .- t_value
     state.UB = update_UB!(state.UB, other_values.sx, diff_st, norm_type)
-    state.UB_k = obj_value_k - k_values.t
-    state.UB_v = obj_value_v - v_values.t
+    state.UB_k = obj_value_k .- k_values.t
+    state.UB_v = obj_value_v .- v_values.t
     state.gap = (state.UB - state.LB)/abs(state.UB) * 100
 end
 
@@ -87,8 +99,22 @@ update_UB!(UB,_sx,diff_st,::LInfNorm) = min(UB,norm([ _sx; diff_st], 1))
 
 function merge_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
     γ₀, γₓ, γₜ = generate_strengthened_cuts(env.dcglp, cut_strategy.cut_strengthening_type)
+    if γₜ == 0
+        const_factor = 1e-04
+    else 
+        # const_factor = 1
+        const_factor  = 1e-05
+    end
+    _γ₀ = γ₀ / const_factor
+    _γₓ = γₓ ./ const_factor
+    _γₜ = γₜ / const_factor
+    # push!(env.dcglp.γ_values, (_γ₀, _γₓ, _γₜ))
+    # @info "_γ₀: $_γ₀, _γₓ: $_γₓ, _γₜ: $_γₜ"
+    # master_disjunctive_cut = @expression(env.master.model, _γ₀ + dot(_γₓ, env.master.var[:x]) + dot(_γₜ, env.master.var[:t]))
     push!(env.dcglp.γ_values, (γ₀, γₓ, γₜ))
-    master_disjunctive_cut = @expression(env.master.model, γ₀ + dot(γₓ, env.master.var[:x]) + γₜ * env.master.var[:t])
+    # @info "γ₀: $γ₀, γₓ: $γₓ, γₜ: $γₜ"
+    @info "γ₀/γₜ: $(γ₀/γₜ)"
+    master_disjunctive_cut = @expression(env.master.model, γ₀ + dot(γₓ, env.master.var[:x]) + dot(γₜ, env.master.var[:t]))
     if cut_strategy.include_master_cuts
         push!(env.dcglp.master_cuts, [master_disjunctive_cut])
         return env.dcglp.master_cuts
