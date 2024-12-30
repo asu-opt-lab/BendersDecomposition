@@ -73,5 +73,7 @@ end
 # Include model-specific implementations
 include("CFLP/cflp.jl")
 include("UFLP/uflp.jl")
+include("SCFLP/scflp.jl")
+include("MCNDP/mcndp.jl")
 include("model_utils.jl")
 include("base_dcglp.jl")

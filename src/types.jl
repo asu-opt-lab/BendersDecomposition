@@ -30,12 +30,33 @@ struct UFLPData <: AbstractData
     costs::Matrix{Float64}
 end
 
+struct SCFLPData <: AbstractData
+    n_facilities::Int
+    n_customers::Int
+    n_scenarios::Int
+    capacities::Vector{Float64}
+    demands::Vector{Vector{Float64}}
+    fixed_costs::Vector{Float64}
+    costs::Matrix{Float64}
+end
+
+struct MCNDPData <: AbstractData
+    num_nodes::Int      # Number of nodes
+    num_arcs::Int       # Number of arcs
+    num_commodities::Int # Number of commodities
+    arcs::Vector{Tuple{Int,Int}}  # Arcs (from_node, to_node)
+    fixed_costs::Vector{Float64}   # Fixed costs for opening arcs
+    variable_costs::Vector{Float64} # Variable costs per unit flow
+    capacities::Vector{Float64}     # Arc capacities
+    demands::Vector{Tuple{Int,Int,Float64}} # Demands (origin, destination, quantity)
+end
 # ============================================================================
 # Algorithm Strategy Types
 # ============================================================================
 # Loop strategies
 struct Sequential <: SolutionProcedure end
 struct Callback <: SolutionProcedure end
+struct StochasticSequential <: SolutionProcedure end
 
 # Cut strategies
 struct ClassicalCut <: CutStrategy end
@@ -78,7 +99,7 @@ end
 # Exports
 # ============================================================================
 export CFLPData, UFLPData
-export Sequential, Callback
+export Sequential, Callback, StochasticSequential
 export ClassicalCut, FatKnapsackCut, SlimKnapsackCut, KnapsackCut
 export PureDisjunctiveCut, StrengthenedDisjunctiveCut
 export StandardNorm, L1Norm, L2Norm, LInfNorm

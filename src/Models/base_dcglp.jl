@@ -3,7 +3,7 @@ export DCGLP
 mutable struct DCGLP <: AbstractDCGLP
     model::Model
     γ_constraints::Dict{Symbol,Any}
-    γ_values::Vector{Tuple{Float64, Vector{Float64},Float64}}
+    γ_values::Vector{Tuple{Float64, Vector{Float64}, Union{Float64, Vector{Float64}}}}
     disjunctive_inequalities_constraints::Vector{ConstraintRef}
     dcglp_constraints::Any
     master_cuts::Any
@@ -83,15 +83,13 @@ end
 # function add_problem_specific_constraints!(model::Model, data::AbstractData) end
 
 # Generic function to add t constraints
-function add_t_constraints!(model::Model, ::AbstractData, ::CutStrategy
-, ::StandardNorm)
+function add_t_constraints!(model::Model, ::AbstractData, ::CutStrategy, ::StandardNorm)
     @variable(model, kₜ)
     @variable(model, vₜ)
     @constraint(model, cont, kₜ + vₜ == 0)
 end
 
-function add_t_constraints!(model::Model, ::AbstractData, ::CutStrategy
-, ::LNorm)
+function add_t_constraints!(model::Model, ::AbstractData, ::CutStrategy, ::LNorm)
     @variable(model, kₜ)
     @variable(model, vₜ)
     @variable(model, st)
@@ -99,12 +97,10 @@ function add_t_constraints!(model::Model, ::AbstractData, ::CutStrategy
 end
 
 # Function to add norm-specific components for StandardNorm
-function add_norm_specific_components!(model::Model, data::AbstractData, ::CutStrategy
-, norm_type::StandardNorm) end
+function add_norm_specific_components!(model::Model, data::AbstractData, ::CutStrategy, norm_type::StandardNorm) end
 
 # Function to add norm-specific components for LNorm (ScalarDimension)
-function add_norm_specific_components!(model::Model, data::AbstractData, ::CutStrategy
-, norm_type::LNorm)
+function add_norm_specific_components!(model::Model, data::AbstractData, ::CutStrategy, norm_type::LNorm)
     N = data.n_facilities
     if norm_type == L1Norm()
         @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.NormInfinityCone(1 + N + 1))

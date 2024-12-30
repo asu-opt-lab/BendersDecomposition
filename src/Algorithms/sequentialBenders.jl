@@ -45,9 +45,10 @@ Solve the master problem
 """
 function solve_master!(master::AbstractMasterProblem)
     optimize!(master.model)
+    # @info termination_status(master.model)
     master.obj_value = JuMP.objective_value(master.model)
     master.x_value = value.(master.var[:x])
-    master.t_value = value(master.var[:t])
+    master.t_value = value.(master.var[:t])
 end
 
 """
@@ -79,5 +80,5 @@ end
 Check termination criteria based on gap and time limit
 """
 function is_terminated(state::BendersState, params::BendersParams, log::BendersIterationLog)
-    return state.gap <= params.gap_tolerance || get_total_time(log) >= params.time_limit #|| state.iteration >= 2
+    return state.gap <= params.gap_tolerance || get_total_time(log) >= params.time_limit #|| state.iteration >= 80
 end

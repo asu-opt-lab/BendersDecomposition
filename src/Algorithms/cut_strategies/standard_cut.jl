@@ -7,10 +7,18 @@ function generate_cuts(env::BendersEnv, ::ClassicalCut)
     return cut, sub_obj_val
 end
 
+function generate_cuts(env::BendersEnv, ::ClassicalCut, scenario::Int)
+    (coefficients_t, coefficients_x, constant_term), sub_obj_val = generate_cut_coefficients(env.sub.sub_problems[scenario], env.master.x_value, ClassicalCut())
+
+    cut = @expression(env.master.model, 
+        constant_term + dot(coefficients_x, env.master.var[:x]) + coefficients_t * env.master.var[:t][scenario])
+
+    return cut, sub_obj_val
+end
+
 function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Float64}, ::ClassicalCut)
     optimize!(sub.model)
     status = dual_status(sub.model)
-    
     if status == FEASIBLE_POINT
         sub_obj_val = objective_value(sub.model)
         coefficients_x = dual.(sub.fixed_x_constraints)

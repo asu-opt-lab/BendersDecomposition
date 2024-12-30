@@ -1,6 +1,6 @@
 module BendersDecomposition
 
-using Printf, StatsBase, Random, Distributions, LinearAlgebra, Plots, ArgParse, DataFrames, CSV, JSON
+using Printf, StatsBase, Random, Distributions, LinearAlgebra, ArgParse, DataFrames, CSV, JSON
 using JuMP, CPLEX, Gurobi
 
 # Include supporting files
@@ -22,13 +22,13 @@ Parameters for configuring the Benders decomposition algorithm.
 - `dcglp_attributes::Dict{Symbol,Any}`: Solver-specific attributes for DCGLP
 - `verbose::Bool`: Whether to print detailed progress information
 """
-struct BendersParams
+mutable struct BendersParams
     time_limit::Float64
     gap_tolerance::Float64
-    solver::Symbol
-    master_attributes::Dict{Symbol,Any}
-    sub_attributes::Dict{Symbol,Any}
-    dcglp_attributes::Dict{Symbol,Any}
+    solver::String
+    master_attributes::Dict{String,Any}
+    sub_attributes::Dict{String,Any}
+    dcglp_attributes::Dict{String,Any}
     verbose::Bool
 end
 export BendersParams
@@ -47,7 +47,7 @@ Environment containing all components needed for Benders decomposition.
 mutable struct BendersEnv
     data::AbstractData
     master::AbstractMasterProblem
-    sub::AbstractSubProblem
+    sub::Union{AbstractSubProblem, Vector{AbstractSubProblem}}
     dcglp::Union{Nothing, DCGLP}  # Optional component
 end
 
@@ -65,7 +65,13 @@ function BendersEnv(data::AbstractData, cut_strategy::CutStrategy, params::Bende
     master = create_master_problem(data, cut_strategy)
     assign_attributes!(master.model, params.master_attributes)
     sub = create_sub_problem(data, cut_strategy)
-    assign_attributes!(sub.model, params.sub_attributes)
+    if sub isa AbstractSCFLPSubProblem
+        for scenario_sub in sub.sub_problems
+            assign_attributes!(scenario_sub.model, params.sub_attributes)
+        end
+    else
+        assign_attributes!(sub.model, params.sub_attributes)
+    end
     if cut_strategy isa DisjunctiveCut
         dcglp = create_dcglp(data, cut_strategy)
         assign_attributes!(dcglp.model, params.dcglp_attributes)
@@ -74,6 +80,7 @@ function BendersEnv(data::AbstractData, cut_strategy::CutStrategy, params::Bende
     end
     return BendersEnv(data, master, sub, dcglp)
 end
+
 export BendersEnv
 
 """
@@ -94,6 +101,12 @@ function run_Benders(data::AbstractData, loop_strategy::SolutionProcedure, cut_s
     env = BendersEnv(data, cut_strategy, params)
     solve!(env, loop_strategy, cut_strategy, params)
 end
+
+function run_Benders(data::AbstractData, loop_strategy::StochasticSequential, cut_strategy::CutStrategy, params::BendersParams)
+    env = BendersEnv(data, cut_strategy, params)
+    solve!(env, loop_strategy, cut_strategy, params)
+end
+
 export run_Benders
 
 include("algorithms/algorithms.jl")

@@ -20,8 +20,8 @@ struct DCGLPIterationInfo
     iter::Int
     LB::Float64
     UB::Float64
-    UB_k::Float64
-    UB_v::Float64
+    UB_k::Union{Vector{Float64}, Float64}
+    UB_v::Union{Vector{Float64}, Float64}
     gap::Float64
     master_time::Float64
     sub_k_time::Float64
@@ -47,8 +47,8 @@ mutable struct DCGLPState
     iteration::Int
     LB::Float64
     UB::Float64
-    UB_k::Float64
-    UB_v::Float64
+    UB_k::Union{Vector{Float64}, Float64}
+    UB_v::Union{Vector{Float64}, Float64}
     gap::Float64
 
     # Constructor with default values
@@ -118,7 +118,7 @@ end
 
 function generate_strengthened_cuts(dcglp::DCGLP, ::PureDisjunctiveCut)
     optimize!(dcglp.model)
-    γₜ = dual(dcglp.model[:cont])
+    γₜ = dual.(dcglp.model[:cont])
     γ₀ = dual(dcglp.model[:con0])
     γₓ = dual.(dcglp.model[:conx])
     return γ₀, γₓ, γₜ
