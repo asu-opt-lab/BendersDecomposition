@@ -122,7 +122,7 @@ function read_uflp_benchmark_data(filename::AbstractString;filepath="data/locssa
     return UFLPData(n_facilities, n_customers, demands, fixed_costs, costs)
 end
 
-function read_Simple_data(filename::AbstractString;filepath="data"::AbstractString)
+function read_Simple_data(filename::AbstractString;filepath="data/AllKoerkelGhosh/"::AbstractString)
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
 

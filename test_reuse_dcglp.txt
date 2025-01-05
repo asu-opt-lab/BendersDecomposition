@@ -1,0 +1,1022 @@
+[cut_strategy]
+type = "DISJUNCTIVE_CUT"
+base_cut_strategy = "FAT_KNAPSACK_CUT"
+norm_type = "L1NORM"
+cut_strengthening = "PURE_DISJUNCTION"
+use_two_sided_cuts = true
+include_master_cuts = true
+reuse_dcglp = true
+verbose = false
+
+[ Info: ga500a-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 669973.0000 | Gap: 74729.843% | Time: (M:   1.74, S:   0.32) | Elapsed:   2.06
+Iter:    2 | LB: -20147340.0000 | UB: 575968.0000 | Gap: 3597.996% | Time: (M:   1.75, S:   0.32) | Elapsed:   2.63
+Iter:    3 | LB:  503266.4265 | UB: 519427.7753 | Gap:    3.111% | Time: (M:   1.78, S:   0.33) | Elapsed:   2.67
+Iter:    4 | LB:  506341.5946 | UB: 512001.0186 | Gap:    1.105% | Time: (M:   2.05, S:   0.33) | Elapsed:   2.95
+Iter:    5 | LB:  509305.3219 | UB: 511141.8951 | Gap:    0.359% | Time: (M:   2.64, S:   0.34) | Elapsed:   3.54
+Iter:    6 | LB:  510371.1318 | UB: 510806.6153 | Gap:    0.085% | Time: (M:   3.04, S:   0.38) | Elapsed:   3.99
+Iter:    7 | LB:  510553.5354 | UB: 510632.9577 | Gap:    0.016% | Time: (M:   3.38, S:   0.38) | Elapsed:   4.34
+Iter:    8 | LB:  510585.0642 | UB: 510599.8352 | Gap:    0.003% | Time: (M:   3.58, S:   0.39) | Elapsed:   4.55
+Iter:    9 | LB:  510588.6586 | UB: 510589.7049 | Gap:    0.000% | Time: (M:   3.68, S:   0.39) | Elapsed:   4.65
+Iter:   10 | LB:  510588.9580 | UB: 510589.1628 | Gap:    0.000% | Time: (M:   3.75, S:   0.39) | Elapsed:   4.72
+Iter:   11 | LB:  510588.9660 | UB: 510588.9660 | Gap:   -0.000% | Time: (M:   3.82, S:   0.62) | Elapsed:   5.02
+[ Info: ga500b-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997990.0000 | UB: 671783.0000 | Gap: 74528.497% | Time: (M:   0.00, S:   0.25) | Elapsed:   0.25
+Iter:    2 | LB: -19467992.0000 | UB: 671783.0000 | Gap: 2997.958% | Time: (M:   0.01, S:   0.25) | Elapsed:   0.28
+Iter:    3 | LB:  515441.5791 | UB: 540483.2049 | Gap:    4.633% | Time: (M:   0.04, S:   0.26) | Elapsed:   0.32
+Iter:    4 | LB:  525910.5055 | UB: 534578.9614 | Gap:    1.622% | Time: (M:   0.31, S:   0.27) | Elapsed:   0.61
+Iter:    5 | LB:  532584.9107 | UB: 533934.8993 | Gap:    0.253% | Time: (M:   0.79, S:   0.27) | Elapsed:   1.10
+Iter:    6 | LB:  533153.8175 | UB: 533483.1281 | Gap:    0.062% | Time: (M:   1.03, S:   0.28) | Elapsed:   1.35
+Iter:    7 | LB:  533311.2392 | UB: 533359.4599 | Gap:    0.009% | Time: (M:   1.23, S:   0.29) | Elapsed:   1.56
+Iter:    8 | LB:  533334.1843 | UB: 533346.4156 | Gap:    0.002% | Time: (M:   1.36, S:   0.29) | Elapsed:   1.70
+Iter:    9 | LB:  533338.1225 | UB: 533339.6503 | Gap:    0.000% | Time: (M:   1.45, S:   0.30) | Elapsed:   1.81
+Iter:   10 | LB:  533338.5705 | UB: 533338.6580 | Gap:    0.000% | Time: (M:   1.54, S:   0.31) | Elapsed:   1.90
+Iter:   11 | LB:  533338.5747 | UB: 533338.5754 | Gap:    0.000% | Time: (M:   1.57, S:   0.32) | Elapsed:   1.95
+[ Info: ga750a-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 991989.0000 | Gap: 75705.657% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.07
+Iter:    2 | LB: -42909773.0000 | UB: 862944.0000 | Gap: 5072.486% | Time: (M:   0.01, S:   0.08) | Elapsed:   0.14
+Iter:    3 | LB:  753886.5307 | UB: 774625.5396 | Gap:    2.677% | Time: (M:   0.08, S:   0.09) | Elapsed:   0.22
+Iter:    4 | LB:  757175.7391 | UB: 764107.3174 | Gap:    0.907% | Time: (M:   0.94, S:   0.10) | Elapsed:   1.09
+Iter:    5 | LB:  760748.5842 | UB: 763016.0378 | Gap:    0.297% | Time: (M:   2.64, S:   0.10) | Elapsed:   2.81
+Iter:    6 | LB:  762246.2532 | UB: 762681.6952 | Gap:    0.057% | Time: (M:   4.30, S:   0.11) | Elapsed:   4.47
+Iter:    7 | LB:  762424.1402 | UB: 762503.1187 | Gap:    0.010% | Time: (M:   5.51, S:   0.15) | Elapsed:   5.73
+Iter:    8 | LB:  762460.2880 | UB: 762469.5817 | Gap:    0.001% | Time: (M:   6.17, S:   0.16) | Elapsed:   6.40
+Iter:    9 | LB:  762464.2716 | UB: 762465.2466 | Gap:    0.000% | Time: (M:   6.48, S:   0.16) | Elapsed:   6.72
+Iter:   10 | LB:  762464.4478 | UB: 762464.4924 | Gap:    0.000% | Time: (M:   6.63, S:   0.38) | Elapsed:   7.09
+[ Info: ga750b-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749998000.0000 | UB: 1006080.0000 | Gap: 74646.557% | Time: (M:   0.01, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -45499597.0000 | UB: 1006080.0000 | Gap: 4622.463% | Time: (M:   0.03, S:   0.07) | Elapsed:   0.14
+Iter:    3 | LB:  767405.9286 | UB: 800619.1289 | Gap:    4.148% | Time: (M:   0.09, S:   0.09) | Elapsed:   0.23
+Iter:    4 | LB:  779902.6892 | UB: 791949.2986 | Gap:    1.521% | Time: (M:   0.83, S:   0.10) | Elapsed:   0.99
+Iter:    5 | LB:  789035.7940 | UB: 791003.7094 | Gap:    0.249% | Time: (M:   2.39, S:   0.12) | Elapsed:   2.58
+Iter:    6 | LB:  789868.3592 | UB: 790229.2199 | Gap:    0.046% | Time: (M:   3.11, S:   0.14) | Elapsed:   3.32
+Iter:    7 | LB:  790085.5916 | UB: 790158.0800 | Gap:    0.009% | Time: (M:   3.97, S:   0.15) | Elapsed:   4.20
+Iter:    8 | LB:  790117.8255 | UB: 790125.6502 | Gap:    0.001% | Time: (M:   4.47, S:   0.17) | Elapsed:   4.74
+Iter:    9 | LB:  790121.4794 | UB: 790122.5464 | Gap:    0.000% | Time: (M:   4.77, S:   0.18) | Elapsed:   5.05
+Iter:   10 | LB:  790121.8575 | UB: 790121.9308 | Gap:    0.000% | Time: (M:   4.97, S:   0.19) | Elapsed:   5.28
+[ Info: ga750c-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979998.0000 | UB: 1018182.0000 | Gap: 73758.737% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -33787299.0000 | UB: 1018182.0000 | Gap: 3418.395% | Time: (M:   0.03, S:   0.07) | Elapsed:   0.14
+Iter:    3 | LB:  831871.0082 | UB: 881754.6490 | Gap:    5.657% | Time: (M:   0.09, S:   0.12) | Elapsed:   0.26
+Iter:    4 | LB:  865880.6348 | UB: 879728.6869 | Gap:    1.574% | Time: (M:   0.55, S:   0.15) | Elapsed:   0.78
+Iter:    5 | LB:  874032.8778 | UB: 875796.9391 | Gap:    0.201% | Time: (M:   1.05, S:   0.18) | Elapsed:   1.34
+Iter:    6 | LB:  875471.3988 | UB: 875723.4226 | Gap:    0.029% | Time: (M:   1.77, S:   0.22) | Elapsed:   2.11
+Iter:    7 | LB:  875603.3296 | UB: 875633.2879 | Gap:    0.003% | Time: (M:   2.31, S:   0.25) | Elapsed:   2.70
+Iter:    8 | LB:  875623.8093 | UB: 875625.6134 | Gap:    0.000% | Time: (M:   2.70, S:   0.29) | Elapsed:   3.14
+Iter:    9 | LB:  875624.6139 | UB: 875624.9751 | Gap:    0.000% | Time: (M:   2.97, S:   0.32) | Elapsed:   3.47
+Iter:   10 | LB:  875624.6740 | UB: 875624.6911 | Gap:    0.000% | Time: (M:   3.06, S:   0.36) | Elapsed:   3.62
+[ Info: ga500a-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 672459.0000 | Gap: 74453.946% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.04
+Iter:    2 | LB: -21803368.0000 | UB: 575773.0000 | Gap: 3886.799% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.07
+Iter:    3 | LB:  503502.9316 | UB: 519908.0411 | Gap:    3.155% | Time: (M:   0.04, S:   0.04) | Elapsed:   0.11
+Iter:    4 | LB:  506257.2220 | UB: 511798.8860 | Gap:    1.083% | Time: (M:   0.39, S:   0.04) | Elapsed:   0.46
+Iter:    5 | LB:  509194.0813 | UB: 510998.8579 | Gap:    0.353% | Time: (M:   1.07, S:   0.05) | Elapsed:   1.16
+Iter:    6 | LB:  510288.9995 | UB: 510665.4844 | Gap:    0.074% | Time: (M:   1.54, S:   0.06) | Elapsed:   1.63
+Iter:    7 | LB:  510441.1404 | UB: 510506.3950 | Gap:    0.013% | Time: (M:   1.89, S:   0.06) | Elapsed:   1.99
+Iter:    8 | LB:  510469.7113 | UB: 510477.9216 | Gap:    0.002% | Time: (M:   2.12, S:   0.07) | Elapsed:   2.23
+Iter:    9 | LB:  510472.0073 | UB: 510473.1389 | Gap:    0.000% | Time: (M:   2.21, S:   0.07) | Elapsed:   2.32
+Iter:   10 | LB:  510472.2417 | UB: 510472.2518 | Gap:    0.000% | Time: (M:   2.28, S:   0.07) | Elapsed:   2.40
+[ Info: ga500b-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997998.0000 | UB: 671124.0000 | Gap: 74601.582% | Time: (M:   0.00, S:   0.02) | Elapsed:   0.03
+Iter:    2 | LB: -20532490.0000 | UB: 671124.0000 | Gap: 3159.418% | Time: (M:   0.03, S:   0.03) | Elapsed:   0.11
+Iter:    3 | LB:  516420.0264 | UB: 541269.9520 | Gap:    4.591% | Time: (M:   0.06, S:   0.08) | Elapsed:   0.19
+Iter:    4 | LB:  525821.0817 | UB: 534299.6328 | Gap:    1.587% | Time: (M:   0.32, S:   0.08) | Elapsed:   0.47
+Iter:    5 | LB:  532152.7934 | UB: 534082.3454 | Gap:    0.361% | Time: (M:   0.88, S:   0.09) | Elapsed:   1.03
+Iter:    6 | LB:  532888.0355 | UB: 533187.2297 | Gap:    0.056% | Time: (M:   1.14, S:   0.10) | Elapsed:   1.31
+Iter:    7 | LB:  533064.3714 | UB: 533104.8049 | Gap:    0.008% | Time: (M:   1.39, S:   0.37) | Elapsed:   1.83
+Iter:    8 | LB:  533085.8423 | UB: 533089.5262 | Gap:    0.001% | Time: (M:   1.53, S:   0.38) | Elapsed:   1.99
+Iter:    9 | LB:  533087.3020 | UB: 533087.8833 | Gap:    0.000% | Time: (M:   1.62, S:   0.38) | Elapsed:   2.09
+Iter:   10 | LB:  533087.5735 | UB: 533087.5772 | Gap:    0.000% | Time: (M:   1.70, S:   0.39) | Elapsed:   2.19
+[ Info: ga750a-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 995628.0000 | Gap: 75429.320% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -44870195.0000 | UB: 862493.0000 | Gap: 5302.384% | Time: (M:   0.01, S:   0.07) | Elapsed:   0.13
+Iter:    3 | LB:  753574.5031 | UB: 775393.7406 | Gap:    2.814% | Time: (M:   0.08, S:   0.08) | Elapsed:   0.21
+Iter:    4 | LB:  757036.1252 | UB: 764148.8407 | Gap:    0.931% | Time: (M:   0.86, S:   0.09) | Elapsed:   1.00
+Iter:    5 | LB:  760892.5563 | UB: 763133.5780 | Gap:    0.294% | Time: (M:   2.98, S:   0.10) | Elapsed:   3.13
+Iter:    6 | LB:  762275.4939 | UB: 762797.6245 | Gap:    0.068% | Time: (M:   4.93, S:   0.10) | Elapsed:   5.09
+Iter:    7 | LB:  762473.5414 | UB: 762562.8582 | Gap:    0.012% | Time: (M:   6.39, S:   0.11) | Elapsed:   6.57
+Iter:    8 | LB:  762514.2483 | UB: 762527.9562 | Gap:    0.002% | Time: (M:   7.06, S:   0.12) | Elapsed:   7.24
+Iter:    9 | LB:  762519.7325 | UB: 762520.5389 | Gap:    0.000% | Time: (M:   7.41, S:   0.12) | Elapsed:   7.61
+Iter:   10 | LB:  762520.1433 | UB: 762520.2085 | Gap:    0.000% | Time: (M:   7.56, S:   0.13) | Elapsed:   7.77
+[ Info: ga750b-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749998000.0000 | UB: 990837.0000 | Gap: 75793.378% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.06
+Iter:    2 | LB: -42573247.0000 | UB: 990837.0000 | Gap: 4396.695% | Time: (M:   0.02, S:   0.06) | Elapsed:   0.13
+Iter:    3 | LB:  768586.3391 | UB: 799200.1196 | Gap:    3.831% | Time: (M:   0.08, S:   0.08) | Elapsed:   0.22
+Iter:    4 | LB:  780175.5628 | UB: 791311.7012 | Gap:    1.407% | Time: (M:   0.82, S:   0.10) | Elapsed:   0.98
+Iter:    5 | LB:  788352.4303 | UB: 790426.7244 | Gap:    0.262% | Time: (M:   2.26, S:   0.11) | Elapsed:   2.45
+Iter:    6 | LB:  789265.6403 | UB: 789623.7555 | Gap:    0.045% | Time: (M:   3.10, S:   0.13) | Elapsed:   3.31
+Iter:    7 | LB:  789478.1310 | UB: 789537.9867 | Gap:    0.008% | Time: (M:   3.90, S:   0.14) | Elapsed:   4.13
+Iter:    8 | LB:  789508.9243 | UB: 789517.5722 | Gap:    0.001% | Time: (M:   4.43, S:   0.16) | Elapsed:   4.68
+Iter:    9 | LB:  789512.2964 | UB: 789513.2658 | Gap:    0.000% | Time: (M:   4.69, S:   0.20) | Elapsed:   5.00
+Iter:   10 | LB:  789512.4225 | UB: 789512.5109 | Gap:    0.000% | Time: (M:   4.87, S:   0.21) | Elapsed:   5.19
+Iter:   11 | LB:  789512.4316 | UB: 789512.4352 | Gap:    0.000% | Time: (M:   4.93, S:   0.47) | Elapsed:   5.51
+[ Info: ga750c-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979998.0000 | UB: 1017899.0000 | Gap: 73779.216% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.06
+Iter:    2 | LB: -34392962.0000 | UB: 1017899.0000 | Gap: 3478.819% | Time: (M:   0.03, S:   0.06) | Elapsed:   0.14
+Iter:    3 | LB:  831275.5081 | UB: 880100.8066 | Gap:    5.548% | Time: (M:   0.12, S:   0.10) | Elapsed:   0.27
+Iter:    4 | LB:  864955.6825 | UB: 879038.1361 | Gap:    1.602% | Time: (M:   0.85, S:   0.12) | Elapsed:   1.06
+Iter:    5 | LB:  872374.6305 | UB: 874259.7287 | Gap:    0.216% | Time: (M:   1.38, S:   0.16) | Elapsed:   1.65
+Iter:    6 | LB:  873767.7797 | UB: 874055.0564 | Gap:    0.033% | Time: (M:   2.47, S:   0.20) | Elapsed:   2.87
+Iter:    7 | LB:  873925.5584 | UB: 873957.3468 | Gap:    0.004% | Time: (M:   3.17, S:   0.23) | Elapsed:   3.62
+Iter:    8 | LB:  873945.6663 | UB: 873948.1747 | Gap:    0.000% | Time: (M:   3.62, S:   0.26) | Elapsed:   4.14
+Iter:    9 | LB:  873946.6859 | UB: 873946.8061 | Gap:    0.000% | Time: (M:   3.92, S:   0.30) | Elapsed:   4.49
+Iter:   10 | LB:  873946.7185 | UB: 873946.7239 | Gap:    0.000% | Time: (M:   4.02, S:   0.33) | Elapsed:   4.64
+[ Info: ga500a-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 664177.0000 | Gap: 75381.107% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -19941503.0000 | UB: 574616.0000 | Gap: 3570.405% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  503440.9486 | UB: 518980.6375 | Gap:    2.994% | Time: (M:   0.04, S:   0.04) | Elapsed:   0.09
+Iter:    4 | LB:  506247.3903 | UB: 511254.8897 | Gap:    0.979% | Time: (M:   0.37, S:   0.05) | Elapsed:   0.44
+Iter:    5 | LB:  509089.0534 | UB: 510676.5433 | Gap:    0.311% | Time: (M:   1.12, S:   0.05) | Elapsed:   1.19
+Iter:    6 | LB:  509974.7396 | UB: 510300.9574 | Gap:    0.064% | Time: (M:   1.48, S:   0.05) | Elapsed:   1.56
+Iter:    7 | LB:  510113.4914 | UB: 510163.7193 | Gap:    0.010% | Time: (M:   1.79, S:   0.05) | Elapsed:   1.87
+Iter:    8 | LB:  510136.3655 | UB: 510143.5204 | Gap:    0.001% | Time: (M:   1.98, S:   0.06) | Elapsed:   2.07
+Iter:    9 | LB:  510138.6807 | UB: 510139.3239 | Gap:    0.000% | Time: (M:   2.06, S:   0.07) | Elapsed:   2.16
+Iter:   10 | LB:  510139.0360 | UB: 510139.0360 | Gap:    0.000% | Time: (M:   2.13, S:   0.07) | Elapsed:   2.23
+[ Info: ga500b-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499998000.0000 | UB: 660932.0000 | Gap: 75750.445% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -17652727.0000 | UB: 660932.0000 | Gap: 2770.884% | Time: (M:   0.01, S:   0.06) | Elapsed:   0.09
+Iter:    3 | LB:  516166.6026 | UB: 538991.2405 | Gap:    4.235% | Time: (M:   0.04, S:   0.07) | Elapsed:   0.14
+Iter:    4 | LB:  526081.9392 | UB: 534271.0472 | Gap:    1.533% | Time: (M:   0.44, S:   0.07) | Elapsed:   0.55
+Iter:    5 | LB:  531864.7110 | UB: 533380.9631 | Gap:    0.284% | Time: (M:   1.01, S:   0.08) | Elapsed:   1.12
+Iter:    6 | LB:  532534.8212 | UB: 532833.4970 | Gap:    0.056% | Time: (M:   1.19, S:   0.09) | Elapsed:   1.53
+Iter:    7 | LB:  532703.5309 | UB: 532772.8269 | Gap:    0.013% | Time: (M:   1.47, S:   0.09) | Elapsed:   1.83
+Iter:    8 | LB:  532732.0219 | UB: 532740.7808 | Gap:    0.002% | Time: (M:   1.71, S:   0.10) | Elapsed:   2.07
+Iter:    9 | LB:  532735.3698 | UB: 532736.4173 | Gap:    0.000% | Time: (M:   1.82, S:   0.11) | Elapsed:   2.20
+Iter:   10 | LB:  532735.6615 | UB: 532735.8269 | Gap:    0.000% | Time: (M:   1.91, S:   0.12) | Elapsed:   2.30
+Iter:   11 | LB:  532735.6910 | UB: 532735.7148 | Gap:    0.000% | Time: (M:   2.00, S:   0.12) | Elapsed:   2.40
+[ Info: ga750a-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 998397.0000 | Gap: 75220.398% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.06
+Iter:    2 | LB: -45854821.0000 | UB: 863058.0000 | Gap: 5413.064% | Time: (M:   0.01, S:   0.07) | Elapsed:   0.13
+Iter:    3 | LB:  753647.2900 | UB: 774501.6225 | Gap:    2.693% | Time: (M:   0.08, S:   0.08) | Elapsed:   0.21
+Iter:    4 | LB:  757119.9865 | UB: 764137.9615 | Gap:    0.918% | Time: (M:   0.85, S:   0.09) | Elapsed:   0.99
+Iter:    5 | LB:  760907.0347 | UB: 763194.3450 | Gap:    0.300% | Time: (M:   2.86, S:   0.09) | Elapsed:   3.02
+Iter:    6 | LB:  762310.7005 | UB: 762857.2965 | Gap:    0.072% | Time: (M:   4.89, S:   0.10) | Elapsed:   5.06
+Iter:    7 | LB:  762525.2900 | UB: 762600.9053 | Gap:    0.010% | Time: (M:   6.35, S:   0.11) | Elapsed:   6.54
+Iter:    8 | LB:  762565.5510 | UB: 762574.6025 | Gap:    0.001% | Time: (M:   7.25, S:   0.12) | Elapsed:   7.44
+Iter:    9 | LB:  762568.3603 | UB: 762569.3915 | Gap:    0.000% | Time: (M:   7.54, S:   0.12) | Elapsed:   7.74
+Iter:   10 | LB:  762568.5003 | UB: 762568.6686 | Gap:    0.000% | Time: (M:   7.69, S:   0.14) | Elapsed:   7.91
+Iter:   11 | LB:  762568.5130 | UB: 762568.5223 | Gap:    0.000% | Time: (M:   7.83, S:   0.14) | Elapsed:   8.06
+[ Info: ga750b-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749998000.0000 | UB: 994852.0000 | Gap: 75487.897% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.07
+Iter:    2 | LB: -42978986.0000 | UB: 994852.0000 | Gap: 4420.139% | Time: (M:   0.03, S:   0.07) | Elapsed:   0.18
+Iter:    3 | LB:  767924.5574 | UB: 799620.2608 | Gap:    3.964% | Time: (M:   0.09, S:   0.39) | Elapsed:   0.56
+Iter:    4 | LB:  779527.7653 | UB: 791122.2632 | Gap:    1.466% | Time: (M:   1.10, S:   0.40) | Elapsed:   1.60
+Iter:    5 | LB:  788474.2286 | UB: 790487.7703 | Gap:    0.255% | Time: (M:   2.59, S:   0.61) | Elapsed:   3.31
+Iter:    6 | LB:  789356.6621 | UB: 789732.5599 | Gap:    0.048% | Time: (M:   3.32, S:   0.62) | Elapsed:   4.05
+Iter:    7 | LB:  789572.8739 | UB: 789644.2015 | Gap:    0.009% | Time: (M:   4.18, S:   0.63) | Elapsed:   4.93
+Iter:    8 | LB:  789615.2181 | UB: 789621.5315 | Gap:    0.001% | Time: (M:   4.77, S:   0.64) | Elapsed:   5.55
+Iter:    9 | LB:  789618.2548 | UB: 789618.9727 | Gap:    0.000% | Time: (M:   5.01, S:   0.66) | Elapsed:   5.81
+Iter:   10 | LB:  789618.4620 | UB: 789618.4660 | Gap:    0.000% | Time: (M:   5.18, S:   0.68) | Elapsed:   6.01
+[ Info: ga750c-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979991.0000 | UB: 1012861.0000 | Gap: 74145.697% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.06
+Iter:    2 | LB: -32828632.0000 | UB: 1012861.0000 | Gap: 3341.178% | Time: (M:   0.03, S:   0.06) | Elapsed:   0.14
+Iter:    3 | LB:  832704.3168 | UB: 881492.7127 | Gap:    5.535% | Time: (M:   0.13, S:   0.10) | Elapsed:   0.28
+Iter:    4 | LB:  863345.6020 | UB: 878551.0648 | Gap:    1.731% | Time: (M:   0.74, S:   0.13) | Elapsed:   0.94
+Iter:    5 | LB:  872527.2078 | UB: 874492.8510 | Gap:    0.225% | Time: (M:   1.34, S:   0.16) | Elapsed:   1.60
+Iter:    6 | LB:  873894.3474 | UB: 874207.1891 | Gap:    0.036% | Time: (M:   2.15, S:   0.19) | Elapsed:   2.47
+Iter:    7 | LB:  874081.7267 | UB: 874125.0350 | Gap:    0.005% | Time: (M:   2.84, S:   0.22) | Elapsed:   3.22
+Iter:    8 | LB:  874105.9726 | UB: 874110.9128 | Gap:    0.001% | Time: (M:   3.33, S:   0.26) | Elapsed:   3.77
+Iter:    9 | LB:  874108.8061 | UB: 874109.1130 | Gap:    0.000% | Time: (M:   3.68, S:   0.30) | Elapsed:   4.17
+Iter:   10 | LB:  874108.9097 | UB: 874108.9387 | Gap:    0.000% | Time: (M:   3.79, S:   0.33) | Elapsed:   4.34
+[ Info: ga500a-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 668434.0000 | Gap: 74901.671% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -20903167.0000 | UB: 575755.0000 | Gap: 3730.566% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  503386.5800 | UB: 518101.3836 | Gap:    2.840% | Time: (M:   0.04, S:   0.04) | Elapsed:   0.10
+Iter:    4 | LB:  506616.3206 | UB: 511232.9471 | Gap:    0.903% | Time: (M:   0.32, S:   0.04) | Elapsed:   0.39
+Iter:    5 | LB:  509472.5912 | UB: 510909.3809 | Gap:    0.281% | Time: (M:   1.07, S:   0.04) | Elapsed:   1.14
+Iter:    6 | LB:  510243.1766 | UB: 510495.8946 | Gap:    0.050% | Time: (M:   1.38, S:   0.05) | Elapsed:   1.47
+Iter:    7 | LB:  510360.9577 | UB: 510403.8161 | Gap:    0.008% | Time: (M:   1.71, S:   0.05) | Elapsed:   1.80
+Iter:    8 | LB:  510379.0724 | UB: 510385.1480 | Gap:    0.001% | Time: (M:   1.85, S:   0.05) | Elapsed:   1.94
+Iter:    9 | LB:  510382.0154 | UB: 510383.1307 | Gap:    0.000% | Time: (M:   1.94, S:   0.06) | Elapsed:   2.04
+Iter:   10 | LB:  510382.6036 | UB: 510382.6261 | Gap:    0.000% | Time: (M:   2.01, S:   0.06) | Elapsed:   2.12
+[ Info: ga500b-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997997.0000 | UB: 670237.0000 | Gap: 74700.178% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -20226236.0000 | UB: 670237.0000 | Gap: 3117.774% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  516100.1844 | UB: 540109.9440 | Gap:    4.445% | Time: (M:   0.04, S:   0.04) | Elapsed:   0.10
+Iter:    4 | LB:  525776.3788 | UB: 534130.1752 | Gap:    1.564% | Time: (M:   0.36, S:   0.05) | Elapsed:   0.44
+Iter:    5 | LB:  532064.0074 | UB: 533388.7556 | Gap:    0.248% | Time: (M:   0.94, S:   0.05) | Elapsed:   1.03
+Iter:    6 | LB:  532672.8421 | UB: 532947.9323 | Gap:    0.052% | Time: (M:   1.12, S:   0.06) | Elapsed:   1.23
+Iter:    7 | LB:  532815.4406 | UB: 532865.7227 | Gap:    0.009% | Time: (M:   1.36, S:   0.07) | Elapsed:   1.47
+Iter:    8 | LB:  532838.2935 | UB: 532845.1987 | Gap:    0.001% | Time: (M:   1.52, S:   0.08) | Elapsed:   1.65
+Iter:    9 | LB:  532841.6757 | UB: 532842.0726 | Gap:    0.000% | Time: (M:   1.63, S:   0.08) | Elapsed:   1.77
+Iter:   10 | LB:  532841.9354 | UB: 532841.9357 | Gap:    0.000% | Time: (M:   1.72, S:   0.09) | Elapsed:   1.87
+[ Info: ga750a-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 1008047.0000 | Gap: 74501.273% | Time: (M:   0.00, S:   0.10) | Elapsed:   0.10
+Iter:    2 | LB: -46773452.0000 | UB: 863939.0000 | Gap: 5513.976% | Time: (M:   0.01, S:   0.10) | Elapsed:   0.17
+Iter:    3 | LB:  753521.4827 | UB: 776563.8700 | Gap:    2.967% | Time: (M:   0.07, S:   0.40) | Elapsed:   0.53
+Iter:    4 | LB:  756792.5242 | UB: 764587.8478 | Gap:    1.020% | Time: (M:   0.92, S:   0.41) | Elapsed:   1.40
+Iter:    5 | LB:  760829.3161 | UB: 763421.4715 | Gap:    0.340% | Time: (M:   3.39, S:   0.42) | Elapsed:   3.87
+Iter:    6 | LB:  762438.3156 | UB: 763032.6709 | Gap:    0.078% | Time: (M:   5.63, S:   0.63) | Elapsed:   6.33
+Iter:    7 | LB:  762682.4283 | UB: 762796.3177 | Gap:    0.015% | Time: (M:   7.34, S:   0.63) | Elapsed:   8.05
+Iter:    8 | LB:  762732.6161 | UB: 762753.0650 | Gap:    0.003% | Time: (M:   8.18, S:   0.64) | Elapsed:   8.90
+Iter:    9 | LB:  762737.8455 | UB: 762741.1548 | Gap:    0.000% | Time: (M:   8.56, S:   0.64) | Elapsed:   9.30
+Iter:   10 | LB:  762738.4680 | UB: 762738.8014 | Gap:    0.000% | Time: (M:   8.73, S:   0.65) | Elapsed:   9.47
+Iter:   11 | LB:  762738.5020 | UB: 762738.5417 | Gap:    0.000% | Time: (M:   8.88, S:   0.66) | Elapsed:   9.64
+[ Info: ga750b-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749997999.0000 | UB: 1010953.0000 | Gap: 74287.227% | Time: (M:   0.01, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -46474505.0000 | UB: 1010953.0000 | Gap: 4697.098% | Time: (M:   0.02, S:   0.06) | Elapsed:   0.14
+Iter:    3 | LB:  767141.8310 | UB: 800625.3337 | Gap:    4.182% | Time: (M:   0.09, S:   0.09) | Elapsed:   0.23
+Iter:    4 | LB:  780141.4291 | UB: 792014.4161 | Gap:    1.499% | Time: (M:   0.77, S:   0.10) | Elapsed:   0.93
+Iter:    5 | LB:  789234.7737 | UB: 791229.7077 | Gap:    0.252% | Time: (M:   2.36, S:   0.11) | Elapsed:   2.54
+Iter:    6 | LB:  790091.2120 | UB: 790483.2259 | Gap:    0.050% | Time: (M:   3.14, S:   0.13) | Elapsed:   3.36
+Iter:    7 | LB:  790306.9539 | UB: 790379.3564 | Gap:    0.009% | Time: (M:   4.08, S:   0.14) | Elapsed:   4.31
+Iter:    8 | LB:  790341.8806 | UB: 790350.4534 | Gap:    0.001% | Time: (M:   4.72, S:   0.16) | Elapsed:   4.97
+Iter:    9 | LB:  790344.8784 | UB: 790345.7100 | Gap:    0.000% | Time: (M:   4.97, S:   0.17) | Elapsed:   5.24
+Iter:   10 | LB:  790345.0577 | UB: 790345.0743 | Gap:    0.000% | Time: (M:   5.15, S:   0.18) | Elapsed:   5.45
+[ Info: ga750c-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979988.0000 | UB: 1028964.0000 | Gap: 72986.903% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.07
+Iter:    2 | LB: -36248819.0000 | UB: 1028964.0000 | Gap: 3622.846% | Time: (M:   0.03, S:   0.07) | Elapsed:   0.15
+Iter:    3 | LB:  831122.7343 | UB: 880594.0821 | Gap:    5.618% | Time: (M:   0.11, S:   0.11) | Elapsed:   0.28
+Iter:    4 | LB:  866014.6304 | UB: 880594.0821 | Gap:    1.656% | Time: (M:   0.66, S:   0.14) | Elapsed:   0.88
+Iter:    5 | LB:  873790.5944 | UB: 875768.6513 | Gap:    0.226% | Time: (M:   1.14, S:   0.17) | Elapsed:   1.41
+Iter:    6 | LB:  875396.9412 | UB: 875698.7267 | Gap:    0.034% | Time: (M:   1.95, S:   0.21) | Elapsed:   2.29
+Iter:    7 | LB:  875541.0562 | UB: 875579.3069 | Gap:    0.004% | Time: (M:   2.63, S:   0.25) | Elapsed:   3.02
+Iter:    8 | LB:  875563.5122 | UB: 875568.4298 | Gap:    0.001% | Time: (M:   3.16, S:   0.28) | Elapsed:   3.62
+Iter:    9 | LB:  875565.7598 | UB: 875566.0162 | Gap:    0.000% | Time: (M:   3.48, S:   0.32) | Elapsed:   3.99
+Iter:   10 | LB:  875565.9282 | UB: 875565.9307 | Gap:    0.000% | Time: (M:   3.60, S:   0.35) | Elapsed:   4.16
+[ Info: ga500a-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 668015.0000 | Gap: 74948.589% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -20431755.0000 | UB: 574837.0000 | Gap: 3654.356% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.12
+Iter:    3 | LB:  503439.7236 | UB: 518628.0553 | Gap:    2.929% | Time: (M:   0.04, S:   0.03) | Elapsed:   0.17
+Iter:    4 | LB:  506655.5077 | UB: 511627.8462 | Gap:    0.972% | Time: (M:   0.37, S:   0.04) | Elapsed:   0.51
+Iter:    5 | LB:  509499.2800 | UB: 511056.0764 | Gap:    0.305% | Time: (M:   0.97, S:   0.04) | Elapsed:   1.11
+Iter:    6 | LB:  510341.9653 | UB: 510643.3885 | Gap:    0.059% | Time: (M:   1.35, S:   0.04) | Elapsed:   1.50
+Iter:    7 | LB:  510462.1269 | UB: 510514.7925 | Gap:    0.010% | Time: (M:   1.67, S:   0.08) | Elapsed:   1.86
+Iter:    8 | LB:  510484.4285 | UB: 510492.0591 | Gap:    0.001% | Time: (M:   1.84, S:   0.08) | Elapsed:   2.04
+Iter:    9 | LB:  510487.4500 | UB: 510488.9099 | Gap:    0.000% | Time: (M:   1.93, S:   0.09) | Elapsed:   2.14
+Iter:   10 | LB:  510487.7086 | UB: 510487.9347 | Gap:    0.000% | Time: (M:   2.00, S:   0.09) | Elapsed:   2.21
+Iter:   11 | LB:  510487.7205 | UB: 510487.7301 | Gap:    0.000% | Time: (M:   2.06, S:   0.09) | Elapsed:   2.28
+[ Info: ga500b-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997999.0000 | UB: 669816.0000 | Gap: 74747.067% | Time: (M:   0.00, S:   0.02) | Elapsed:   0.03
+Iter:    2 | LB: -19763004.0000 | UB: 669816.0000 | Gap: 3050.512% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  515795.8491 | UB: 540787.0445 | Gap:    4.621% | Time: (M:   0.04, S:   0.04) | Elapsed:   0.10
+Iter:    4 | LB:  525715.7121 | UB: 534460.6229 | Gap:    1.636% | Time: (M:   0.27, S:   0.05) | Elapsed:   0.34
+Iter:    5 | LB:  531914.4162 | UB: 533793.6320 | Gap:    0.352% | Time: (M:   0.72, S:   0.05) | Elapsed:   0.80
+Iter:    6 | LB:  532730.9705 | UB: 533074.1670 | Gap:    0.064% | Time: (M:   0.91, S:   0.06) | Elapsed:   1.01
+Iter:    7 | LB:  532941.6585 | UB: 532995.4112 | Gap:    0.010% | Time: (M:   1.16, S:   0.07) | Elapsed:   1.27
+Iter:    8 | LB:  532965.0421 | UB: 532972.5889 | Gap:    0.001% | Time: (M:   1.31, S:   0.08) | Elapsed:   1.43
+Iter:    9 | LB:  532968.6623 | UB: 532969.4705 | Gap:    0.000% | Time: (M:   1.40, S:   0.09) | Elapsed:   1.53
+Iter:   10 | LB:  532968.8027 | UB: 532968.8778 | Gap:    0.000% | Time: (M:   1.48, S:   0.09) | Elapsed:   1.63
+Iter:   11 | LB:  532968.8083 | UB: 532968.8104 | Gap:    0.000% | Time: (M:   1.51, S:   0.10) | Elapsed:   1.67
+[ Info: ga750a-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 990921.0000 | Gap: 75787.144% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.06
+Iter:    2 | LB: -42573567.0000 | UB: 861829.0000 | Gap: 5039.909% | Time: (M:   0.01, S:   0.07) | Elapsed:   0.12
+Iter:    3 | LB:  753799.1303 | UB: 774058.8875 | Gap:    2.617% | Time: (M:   0.07, S:   0.08) | Elapsed:   0.19
+Iter:    4 | LB:  757363.7288 | UB: 764214.8272 | Gap:    0.896% | Time: (M:   0.94, S:   0.08) | Elapsed:   1.08
+Iter:    5 | LB:  761100.8545 | UB: 763356.6819 | Gap:    0.296% | Time: (M:   2.95, S:   0.09) | Elapsed:   3.10
+Iter:    6 | LB:  762389.1424 | UB: 762825.6825 | Gap:    0.057% | Time: (M:   5.30, S:   0.10) | Elapsed:   5.46
+Iter:    7 | LB:  762594.9883 | UB: 762674.5630 | Gap:    0.010% | Time: (M:   7.12, S:   0.14) | Elapsed:   7.33
+Iter:    8 | LB:  762631.1137 | UB: 762642.4233 | Gap:    0.001% | Time: (M:   8.19, S:   0.14) | Elapsed:   8.41
+Iter:    9 | LB:  762636.8619 | UB: 762637.8517 | Gap:    0.000% | Time: (M:   8.64, S:   0.15) | Elapsed:   8.87
+Iter:   10 | LB:  762637.0288 | UB: 762637.1454 | Gap:    0.000% | Time: (M:   8.79, S:   0.38) | Elapsed:   9.25
+Iter:   11 | LB:  762637.0323 | UB: 762637.0323 | Gap:    0.000% | Time: (M:   8.93, S:   0.39) | Elapsed:   9.40
+[ Info: ga750b-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749997991.0000 | UB: 1010453.0000 | Gap: 74323.936% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -48356819.0000 | UB: 1010453.0000 | Gap: 4885.657% | Time: (M:   0.02, S:   0.07) | Elapsed:   0.14
+Iter:    3 | LB:  767347.1088 | UB: 800227.5818 | Gap:    4.109% | Time: (M:   0.08, S:   0.09) | Elapsed:   0.22
+Iter:    4 | LB:  779229.5873 | UB: 791451.3005 | Gap:    1.544% | Time: (M:   0.86, S:   0.10) | Elapsed:   1.03
+Iter:    5 | LB:  788344.5379 | UB: 790578.3140 | Gap:    0.283% | Time: (M:   2.36, S:   0.12) | Elapsed:   2.55
+Iter:    6 | LB:  789382.1361 | UB: 789761.1918 | Gap:    0.048% | Time: (M:   3.04, S:   0.13) | Elapsed:   3.24
+Iter:    7 | LB:  789608.3673 | UB: 789673.4959 | Gap:    0.008% | Time: (M:   3.88, S:   0.14) | Elapsed:   4.11
+Iter:    8 | LB:  789642.8655 | UB: 789651.1158 | Gap:    0.001% | Time: (M:   4.53, S:   0.16) | Elapsed:   4.78
+Iter:    9 | LB:  789647.0682 | UB: 789647.7588 | Gap:    0.000% | Time: (M:   4.86, S:   0.17) | Elapsed:   5.13
+Iter:   10 | LB:  789647.2353 | UB: 789647.4799 | Gap:    0.000% | Time: (M:   5.04, S:   0.18) | Elapsed:   5.33
+Iter:   11 | LB:  789647.2552 | UB: 789647.2695 | Gap:    0.000% | Time: (M:   5.22, S:   0.20) | Elapsed:   5.54
+[ Info: ga750c-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979901.0000 | UB: 1028543.0000 | Gap: 73016.728% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -38322049.0000 | UB: 1028543.0000 | Gap: 3825.858% | Time: (M:   0.03, S:   0.06) | Elapsed:   0.15
+Iter:    3 | LB:  828643.8828 | UB: 879793.6845 | Gap:    5.814% | Time: (M:   0.10, S:   0.11) | Elapsed:   0.26
+Iter:    4 | LB:  862637.2679 | UB: 878204.6833 | Gap:    1.773% | Time: (M:   0.62, S:   0.14) | Elapsed:   0.84
+Iter:    5 | LB:  871368.2508 | UB: 873496.6774 | Gap:    0.244% | Time: (M:   1.11, S:   0.17) | Elapsed:   1.38
+Iter:    6 | LB:  873013.2457 | UB: 873325.8432 | Gap:    0.036% | Time: (M:   1.87, S:   0.21) | Elapsed:   2.20
+Iter:    7 | LB:  873162.7587 | UB: 873213.2812 | Gap:    0.006% | Time: (M:   2.54, S:   0.24) | Elapsed:   2.93
+Iter:    8 | LB:  873189.5762 | UB: 873193.1144 | Gap:    0.000% | Time: (M:   3.00, S:   0.28) | Elapsed:   3.45
+Iter:    9 | LB:  873191.3773 | UB: 873191.9101 | Gap:    0.000% | Time: (M:   3.30, S:   0.31) | Elapsed:   3.81
+Iter:   10 | LB:  873191.4667 | UB: 873191.4875 | Gap:    0.000% | Time: (M:   3.41, S:   0.35) | Elapsed:   3.97
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+[ Info: ga500a-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 669973.0000 | Gap: 74729.843% | Time: (M:   1.76, S:   0.33) | Elapsed:   2.08
+Iter:    2 | LB: -20147340.0000 | UB: 575968.0000 | Gap: 3597.996% | Time: (M:   1.76, S:   0.33) | Elapsed:   2.64
+Iter:    3 | LB:  503266.4265 | UB: 519427.7753 | Gap:    3.111% | Time: (M:   1.79, S:   0.34) | Elapsed:   2.68
+Iter:    4 | LB:  506341.5946 | UB: 512001.0186 | Gap:    1.105% | Time: (M:   2.05, S:   0.34) | Elapsed:   2.95
+Iter:    5 | LB:  509305.3219 | UB: 511141.8951 | Gap:    0.359% | Time: (M:   2.65, S:   0.34) | Elapsed:   3.55
+Iter:    6 | LB:  510371.1318 | UB: 510806.6153 | Gap:    0.085% | Time: (M:   3.03, S:   0.38) | Elapsed:   3.98
+Iter:    7 | LB:  510553.5354 | UB: 510632.9577 | Gap:    0.016% | Time: (M:   3.38, S:   0.39) | Elapsed:   4.33
+Iter:    8 | LB:  510585.0642 | UB: 510599.8352 | Gap:    0.003% | Time: (M:   3.58, S:   0.39) | Elapsed:   4.54
+Iter:    9 | LB:  510588.6586 | UB: 510589.7049 | Gap:    0.000% | Time: (M:   3.69, S:   0.39) | Elapsed:   4.65
+Iter:   10 | LB:  510588.9580 | UB: 510589.1628 | Gap:    0.000% | Time: (M:   3.75, S:   0.40) | Elapsed:   4.72
+Iter:   11 | LB:  510588.9660 | UB: 510588.9660 | Gap:   -0.000% | Time: (M:   3.82, S:   0.63) | Elapsed:   5.02
+[ Info: ga500b-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997990.0000 | UB: 671783.0000 | Gap: 74528.497% | Time: (M:   0.00, S:   0.25) | Elapsed:   0.25
+Iter:    2 | LB: -19467992.0000 | UB: 671783.0000 | Gap: 2997.958% | Time: (M:   0.01, S:   0.25) | Elapsed:   0.28
+Iter:    3 | LB:  515441.5791 | UB: 540483.2049 | Gap:    4.633% | Time: (M:   0.04, S:   0.26) | Elapsed:   0.33
+Iter:    4 | LB:  525910.5055 | UB: 534578.9614 | Gap:    1.622% | Time: (M:   0.31, S:   0.27) | Elapsed:   0.61
+Iter:    5 | LB:  532584.9107 | UB: 533934.8993 | Gap:    0.253% | Time: (M:   0.77, S:   0.28) | Elapsed:   1.08
+Iter:    6 | LB:  533153.8175 | UB: 533483.1281 | Gap:    0.062% | Time: (M:   1.00, S:   0.28) | Elapsed:   1.33
+Iter:    7 | LB:  533311.2392 | UB: 533359.4599 | Gap:    0.009% | Time: (M:   1.22, S:   0.29) | Elapsed:   1.55
+Iter:    8 | LB:  533334.1843 | UB: 533346.4156 | Gap:    0.002% | Time: (M:   1.35, S:   0.30) | Elapsed:   1.69
+Iter:    9 | LB:  533338.1225 | UB: 533339.6503 | Gap:    0.000% | Time: (M:   1.44, S:   0.31) | Elapsed:   1.80
+Iter:   10 | LB:  533338.5705 | UB: 533338.6580 | Gap:    0.000% | Time: (M:   1.52, S:   0.31) | Elapsed:   1.89
+Iter:   11 | LB:  533338.5747 | UB: 533338.5754 | Gap:    0.000% | Time: (M:   1.55, S:   0.32) | Elapsed:   1.93
+[ Info: ga750a-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 991989.0000 | Gap: 75705.657% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.07
+Iter:    2 | LB: -42909773.0000 | UB: 862944.0000 | Gap: 5072.486% | Time: (M:   0.01, S:   0.07) | Elapsed:   0.13
+Iter:    3 | LB:  753886.5307 | UB: 774625.5396 | Gap:    2.677% | Time: (M:   0.08, S:   0.09) | Elapsed:   0.21
+Iter:    4 | LB:  757175.7391 | UB: 764107.3174 | Gap:    0.907% | Time: (M:   0.96, S:   0.09) | Elapsed:   1.11
+Iter:    5 | LB:  760748.5842 | UB: 763016.0378 | Gap:    0.297% | Time: (M:   2.71, S:   0.10) | Elapsed:   2.86
+Iter:    6 | LB:  762246.2532 | UB: 762681.6952 | Gap:    0.057% | Time: (M:   4.41, S:   0.10) | Elapsed:   4.58
+Iter:    7 | LB:  762424.1402 | UB: 762503.1187 | Gap:    0.010% | Time: (M:   5.71, S:   0.14) | Elapsed:   5.91
+Iter:    8 | LB:  762460.2880 | UB: 762469.5817 | Gap:    0.001% | Time: (M:   6.38, S:   0.15) | Elapsed:   6.60
+Iter:    9 | LB:  762464.2716 | UB: 762465.2466 | Gap:    0.000% | Time: (M:   6.67, S:   0.16) | Elapsed:   6.90
+Iter:   10 | LB:  762464.4478 | UB: 762464.4924 | Gap:    0.000% | Time: (M:   6.81, S:   0.40) | Elapsed:   7.29
+[ Info: ga750b-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749998000.0000 | UB: 1006080.0000 | Gap: 74646.557% | Time: (M:   0.01, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -45499597.0000 | UB: 1006080.0000 | Gap: 4622.463% | Time: (M:   0.03, S:   0.07) | Elapsed:   0.15
+Iter:    3 | LB:  767405.9286 | UB: 800619.1289 | Gap:    4.148% | Time: (M:   0.09, S:   0.09) | Elapsed:   0.24
+Iter:    4 | LB:  779902.6892 | UB: 791949.2986 | Gap:    1.521% | Time: (M:   0.87, S:   0.10) | Elapsed:   1.05
+Iter:    5 | LB:  789035.7940 | UB: 791003.7094 | Gap:    0.249% | Time: (M:   2.49, S:   0.12) | Elapsed:   2.69
+Iter:    6 | LB:  789868.3592 | UB: 790229.2199 | Gap:    0.046% | Time: (M:   3.26, S:   0.14) | Elapsed:   3.49
+Iter:    7 | LB:  790085.5916 | UB: 790158.0800 | Gap:    0.009% | Time: (M:   4.17, S:   0.15) | Elapsed:   4.42
+Iter:    8 | LB:  790117.8255 | UB: 790125.6502 | Gap:    0.001% | Time: (M:   4.70, S:   0.17) | Elapsed:   4.98
+Iter:    9 | LB:  790121.4794 | UB: 790122.5464 | Gap:    0.000% | Time: (M:   4.99, S:   0.19) | Elapsed:   5.30
+Iter:   10 | LB:  790121.8575 | UB: 790121.9308 | Gap:    0.000% | Time: (M:   5.19, S:   0.20) | Elapsed:   5.52
+[ Info: ga750c-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979998.0000 | UB: 1018182.0000 | Gap: 73758.737% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -33787299.0000 | UB: 1018182.0000 | Gap: 3418.395% | Time: (M:   0.03, S:   0.07) | Elapsed:   0.15
+Iter:    3 | LB:  831871.0082 | UB: 881754.6490 | Gap:    5.657% | Time: (M:   0.09, S:   0.11) | Elapsed:   0.25
+Iter:    4 | LB:  865880.6348 | UB: 879728.6869 | Gap:    1.574% | Time: (M:   0.56, S:   0.14) | Elapsed:   0.78
+Iter:    5 | LB:  874032.8778 | UB: 875796.9391 | Gap:    0.201% | Time: (M:   1.04, S:   0.17) | Elapsed:   1.31
+Iter:    6 | LB:  875471.3988 | UB: 875723.4226 | Gap:    0.029% | Time: (M:   1.75, S:   0.21) | Elapsed:   2.13
+Iter:    7 | LB:  875603.3296 | UB: 875633.2879 | Gap:    0.003% | Time: (M:   2.28, S:   0.24) | Elapsed:   2.71
+Iter:    8 | LB:  875623.8093 | UB: 875625.6134 | Gap:    0.000% | Time: (M:   2.65, S:   0.27) | Elapsed:   3.14
+Iter:    9 | LB:  875624.6139 | UB: 875624.9751 | Gap:    0.000% | Time: (M:   2.93, S:   0.31) | Elapsed:   3.47
+Iter:   10 | LB:  875624.6740 | UB: 875624.6911 | Gap:    0.000% | Time: (M:   3.03, S:   0.34) | Elapsed:   3.62
+[ Info: ga500a-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 672459.0000 | Gap: 74453.946% | Time: (M:   0.00, S:   0.04) | Elapsed:   0.04
+Iter:    2 | LB: -21803368.0000 | UB: 575773.0000 | Gap: 3886.799% | Time: (M:   0.01, S:   0.04) | Elapsed:   0.07
+Iter:    3 | LB:  503502.9316 | UB: 519908.0411 | Gap:    3.155% | Time: (M:   0.04, S:   0.04) | Elapsed:   0.10
+Iter:    4 | LB:  506257.2220 | UB: 511798.8860 | Gap:    1.083% | Time: (M:   0.36, S:   0.05) | Elapsed:   0.43
+Iter:    5 | LB:  509194.0813 | UB: 510998.8579 | Gap:    0.353% | Time: (M:   1.03, S:   0.06) | Elapsed:   1.12
+Iter:    6 | LB:  510288.9995 | UB: 510665.4844 | Gap:    0.074% | Time: (M:   1.50, S:   0.06) | Elapsed:   1.60
+Iter:    7 | LB:  510441.1404 | UB: 510506.3950 | Gap:    0.013% | Time: (M:   1.84, S:   0.06) | Elapsed:   1.93
+Iter:    8 | LB:  510469.7113 | UB: 510477.9216 | Gap:    0.002% | Time: (M:   2.06, S:   0.07) | Elapsed:   2.16
+Iter:    9 | LB:  510472.0073 | UB: 510473.1389 | Gap:    0.000% | Time: (M:   2.14, S:   0.07) | Elapsed:   2.25
+Iter:   10 | LB:  510472.2417 | UB: 510472.2518 | Gap:    0.000% | Time: (M:   2.21, S:   0.07) | Elapsed:   2.33
+[ Info: ga500b-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997998.0000 | UB: 671124.0000 | Gap: 74601.582% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -20532490.0000 | UB: 671124.0000 | Gap: 3159.418% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  516420.0264 | UB: 541269.9520 | Gap:    4.591% | Time: (M:   0.03, S:   0.08) | Elapsed:   0.13
+Iter:    4 | LB:  525821.0817 | UB: 534299.6328 | Gap:    1.587% | Time: (M:   0.29, S:   0.08) | Elapsed:   0.40
+Iter:    5 | LB:  532152.7934 | UB: 534082.3454 | Gap:    0.361% | Time: (M:   0.84, S:   0.09) | Elapsed:   0.97
+Iter:    6 | LB:  532888.0355 | UB: 533187.2297 | Gap:    0.056% | Time: (M:   1.09, S:   0.09) | Elapsed:   1.23
+Iter:    7 | LB:  533064.3714 | UB: 533104.8049 | Gap:    0.008% | Time: (M:   1.34, S:   0.38) | Elapsed:   1.76
+Iter:    8 | LB:  533085.8423 | UB: 533089.5262 | Gap:    0.001% | Time: (M:   1.47, S:   0.38) | Elapsed:   1.91
+Iter:    9 | LB:  533087.3020 | UB: 533087.8833 | Gap:    0.000% | Time: (M:   1.56, S:   0.39) | Elapsed:   2.00
+Iter:   10 | LB:  533087.5735 | UB: 533087.5772 | Gap:    0.000% | Time: (M:   1.65, S:   0.40) | Elapsed:   2.10
+[ Info: ga750a-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 995628.0000 | Gap: 75429.320% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -44870195.0000 | UB: 862493.0000 | Gap: 5302.384% | Time: (M:   0.01, S:   0.07) | Elapsed:   0.13
+Iter:    3 | LB:  753574.5031 | UB: 775393.7406 | Gap:    2.814% | Time: (M:   0.08, S:   0.08) | Elapsed:   0.21
+Iter:    4 | LB:  757036.1252 | UB: 764148.8407 | Gap:    0.931% | Time: (M:   0.83, S:   0.09) | Elapsed:   0.97
+Iter:    5 | LB:  760892.5563 | UB: 763133.5780 | Gap:    0.294% | Time: (M:   2.91, S:   0.09) | Elapsed:   3.07
+Iter:    6 | LB:  762275.4939 | UB: 762797.6245 | Gap:    0.068% | Time: (M:   4.76, S:   0.10) | Elapsed:   4.92
+Iter:    7 | LB:  762473.5414 | UB: 762562.8582 | Gap:    0.012% | Time: (M:   6.16, S:   0.11) | Elapsed:   6.34
+Iter:    8 | LB:  762514.2483 | UB: 762527.9562 | Gap:    0.002% | Time: (M:   6.80, S:   0.12) | Elapsed:   6.99
+Iter:    9 | LB:  762519.7325 | UB: 762520.5389 | Gap:    0.000% | Time: (M:   7.13, S:   0.12) | Elapsed:   7.33
+Iter:   10 | LB:  762520.1433 | UB: 762520.2085 | Gap:    0.000% | Time: (M:   7.28, S:   0.14) | Elapsed:   7.49
+[ Info: ga750b-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749998000.0000 | UB: 990837.0000 | Gap: 75793.378% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -42573247.0000 | UB: 990837.0000 | Gap: 4396.695% | Time: (M:   0.02, S:   0.06) | Elapsed:   0.14
+Iter:    3 | LB:  768586.3391 | UB: 799200.1196 | Gap:    3.831% | Time: (M:   0.08, S:   0.09) | Elapsed:   0.23
+Iter:    4 | LB:  780175.5628 | UB: 791311.7012 | Gap:    1.407% | Time: (M:   0.83, S:   0.11) | Elapsed:   1.00
+Iter:    5 | LB:  788352.4303 | UB: 790426.7244 | Gap:    0.262% | Time: (M:   2.27, S:   0.12) | Elapsed:   2.46
+Iter:    6 | LB:  789265.6403 | UB: 789623.7555 | Gap:    0.045% | Time: (M:   3.09, S:   0.14) | Elapsed:   3.31
+Iter:    7 | LB:  789478.1310 | UB: 789537.9867 | Gap:    0.008% | Time: (M:   3.87, S:   0.15) | Elapsed:   4.11
+Iter:    8 | LB:  789508.9243 | UB: 789517.5722 | Gap:    0.001% | Time: (M:   4.36, S:   0.17) | Elapsed:   4.62
+Iter:    9 | LB:  789512.2964 | UB: 789513.2658 | Gap:    0.000% | Time: (M:   4.63, S:   0.21) | Elapsed:   4.95
+Iter:   10 | LB:  789512.4225 | UB: 789512.5109 | Gap:    0.000% | Time: (M:   4.82, S:   0.23) | Elapsed:   5.16
+Iter:   11 | LB:  789512.4316 | UB: 789512.4352 | Gap:    0.000% | Time: (M:   4.87, S:   0.48) | Elapsed:   5.48
+[ Info: ga750c-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979998.0000 | UB: 1017899.0000 | Gap: 73779.216% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.06
+Iter:    2 | LB: -34392962.0000 | UB: 1017899.0000 | Gap: 3478.819% | Time: (M:   0.03, S:   0.06) | Elapsed:   0.14
+Iter:    3 | LB:  831275.5081 | UB: 880100.8066 | Gap:    5.548% | Time: (M:   0.12, S:   0.10) | Elapsed:   0.27
+Iter:    4 | LB:  864955.6825 | UB: 879038.1361 | Gap:    1.602% | Time: (M:   0.85, S:   0.13) | Elapsed:   1.05
+Iter:    5 | LB:  872374.6305 | UB: 874259.7287 | Gap:    0.216% | Time: (M:   1.36, S:   0.16) | Elapsed:   1.62
+Iter:    6 | LB:  873767.7797 | UB: 874055.0564 | Gap:    0.033% | Time: (M:   2.12, S:   0.19) | Elapsed:   2.44
+Iter:    7 | LB:  873925.5584 | UB: 873957.3468 | Gap:    0.004% | Time: (M:   2.76, S:   0.23) | Elapsed:   3.13
+Iter:    8 | LB:  873945.6663 | UB: 873948.1747 | Gap:    0.000% | Time: (M:   3.20, S:   0.26) | Elapsed:   3.62
+Iter:    9 | LB:  873946.6859 | UB: 873946.8061 | Gap:    0.000% | Time: (M:   3.48, S:   0.30) | Elapsed:   3.96
+Iter:   10 | LB:  873946.7185 | UB: 873946.7239 | Gap:    0.000% | Time: (M:   3.57, S:   0.32) | Elapsed:   4.10
+[ Info: ga500a-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 664177.0000 | Gap: 75381.107% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -19941503.0000 | UB: 574616.0000 | Gap: 3570.405% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  503440.9486 | UB: 518980.6375 | Gap:    2.994% | Time: (M:   0.04, S:   0.04) | Elapsed:   0.09
+Iter:    4 | LB:  506247.3903 | UB: 511254.8897 | Gap:    0.979% | Time: (M:   0.35, S:   0.04) | Elapsed:   0.42
+Iter:    5 | LB:  509089.0534 | UB: 510676.5433 | Gap:    0.311% | Time: (M:   1.07, S:   0.05) | Elapsed:   1.14
+Iter:    6 | LB:  509974.7396 | UB: 510300.9574 | Gap:    0.064% | Time: (M:   1.43, S:   0.05) | Elapsed:   1.51
+Iter:    7 | LB:  510113.4914 | UB: 510163.7193 | Gap:    0.010% | Time: (M:   1.72, S:   0.05) | Elapsed:   1.81
+Iter:    8 | LB:  510136.3655 | UB: 510143.5204 | Gap:    0.001% | Time: (M:   1.91, S:   0.06) | Elapsed:   2.00
+Iter:    9 | LB:  510138.6807 | UB: 510139.3239 | Gap:    0.000% | Time: (M:   1.98, S:   0.06) | Elapsed:   2.08
+Iter:   10 | LB:  510139.0360 | UB: 510139.0360 | Gap:    0.000% | Time: (M:   2.05, S:   0.07) | Elapsed:   2.15
+[ Info: ga500b-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499998000.0000 | UB: 660932.0000 | Gap: 75750.445% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -17652727.0000 | UB: 660932.0000 | Gap: 2770.884% | Time: (M:   0.01, S:   0.06) | Elapsed:   0.09
+Iter:    3 | LB:  516166.6026 | UB: 538991.2405 | Gap:    4.235% | Time: (M:   0.04, S:   0.07) | Elapsed:   0.13
+Iter:    4 | LB:  526081.9392 | UB: 534271.0472 | Gap:    1.533% | Time: (M:   0.42, S:   0.08) | Elapsed:   0.53
+Iter:    5 | LB:  531864.7110 | UB: 533380.9631 | Gap:    0.284% | Time: (M:   0.98, S:   0.08) | Elapsed:   1.09
+Iter:    6 | LB:  532534.8212 | UB: 532833.4970 | Gap:    0.056% | Time: (M:   1.15, S:   0.09) | Elapsed:   1.49
+Iter:    7 | LB:  532703.5309 | UB: 532772.8269 | Gap:    0.013% | Time: (M:   1.43, S:   0.10) | Elapsed:   1.78
+Iter:    8 | LB:  532732.0219 | UB: 532740.7808 | Gap:    0.002% | Time: (M:   1.65, S:   0.10) | Elapsed:   2.01
+Iter:    9 | LB:  532735.3698 | UB: 532736.4173 | Gap:    0.000% | Time: (M:   1.76, S:   0.11) | Elapsed:   2.14
+Iter:   10 | LB:  532735.6615 | UB: 532735.8269 | Gap:    0.000% | Time: (M:   1.85, S:   0.12) | Elapsed:   2.23
+Iter:   11 | LB:  532735.6910 | UB: 532735.7148 | Gap:    0.000% | Time: (M:   1.93, S:   0.12) | Elapsed:   2.33
+[ Info: ga750a-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 998397.0000 | Gap: 75220.398% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -45854821.0000 | UB: 863058.0000 | Gap: 5413.064% | Time: (M:   0.01, S:   0.07) | Elapsed:   0.13
+Iter:    3 | LB:  753647.2900 | UB: 774501.6225 | Gap:    2.693% | Time: (M:   0.08, S:   0.08) | Elapsed:   0.21
+Iter:    4 | LB:  757119.9865 | UB: 764137.9615 | Gap:    0.918% | Time: (M:   0.81, S:   0.09) | Elapsed:   0.95
+Iter:    5 | LB:  760907.0347 | UB: 763194.3450 | Gap:    0.300% | Time: (M:   2.73, S:   0.09) | Elapsed:   2.89
+Iter:    6 | LB:  762310.7005 | UB: 762857.2965 | Gap:    0.072% | Time: (M:   4.63, S:   0.10) | Elapsed:   4.80
+Iter:    7 | LB:  762525.2900 | UB: 762600.9053 | Gap:    0.010% | Time: (M:   5.99, S:   0.11) | Elapsed:   6.17
+Iter:    8 | LB:  762565.5510 | UB: 762574.6025 | Gap:    0.001% | Time: (M:   6.82, S:   0.12) | Elapsed:   7.01
+Iter:    9 | LB:  762568.3603 | UB: 762569.3915 | Gap:    0.000% | Time: (M:   7.10, S:   0.12) | Elapsed:   7.30
+Iter:   10 | LB:  762568.5003 | UB: 762568.6686 | Gap:    0.000% | Time: (M:   7.24, S:   0.13) | Elapsed:   7.46
+Iter:   11 | LB:  762568.5130 | UB: 762568.5223 | Gap:    0.000% | Time: (M:   7.38, S:   0.14) | Elapsed:   7.61
+[ Info: ga750b-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749998000.0000 | UB: 994852.0000 | Gap: 75487.897% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.06
+Iter:    2 | LB: -42978986.0000 | UB: 994852.0000 | Gap: 4420.139% | Time: (M:   0.03, S:   0.06) | Elapsed:   0.18
+Iter:    3 | LB:  767924.5574 | UB: 799620.2608 | Gap:    3.964% | Time: (M:   0.09, S:   0.33) | Elapsed:   0.51
+Iter:    4 | LB:  779527.7653 | UB: 791122.2632 | Gap:    1.466% | Time: (M:   1.09, S:   0.34) | Elapsed:   1.53
+Iter:    5 | LB:  788474.2286 | UB: 790487.7703 | Gap:    0.255% | Time: (M:   2.89, S:   0.60) | Elapsed:   3.61
+Iter:    6 | LB:  789356.6621 | UB: 789732.5599 | Gap:    0.048% | Time: (M:   3.62, S:   0.62) | Elapsed:   4.36
+Iter:    7 | LB:  789572.8739 | UB: 789644.2015 | Gap:    0.009% | Time: (M:   4.51, S:   0.63) | Elapsed:   5.27
+Iter:    8 | LB:  789615.2181 | UB: 789621.5315 | Gap:    0.001% | Time: (M:   5.03, S:   0.65) | Elapsed:   5.81
+Iter:    9 | LB:  789618.2548 | UB: 789618.9727 | Gap:    0.000% | Time: (M:   5.25, S:   0.66) | Elapsed:   6.06
+Iter:   10 | LB:  789618.4620 | UB: 789618.4660 | Gap:    0.000% | Time: (M:   5.42, S:   0.67) | Elapsed:   6.26
+[ Info: ga750c-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979991.0000 | UB: 1012861.0000 | Gap: 74145.697% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.06
+Iter:    2 | LB: -32828632.0000 | UB: 1012861.0000 | Gap: 3341.178% | Time: (M:   0.03, S:   0.06) | Elapsed:   0.14
+Iter:    3 | LB:  832704.3168 | UB: 881492.7127 | Gap:    5.535% | Time: (M:   0.13, S:   0.10) | Elapsed:   0.28
+Iter:    4 | LB:  863345.6020 | UB: 878551.0648 | Gap:    1.731% | Time: (M:   0.74, S:   0.13) | Elapsed:   0.94
+Iter:    5 | LB:  872527.2078 | UB: 874492.8510 | Gap:    0.225% | Time: (M:   1.29, S:   0.16) | Elapsed:   1.55
+Iter:    6 | LB:  873894.3474 | UB: 874207.1891 | Gap:    0.036% | Time: (M:   2.08, S:   0.19) | Elapsed:   2.40
+Iter:    7 | LB:  874081.7267 | UB: 874125.0350 | Gap:    0.005% | Time: (M:   2.74, S:   0.22) | Elapsed:   3.12
+Iter:    8 | LB:  874105.9726 | UB: 874110.9128 | Gap:    0.001% | Time: (M:   3.22, S:   0.26) | Elapsed:   3.65
+Iter:    9 | LB:  874108.8061 | UB: 874109.1130 | Gap:    0.000% | Time: (M:   3.55, S:   0.29) | Elapsed:   4.05
+Iter:   10 | LB:  874108.9097 | UB: 874108.9387 | Gap:    0.000% | Time: (M:   3.67, S:   0.32) | Elapsed:   4.21
+[ Info: ga500a-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 668434.0000 | Gap: 74901.671% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -20903167.0000 | UB: 575755.0000 | Gap: 3730.566% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  503386.5800 | UB: 518101.3836 | Gap:    2.840% | Time: (M:   0.04, S:   0.04) | Elapsed:   0.10
+Iter:    4 | LB:  506616.3206 | UB: 511232.9471 | Gap:    0.903% | Time: (M:   0.30, S:   0.04) | Elapsed:   0.37
+Iter:    5 | LB:  509472.5912 | UB: 510909.3809 | Gap:    0.281% | Time: (M:   0.94, S:   0.04) | Elapsed:   1.01
+Iter:    6 | LB:  510243.1766 | UB: 510495.8946 | Gap:    0.050% | Time: (M:   1.25, S:   0.05) | Elapsed:   1.33
+Iter:    7 | LB:  510360.9577 | UB: 510403.8161 | Gap:    0.008% | Time: (M:   1.50, S:   0.05) | Elapsed:   1.59
+Iter:    8 | LB:  510379.0724 | UB: 510385.1480 | Gap:    0.001% | Time: (M:   1.63, S:   0.05) | Elapsed:   1.73
+Iter:    9 | LB:  510382.0154 | UB: 510383.1307 | Gap:    0.000% | Time: (M:   1.72, S:   0.06) | Elapsed:   1.82
+Iter:   10 | LB:  510382.6036 | UB: 510382.6261 | Gap:    0.000% | Time: (M:   1.78, S:   0.06) | Elapsed:   1.89
+[ Info: ga500b-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997997.0000 | UB: 670237.0000 | Gap: 74700.178% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -20226236.0000 | UB: 670237.0000 | Gap: 3117.774% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  516100.1844 | UB: 540109.9440 | Gap:    4.445% | Time: (M:   0.04, S:   0.04) | Elapsed:   0.11
+Iter:    4 | LB:  525776.3788 | UB: 534130.1752 | Gap:    1.564% | Time: (M:   0.34, S:   0.05) | Elapsed:   0.42
+Iter:    5 | LB:  532064.0074 | UB: 533388.7556 | Gap:    0.248% | Time: (M:   0.90, S:   0.05) | Elapsed:   1.00
+Iter:    6 | LB:  532672.8421 | UB: 532947.9323 | Gap:    0.052% | Time: (M:   1.09, S:   0.06) | Elapsed:   1.19
+Iter:    7 | LB:  532815.4406 | UB: 532865.7227 | Gap:    0.009% | Time: (M:   1.31, S:   0.07) | Elapsed:   1.43
+Iter:    8 | LB:  532838.2935 | UB: 532845.1987 | Gap:    0.001% | Time: (M:   1.47, S:   0.08) | Elapsed:   1.61
+Iter:    9 | LB:  532841.6757 | UB: 532842.0726 | Gap:    0.000% | Time: (M:   1.58, S:   0.08) | Elapsed:   1.72
+Iter:   10 | LB:  532841.9354 | UB: 532841.9357 | Gap:    0.000% | Time: (M:   1.66, S:   0.09) | Elapsed:   1.82
+[ Info: ga750a-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 1008047.0000 | Gap: 74501.273% | Time: (M:   0.00, S:   0.10) | Elapsed:   0.10
+Iter:    2 | LB: -46773452.0000 | UB: 863939.0000 | Gap: 5513.976% | Time: (M:   0.01, S:   0.10) | Elapsed:   0.17
+Iter:    3 | LB:  753521.4827 | UB: 776563.8700 | Gap:    2.967% | Time: (M:   0.08, S:   0.38) | Elapsed:   0.51
+Iter:    4 | LB:  756792.5242 | UB: 764587.8478 | Gap:    1.020% | Time: (M:   0.93, S:   0.39) | Elapsed:   1.38
+Iter:    5 | LB:  760829.3161 | UB: 763421.4715 | Gap:    0.340% | Time: (M:   3.24, S:   0.40) | Elapsed:   3.71
+Iter:    6 | LB:  762438.3156 | UB: 763032.6709 | Gap:    0.078% | Time: (M:   5.42, S:   0.60) | Elapsed:   6.10
+Iter:    7 | LB:  762682.4283 | UB: 762796.3177 | Gap:    0.015% | Time: (M:   7.01, S:   0.61) | Elapsed:   7.69
+Iter:    8 | LB:  762732.6161 | UB: 762753.0650 | Gap:    0.003% | Time: (M:   7.82, S:   0.61) | Elapsed:   8.51
+Iter:    9 | LB:  762737.8455 | UB: 762741.1548 | Gap:    0.000% | Time: (M:   8.19, S:   0.62) | Elapsed:   8.90
+Iter:   10 | LB:  762738.4680 | UB: 762738.8014 | Gap:    0.000% | Time: (M:   8.35, S:   0.62) | Elapsed:   9.07
+Iter:   11 | LB:  762738.5020 | UB: 762738.5417 | Gap:    0.000% | Time: (M:   8.50, S:   0.63) | Elapsed:   9.23
+[ Info: ga750b-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749997999.0000 | UB: 1010953.0000 | Gap: 74287.227% | Time: (M:   0.01, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -46474505.0000 | UB: 1010953.0000 | Gap: 4697.098% | Time: (M:   0.03, S:   0.06) | Elapsed:   0.14
+Iter:    3 | LB:  767141.8310 | UB: 800625.3337 | Gap:    4.182% | Time: (M:   0.09, S:   0.09) | Elapsed:   0.23
+Iter:    4 | LB:  780141.4291 | UB: 792014.4161 | Gap:    1.499% | Time: (M:   0.73, S:   0.10) | Elapsed:   0.89
+Iter:    5 | LB:  789234.7737 | UB: 791229.7077 | Gap:    0.252% | Time: (M:   2.24, S:   0.11) | Elapsed:   2.42
+Iter:    6 | LB:  790091.2120 | UB: 790483.2259 | Gap:    0.050% | Time: (M:   2.98, S:   0.13) | Elapsed:   3.19
+Iter:    7 | LB:  790306.9539 | UB: 790379.3564 | Gap:    0.009% | Time: (M:   3.91, S:   0.14) | Elapsed:   4.14
+Iter:    8 | LB:  790341.8806 | UB: 790350.4534 | Gap:    0.001% | Time: (M:   4.54, S:   0.16) | Elapsed:   4.79
+Iter:    9 | LB:  790344.8784 | UB: 790345.7100 | Gap:    0.000% | Time: (M:   4.78, S:   0.17) | Elapsed:   5.05
+Iter:   10 | LB:  790345.0577 | UB: 790345.0743 | Gap:    0.000% | Time: (M:   4.96, S:   0.18) | Elapsed:   5.26
+[ Info: ga750c-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979988.0000 | UB: 1028964.0000 | Gap: 72986.903% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -36248819.0000 | UB: 1028964.0000 | Gap: 3622.846% | Time: (M:   0.03, S:   0.07) | Elapsed:   0.15
+Iter:    3 | LB:  831122.7343 | UB: 880594.0821 | Gap:    5.618% | Time: (M:   0.12, S:   0.11) | Elapsed:   0.29
+Iter:    4 | LB:  866014.6304 | UB: 880594.0821 | Gap:    1.656% | Time: (M:   0.67, S:   0.13) | Elapsed:   0.89
+Iter:    5 | LB:  873790.5944 | UB: 875768.6513 | Gap:    0.226% | Time: (M:   1.13, S:   0.17) | Elapsed:   1.41
+Iter:    6 | LB:  875396.9412 | UB: 875698.7267 | Gap:    0.034% | Time: (M:   1.92, S:   0.20) | Elapsed:   2.25
+Iter:    7 | LB:  875541.0562 | UB: 875579.3069 | Gap:    0.004% | Time: (M:   2.59, S:   0.24) | Elapsed:   2.97
+Iter:    8 | LB:  875563.5122 | UB: 875568.4298 | Gap:    0.001% | Time: (M:   3.09, S:   0.27) | Elapsed:   3.53
+Iter:    9 | LB:  875565.7598 | UB: 875566.0162 | Gap:    0.000% | Time: (M:   3.40, S:   0.31) | Elapsed:   3.90
+Iter:   10 | LB:  875565.9282 | UB: 875565.9307 | Gap:    0.000% | Time: (M:   3.51, S:   0.34) | Elapsed:   4.05
+[ Info: ga500a-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 668015.0000 | Gap: 74948.589% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -20431755.0000 | UB: 574837.0000 | Gap: 3654.356% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  503439.7236 | UB: 518628.0553 | Gap:    2.929% | Time: (M:   0.04, S:   0.03) | Elapsed:   0.10
+Iter:    4 | LB:  506655.5077 | UB: 511627.8462 | Gap:    0.972% | Time: (M:   0.36, S:   0.04) | Elapsed:   0.43
+Iter:    5 | LB:  509499.2800 | UB: 511056.0764 | Gap:    0.305% | Time: (M:   0.97, S:   0.04) | Elapsed:   1.04
+Iter:    6 | LB:  510341.9653 | UB: 510643.3885 | Gap:    0.059% | Time: (M:   1.37, S:   0.04) | Elapsed:   1.45
+Iter:    7 | LB:  510462.1269 | UB: 510514.7925 | Gap:    0.010% | Time: (M:   1.69, S:   0.08) | Elapsed:   1.80
+Iter:    8 | LB:  510484.4285 | UB: 510492.0591 | Gap:    0.001% | Time: (M:   1.86, S:   0.08) | Elapsed:   1.98
+Iter:    9 | LB:  510487.4500 | UB: 510488.9099 | Gap:    0.000% | Time: (M:   1.95, S:   0.09) | Elapsed:   2.08
+Iter:   10 | LB:  510487.7086 | UB: 510487.9347 | Gap:    0.000% | Time: (M:   2.01, S:   0.09) | Elapsed:   2.15
+Iter:   11 | LB:  510487.7205 | UB: 510487.7301 | Gap:    0.000% | Time: (M:   2.08, S:   0.09) | Elapsed:   2.22
+[ Info: ga500b-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997999.0000 | UB: 669816.0000 | Gap: 74747.067% | Time: (M:   0.00, S:   0.02) | Elapsed:   0.03
+Iter:    2 | LB: -19763004.0000 | UB: 669816.0000 | Gap: 3050.512% | Time: (M:   0.01, S:   0.02) | Elapsed:   0.06
+Iter:    3 | LB:  515795.8491 | UB: 540787.0445 | Gap:    4.621% | Time: (M:   0.04, S:   0.04) | Elapsed:   0.10
+Iter:    4 | LB:  525715.7121 | UB: 534460.6229 | Gap:    1.636% | Time: (M:   0.27, S:   0.05) | Elapsed:   0.34
+Iter:    5 | LB:  531914.4162 | UB: 533793.6320 | Gap:    0.352% | Time: (M:   0.71, S:   0.05) | Elapsed:   0.80
+Iter:    6 | LB:  532730.9705 | UB: 533074.1670 | Gap:    0.064% | Time: (M:   0.90, S:   0.06) | Elapsed:   1.00
+Iter:    7 | LB:  532941.6585 | UB: 532995.4112 | Gap:    0.010% | Time: (M:   1.14, S:   0.07) | Elapsed:   1.25
+Iter:    8 | LB:  532965.0421 | UB: 532972.5889 | Gap:    0.001% | Time: (M:   1.28, S:   0.07) | Elapsed:   1.40
+Iter:    9 | LB:  532968.6623 | UB: 532969.4705 | Gap:    0.000% | Time: (M:   1.37, S:   0.08) | Elapsed:   1.50
+Iter:   10 | LB:  532968.8027 | UB: 532968.8778 | Gap:    0.000% | Time: (M:   1.46, S:   0.09) | Elapsed:   1.60
+Iter:   11 | LB:  532968.8083 | UB: 532968.8104 | Gap:    0.000% | Time: (M:   1.49, S:   0.09) | Elapsed:   1.64
+[ Info: ga750a-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 990921.0000 | Gap: 75787.144% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -42573567.0000 | UB: 861829.0000 | Gap: 5039.909% | Time: (M:   0.01, S:   0.07) | Elapsed:   0.13
+Iter:    3 | LB:  753799.1303 | UB: 774058.8875 | Gap:    2.617% | Time: (M:   0.07, S:   0.08) | Elapsed:   0.20
+Iter:    4 | LB:  757363.7288 | UB: 764214.8272 | Gap:    0.896% | Time: (M:   0.92, S:   0.09) | Elapsed:   1.06
+Iter:    5 | LB:  761100.8545 | UB: 763356.6819 | Gap:    0.296% | Time: (M:   2.87, S:   0.10) | Elapsed:   3.03
+Iter:    6 | LB:  762389.1424 | UB: 762825.6825 | Gap:    0.057% | Time: (M:   4.80, S:   0.10) | Elapsed:   4.96
+Iter:    7 | LB:  762594.9883 | UB: 762674.5630 | Gap:    0.010% | Time: (M:   6.37, S:   0.14) | Elapsed:   6.58
+Iter:    8 | LB:  762631.1137 | UB: 762642.4233 | Gap:    0.001% | Time: (M:   7.32, S:   0.15) | Elapsed:   7.53
+Iter:    9 | LB:  762636.8619 | UB: 762637.8517 | Gap:    0.000% | Time: (M:   7.70, S:   0.15) | Elapsed:   7.92
+Iter:   10 | LB:  762637.0288 | UB: 762637.1454 | Gap:    0.000% | Time: (M:   7.84, S:   0.37) | Elapsed:   8.28
+Iter:   11 | LB:  762637.0323 | UB: 762637.0323 | Gap:    0.000% | Time: (M:   7.98, S:   0.37) | Elapsed:   8.43
+[ Info: ga750b-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749997991.0000 | UB: 1010453.0000 | Gap: 74323.936% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -48356819.0000 | UB: 1010453.0000 | Gap: 4885.657% | Time: (M:   0.02, S:   0.06) | Elapsed:   0.14
+Iter:    3 | LB:  767347.1088 | UB: 800227.5818 | Gap:    4.109% | Time: (M:   0.08, S:   0.09) | Elapsed:   0.22
+Iter:    4 | LB:  779229.5873 | UB: 791451.3005 | Gap:    1.544% | Time: (M:   0.86, S:   0.10) | Elapsed:   1.03
+Iter:    5 | LB:  788344.5379 | UB: 790578.3140 | Gap:    0.283% | Time: (M:   2.37, S:   0.12) | Elapsed:   2.56
+Iter:    6 | LB:  789382.1361 | UB: 789761.1918 | Gap:    0.048% | Time: (M:   3.05, S:   0.13) | Elapsed:   3.26
+Iter:    7 | LB:  789608.3673 | UB: 789673.4959 | Gap:    0.008% | Time: (M:   3.89, S:   0.14) | Elapsed:   4.12
+Iter:    8 | LB:  789642.8655 | UB: 789651.1158 | Gap:    0.001% | Time: (M:   4.51, S:   0.16) | Elapsed:   4.76
+Iter:    9 | LB:  789647.0682 | UB: 789647.7588 | Gap:    0.000% | Time: (M:   4.85, S:   0.17) | Elapsed:   5.13
+Iter:   10 | LB:  789647.2353 | UB: 789647.4799 | Gap:    0.000% | Time: (M:   5.03, S:   0.18) | Elapsed:   5.32
+Iter:   11 | LB:  789647.2552 | UB: 789647.2695 | Gap:    0.000% | Time: (M:   5.21, S:   0.19) | Elapsed:   5.53
+[ Info: ga750c-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979901.0000 | UB: 1028543.0000 | Gap: 73016.728% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.06
+Iter:    2 | LB: -38322049.0000 | UB: 1028543.0000 | Gap: 3825.858% | Time: (M:   0.03, S:   0.06) | Elapsed:   0.14
+Iter:    3 | LB:  828643.8828 | UB: 879793.6845 | Gap:    5.814% | Time: (M:   0.10, S:   0.10) | Elapsed:   0.25
+Iter:    4 | LB:  862637.2679 | UB: 878204.6833 | Gap:    1.773% | Time: (M:   0.62, S:   0.13) | Elapsed:   0.83
+Iter:    5 | LB:  871368.2508 | UB: 873496.6774 | Gap:    0.244% | Time: (M:   1.11, S:   0.16) | Elapsed:   1.37
+Iter:    6 | LB:  873013.2457 | UB: 873325.8432 | Gap:    0.036% | Time: (M:   1.86, S:   0.20) | Elapsed:   2.18
+Iter:    7 | LB:  873162.7587 | UB: 873213.2812 | Gap:    0.006% | Time: (M:   2.54, S:   0.23) | Elapsed:   2.91
+Iter:    8 | LB:  873189.5762 | UB: 873193.1144 | Gap:    0.000% | Time: (M:   3.00, S:   0.27) | Elapsed:   3.43
+Iter:    9 | LB:  873191.3773 | UB: 873191.9101 | Gap:    0.000% | Time: (M:   3.29, S:   0.30) | Elapsed:   3.77
+Iter:   10 | LB:  873191.4667 | UB: 873191.4875 | Gap:    0.000% | Time: (M:   3.39, S:   0.33) | Elapsed:   3.93
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+< Not collect multiple obj >
+
+[ Info: ga500a-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 669973.0000 | Gap: 74729.843% | Time: (M:   1.97, S:   0.33) | Elapsed:   2.30
+Iter:    2 | LB: -20147340.0000 | UB: 575968.0000 | Gap: 3597.996% | Time: (M:   1.97, S:   0.34) | Elapsed:   2.95
+Iter:    3 | LB:  503266.4265 | UB: 519427.7753 | Gap:    3.111% | Time: (M:   2.01, S:   0.34) | Elapsed:   2.99
+Iter:    4 | LB:  506341.5946 | UB: 512001.0186 | Gap:    1.105% | Time: (M:   2.28, S:   0.35) | Elapsed:   3.28
+Iter:    5 | LB:  509305.3219 | UB: 511141.8951 | Gap:    0.359% | Time: (M:   2.90, S:   0.55) | Elapsed:   4.10
+Iter:    6 | LB:  510371.1318 | UB: 510806.6153 | Gap:    0.085% | Time: (M:   3.32, S:   0.56) | Elapsed:   4.53
+Iter:    7 | LB:  510553.5354 | UB: 510632.9577 | Gap:    0.016% | Time: (M:   3.87, S:   0.56) | Elapsed:   5.09
+Iter:    8 | LB:  510585.0642 | UB: 510599.8352 | Gap:    0.003% | Time: (M:   4.16, S:   0.56) | Elapsed:   5.38
+Iter:    9 | LB:  510588.6586 | UB: 510589.7049 | Gap:    0.000% | Time: (M:   4.28, S:   0.57) | Elapsed:   5.51
+Iter:   10 | LB:  510588.9580 | UB: 510589.1628 | Gap:    0.000% | Time: (M:   4.35, S:   0.58) | Elapsed:   5.59
+Iter:   11 | LB:  510588.9660 | UB: 510588.9660 | Gap:    0.000% | Time: (M:   4.43, S:   0.58) | Elapsed:   5.67
+[ Info: ga500b-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997990.0000 | UB: 671783.0000 | Gap: 74528.497% | Time: (M:   0.00, S:   0.04) | Elapsed:   0.04
+Iter:    2 | LB: -19467992.0000 | UB: 671783.0000 | Gap: 2997.958% | Time: (M:   0.01, S:   0.04) | Elapsed:   0.08
+Iter:    3 | LB:  515441.5791 | UB: 540483.2049 | Gap:    4.633% | Time: (M:   0.04, S:   0.05) | Elapsed:   0.12
+Iter:    4 | LB:  525910.5055 | UB: 534578.9614 | Gap:    1.622% | Time: (M:   0.33, S:   0.06) | Elapsed:   0.41
+Iter:    5 | LB:  532584.9107 | UB: 533934.8993 | Gap:    0.253% | Time: (M:   0.81, S:   0.07) | Elapsed:   0.91
+Iter:    6 | LB:  533153.8175 | UB: 533483.1281 | Gap:    0.062% | Time: (M:   1.04, S:   0.08) | Elapsed:   1.16
+Iter:    7 | LB:  533311.2392 | UB: 533359.4599 | Gap:    0.009% | Time: (M:   1.27, S:   0.08) | Elapsed:   1.39
+Iter:    8 | LB:  533334.1843 | UB: 533346.4156 | Gap:    0.002% | Time: (M:   1.42, S:   0.09) | Elapsed:   1.56
+Iter:    9 | LB:  533338.1225 | UB: 533339.6503 | Gap:    0.000% | Time: (M:   1.52, S:   0.09) | Elapsed:   1.67
+Iter:   10 | LB:  533338.5705 | UB: 533338.6580 | Gap:    0.000% | Time: (M:   1.61, S:   0.10) | Elapsed:   1.78
+Iter:   11 | LB:  533338.5747 | UB: 533338.5754 | Gap:    0.000% | Time: (M:   1.64, S:   0.11) | Elapsed:   1.82
+[ Info: ga750a-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 991989.0000 | Gap: 75705.657% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -42909773.0000 | UB: 862944.0000 | Gap: 5072.486% | Time: (M:   0.01, S:   0.07) | Elapsed:   0.13
+Iter:    3 | LB:  753886.5307 | UB: 774625.5396 | Gap:    2.677% | Time: (M:   0.08, S:   0.08) | Elapsed:   0.22
+Iter:    4 | LB:  757175.7391 | UB: 764107.3174 | Gap:    0.907% | Time: (M:   0.99, S:   0.10) | Elapsed:   1.15
+Iter:    5 | LB:  760748.5842 | UB: 763016.0378 | Gap:    0.297% | Time: (M:   3.13, S:   0.10) | Elapsed:   3.31
+Iter:    6 | LB:  762246.2532 | UB: 762681.6952 | Gap:    0.057% | Time: (M:   5.19, S:   0.11) | Elapsed:   5.37
+Iter:    7 | LB:  762424.1402 | UB: 762503.1187 | Gap:    0.010% | Time: (M:   6.48, S:   0.12) | Elapsed:   6.68
+Iter:    8 | LB:  762460.2880 | UB: 762469.5817 | Gap:    0.001% | Time: (M:   7.53, S:   0.13) | Elapsed:   7.74
+Iter:    9 | LB:  762464.2716 | UB: 762465.2466 | Gap:    0.000% | Time: (M:   7.85, S:   0.13) | Elapsed:   8.07
+Iter:   10 | LB:  762464.4478 | UB: 762464.4924 | Gap:    0.000% | Time: (M:   8.00, S:   0.18) | Elapsed:   8.27
+[ Info: ga750b-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749998000.0000 | UB: 1006080.0000 | Gap: 74646.557% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.07
+Iter:    2 | LB: -45499597.0000 | UB: 1006080.0000 | Gap: 4622.463% | Time: (M:   0.02, S:   0.07) | Elapsed:   0.15
+Iter:    3 | LB:  767405.9286 | UB: 800619.1289 | Gap:    4.148% | Time: (M:   0.08, S:   0.09) | Elapsed:   0.23
+Iter:    4 | LB:  779902.6892 | UB: 791949.2986 | Gap:    1.521% | Time: (M:   1.04, S:   0.10) | Elapsed:   1.22
+Iter:    5 | LB:  789035.7940 | UB: 791003.7094 | Gap:    0.249% | Time: (M:   3.45, S:   0.12) | Elapsed:   3.66
+Iter:    6 | LB:  789868.3592 | UB: 790229.2199 | Gap:    0.046% | Time: (M:   4.32, S:   0.13) | Elapsed:   4.55
+Iter:    7 | LB:  790085.5916 | UB: 790158.0800 | Gap:    0.009% | Time: (M:   5.45, S:   0.16) | Elapsed:   5.71
+Iter:    8 | LB:  790117.8255 | UB: 790125.6502 | Gap:    0.001% | Time: (M:   5.99, S:   0.17) | Elapsed:   6.27
+Iter:    9 | LB:  790121.4794 | UB: 790122.5464 | Gap:    0.000% | Time: (M:   6.33, S:   0.18) | Elapsed:   6.64
+Iter:   10 | LB:  790121.8575 | UB: 790121.9308 | Gap:    0.000% | Time: (M:   6.53, S:   0.20) | Elapsed:   6.86
+[ Info: ga750c-1
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979998.0000 | UB: 1018182.0000 | Gap: 73758.737% | Time: (M:   0.00, S:   0.11) | Elapsed:   0.11
+Iter:    2 | LB: -33787299.0000 | UB: 1018182.0000 | Gap: 3418.395% | Time: (M:   0.03, S:   0.34) | Elapsed:   0.42
+Iter:    3 | LB:  831871.0082 | UB: 881754.6490 | Gap:    5.657% | Time: (M:   0.10, S:   0.38) | Elapsed:   0.53
+Iter:    4 | LB:  865880.6348 | UB: 879728.6869 | Gap:    1.574% | Time: (M:   0.63, S:   0.41) | Elapsed:   1.13
+Iter:    5 | LB:  874032.8778 | UB: 875796.9391 | Gap:    0.201% | Time: (M:   1.25, S:   0.46) | Elapsed:   1.81
+Iter:    6 | LB:  875471.3988 | UB: 875723.4226 | Gap:    0.029% | Time: (M:   2.65, S:   0.50) | Elapsed:   3.28
+Iter:    7 | LB:  875603.3296 | UB: 875633.2879 | Gap:    0.003% | Time: (M:   3.68, S:   0.53) | Elapsed:   4.37
+Iter:    8 | LB:  875623.8093 | UB: 875625.6134 | Gap:    0.000% | Time: (M:   4.24, S:   0.57) | Elapsed:   4.99
+Iter:    9 | LB:  875624.6139 | UB: 875624.9751 | Gap:    0.000% | Time: (M:   4.92, S:   0.72) | Elapsed:   5.84
+Iter:   10 | LB:  875624.6740 | UB: 875624.6911 | Gap:    0.000% | Time: (M:   5.03, S:   0.75) | Elapsed:   6.05
+[ Info: ga500a-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 672459.0000 | Gap: 74453.946% | Time: (M:   0.00, S:   0.04) | Elapsed:   0.04
+Iter:    2 | LB: -21803368.0000 | UB: 575773.0000 | Gap: 3886.799% | Time: (M:   0.03, S:   0.04) | Elapsed:   0.13
+Iter:    3 | LB:  503502.9316 | UB: 519908.0411 | Gap:    3.155% | Time: (M:   0.11, S:   0.05) | Elapsed:   0.23
+Iter:    4 | LB:  506257.2220 | UB: 511798.8860 | Gap:    1.083% | Time: (M:   0.49, S:   0.06) | Elapsed:   0.62
+Iter:    5 | LB:  509194.0813 | UB: 510998.8579 | Gap:    0.353% | Time: (M:   1.36, S:   0.06) | Elapsed:   1.50
+Iter:    6 | LB:  510288.9995 | UB: 510665.4844 | Gap:    0.074% | Time: (M:   2.25, S:   0.06) | Elapsed:   2.39
+Iter:    7 | LB:  510441.1404 | UB: 510506.3950 | Gap:    0.013% | Time: (M:   2.65, S:   0.07) | Elapsed:   2.79
+Iter:    8 | LB:  510469.7113 | UB: 510477.9216 | Gap:    0.002% | Time: (M:   2.90, S:   0.07) | Elapsed:   3.06
+Iter:    9 | LB:  510472.0073 | UB: 510473.1389 | Gap:    0.000% | Time: (M:   3.00, S:   0.07) | Elapsed:   3.16
+Iter:   10 | LB:  510472.2417 | UB: 510472.2518 | Gap:    0.000% | Time: (M:   3.07, S:   0.08) | Elapsed:   3.24
+[ Info: ga500b-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997998.0000 | UB: 671124.0000 | Gap: 74601.582% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -20532490.0000 | UB: 671124.0000 | Gap: 3159.418% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  516420.0264 | UB: 541269.9520 | Gap:    4.591% | Time: (M:   0.03, S:   0.04) | Elapsed:   0.10
+Iter:    4 | LB:  525821.0817 | UB: 534299.6328 | Gap:    1.587% | Time: (M:   0.31, S:   0.05) | Elapsed:   0.39
+Iter:    5 | LB:  532152.7934 | UB: 534082.3454 | Gap:    0.361% | Time: (M:   0.91, S:   0.05) | Elapsed:   1.00
+Iter:    6 | LB:  532888.0355 | UB: 533187.2297 | Gap:    0.056% | Time: (M:   1.17, S:   0.06) | Elapsed:   1.27
+Iter:    7 | LB:  533064.3714 | UB: 533104.8049 | Gap:    0.008% | Time: (M:   1.42, S:   0.07) | Elapsed:   1.54
+Iter:    8 | LB:  533085.8423 | UB: 533089.5262 | Gap:    0.001% | Time: (M:   1.58, S:   0.08) | Elapsed:   1.71
+Iter:    9 | LB:  533087.3020 | UB: 533087.8833 | Gap:    0.000% | Time: (M:   1.67, S:   0.08) | Elapsed:   1.81
+Iter:   10 | LB:  533087.5735 | UB: 533087.5772 | Gap:    0.000% | Time: (M:   1.77, S:   0.10) | Elapsed:   1.93
+[ Info: ga750a-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 995628.0000 | Gap: 75429.320% | Time: (M:   0.01, S:   0.08) | Elapsed:   0.08
+Iter:    2 | LB: -44870195.0000 | UB: 862493.0000 | Gap: 5302.384% | Time: (M:   0.02, S:   0.08) | Elapsed:   0.32
+Iter:    3 | LB:  753574.5031 | UB: 775393.7406 | Gap:    2.814% | Time: (M:   0.09, S:   0.38) | Elapsed:   0.70
+Iter:    4 | LB:  757036.1252 | UB: 764148.8407 | Gap:    0.931% | Time: (M:   0.94, S:   0.39) | Elapsed:   1.56
+Iter:    5 | LB:  760892.5563 | UB: 763133.5780 | Gap:    0.294% | Time: (M:   3.18, S:   0.39) | Elapsed:   3.82
+Iter:    6 | LB:  762275.4939 | UB: 762797.6245 | Gap:    0.068% | Time: (M:   5.22, S:   0.40) | Elapsed:   5.86
+Iter:    7 | LB:  762473.5414 | UB: 762562.8582 | Gap:    0.012% | Time: (M:   7.03, S:   0.41) | Elapsed:   7.70
+Iter:    8 | LB:  762514.2483 | UB: 762527.9562 | Gap:    0.002% | Time: (M:   7.86, S:   0.42) | Elapsed:   8.55
+Iter:    9 | LB:  762519.7325 | UB: 762520.5389 | Gap:    0.000% | Time: (M:   8.26, S:   0.43) | Elapsed:   8.96
+Iter:   10 | LB:  762520.1433 | UB: 762520.2085 | Gap:    0.000% | Time: (M:   8.41, S:   0.44) | Elapsed:   9.12
+[ Info: ga750b-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749998000.0000 | UB: 990837.0000 | Gap: 75793.378% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.07
+Iter:    2 | LB: -42573247.0000 | UB: 990837.0000 | Gap: 4396.695% | Time: (M:   0.02, S:   0.06) | Elapsed:   0.13
+Iter:    3 | LB:  768586.3391 | UB: 799200.1196 | Gap:    3.831% | Time: (M:   0.08, S:   0.09) | Elapsed:   0.22
+Iter:    4 | LB:  780175.5628 | UB: 791311.7012 | Gap:    1.407% | Time: (M:   0.89, S:   0.11) | Elapsed:   1.06
+Iter:    5 | LB:  788352.4303 | UB: 790426.7244 | Gap:    0.262% | Time: (M:   2.39, S:   0.12) | Elapsed:   2.58
+Iter:    6 | LB:  789265.6403 | UB: 789623.7555 | Gap:    0.045% | Time: (M:   3.28, S:   0.14) | Elapsed:   3.49
+Iter:    7 | LB:  789478.1310 | UB: 789537.9867 | Gap:    0.008% | Time: (M:   4.12, S:   0.15) | Elapsed:   4.35
+Iter:    8 | LB:  789508.9243 | UB: 789517.5722 | Gap:    0.001% | Time: (M:   4.63, S:   0.16) | Elapsed:   4.89
+Iter:    9 | LB:  789512.2964 | UB: 789513.2658 | Gap:    0.000% | Time: (M:   4.91, S:   0.18) | Elapsed:   5.20
+Iter:   10 | LB:  789512.4225 | UB: 789512.5109 | Gap:    0.000% | Time: (M:   5.10, S:   0.19) | Elapsed:   5.40
+Iter:   11 | LB:  789512.4316 | UB: 789512.4352 | Gap:    0.000% | Time: (M:   5.16, S:   0.21) | Elapsed:   5.49
+[ Info: ga750c-2
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979998.0000 | UB: 1017899.0000 | Gap: 73779.216% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.07
+Iter:    2 | LB: -34392962.0000 | UB: 1017899.0000 | Gap: 3478.819% | Time: (M:   0.03, S:   0.07) | Elapsed:   0.16
+Iter:    3 | LB:  831275.5081 | UB: 880100.8066 | Gap:    5.548% | Time: (M:   0.13, S:   0.12) | Elapsed:   0.31
+Iter:    4 | LB:  864955.6825 | UB: 879038.1361 | Gap:    1.602% | Time: (M:   1.14, S:   0.15) | Elapsed:   1.38
+Iter:    5 | LB:  872374.6305 | UB: 874259.7287 | Gap:    0.216% | Time: (M:   1.86, S:   0.20) | Elapsed:   2.16
+Iter:    6 | LB:  873767.7797 | UB: 874055.0564 | Gap:    0.033% | Time: (M:   2.78, S:   0.23) | Elapsed:   3.16
+Iter:    7 | LB:  873925.5584 | UB: 873957.3468 | Gap:    0.004% | Time: (M:   3.47, S:   0.26) | Elapsed:   3.89
+Iter:    8 | LB:  873945.6663 | UB: 873948.1747 | Gap:    0.000% | Time: (M:   3.93, S:   0.30) | Elapsed:   4.41
+Iter:    9 | LB:  873946.6859 | UB: 873946.8061 | Gap:    0.000% | Time: (M:   4.22, S:   0.33) | Elapsed:   4.76
+Iter:   10 | LB:  873946.7185 | UB: 873946.7239 | Gap:    0.000% | Time: (M:   4.33, S:   0.36) | Elapsed:   4.93
+[ Info: ga500a-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 664177.0000 | Gap: 75381.107% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -19941503.0000 | UB: 574616.0000 | Gap: 3570.405% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  503440.9486 | UB: 518980.6375 | Gap:    2.994% | Time: (M:   0.04, S:   0.07) | Elapsed:   0.13
+Iter:    4 | LB:  506247.3903 | UB: 511254.8897 | Gap:    0.979% | Time: (M:   0.38, S:   0.07) | Elapsed:   0.48
+Iter:    5 | LB:  509089.0534 | UB: 510676.5433 | Gap:    0.311% | Time: (M:   1.14, S:   0.07) | Elapsed:   1.25
+Iter:    6 | LB:  509974.7396 | UB: 510300.9574 | Gap:    0.064% | Time: (M:   1.56, S:   0.08) | Elapsed:   1.67
+Iter:    7 | LB:  510113.4914 | UB: 510163.7193 | Gap:    0.010% | Time: (M:   1.91, S:   0.08) | Elapsed:   2.02
+Iter:    8 | LB:  510136.3655 | UB: 510143.5204 | Gap:    0.001% | Time: (M:   2.10, S:   0.08) | Elapsed:   2.22
+Iter:    9 | LB:  510138.6807 | UB: 510139.3239 | Gap:    0.000% | Time: (M:   2.19, S:   0.09) | Elapsed:   2.31
+Iter:   10 | LB:  510139.0360 | UB: 510139.0360 | Gap:   -0.000% | Time: (M:   2.26, S:   0.46) | Elapsed:   2.76
+[ Info: ga500b-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499998000.0000 | UB: 660932.0000 | Gap: 75750.445% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.04
+Iter:    2 | LB: -17652727.0000 | UB: 660932.0000 | Gap: 2770.884% | Time: (M:   0.01, S:   0.04) | Elapsed:   0.07
+Iter:    3 | LB:  516166.6026 | UB: 538991.2405 | Gap:    4.235% | Time: (M:   0.04, S:   0.05) | Elapsed:   0.11
+Iter:    4 | LB:  526081.9392 | UB: 534271.0472 | Gap:    1.533% | Time: (M:   0.44, S:   0.06) | Elapsed:   0.53
+Iter:    5 | LB:  531864.7110 | UB: 533380.9631 | Gap:    0.284% | Time: (M:   1.29, S:   0.06) | Elapsed:   1.39
+Iter:    6 | LB:  532534.8212 | UB: 532833.4970 | Gap:    0.056% | Time: (M:   1.48, S:   0.07) | Elapsed:   1.58
+Iter:    7 | LB:  532703.5309 | UB: 532772.8269 | Gap:    0.013% | Time: (M:   1.93, S:   0.08) | Elapsed:   2.05
+Iter:    8 | LB:  532732.0219 | UB: 532740.7808 | Gap:    0.002% | Time: (M:   2.22, S:   0.09) | Elapsed:   2.35
+Iter:    9 | LB:  532735.3698 | UB: 532736.4173 | Gap:    0.000% | Time: (M:   2.34, S:   0.09) | Elapsed:   2.48
+Iter:   10 | LB:  532735.6615 | UB: 532735.8269 | Gap:    0.000% | Time: (M:   2.43, S:   0.10) | Elapsed:   2.58
+Iter:   11 | LB:  532735.6910 | UB: 532735.7148 | Gap:    0.000% | Time: (M:   2.53, S:   0.10) | Elapsed:   2.69
+[ Info: ga750a-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 998397.0000 | Gap: 75220.398% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.07
+Iter:    2 | LB: -45854821.0000 | UB: 863058.0000 | Gap: 5413.064% | Time: (M:   0.01, S:   0.07) | Elapsed:   0.14
+Iter:    3 | LB:  753647.2900 | UB: 774501.6225 | Gap:    2.693% | Time: (M:   0.08, S:   0.09) | Elapsed:   0.22
+Iter:    4 | LB:  757119.9865 | UB: 764137.9615 | Gap:    0.918% | Time: (M:   0.85, S:   0.09) | Elapsed:   1.00
+Iter:    5 | LB:  760907.0347 | UB: 763194.3450 | Gap:    0.300% | Time: (M:   2.91, S:   0.10) | Elapsed:   3.08
+Iter:    6 | LB:  762310.7005 | UB: 762857.2965 | Gap:    0.072% | Time: (M:   5.01, S:   0.10) | Elapsed:   5.18
+Iter:    7 | LB:  762525.2900 | UB: 762600.9053 | Gap:    0.010% | Time: (M:   6.69, S:   0.11) | Elapsed:   6.87
+Iter:    8 | LB:  762565.5510 | UB: 762574.6025 | Gap:    0.001% | Time: (M:   7.57, S:   0.12) | Elapsed:   7.77
+Iter:    9 | LB:  762568.3603 | UB: 762569.3915 | Gap:    0.000% | Time: (M:   7.87, S:   0.13) | Elapsed:   8.08
+Iter:   10 | LB:  762568.5003 | UB: 762568.6686 | Gap:    0.000% | Time: (M:   8.04, S:   0.14) | Elapsed:   8.26
+Iter:   11 | LB:  762568.5130 | UB: 762568.5223 | Gap:    0.000% | Time: (M:   8.20, S:   0.15) | Elapsed:   8.45
+[ Info: ga750b-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749998000.0000 | UB: 994852.0000 | Gap: 75487.897% | Time: (M:   0.00, S:   0.10) | Elapsed:   0.10
+Iter:    2 | LB: -42978986.0000 | UB: 994852.0000 | Gap: 4420.139% | Time: (M:   0.03, S:   0.10) | Elapsed:   0.44
+Iter:    3 | LB:  767924.5574 | UB: 799620.2608 | Gap:    3.964% | Time: (M:   0.10, S:   0.12) | Elapsed:   0.53
+Iter:    4 | LB:  779527.7653 | UB: 791122.2632 | Gap:    1.466% | Time: (M:   1.66, S:   0.15) | Elapsed:   2.15
+Iter:    5 | LB:  788474.2286 | UB: 790487.7703 | Gap:    0.255% | Time: (M:   4.15, S:   0.19) | Elapsed:   4.71
+Iter:    6 | LB:  789356.6621 | UB: 789732.5599 | Gap:    0.048% | Time: (M:   5.01, S:   0.20) | Elapsed:   5.61
+Iter:    7 | LB:  789572.8739 | UB: 789644.2015 | Gap:    0.009% | Time: (M:   6.28, S:   0.23) | Elapsed:   6.91
+Iter:    8 | LB:  789615.2181 | UB: 789621.5315 | Gap:    0.001% | Time: (M:   7.02, S:   0.24) | Elapsed:   7.67
+Iter:    9 | LB:  789618.2548 | UB: 789618.9727 | Gap:    0.000% | Time: (M:   7.26, S:   0.26) | Elapsed:   7.94
+Iter:   10 | LB:  789618.4620 | UB: 789618.4660 | Gap:    0.000% | Time: (M:   7.46, S:   0.27) | Elapsed:   8.17
+[ Info: ga750c-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979991.0000 | UB: 1012861.0000 | Gap: 74145.697% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.07
+Iter:    2 | LB: -32828632.0000 | UB: 1012861.0000 | Gap: 3341.178% | Time: (M:   0.04, S:   0.07) | Elapsed:   0.16
+Iter:    3 | LB:  832704.3168 | UB: 881492.7127 | Gap:    5.535% | Time: (M:   0.14, S:   0.11) | Elapsed:   0.31
+Iter:    4 | LB:  863345.6020 | UB: 878551.0648 | Gap:    1.731% | Time: (M:   0.76, S:   0.14) | Elapsed:   0.98
+Iter:    5 | LB:  872527.2078 | UB: 874492.8510 | Gap:    0.225% | Time: (M:   1.59, S:   0.24) | Elapsed:   1.94
+Iter:    6 | LB:  873894.3474 | UB: 874207.1891 | Gap:    0.036% | Time: (M:   2.84, S:   0.27) | Elapsed:   3.28
+Iter:    7 | LB:  874081.7267 | UB: 874125.0350 | Gap:    0.005% | Time: (M:   3.53, S:   0.30) | Elapsed:   4.02
+Iter:    8 | LB:  874105.9726 | UB: 874110.9128 | Gap:    0.001% | Time: (M:   4.05, S:   0.34) | Elapsed:   4.60
+Iter:    9 | LB:  874108.8061 | UB: 874109.1130 | Gap:    0.000% | Time: (M:   4.39, S:   0.37) | Elapsed:   5.00
+Iter:   10 | LB:  874108.9097 | UB: 874108.9387 | Gap:    0.000% | Time: (M:   4.50, S:   0.41) | Elapsed:   5.16
+[ Info: ga500a-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 668434.0000 | Gap: 74901.671% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.04
+Iter:    2 | LB: -20903167.0000 | UB: 575755.0000 | Gap: 3730.566% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  503386.5800 | UB: 518101.3836 | Gap:    2.840% | Time: (M:   0.04, S:   0.04) | Elapsed:   0.10
+Iter:    4 | LB:  506616.3206 | UB: 511232.9471 | Gap:    0.903% | Time: (M:   0.31, S:   0.04) | Elapsed:   0.38
+Iter:    5 | LB:  509472.5912 | UB: 510909.3809 | Gap:    0.281% | Time: (M:   0.94, S:   0.05) | Elapsed:   1.02
+Iter:    6 | LB:  510243.1766 | UB: 510495.8946 | Gap:    0.050% | Time: (M:   1.24, S:   0.05) | Elapsed:   1.33
+Iter:    7 | LB:  510360.9577 | UB: 510403.8161 | Gap:    0.008% | Time: (M:   1.59, S:   0.06) | Elapsed:   1.69
+Iter:    8 | LB:  510379.0724 | UB: 510385.1480 | Gap:    0.001% | Time: (M:   1.73, S:   0.06) | Elapsed:   1.85
+Iter:    9 | LB:  510382.0154 | UB: 510383.1307 | Gap:    0.000% | Time: (M:   2.02, S:   0.07) | Elapsed:   2.15
+Iter:   10 | LB:  510382.6036 | UB: 510382.6261 | Gap:    0.000% | Time: (M:   2.21, S:   0.08) | Elapsed:   2.35
+[ Info: ga500b-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997997.0000 | UB: 670237.0000 | Gap: 74700.178% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.07
+Iter:    2 | LB: -20226236.0000 | UB: 670237.0000 | Gap: 3117.774% | Time: (M:   0.02, S:   0.07) | Elapsed:   0.13
+Iter:    3 | LB:  516100.1844 | UB: 540109.9440 | Gap:    4.445% | Time: (M:   0.06, S:   0.08) | Elapsed:   0.18
+Iter:    4 | LB:  525776.3788 | UB: 534130.1752 | Gap:    1.564% | Time: (M:   0.52, S:   0.09) | Elapsed:   0.66
+Iter:    5 | LB:  532064.0074 | UB: 533388.7556 | Gap:    0.248% | Time: (M:   1.25, S:   0.09) | Elapsed:   1.40
+Iter:    6 | LB:  532672.8421 | UB: 532947.9323 | Gap:    0.052% | Time: (M:   1.44, S:   0.10) | Elapsed:   1.61
+Iter:    7 | LB:  532815.4406 | UB: 532865.7227 | Gap:    0.009% | Time: (M:   1.67, S:   0.11) | Elapsed:   1.84
+Iter:    8 | LB:  532838.2935 | UB: 532845.1987 | Gap:    0.001% | Time: (M:   1.96, S:   0.12) | Elapsed:   2.16
+Iter:    9 | LB:  532841.6757 | UB: 532842.0726 | Gap:    0.000% | Time: (M:   2.31, S:   0.14) | Elapsed:   2.54
+Iter:   10 | LB:  532841.9354 | UB: 532841.9357 | Gap:    0.000% | Time: (M:   2.40, S:   0.15) | Elapsed:   2.64
+[ Info: ga750a-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 1008047.0000 | Gap: 74501.273% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.07
+Iter:    2 | LB: -46773452.0000 | UB: 863939.0000 | Gap: 5513.976% | Time: (M:   0.01, S:   0.07) | Elapsed:   0.18
+Iter:    3 | LB:  753521.4827 | UB: 776563.8700 | Gap:    2.967% | Time: (M:   0.07, S:   0.09) | Elapsed:   0.26
+Iter:    4 | LB:  756792.5242 | UB: 764587.8478 | Gap:    1.020% | Time: (M:   1.08, S:   0.09) | Elapsed:   1.60
+Iter:    5 | LB:  760829.3161 | UB: 763421.4715 | Gap:    0.340% | Time: (M:   3.59, S:   0.10) | Elapsed:   4.12
+Iter:    6 | LB:  762438.3156 | UB: 763032.6709 | Gap:    0.078% | Time: (M:   5.86, S:   0.11) | Elapsed:   6.40
+Iter:    7 | LB:  762682.4283 | UB: 762796.3177 | Gap:    0.015% | Time: (M:   7.63, S:   0.12) | Elapsed:   8.18
+Iter:    8 | LB:  762732.6161 | UB: 762753.0650 | Gap:    0.003% | Time: (M:   8.51, S:   0.12) | Elapsed:   9.08
+Iter:    9 | LB:  762737.8455 | UB: 762741.1548 | Gap:    0.000% | Time: (M:   8.92, S:   0.13) | Elapsed:   9.51
+Iter:   10 | LB:  762738.4680 | UB: 762738.8014 | Gap:    0.000% | Time: (M:   9.09, S:   0.14) | Elapsed:   9.69
+Iter:   11 | LB:  762738.5020 | UB: 762738.5417 | Gap:    0.000% | Time: (M:   9.26, S:   0.15) | Elapsed:   9.87
+[ Info: ga750b-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749997999.0000 | UB: 1010953.0000 | Gap: 74287.227% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.07
+Iter:    2 | LB: -46474505.0000 | UB: 1010953.0000 | Gap: 4697.098% | Time: (M:   0.03, S:   0.07) | Elapsed:   0.16
+Iter:    3 | LB:  767141.8310 | UB: 800625.3337 | Gap:    4.182% | Time: (M:   0.10, S:   0.10) | Elapsed:   0.26
+Iter:    4 | LB:  780141.4291 | UB: 792014.4161 | Gap:    1.499% | Time: (M:   0.84, S:   0.11) | Elapsed:   1.03
+Iter:    5 | LB:  789234.7737 | UB: 791229.7077 | Gap:    0.252% | Time: (M:   2.56, S:   0.12) | Elapsed:   2.76
+Iter:    6 | LB:  790091.2120 | UB: 790483.2259 | Gap:    0.050% | Time: (M:   3.38, S:   0.14) | Elapsed:   3.61
+Iter:    7 | LB:  790306.9539 | UB: 790379.3564 | Gap:    0.009% | Time: (M:   4.35, S:   0.15) | Elapsed:   4.60
+Iter:    8 | LB:  790341.8806 | UB: 790350.4534 | Gap:    0.001% | Time: (M:   5.01, S:   0.17) | Elapsed:   5.29
+Iter:    9 | LB:  790344.8784 | UB: 790345.7100 | Gap:    0.000% | Time: (M:   5.28, S:   0.19) | Elapsed:   5.58
+Iter:   10 | LB:  790345.0577 | UB: 790345.0743 | Gap:    0.000% | Time: (M:   5.48, S:   0.20) | Elapsed:   5.80
+[ Info: ga750c-4
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979988.0000 | UB: 1028964.0000 | Gap: 72986.903% | Time: (M:   0.00, S:   0.07) | Elapsed:   0.08
+Iter:    2 | LB: -36248819.0000 | UB: 1028964.0000 | Gap: 3622.846% | Time: (M:   0.03, S:   0.08) | Elapsed:   0.17
+Iter:    3 | LB:  831122.7343 | UB: 880594.0821 | Gap:    5.618% | Time: (M:   0.12, S:   0.12) | Elapsed:   0.30
+Iter:    4 | LB:  866014.6304 | UB: 880594.0821 | Gap:    1.656% | Time: (M:   0.70, S:   0.14) | Elapsed:   0.93
+Iter:    5 | LB:  873790.5944 | UB: 875768.6513 | Gap:    0.226% | Time: (M:   1.20, S:   0.18) | Elapsed:   1.49
+Iter:    6 | LB:  875396.9412 | UB: 875698.7267 | Gap:    0.034% | Time: (M:   2.05, S:   0.21) | Elapsed:   2.39
+Iter:    7 | LB:  875541.0562 | UB: 875579.3069 | Gap:    0.004% | Time: (M:   2.77, S:   0.24) | Elapsed:   3.16
+Iter:    8 | LB:  875563.5122 | UB: 875568.4298 | Gap:    0.001% | Time: (M:   3.30, S:   0.27) | Elapsed:   3.74
+Iter:    9 | LB:  875565.7598 | UB: 875566.0162 | Gap:    0.000% | Time: (M:   3.71, S:   0.31) | Elapsed:   4.22
+Iter:   10 | LB:  875565.9282 | UB: 875565.9307 | Gap:    0.000% | Time: (M:   4.03, S:   0.35) | Elapsed:   4.59
+[ Info: ga500a-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499999800.0000 | UB: 668015.0000 | Gap: 74948.589% | Time: (M:   0.00, S:   0.03) | Elapsed:   0.03
+Iter:    2 | LB: -20431755.0000 | UB: 574837.0000 | Gap: 3654.356% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  503439.7236 | UB: 518628.0553 | Gap:    2.929% | Time: (M:   0.03, S:   0.04) | Elapsed:   0.09
+Iter:    4 | LB:  506655.5077 | UB: 511627.8462 | Gap:    0.972% | Time: (M:   0.39, S:   0.04) | Elapsed:   0.46
+Iter:    5 | LB:  509499.2800 | UB: 511056.0764 | Gap:    0.305% | Time: (M:   1.03, S:   0.08) | Elapsed:   1.14
+Iter:    6 | LB:  510341.9653 | UB: 510643.3885 | Gap:    0.059% | Time: (M:   1.44, S:   0.08) | Elapsed:   1.55
+Iter:    7 | LB:  510462.1269 | UB: 510514.7925 | Gap:    0.010% | Time: (M:   1.91, S:   0.09) | Elapsed:   2.03
+Iter:    8 | LB:  510484.4285 | UB: 510492.0591 | Gap:    0.001% | Time: (M:   2.10, S:   0.09) | Elapsed:   2.23
+Iter:    9 | LB:  510487.4500 | UB: 510488.9099 | Gap:    0.000% | Time: (M:   2.19, S:   0.09) | Elapsed:   2.32
+Iter:   10 | LB:  510487.7086 | UB: 510487.9347 | Gap:    0.000% | Time: (M:   2.27, S:   0.10) | Elapsed:   2.41
+Iter:   11 | LB:  510487.7205 | UB: 510487.7301 | Gap:    0.000% | Time: (M:   2.34, S:   0.10) | Elapsed:   2.48
+[ Info: ga500b-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -499997999.0000 | UB: 669816.0000 | Gap: 74747.067% | Time: (M:   0.00, S:   0.02) | Elapsed:   0.03
+Iter:    2 | LB: -19763004.0000 | UB: 669816.0000 | Gap: 3050.512% | Time: (M:   0.01, S:   0.03) | Elapsed:   0.06
+Iter:    3 | LB:  515795.8491 | UB: 540787.0445 | Gap:    4.621% | Time: (M:   0.07, S:   0.04) | Elapsed:   0.13
+Iter:    4 | LB:  525715.7121 | UB: 534460.6229 | Gap:    1.636% | Time: (M:   0.32, S:   0.04) | Elapsed:   0.40
+Iter:    5 | LB:  531914.4162 | UB: 533793.6320 | Gap:    0.352% | Time: (M:   0.77, S:   0.05) | Elapsed:   0.87
+Iter:    6 | LB:  532730.9705 | UB: 533074.1670 | Gap:    0.064% | Time: (M:   1.04, S:   0.06) | Elapsed:   1.14
+Iter:    7 | LB:  532941.6585 | UB: 532995.4112 | Gap:    0.010% | Time: (M:   1.53, S:   0.06) | Elapsed:   1.64
+Iter:    8 | LB:  532965.0421 | UB: 532972.5889 | Gap:    0.001% | Time: (M:   1.81, S:   0.08) | Elapsed:   1.95
+Iter:    9 | LB:  532968.6623 | UB: 532969.4705 | Gap:    0.000% | Time: (M:   1.91, S:   0.08) | Elapsed:   2.06
+Iter:   10 | LB:  532968.8027 | UB: 532968.8778 | Gap:    0.000% | Time: (M:   2.03, S:   0.09) | Elapsed:   2.19
+Iter:   11 | LB:  532968.8083 | UB: 532968.8104 | Gap:    0.000% | Time: (M:   2.07, S:   0.10) | Elapsed:   2.24
+[ Info: ga750a-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749999800.0000 | UB: 990921.0000 | Gap: 75787.144% | Time: (M:   0.00, S:   0.06) | Elapsed:   0.06
+Iter:    2 | LB: -42573567.0000 | UB: 861829.0000 | Gap: 5039.909% | Time: (M:   0.01, S:   0.06) | Elapsed:   0.12
+Iter:    3 | LB:  753799.1303 | UB: 774058.8875 | Gap:    2.617% | Time: (M:   0.11, S:   0.08) | Elapsed:   0.25
+Iter:    4 | LB:  757363.7288 | UB: 764214.8272 | Gap:    0.896% | Time: (M:   1.36, S:   0.10) | Elapsed:   1.53
+Iter:    5 | LB:  761100.8545 | UB: 763356.6819 | Gap:    0.296% | Time: (M:   4.12, S:   0.11) | Elapsed:   4.30
+Iter:    6 | LB:  762389.1424 | UB: 762825.6825 | Gap:    0.057% | Time: (M:   7.77, S:   0.12) | Elapsed:   7.97
+Iter:    7 | LB:  762594.9883 | UB: 762674.5630 | Gap:    0.010% | Time: (M:   9.86, S:   0.12) | Elapsed:  10.09
+Iter:    8 | LB:  762631.1137 | UB: 762642.4233 | Gap:    0.001% | Time: (M:  11.48, S:   0.13) | Elapsed:  11.71
+Iter:    9 | LB:  762636.8619 | UB: 762637.8517 | Gap:    0.000% | Time: (M:  12.10, S:   0.15) | Elapsed:  12.36
+Iter:   10 | LB:  762637.0288 | UB: 762637.1454 | Gap:    0.000% | Time: (M:  12.28, S:   0.16) | Elapsed:  12.55
+Iter:   11 | LB:  762637.0323 | UB: 762637.0323 | Gap:    0.000% | Time: (M:  12.44, S:   0.16) | Elapsed:  12.72
+[ Info: ga750b-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749997991.0000 | UB: 1010453.0000 | Gap: 74323.936% | Time: (M:   0.00, S:   0.35) | Elapsed:   0.35
+Iter:    2 | LB: -48356819.0000 | UB: 1010453.0000 | Gap: 4885.657% | Time: (M:   0.03, S:   0.35) | Elapsed:   0.44
+Iter:    3 | LB:  767347.1088 | UB: 800227.5818 | Gap:    4.109% | Time: (M:   0.09, S:   0.37) | Elapsed:   0.52
+Iter:    4 | LB:  779229.5873 | UB: 791451.3005 | Gap:    1.544% | Time: (M:   1.15, S:   0.38) | Elapsed:   1.61
+Iter:    5 | LB:  788344.5379 | UB: 790578.3140 | Gap:    0.283% | Time: (M:   2.86, S:   0.40) | Elapsed:   3.35
+Iter:    6 | LB:  789382.1361 | UB: 789761.1918 | Gap:    0.048% | Time: (M:   3.58, S:   0.41) | Elapsed:   4.09
+Iter:    7 | LB:  789608.3673 | UB: 789673.4959 | Gap:    0.008% | Time: (M:   4.49, S:   0.43) | Elapsed:   5.02
+Iter:    8 | LB:  789642.8655 | UB: 789651.1158 | Gap:    0.001% | Time: (M:   5.15, S:   0.45) | Elapsed:   5.71
+Iter:    9 | LB:  789647.0682 | UB: 789647.7588 | Gap:    0.000% | Time: (M:   5.51, S:   0.46) | Elapsed:   6.10
+Iter:   10 | LB:  789647.2353 | UB: 789647.4799 | Gap:    0.000% | Time: (M:   5.71, S:   0.50) | Elapsed:   6.36
+Iter:   11 | LB:  789647.2552 | UB: 789647.2695 | Gap:    0.000% | Time: (M:   5.96, S:   0.58) | Elapsed:   6.69
+[ Info: ga750c-5
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, false)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+Iter:    1 | LB: -749979901.0000 | UB: 1028543.0000 | Gap: 73016.728% | Time: (M:   0.01, S:   0.11) | Elapsed:   0.12
+Iter:    2 | LB: -38322049.0000 | UB: 1028543.0000 | Gap: 3825.858% | Time: (M:   0.04, S:   0.12) | Elapsed:   0.22
+Iter:    3 | LB:  828643.8828 | UB: 879793.6845 | Gap:    5.814% | Time: (M:   0.12, S:   0.16) | Elapsed:   0.35
+Iter:    4 | LB:  862637.2679 | UB: 878204.6833 | Gap:    1.773% | Time: (M:   0.96, S:   0.20) | Elapsed:   1.25
+Iter:    5 | LB:  871368.2508 | UB: 873496.6774 | Gap:    0.244% | Time: (M:   1.46, S:   0.23) | Elapsed:   1.81
+Iter:    6 | LB:  873013.2457 | UB: 873325.8432 | Gap:    0.036% | Time: (M:   2.29, S:   0.27) | Elapsed:   2.69
+Iter:    7 | LB:  873162.7587 | UB: 873213.2812 | Gap:    0.006% | Time: (M:   2.99, S:   0.30) | Elapsed:   3.45
+Iter:    8 | LB:  873189.5762 | UB: 873193.1144 | Gap:    0.000% | Time: (M:   3.50, S:   0.33) | Elapsed:   4.02
+Iter:    9 | LB:  873191.3773 | UB: 873191.9101 | Gap:    0.000% | Time: (M:   3.82, S:   0.36) | Elapsed:   4.40
+Iter:   10 | LB:  873191.4667 | UB: 873191.4875 | Gap:    0.000% | Time: (M:   3.94, S:   0.40) | Elapsed:   4.58

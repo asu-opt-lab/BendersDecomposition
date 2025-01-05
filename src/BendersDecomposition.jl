@@ -69,6 +69,7 @@ function BendersEnv(data::AbstractData, cut_strategy::CutStrategy, params::Bende
         for scenario_sub in sub.sub_problems
             assign_attributes!(scenario_sub.model, params.sub_attributes)
         end
+    elseif sub isa KnapsackUFLPSubProblem
     else
         assign_attributes!(sub.model, params.sub_attributes)
     end
@@ -99,6 +100,7 @@ Execute Benders decomposition algorithm to solve the given problem instance.
 """
 function run_Benders(data::AbstractData, loop_strategy::SolutionProcedure, cut_strategy::CutStrategy, params::BendersParams)
     env = BendersEnv(data, cut_strategy, params)
+    relax_integrality(env.master.model)
     solve!(env, loop_strategy, cut_strategy, params)
 end
 

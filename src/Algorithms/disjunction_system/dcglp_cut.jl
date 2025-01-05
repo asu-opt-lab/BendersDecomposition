@@ -1,6 +1,9 @@
 function generate_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
-
-    sub_obj_val = get_subproblem_value(env) #checked
+    if  env.sub isa KnapsackUFLPSubProblem
+        critical_items, sub_obj_val = generate_cut_coefficients(env.sub, env.master.x_value, cut_strategy.base_cut_strategy)
+    else 
+        sub_obj_val = get_subproblem_value(env) #checked
+    end
 
     disjunctive_inequality = select_disjunctive_inequality(env.master.x_value)
 
@@ -74,8 +77,12 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
 end
 
 
+# function is_terminated(state, log)
+#     return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || (state.UB_k <= 1e-3 && state.UB_v <= 1e-3) || get_total_time(log) >= 200 || state.iteration >= 50
+# end
+
 function is_terminated(state, log)
-    return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || (state.UB_k <= 1e-3 && state.UB_v <= 1e-3) || get_total_time(log) >= 200 || state.iteration >= 50
+    return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || (all(state.UB_k .<= 1e-3) && all(state.UB_v .<= 1e-3)) || get_total_time(log) >= 200 || state.iteration >= 50
 end
 
 
@@ -113,7 +120,7 @@ function merge_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
     # master_disjunctive_cut = @expression(env.master.model, _γ₀ + dot(_γₓ, env.master.var[:x]) + dot(_γₜ, env.master.var[:t]))
     push!(env.dcglp.γ_values, (γ₀, γₓ, γₜ))
     # @info "γ₀: $γ₀, γₓ: $γₓ, γₜ: $γₜ"
-    @info "γ₀/γₜ: $(γ₀/γₜ)"
+    # @info "γ₀/γₜ: $(γ₀/γₜ)"
     master_disjunctive_cut = @expression(env.master.model, γ₀ + dot(γₓ, env.master.var[:x]) + dot(γₜ, env.master.var[:t]))
     if cut_strategy.include_master_cuts
         push!(env.dcglp.master_cuts, [master_disjunctive_cut])

@@ -3,9 +3,8 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::CutStrategy, params::
     start_time = time()
     # time_limit = params.time_limit
     # params.time_limit = 600
-    # df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy, params)
-    # params.time_limit = time_limit
-    # params.time_limit -= df_root_node_preprocessing.total_time[end]
+    df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy, params)
+    params.time_limit -= df_root_node_preprocessing.total_time[end]
 
     function lazy_callback(cb_data)
         status = JuMP.callback_node_status(cb_data, env.master.model)
@@ -13,6 +12,10 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::CutStrategy, params::
             env.master.x_value = JuMP.callback_value.(cb_data, env.master.var[:x])
             value_t = JuMP.callback_value.(cb_data, env.master.var[:t])
             
+            if length(value_t) > 1
+                value_t = sum(value_t)
+            end
+
             solve_sub!(env.sub, env.master.x_value)
             cuts, sub_obj_value = generate_cuts(env, cut_strategy)
             if value_t <= sub_obj_value - 1e-06
@@ -35,25 +38,27 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::CutStrategy, params::
     @info "objective bound" JuMP.objective_bound(env.master.model)
     @info "objective value" JuMP.objective_value(env.master.model)
     @info "relative gap" JuMP.relative_gap(env.master.model)
-    # df_callback = DataFrame(
-    #     node_count = JuMP.node_count(env.master.model),
-    #     elapsed_time = time() - start_time,
-    #     objective_bound = JuMP.objective_bound(env.master.model),
-    #     objective_value = JuMP.objective_value(env.master.model),
-    #     relative_gap = JuMP.relative_gap(env.master.model)
-    # )
+    df_callback = DataFrame(
+        node_count = JuMP.node_count(env.master.model),
+        elapsed_time = time() - start_time,
+        objective_bound = JuMP.objective_bound(env.master.model),
+        objective_value = JuMP.objective_value(env.master.model),
+        relative_gap = JuMP.relative_gap(env.master.model)
+    )
     
-    # return df_root_node_preprocessing, df_callback
+    return df_root_node_preprocessing, df_callback
 end
 
 function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, params::BendersParams)
     start_time = time()
-    time_limit = params.time_limit
-    params.time_limit = 600
-    df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy.base_cut_strategy, params)
-    params.time_limit = time_limit
+    # time_limit = params.time_limit
+    # params.time_limit = 600
+    # df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy.base_cut_strategy, params)
+    # params.time_limit = time_limit
+    # params.time_limit -= df_root_node_preprocessing.total_time[end]
+    # df2 = root_node_preprocessing!(env, cut_strategy, params)
+    df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy, params)
     params.time_limit -= df_root_node_preprocessing.total_time[end]
-    df2 = root_node_preprocessing!(env, cut_strategy, params)
     number_of_subproblem_solves = 0
 
     function lazy_callback(cb_data)
@@ -64,9 +69,12 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
 
             env.master.x_value = JuMP.callback_value.(cb_data, env.master.var[:x])
             value_t = JuMP.callback_value.(cb_data, env.master.var[:t])
-            
+            if length(value_t) > 1
+                value_t = sum(value_t)
+            end
             solve_sub!(env.sub, env.master.x_value)
             cuts, sub_obj_value = generate_cuts(env, cut_strategy.base_cut_strategy)
+            
             if value_t <= sub_obj_value - 1e-06
                 for _cut in cuts
                     cut = @build_constraint(0 >= _cut)
@@ -79,18 +87,26 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
     function user_callback(cb_data)
         status = JuMP.callback_node_status(cb_data, env.master.model)
         depth = Ref{CPXLONG}()
-        if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL && depth[] <= 10 && number_of_subproblem_solves >= 200 
-            number_of_subproblem_solves = 0      
-            env.master.x_value = JuMP.callback_value.(cb_data, env.master.var[:x])
-            env.master.t_value = JuMP.callback_value.(cb_data, env.master.var[:t])
-            
-            solve_sub!(env.sub, env.master.x_value)
-            cuts, sub_obj_value = generate_cuts(env, cut_strategy)
-            if env.master.t_value <= sub_obj_value - 1e-06
-                for _cut in cuts
-                    cut = @build_constraint(0 .>= _cut)
-                    # @info "User cut" cut
-                    MOI.submit.(env.master.model, MOI.UserCut(cb_data), cut)
+        ret = CPXcallbackgetinfolong(cb_data, CPXCALLBACKINFO_NODEDEPTH, depth)
+        if ret == 0
+            # if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL && depth[] <= 10 && number_of_subproblem_solves >= 200 
+            if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL && depth[] <= 10 || number_of_subproblem_solves >= 200 
+                @info "disjunctive cut added", depth
+                number_of_subproblem_solves = 0      
+                env.master.x_value = JuMP.callback_value.(cb_data, env.master.var[:x])
+                env.master.t_value = JuMP.callback_value.(cb_data, env.master.var[:t])
+
+                if length(env.master.t_value) > 1
+                    sum_t = sum(env.master.t_value)
+                end
+                solve_sub!(env.sub, env.master.x_value)
+                cuts, sub_obj_value = generate_cuts(env, cut_strategy)
+                if sum_t <= sub_obj_value - 1e-06
+                    for _cut in cuts
+                        cut = @build_constraint(0 .>= _cut)
+                        # @info "User cut" cut
+                        MOI.submit.(env.master.model, MOI.UserCut(cb_data), cut)
+                    end
                 end
             end
         end
@@ -111,15 +127,15 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
     @info "objective bound" JuMP.objective_bound(env.master.model)
     @info "objective value" JuMP.objective_value(env.master.model)
     @info "relative gap" JuMP.relative_gap(env.master.model)
-    # df_callback = DataFrame(
-    #     node_count = JuMP.node_count(env.master.model),
-    #     elapsed_time = time() - start_time,
-    #     objective_bound = JuMP.objective_bound(env.master.model),
-    #     objective_value = JuMP.objective_value(env.master.model),
-    #     relative_gap = JuMP.relative_gap(env.master.model)
-    # )
+    df_callback = DataFrame(
+        node_count = JuMP.node_count(env.master.model),
+        elapsed_time = time() - start_time,
+        objective_bound = JuMP.objective_bound(env.master.model),
+        objective_value = JuMP.objective_value(env.master.model),
+        relative_gap = JuMP.relative_gap(env.master.model)
+    )
     
-    # return df_root_node_preprocessing, df_callback
+    return df_root_node_preprocessing, df_callback
 end
 
 

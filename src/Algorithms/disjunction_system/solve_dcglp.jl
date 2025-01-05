@@ -25,7 +25,7 @@ function generate_cut_coefficients(sub::AbstractSubProblem, korv_values, base_cu
     solve_sub!(sub, input)
     dual_values, obj_value = generate_cut_coefficients(sub, input, base_cut_strategy)
     obj_value *= korv_values.constant
-    if obj_value <= korv_values.t - 1e-04
+    if obj_value <= sum(korv_values.t) - 1e-04
         return false, [], korv_values.t
     end
     return true, dual_values, obj_value
