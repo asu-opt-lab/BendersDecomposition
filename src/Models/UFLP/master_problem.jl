@@ -8,7 +8,7 @@ mutable struct UFLPMasterProblem <: AbstractUFLPMasterProblem
     var::Dict
     obj_value::Float64
     x_value::Vector{Float64}
-    t_value::Vector{Float64}
+    t_value::Any
 end
 
 
@@ -26,7 +26,11 @@ function create_master_problem(data::UFLPData, cut_strategy::Union{ClassicalCut,
     @objective(model, Min, sum(data.fixed_costs .* x) + sum(t))
     @constraint(model, sum(x) >= 2)
     
-    return UFLPMasterProblem(model, Dict(:x => x, :t => t), 0.0, zeros(N), zeros(M))
+    if cut_strategy == FatKnapsackCut()
+        return UFLPMasterProblem(model, Dict(:x => x, :t => t), 0.0, zeros(N), zeros(M))
+    else
+        return UFLPMasterProblem(model, Dict(:x => x, :t => t), 0.0, zeros(N), 0.0)
+    end
 end
 
 

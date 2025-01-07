@@ -46,7 +46,11 @@ function create_sub_problem(data::UFLPData, cut_strategy::Union{FatKnapsackCut, 
     
     @debug "Building Subproblem for UFLP ($(typeof(cut_strategy)))"
     cost_demands = [data.costs[:,j] .* data.demands[j] for j in 1:data.n_customers]
+
+    # Retrieve indices in ascending order (low cost first)
     sorted_indices = [sortperm(cost_demands[j]) for j in 1:data.n_customers]
+
+    # Reorder cost vectors regarding to sorted_indices
     sorted_cost_demands = [cost_demands[j][sorted_indices[j]] for j in 1:data.n_customers]
     selected_k = Dict(j => [] for j in 1:data.n_customers)
     return KnapsackUFLPSubProblem(sorted_cost_demands, sorted_indices, selected_k)

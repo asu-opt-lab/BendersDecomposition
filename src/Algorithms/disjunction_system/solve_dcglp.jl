@@ -25,10 +25,30 @@ function generate_cut_coefficients(sub::AbstractSubProblem, korv_values, base_cu
     solve_sub!(sub, input)
     dual_values, obj_value = generate_cut_coefficients(sub, input, base_cut_strategy)
     obj_value *= korv_values.constant
-    if obj_value <= sum(korv_values.t) - 1e-04
+    if obj_value <= korv_values.t - 1e-04
         return false, [], korv_values.t
     end
     return true, dual_values, obj_value
+end
+
+function generate_cut_coefficients(sub::AbstractSubProblem, korv_values, base_cut_strategy::FatKnapsackCut)
+    if isapprox(korv_values.constant, 0.0, atol=1e-09)
+        return false, [], korv_values.t
+    end
+    input = @. abs(korv_values.x / korv_values.constant) # abs value
+    dual_values, obj_value = generate_cut_coefficients(sub, input, base_cut_strategy)
+    obj_value *= korv_values.constant
+    gap_korv = obj_value - korv_values.t
+    # gap_korv = @. abs(korv_values.t - obj_value) # nonnegative means cut is meaningless (cannot cut-off current kappa or nu)
+    if_add_cuts = fill(true, length(dual_values))
+    indices = findall(i -> gap_korv[i] <= 1e-09, eachindex(gap_korv)) 
+    if length(indices) == length(gap_korv)
+        return false, [], korv_values.t
+    end
+    if !isempty(indices)
+        if_add_cuts[indices] .= false
+    end
+    return if_add_cuts, dual_values, obj_value
 end
 
 
@@ -84,20 +104,26 @@ function _build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::A
     expressions_master = []
     for j in 1:length(critical_items)
         k = critical_items[j]
-        c_sorted = sub.sorted_cost_demands[j]
-        sorted_indices = sub.sorted_indices[j]
-        push!(expressions_k, @expression(dcglp.model, c_sorted[k] * dcglp.model[:k₀] - sum((c_sorted[k] - c_sorted[i]) * dcglp.model[:kₓ][sorted_indices[i]] for i in 1:k-1)))
-        push!(expressions_v, @expression(dcglp.model, c_sorted[k] * dcglp.model[:v₀] - sum((c_sorted[k] - c_sorted[i]) * dcglp.model[:vₓ][sorted_indices[i]] for i in 1:k-1)))
-        push!(expressions_master, @expression(master.model, c_sorted[k] - sum((c_sorted[k] - c_sorted[i]) * master.model[:x][sorted_indices[i]] for i in 1:k-1)))
+        if k != false
+            c_sorted = sub.sorted_cost_demands[j]
+            sorted_indices = sub.sorted_indices[j]
+            push!(expressions_k, @expression(dcglp.model, c_sorted[k] * dcglp.model[:k₀] - sum((c_sorted[k] - c_sorted[i]) * dcglp.model[:kₓ][sorted_indices[i]] for i in 1:k-1)))
+            push!(expressions_v, @expression(dcglp.model, c_sorted[k] * dcglp.model[:v₀] - sum((c_sorted[k] - c_sorted[i]) * dcglp.model[:vₓ][sorted_indices[i]] for i in 1:k-1)))
+            push!(expressions_master, @expression(master.model, c_sorted[k] - sum((c_sorted[k] - c_sorted[i]) * master.model[:x][sorted_indices[i]] for i in 1:k-1)))
+        else
+            push!(expressions_k, nothing)
+            push!(expressions_v, nothing)
+            push!(expressions_master, nothing)
+        end
     end
     return expressions_k, expressions_v, expressions_master
 end
 
 function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, critical_items::Vector{Int}, ::FatKnapsackCut)
     expressions_k, expressions_v, expressions_master = _build_cuts(dcglp, master, sub, critical_items, FatKnapsackCut())
-    return [@expression(dcglp.model, expr_k - dcglp.model[:kₜ][j]) for (j, expr_k) in enumerate(expressions_k)], 
-           [@expression(dcglp.model, expr_v - dcglp.model[:vₜ][j]) for (j, expr_v) in enumerate(expressions_v)],
-           [@expression(master.model, expr_master - master.model[:t][j]) for (j, expr_master) in enumerate(expressions_master)]
+    return [@expression(dcglp.model, expr_k - dcglp.model[:kₜ][j]) for (j, expr_k) in enumerate(expressions_k) if !isnothing(expr_k)], 
+           [@expression(dcglp.model, expr_v - dcglp.model[:vₜ][j]) for (j, expr_v) in enumerate(expressions_v) if !isnothing(expr_v)],
+           [@expression(master.model, expr_master - master.model[:t][j]) for (j, expr_master) in enumerate(expressions_master) if !isnothing(expr_master)]
 end
 
 function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, critical_items::Vector{Int}, ::SlimKnapsackCut)

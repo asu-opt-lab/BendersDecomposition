@@ -1,0 +1,790 @@
+[ Info: ga250a-3
+[ Info: DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false, true)
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+[ Info: Dict{String, Any}("solver" => "CPLEX")
+[ Info: kappa_zero or nu_zero closes to zero
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     -1.0e6
+│     -1.0e6
+│      ⋮
+└     -1.0e6
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 332934.0
+   Iter:    1 | LB:       0.0000 | UB: 332934.0000 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 250827.0, "LB", 251500.0)
+[ Info: kappa_zero or nu_zero closes to zero
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     1006.0
+│     1006.0
+│        ⋮
+└     1006.0
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     0.0
+│     0.0
+│     ⋮
+└     0.0
+   Iter:    2 | LB: 1001006.0000 | UB: 332934.0000 | Gap:  -200.66% 
+Iter:    1 | LB: -249999800.0000 | UB: 333134.0000 | Gap: 75144.817% | Time: (M:   2.38, S:   6.52) | Elapsed:   8.91
+[ Info: kappa_zero or nu_zero closes to zero
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 250826.99999999997
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     0.0
+│     0.0
+│     ⋮
+└     0.0
+   Iter:    1 | LB:       0.0000 | UB: 362321.0000 | Gap:   100.00% 
+[ Info: kappa_zero or nu_zero closes to zero
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│      99432.0
+│      72063.0
+│          ⋮
+└     102263.0
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 375329.0
+   Iter:    2 | LB:  112494.0000 | UB: 362321.0000 | Gap:    68.95% 
+[ Info: ("meaningless cut", "UB", 251900.0, "LB", 2.345468e7)
+[ Info: kappa_zero or nu_zero closes to zero
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     100432.0
+│      73063.0
+│          ⋮
+└     103266.0
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     0.0
+│     0.0
+│     ⋮
+└     0.0
+   Iter:    3 | LB:  112494.0000 | UB: 112494.0000 | Gap:     0.00% 
+Iter:    2 | LB: -4631376.0000 | UB: 288271.0000 | Gap: 1706.605% | Time: (M:   2.39, S:   7.08) | Elapsed:   9.98
+[ Info: ("meaningless cut", "UB", 132109.0646549888, "LB", 250181.17273070954)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     1000.0
+│     1000.0
+│        ⋮
+└     1003.0
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 147586.1429716377
+   Iter:    1 | LB:       0.0000 | UB: 147586.1430 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 208203.79271952275, "LB", 210929.06304275576)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     1025.0353201581595
+│      855.6934206624235
+│        ⋮
+└      836.5889965456718
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 49959.767809672674
+   Iter:    2 | LB:       0.4297 | UB:  50136.8979 | Gap:   100.00% 
+[ Info: kappa_zero or nu_zero closes to zero
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 253367.35790353126
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│      0.0
+│      0.0
+│      ⋮
+└     71.69359812843402
+   Iter:    3 | LB:       0.9091 | UB:  50136.8979 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 116417.79817861039
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 135462.83003060697
+   Iter:    4 | LB:       0.9231 | UB:  50136.8979 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 115466.53402044254, "LB", 115521.8685231063)
+[ Info: ("meaningless cut", "UB", 135689.51425081273, "LB", 135893.2588755213)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     459.59595959595765
+│     460.5404040404021
+│       ⋮
+└     460.9747474747455
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     541.3484848484868
+│     540.4040404040423
+│       ⋮
+└     542.9696969696989
+   Iter:    5 | LB:       0.9444 | UB:      0.9444 | Gap:     0.00% 
+Iter:    3 | LB:  252777.8798 | UB: 263265.3516 | Gap:    3.984% | Time: (M:   2.40, S:   8.35) | Elapsed:  11.28
+[ Info: ("meaningless cut", "UB", 122401.03133864903, "LB", 252066.03683581416)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     1010.9812397959491
+│     1009.0
+│        ⋮
+└     1036.132927719955
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 146431.87681424557
+   Iter:    1 | LB:       0.0000 | UB: 146431.8768 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 180078.57724053715, "LB", 188654.50606606234)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     821.2421432328549
+│     894.1643072060318
+│       ⋮
+└     724.760631096534
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 79445.64632300107
+   Iter:    2 | LB:       0.8462 | UB:  79765.4546 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 124281.3422674599, "LB", 134806.9138207241)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     565.1702777471517
+│     491.7675080105771
+│       ⋮
+└     497.8213704093773
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 131990.8213347222
+   Iter:    3 | LB:       0.9167 | UB:  79765.4546 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 100791.86008680459, "LB", 101952.08896230257)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 153312.73377795084
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     400.4834854393969
+│     400.7885508752025
+│       ⋮
+└     425.2923183214838
+   Iter:    4 | LB:       0.9167 | UB:  79765.4546 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 134164.98584643294, "LB", 134901.86916658882)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 119505.38966610972
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     540.6966190773678
+│     533.3714694311536
+│       ⋮
+└     555.8606799096635
+   Iter:    5 | LB:       0.9167 | UB:  79765.4546 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 112808.480352474, "LB", 113361.56356280169)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 140539.31246754504
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     455.00246754257216
+│     448.93738101951897
+│       ⋮
+└     470.9427120841963
+   Iter:    6 | LB:       0.9167 | UB:  79765.4546 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 130841.09631937408, "LB", 130943.82400007201)
+[ Info: ("meaningless cut", "UB", 122356.63662996556, "LB", 122927.51291930364)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     518.4603909203856
+│     524.0543806004727
+│       ⋮
+└     527.0722549323168
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     493.43751554223013
+│     485.86228606619403
+│       ⋮
+└     509.9773394543049
+   Iter:    7 | LB:       0.9167 | UB:      0.9167 | Gap:     0.00% 
+Iter:    4 | LB:  256559.1345 | UB: 258938.1105 | Gap:    0.919% | Time: (M:   2.54, S:  10.01) | Elapsed:  13.10
+[ Info: ("meaningless cut", "UB", 126865.68714930236, "LB", 251646.02277852)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     1017.4341191432113
+│     1016.8619145510494
+│        ⋮
+└     1027.2362222155962
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 151780.53838050552
+   Iter:    1 | LB:       0.0000 | UB: 151780.5384 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 126892.0256355875
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 143476.32034865726
+   Iter:    2 | LB:       0.0000 | UB: 151780.5384 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 119882.51942551373
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 137345.3782268693
+   Iter:    3 | LB:       0.4595 | UB: 151780.5384 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 137129.021756693, "LB", 137441.8643529105)
+[ Info: ("meaningless cut", "UB", 116049.63690022704, "LB", 116345.29290004152)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     542.4174210071212
+│     547.9968745030384
+│       ⋮
+└     545.7245104145162
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     475.4762150720501
+│     469.324556983971
+│       ⋮
+└     481.97122873703995
+   Iter:    4 | LB:       0.4595 | UB:      0.4595 | Gap:     0.00% 
+Iter:    5 | LB:  257330.5005 | UB: 257727.9499 | Gap:    0.154% | Time: (M:   2.81, S:  11.38) | Elapsed:  14.75
+[ Info: ("meaningless cut", "UB", 123865.13413770408, "LB", 251088.87299753813)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     1016.5181141562939
+│     1013.0204715679193
+│        ⋮
+└     1023.3401571465015
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 142069.90486390068
+   Iter:    1 | LB:       0.0000 | UB: 142069.9049 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 123905.28423850673
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 138720.25254499677
+   Iter:    2 | LB:       0.0000 | UB: 142069.9049 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 123743.38037715337
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 131074.78588472548
+   Iter:    3 | LB:       0.0474 | UB: 142069.9049 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 106867.41486572377, "LB", 106962.33910541871)
+[ Info: ("meaningless cut", "UB", 146661.25207807616, "LB", 146768.990143562)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     432.9001775216923
+│     427.91304314095123
+│       ⋮
+└     432.6775979378557
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     583.6877267099565
+│     585.177218502323
+│       ⋮
+└     590.7323492840006
+   Iter:    4 | LB:       0.0698 | UB:      0.0698 | Gap:     0.00% 
+Iter:    6 | LB:  257476.8077 | UB: 257593.1578 | Gap:    0.045% | Time: (M:   3.07, S:  13.57) | Elapsed:  17.23
+[ Info: ("meaningless cut", "UB", 125863.30160658856, "LB", 250645.64968144253)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     1015.1976098688375
+│     1012.4105946941469
+│        ⋮
+└     1020.6621570650653
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 137119.4415452441
+   Iter:    1 | LB:       0.0000 | UB: 137119.4415 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 125900.98442520073
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 134970.63485167126
+   Iter:    2 | LB:       0.0000 | UB: 137119.4415 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 127328.36809117396
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 127309.06807289053
+   Iter:    3 | LB:       0.0099 | UB: 137119.4415 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 135779.44664531123, "LB", 135982.70110067303)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     547.8001482288638
+│     542.6146037843581
+│       ⋮
+└     546.905954109499
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 117842.77121425507
+   Iter:    4 | LB:       0.0385 | UB: 117377.7231 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 134872.6803950855, "LB", 135282.73925324038)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     544.1103477402727
+│     538.9309479761431
+│       ⋮
+└     544.9963375222757
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 118500.54263334369
+   Iter:    5 | LB:       0.0696 | UB: 117377.7231 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 138962.73288470978, "LB", 139349.5873141266)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     560.9353852723992
+│     554.944202656896
+│       ⋮
+└     560.4984917733907
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 114413.61218029536
+   Iter:    6 | LB:       0.0700 | UB: 113961.5313 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 134300.60235396575, "LB", 134657.18068160236)
+[ Info: ("meaningless cut", "UB", 119089.43947218021, "LB", 119100.78434767602)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     544.4941011945557
+│     536.0167232582786
+│       ⋮
+└     539.9380111391158
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     470.7735369698575
+│     476.4638997314439
+│       ⋮
+└     480.79417422152517
+   Iter:    7 | LB:       0.0700 | UB:      0.0700 | Gap:     0.00% 
+Iter:    7 | LB:  257522.4683 | UB: 257572.1862 | Gap:    0.019% | Time: (M:   3.33, S:  17.04) | Elapsed:  20.95
+[ Info: ("meaningless cut", "UB", 125942.5365502674, "LB", 249147.57716215582)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     1013.7996226411971
+│     1012.0552886281203
+│        ⋮
+└     1019.5268324806349
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 140995.27432188886
+   Iter:    1 | LB:       0.0000 | UB: 140995.2743 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 125982.05859011243
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 136520.56925761548
+   Iter:    2 | LB:       0.0000 | UB: 140995.2743 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 127702.0454649674, "LB", 127892.01123408708)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 127111.75255134384
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     508.06198715390155
+│     509.2552010964577
+│       ⋮
+└     513.6916268590683
+   Iter:    3 | LB:       0.0029 | UB: 126615.8357 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 126017.10430470662
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 127947.78769010547
+   Iter:    4 | LB:       0.0029 | UB: 126615.8357 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 128515.2384187881, "LB", 128805.92137796871)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     514.9281996288105
+│     513.0163705511964
+│       ⋮
+└     518.2792648869545
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 125019.62804466757
+   Iter:    5 | LB:       0.0410 | UB: 124526.1610 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 136881.10352618704, "LB", 137167.28495329755)
+[ Info: ("meaningless cut", "UB", 116625.30131844885, "LB", 116631.67422129415)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     548.0700038502298
+│     546.1330498576141
+│       ⋮
+└     551.6317464362505
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     465.77061096745797
+│     465.9632309469968
+│       ⋮
+└     467.93607822087506
+   Iter:    6 | LB:       0.0410 | UB:      0.0410 | Gap:     0.00% 
+Iter:    8 | LB:  257544.8251 | UB: 257563.2127 | Gap:    0.007% | Time: (M:   3.60, S:  19.13) | Elapsed:  23.33
+[ Info: ("meaningless cut", "UB", 125600.79099365791, "LB", 249152.96187200167)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     1013.2862489918319
+│     1012.2370358835129
+│        ⋮
+└     1018.8279716513028
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 138945.1831081658
+   Iter:    1 | LB:       0.0000 | UB: 138945.1831 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 125642.76203650587
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 135910.81463620788
+   Iter:    2 | LB:       0.0000 | UB: 138945.1831 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 127346.51658282797, "LB", 127513.24036212053)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 127371.7093226011
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     507.5467653872237
+│     507.94110079623925
+│       ⋮
+└     512.5986772980738
+   Iter:    3 | LB:       0.0017 | UB: 126874.1170 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 128014.28459926628, "LB", 128037.67051695476)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 125928.23792896207
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     510.92944607820687
+│     510.8234880478499
+│       ⋮
+└     514.1381676285374
+   Iter:    4 | LB:       0.0017 | UB: 125432.1734 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 125457.72325443907
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 128426.14949220711
+   Iter:    5 | LB:       0.0031 | UB: 125432.1734 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 125921.74704537395, "LB", 126124.85046875932)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     504.40137034886357
+│     502.4535489934432
+│       ⋮
+└     504.8299960293859
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 127701.33918285833
+   Iter:    6 | LB:       0.0257 | UB: 125432.1734 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 131854.88489835526, "LB", 132033.6963450557)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     528.2447539020291
+│     526.1444013127488
+│       ⋮
+└     529.2181357925311
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 121784.11556138679
+   Iter:    7 | LB:       0.0257 | UB: 121303.2042 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 132672.42616828158, "LB", 132837.03015833162)
+[ Info: ("meaningless cut", "UB", 120975.6585192462, "LB", 120977.05851599303)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     528.5549713923182
+│     528.9676702302457
+│       ⋮
+└     530.7597087460352
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     484.7569395749039
+│     483.2950276286573
+│       ⋮
+└     488.0939248806577
+   Iter:    8 | LB:       0.0257 | UB:      0.0257 | Gap:     0.00% 
+Iter:    9 | LB:  257551.6319 | UB: 257555.7523 | Gap:    0.002% | Time: (M:   3.77, S:  22.79) | Elapsed:  27.17
+[ Info: ("meaningless cut", "UB", 125264.4504375456, "LB", 248627.7661959689)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     1016.6248995010138
+│     1012.2909134923781
+│        ⋮
+└     1019.2386038509147
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 147006.99267719671
+   Iter:    1 | LB:       0.0000 | UB: 147006.9927 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 125309.16246946294, "LB", 128219.37300659905)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     520.2611851887214
+│     646.7071169426905
+│       ⋮
+└     505.34801916413426
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 137952.1220408562
+   Iter:    2 | LB:       0.0000 | UB: 137788.5254 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 126064.17134093084, "LB", 152825.69119966755)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     580.2748975326242
+│     498.44525532210093
+│       ⋮
+└     669.6945122444735
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 129728.17785281035
+   Iter:    3 | LB:       0.0000 | UB: 129906.3875 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 125806.21041423807
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 129580.68178268008
+   Iter:    4 | LB:       0.0000 | UB: 129906.3875 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 126392.72763133021
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 127552.57078536456
+   Iter:    5 | LB:       0.0015 | UB: 129906.3875 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 130871.99554662847, "LB", 131044.24820333025)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     526.003186149009
+│     522.2124331242411
+│       ⋮
+└     525.9137844389745
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 122779.14391969556
+   Iter:    6 | LB:       0.0196 | UB: 122294.6645 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 130872.8246017133, "LB", 131036.48534867277)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     525.8401880443274
+│     521.9570405521157
+│       ⋮
+└     526.2710404555006
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 122771.09035978805
+   Iter:    7 | LB:       0.0196 | UB: 122286.5991 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 130873.94391344722, "LB", 131034.1132782494)
+[ Info: ("meaningless cut", "UB", 122768.09221016639, "LB", 122772.91368526536)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     526.6025830523636
+│     521.9117668671072
+│       ⋮
+└     526.1216769851245
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     490.0418733363715
+│     490.3987035129922
+│       ⋮
+└     493.13648375351147
+   Iter:    8 | LB:       0.0196 | UB:      0.0196 | Gap:     0.00% 
+Iter:   10 | LB:  257553.6940 | UB: 257554.0740 | Gap:    0.000% | Time: (M:   4.02, S:  28.15) | Elapsed:  32.80
+[ Info: ("meaningless cut", "UB", 126743.81965491154, "LB", 248064.5231178679)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     1016.6772032247035
+│     1012.3085909868576
+│        ⋮
+└     1019.2347449659778
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 137286.8109926823
+   Iter:    1 | LB:       0.0000 | UB: 137286.8110 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 126865.33773933529, "LB", 128459.52609258467)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     550.5438916612391
+│     490.72666295805277
+│       ⋮
+└     506.6342619193195
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 132054.22172134093
+   Iter:    2 | LB:       0.0000 | UB: 131986.0280 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 127089.3402504458, "LB", 130253.83547171926)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     521.0293300340094
+│     496.8518935277106
+│       ⋮
+└     509.9384780904709
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 129057.8100648644
+   Iter:    3 | LB:       0.0000 | UB: 128879.8179 | Gap:   100.00% 
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (true, "obj_value_k")
+└   obj_value_k = 127172.75683328632
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 128405.4103615011
+   Iter:    4 | LB:       0.0000 | UB: 128879.8179 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 128894.62650264008, "LB", 128951.5947242732)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     518.2646236991902
+│     513.8497861420794
+│       ⋮
+└     516.0596996686695
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 124987.0037325059
+   Iter:    5 | LB:       0.0060 | UB: 124494.6388 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 129361.71150837585, "LB", 129410.73494349113)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     520.6137202701798
+│     515.4343029292221
+│       ⋮
+└     517.3632820541656
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (true, "obj_value_v")
+└   obj_value_v = 124421.41681387328
+   Iter:    6 | LB:       0.0079 | UB: 123930.2923 | Gap:   100.00% 
+[ Info: ("meaningless cut", "UB", 129571.99645854533, "LB", 129612.34530361662)
+[ Info: ("meaningless cut", "UB", 124162.44428606014, "LB", 124185.32705227684)
+┌ Info: if_add_k
+│   (if_add_cuts_k, "obj_value_k") = (false, "obj_value_k")
+│   obj_value_k =
+│    250-element Vector{Float64}:
+│     522.5438882849415
+│     516.4508625522058
+│       ⋮
+└     518.6115864664894
+┌ Info: if_add_v
+│   (if_add_cuts_v, "obj_value_v") = (false, "obj_value_v")
+│   obj_value_v =
+│    250-element Vector{Float64}:
+│     494.14202929755174
+│     495.86644279244155
+│       ⋮
+└     500.6318728572782
+   Iter:    7 | LB:       0.0087 | UB:      0.0087 | Gap:     0.00% 
+Iter:   11 | LB:  257555.3930 | UB: 257553.8453 | Gap:   -0.001% | Time: (M:   4.16, S:  32.03) | Elapsed:  36.84

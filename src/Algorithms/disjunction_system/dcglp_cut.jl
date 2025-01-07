@@ -1,6 +1,7 @@
 function generate_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
     if  env.sub isa KnapsackUFLPSubProblem
         critical_items, sub_obj_val = generate_cut_coefficients(env.sub, env.master.x_value, cut_strategy.base_cut_strategy)
+        sub_obj_val = sum(sub_obj_val)
     else 
         sub_obj_val = get_subproblem_value(env) #checked
     end
@@ -65,30 +66,50 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
 
         is_terminated(state, log) && break
         
-        if if_add_cuts_k
-            add_cuts_k!(env, dual_info_k, cut_strategy)
+        if length(if_add_cuts_k) == 1
+            if if_add_cuts_k
+                add_cuts_k!(env, dual_info_k, cut_strategy)
+            end
+        else
+            if all(if_add_cuts_k)
+                # all true = add cuts for all k
+                add_cuts_k!(env, dual_info_k, cut_strategy)
+            else
+                # add cuts for respective k
+                false_indices = findall(i -> false .== if_add_cuts_k[i], eachindex(if_add_cuts_k))
+                dual_info_k[false_indices] .= false
+                add_cuts_k!(env, dual_info_k, cut_strategy)
+            end
         end
-        if if_add_cuts_v
-            add_cuts_v!(env, dual_info_v, cut_strategy)
+
+        if length(if_add_cuts_v) == 1
+            if if_add_cuts_v
+                add_cuts_v!(env, dual_info_v, cut_strategy)
+            end
+        else
+            if all(if_add_cuts_v)
+                # all true = add cuts for all v
+                add_cuts_v!(env, dual_info_v, cut_strategy)
+            else
+                # add cuts for repective v
+                false_indices = findall(i -> false .== if_add_cuts_v[i], eachindex(if_add_cuts_v))
+                dual_info_v[false_indices] .= false
+                add_cuts_v!(env, dual_info_v, cut_strategy)
+            end
         end
         
     end
 
 end
 
-
-# function is_terminated(state, log)
-#     return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || (state.UB_k <= 1e-3 && state.UB_v <= 1e-3) || get_total_time(log) >= 200 || state.iteration >= 50
-# end
-
 function is_terminated(state, log)
-    return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || (all(state.UB_k .<= 1e-3) && all(state.UB_v .<= 1e-3)) || get_total_time(log) >= 200 || state.iteration >= 50
+    return state.gap <= 1e-09  || state.UB - state.LB <= 1e-09 || get_total_time(log) >= 200 || state.iteration >= 10
 end
 
 
 function print_dcglp_iteration_info(state, log)
-    @printf("   Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.2f%% | UB_k: %11.4f | UB_v: %11.4f \n",
-           state.iteration, state.LB, state.UB, state.gap, state.UB_k, state.UB_v)
+    @printf("   Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.2f%% \n",
+                state.iteration, state.LB, state.UB, state.gap)
 end
 
 function update_bounds!(state, k_values, v_values, other_values, obj_value_k, obj_value_v, t_value, norm_type::LNorm)

@@ -1,4 +1,4 @@
-function generate_cuts(env::BendersEnv, cut_strategy::Union{FatKnapsackCut, SlimKnapsackCut})
+function generate_cuts(env::BendersEnv, cut_strategy::SlimKnapsackCut)
     
     # Generate cut coefficients
     critical_items, obj_values = generate_cut_coefficients(env.sub, env.master.x_value, cut_strategy)
@@ -8,8 +8,18 @@ function generate_cuts(env::BendersEnv, cut_strategy::Union{FatKnapsackCut, Slim
     return cuts, obj_values
 end
 
-function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Float64}, 
-                                 ::Union{FatKnapsackCut, SlimKnapsackCut})
+function generate_cuts(env::BendersEnv, cut_strategy::FatKnapsackCut)
+    
+    # Generate cut coefficients
+    critical_items, obj_values = generate_cut_coefficients(env.sub, env.master.x_value, cut_strategy)
+    obj_values = sum(obj_values)
+
+    # Build and return cuts
+    cuts = build_cuts(env.master, env.sub, critical_items, cut_strategy)
+    return cuts, obj_values
+end
+
+function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Float64}, ::SlimKnapsackCut)
     # Input validation
     J = length(sub.sorted_indices)
    
@@ -29,6 +39,31 @@ function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Floa
 
         # Calculate objective value contribution
         obj_values += c_sorted[k] - (k > 1 ? sum((c_sorted[k] - c_sorted[i]) * x_sorted[i] for i in 1:k-1) : 0)
+    end
+
+    return critical_items, obj_values
+end
+
+function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Float64}, ::FatKnapsackCut)
+    # Input validation
+    J = length(sub.sorted_indices)
+
+    # Pre-allocate arrays for better performance
+    critical_items = Vector{Int}(undef, J)
+    obj_values = Vector{Float64}(undef, J)
+
+    # Process each facility
+    for j in 1:J
+        sorted_indices = sub.sorted_indices[j]
+        c_sorted = sub.sorted_cost_demands[j]
+        x_sorted = x_value[sorted_indices]
+
+        # Find critical item and calculate contribution
+        k = find_critical_item(c_sorted, x_sorted)
+        critical_items[j] = k
+
+        # Calculate objective value contribution
+        obj_values[j] = c_sorted[k] - (k > 1 ? sum((c_sorted[k] - c_sorted[i]) * x_sorted[i] for i in 1:k-1) : 0)
     end
 
     return critical_items, obj_values

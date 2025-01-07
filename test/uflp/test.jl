@@ -18,32 +18,47 @@ solver = "CPLEX"
 # ]
 
 instances=[
-    "ga500a-1"
+    "ga250a-3"
 ]
+
+# instances = [1:66;68:71]
 
 
 for i in instances
-    # data = read_Simple_data("ga250a-3")
     data = read_Simple_data("$i")
+    # data = read_uflp_benchmark_data("p$i")
     @info i
 
-    disjunctive_system = DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false,false)
+    disjunctive_system = DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, false,true)
+    # disjunctive_system = DisjunctiveCut(ClassicalCut(), L1Norm(), PureDisjunctiveCut(), true, true, false,true)
     @info disjunctive_system
+    # params = BendersParams(
+    #     300.0,
+    #     1e-5, # *100 already
+    #     solver,
+    #     Dict("solver" => solver),
+    #     Dict("solver" => solver),
+    #     Dict("solver" => solver),
+    #     # Dict(:solver => :Gurobi),
+    #     true
+    #     # false
+    # )
+
     params = BendersParams(
-        7200.0,
-        1e-5, # *100 already
+        300.0,
+        1e-9, # *100 already
         solver,
-        Dict("solver" => solver),
-        Dict("solver" => solver),
-        Dict("solver" => solver),
+        Dict("solver" => solver, "CPX_PARAM_EPINT" => 0.0, "CPX_PARAM_EPGAP" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9),
+        Dict("solver" => solver, "CPX_PARAM_EPINT" => 0.0, "CPX_PARAM_EPGAP" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9),
+        Dict("solver" => solver, "CPX_PARAM_EPINT" => 0.0, "CPX_PARAM_EPGAP" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9),
         # Dict(:solver => :Gurobi),
         true
         # false
-    )
+    ) 
 
     # result = run_Benders(data, Sequential(), ClassicalCut(), params)
-    result = run_Benders(data, Sequential(), FatKnapsackCut(), params)
+    # result = run_Benders(data, Sequential(), FatKnapsackCut(), params)
     # result = run_Benders(data, Callback(), FatKnapsackCut(), params)
     # result = run_Benders(data, Sequential(), disjunctive_system, params)
-    # result = run_Benders(data, Callback(), disjunctive_system, params)
+    result = run_Benders(data, Callback(), disjunctive_system, params)
 end

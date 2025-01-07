@@ -11,10 +11,10 @@ using BendersDecomposition
 
 
 
-@testset "CFLP Sequential Benders Tests" begin
+@testset "UFLP CallBack Benders Tests" begin
     solver = "CPLEX"
-    # instances = [1:66; 68:71]
-    instances = [2]
+    instances = [1:66; 68:71]
+    # instances = [2]
     for i in instances
         @testset "Instance: p$i" begin
             # Load data

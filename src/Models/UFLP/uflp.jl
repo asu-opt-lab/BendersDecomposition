@@ -10,5 +10,5 @@ end
 
 include("master_problem.jl")
 include("sub_problem.jl")
-include("dcglp.jl")
+include("DCGLP.jl")
 include("milp.jl")

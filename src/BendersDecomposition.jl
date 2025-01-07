@@ -5,7 +5,7 @@ using JuMP, CPLEX, Gurobi
 
 # Include supporting files
 include("types.jl")
-include("models/models.jl") 
+include("Models/models.jl") 
 include("utils/utils.jl")
 
 """
@@ -73,12 +73,14 @@ function BendersEnv(data::AbstractData, cut_strategy::CutStrategy, params::Bende
     else
         assign_attributes!(sub.model, params.sub_attributes)
     end
+
     if cut_strategy isa DisjunctiveCut
         dcglp = create_dcglp(data, cut_strategy)
         assign_attributes!(dcglp.model, params.dcglp_attributes)
     else
         dcglp = nothing
     end
+    
     return BendersEnv(data, master, sub, dcglp)
 end
 
@@ -100,7 +102,6 @@ Execute Benders decomposition algorithm to solve the given problem instance.
 """
 function run_Benders(data::AbstractData, loop_strategy::SolutionProcedure, cut_strategy::CutStrategy, params::BendersParams)
     env = BendersEnv(data, cut_strategy, params)
-    relax_integrality(env.master.model)
     solve!(env, loop_strategy, cut_strategy, params)
 end
 
@@ -111,6 +112,6 @@ end
 
 export run_Benders
 
-include("algorithms/algorithms.jl")
+include("Algorithms/algorithms.jl")
 
 end
