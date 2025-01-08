@@ -31,6 +31,7 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::CutStrategy, params::
 
     @info "node count" JuMP.node_count(env.master.model)
     @info "elapsed time" time() - start_time
+    @info "pure callback time", params.time_limit
     @info "objective bound" JuMP.objective_bound(env.master.model)
     @info "objective value" JuMP.objective_value(env.master.model)
     @info "relative gap" JuMP.relative_gap(env.master.model)
@@ -78,9 +79,14 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
         status = JuMP.callback_node_status(cb_data, env.master.model)
         depth = Ref{CPXLONG}()
         ret = CPXcallbackgetinfolong(cb_data, CPXCALLBACKINFO_NODEDEPTH, depth)
+        
+        n_count = Ref{CPXINT}()
+        ret1 = CPXcallbackgetinfoint(cb_data, CPXCALLBACKINFO_NODECOUNT, n_count)
+        
         if ret == 0
-            if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL && depth[] <= 10 || number_of_subproblem_solves >= 200 
-                @info "disjunctive cut added", depth
+            if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL && depth[] <= 5 || number_of_subproblem_solves >= 200 
+                @info "disjunctive cut added", depth[]
+                @info "node_count", n_count[]
                 number_of_subproblem_solves = 0      
                 env.master.x_value = JuMP.callback_value.(cb_data, env.master.var[:x])
                 env.master.t_value = JuMP.callback_value.(cb_data, env.master.var[:t])
@@ -109,6 +115,7 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
     JuMP.optimize!(env.master.model)
     @info "node count" JuMP.node_count(env.master.model)
     @info "elapsed time" time() - start_time
+    @info "pure callback time", params.time_limit
     @info "objective bound" JuMP.objective_bound(env.master.model)
     @info "objective value" JuMP.objective_value(env.master.model)
     @info "relative gap" JuMP.relative_gap(env.master.model)

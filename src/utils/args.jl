@@ -112,6 +112,8 @@ function load_cut_strategy(config)
             ClassicalCut()
         elseif cut_config["type"] == "KNAPSACK_CUT"
             KnapsackCut()
+        elseif cut_config["type"] == "FATKNAPSACK_CUT"
+            FatKnapsackCut()
         else
             error("Unknown cut strategy type: $(cut_config["type"])")
         end
