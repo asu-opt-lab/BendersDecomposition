@@ -1,0 +1,106 @@
+
+=====================================================================
+
+Julia 1.10.4
+
+To launch use the command "julia"
+
+=====================================================================
+
+  
+
+=====================================================================
+
+CPLEX 22.1.1
+
+Using the command "cplex" will launch the program
+
+=====================================================================
+
+  
+
+=====================================================================
+This module is intended solely for building or source activating user
+python environments, i.e.,
+
+    mamba create -n myenv -c conda-forge
+
+or
+
+    source activate myenv
+
+To list available environments, run:
+
+    mamba info --envs
+
+See our docs: https://links.asu.edu/solpy
+
+Any other use is NOT TESTED.
+=====================================================================
+
+  
+
+=====================================================================
+Gurobi 11.0.2
+
+To use this software, use the command gurobi.sh
+=====================================================================
+
+  
+┌ Warning: Module Parsers with build ID fafbfcfd-91a8-dec4-0006-bcf39cb1f259 is missing from the cache.
+│ This may mean Parsers [69de0a69-1ddd-5017-9359-2bf0b02dc9f0] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module Parsers with build ID fafbfcfd-91a8-dec4-0006-bcf39cb1f259 is missing from the cache.
+│ This may mean Parsers [69de0a69-1ddd-5017-9359-2bf0b02dc9f0] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module Parsers with build ID fafbfcfd-91a8-dec4-0006-bcf39cb1f259 is missing from the cache.
+│ This may mean Parsers [69de0a69-1ddd-5017-9359-2bf0b02dc9f0] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module DataStructures with build ID fafbfcfd-d0eb-9d6e-0006-bcf8ef4780d9 is missing from the cache.
+│ This may mean DataStructures [864edb3b-99cc-5e75-8d2d-829cb0a9cfe8] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module DataStructures with build ID fafbfcfd-d0eb-9d6e-0006-bcf8ef4780d9 is missing from the cache.
+│ This may mean DataStructures [864edb3b-99cc-5e75-8d2d-829cb0a9cfe8] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module StatsBase with build ID ffffffff-ffff-ffff-0006-bd0fdb3b7888 is missing from the cache.
+│ This may mean StatsBase [2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module SpecialFunctions with build ID fafbfcfd-d531-2244-0006-bcf745c46f05 is missing from the cache.
+│ This may mean SpecialFunctions [276daf66-3868-5448-9aa4-cd146d93841b] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module JLLWrappers with build ID fafbfcfd-17d1-17a8-0006-bcf7802bbf25 is missing from the cache.
+│ This may mean JLLWrappers [692b3bcd-3c85-4b1f-b108-f13ce0eb3210] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module JLLWrappers with build ID fafbfcfd-17d1-17a8-0006-bcf7802bbf25 is missing from the cache.
+│ This may mean JLLWrappers [692b3bcd-3c85-4b1f-b108-f13ce0eb3210] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module SpecialFunctions with build ID fafbfcfd-d531-2244-0006-bcf745c46f05 is missing from the cache.
+│ This may mean SpecialFunctions [276daf66-3868-5448-9aa4-cd146d93841b] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module DataStructures with build ID fafbfcfd-d0eb-9d6e-0006-bcf8ef4780d9 is missing from the cache.
+│ This may mean DataStructures [864edb3b-99cc-5e75-8d2d-829cb0a9cfe8] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module Distributions with build ID ffffffff-ffff-ffff-0006-bd1068b55b45 is missing from the cache.
+│ This may mean Distributions [31c24e10-a181-5473-b8eb-7969acd0382f] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module MathOptInterface with build ID fafbfcfd-4e00-a771-0006-bcee06187957 is missing from the cache.
+│ This may mean MathOptInterface [b8f27783-ece8-5eb3-8dc8-9495eed66fee] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+┌ Warning: Module MathOptInterface with build ID fafbfcfd-4e00-a771-0006-bcee06187957 is missing from the cache.
+│ This may mean MathOptInterface [b8f27783-ece8-5eb3-8dc8-9495eed66fee] does not support precompilation but is imported by a module that does.
+└ @ Base loading.jl:1948
+[ Info: Dict{String, Any}("algorithm_params" => Dict{String, Any}("time_limit" => 7200.0, "verbose" => false, "solver" => "CPLEX", "gap_tolerance" => 1.0e-9), "cut_strategy" => Dict{String, Any}("type" => "FATKNAPSACK_CUT"), "solver_params" => Dict{String, Any}("sub" => Dict{String, Any}("CPX_PARAM_EPRHS" => 1.0e-9, "solver" => "CPLEX", "CPX_PARAM_EPINT" => 0.0, "CPX_PARAM_EPGAP" => 1.0e-9), "master" => Dict{String, Any}("CPXPARAM_MIP_Strategy_HeuristicFreq" => 1, "CPX_PARAM_EPRHS" => 1.0e-9, "CPX_PARAM_BRDIR" => 1, "solver" => "CPLEX", "CPXPARAM_MIP_Strategy_LBHeur" => 1, "CPX_PARAM_EPINT" => 0.0, "CPX_PARAM_EPGAP" => 1.0e-9), "dcglp" => Dict{String, Any}("CPX_PARAM_EPRHS" => 1.0e-9, "solver" => "CPLEX", "CPX_PARAM_EPINT" => 0.0, "CPX_PARAM_EPGAP" => 1.0e-9)))
+[ Info: Running Benders decomposition
+[ Info: Dict{String, Any}("CPXPARAM_MIP_Strategy_HeuristicFreq" => 1, "CPX_PARAM_EPRHS" => 1.0e-9, "CPX_PARAM_BRDIR" => 1, "solver" => "CPLEX", "CPXPARAM_MIP_Strategy_LBHeur" => 1, "CPX_PARAM_EPINT" => 0.0, "CPX_PARAM_EPGAP" => 1.0e-9)
+┌ Info: node count
+└   JuMP.node_count(env.master.model) = 25922
+┌ Info: elapsed time
+└   time() - start_time = 7201.438697099686
+[ Info: ("pure callback time", 7193.149922132492)
+┌ Info: objective bound
+└   JuMP.objective_bound(env.master.model) = 791968.0935152868
+┌ Info: objective value
+└   JuMP.objective_value(env.master.model) = 797188.0
+┌ Info: relative gap
+└   JuMP.relative_gap(env.master.model) = 0.006547898970773763
+[ Info: Writing results to CSV

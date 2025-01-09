@@ -7,8 +7,10 @@
 config_path="scripts/config/config_uflp_knapsack.toml"
 
 JOBSCRIPT_DIR="scripts"
-OUTPUT_DIR="knapsack_cplex_HF1_250107"
+# OUTPUT_DIR="knapsack_cplex_HF1_250107"
 # OUTPUT_DIR="knapsack_cplex_LBH1_250107"
+# OUTPUT_DIR="knapsack_cplex_CLSH2_250107"
+OUTPUT_DIR="knapsack_cplex_BDir1_LBH1_HF1_CLSH2_250107"
 
 # Create necessary directories
 mkdir -p "${OUTPUT_DIR}"
@@ -31,6 +33,7 @@ instances=(
 
 # Loop through the instances and create a job script for each
 for instance in "${instances[@]}"; do
+    JOBSCRIPT_FILE="trash_scripts/${OUTPUT_DIR}${instance}.sh"
     JOBSCRIPT_FILE="${JOBSCRIPT_DIR}/${OUTPUT_DIR}${instance}.sh"
     
     # Create job script file
@@ -48,7 +51,8 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=. scripts/uflp_callback.jl --instance ${instance} --output_dir ${OUTPUT_DIR} --config ${config_path}" >> "${JOBSCRIPT_FILE}"
+    # echo "julia --project=. scripts/uflp_callback.jl --instance ${instance} --output_dir ${OUTPUT_DIR} --config ${config_path}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=. scripts/uflp_callback.jl --instance ${instance} --output_dir ${OUTPUT_DIR} --config ${OUTPUT_DIR}/config.toml" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

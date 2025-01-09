@@ -1,0 +1,64 @@
+
+=====================================================================
+
+Julia 1.10.4
+
+To launch use the command "julia"
+
+=====================================================================
+
+  
+
+=====================================================================
+
+CPLEX 22.1.1
+
+Using the command "cplex" will launch the program
+
+=====================================================================
+
+  
+
+=====================================================================
+This module is intended solely for building or source activating user
+python environments, i.e.,
+
+    mamba create -n myenv -c conda-forge
+
+or
+
+    source activate myenv
+
+To list available environments, run:
+
+    mamba info --envs
+
+See our docs: https://links.asu.edu/solpy
+
+Any other use is NOT TESTED.
+=====================================================================
+
+  
+
+=====================================================================
+Gurobi 11.0.2
+
+To use this software, use the command gurobi.sh
+=====================================================================
+
+  
+[ Info: Dict{String, Any}("algorithm_params" => Dict{String, Any}("time_limit" => 7200.0, "verbose" => false, "solver" => "CPLEX", "gap_tolerance" => 1.0e-9), "cut_strategy" => Dict{String, Any}("type" => "FATKNAPSACK_CUT"), "solver_params" => Dict{String, Any}("sub" => Dict{String, Any}("CPX_PARAM_EPRHS" => 1.0e-9, "solver" => "CPLEX", "CPX_PARAM_EPINT" => 0.0, "CPX_PARAM_EPGAP" => 1.0e-9), "master" => Dict{String, Any}("CPX_PARAM_EPRHS" => 1.0e-9, "solver" => "CPLEX", "CPXPARAM_MIP_Strategy_CardLs" => 1, "CPX_PARAM_EPINT" => 0.0, "CPX_PARAM_EPGAP" => 1.0e-9), "dcglp" => Dict{String, Any}("CPX_PARAM_EPRHS" => 1.0e-9, "solver" => "CPLEX", "CPX_PARAM_EPINT" => 0.0, "CPX_PARAM_EPGAP" => 1.0e-9)))
+[ Info: Running Benders decomposition
+[ Info: Dict{String, Any}("CPX_PARAM_EPRHS" => 1.0e-9, "solver" => "CPLEX", "CPXPARAM_MIP_Strategy_CardLs" => 1, "CPX_PARAM_EPINT" => 0.0, "CPX_PARAM_EPGAP" => 1.0e-9)
+┌ Info: node count
+└   JuMP.node_count(env.master.model) = 88231
+┌ Info: elapsed time
+└   time() - start_time = 7201.532009124756
+[ Info: ("pure callback time", 7192.894059181213)
+┌ Info: objective bound
+└   JuMP.objective_bound(env.master.model) = 883151.8783079309
+┌ Info: objective value
+└   JuMP.objective_value(env.master.model) = 901453.0
+┌ Info: relative gap
+└   JuMP.relative_gap(env.master.model) = 0.02030180352394313
+[ Info: Writing results to CSV
