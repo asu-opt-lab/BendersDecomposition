@@ -82,24 +82,30 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
         
         n_count = Ref{CPXINT}()
         ret1 = CPXcallbackgetinfoint(cb_data, CPXCALLBACKINFO_NODECOUNT, n_count)
-        
-        if ret == 0
-            if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL && depth[] <= 5 || number_of_subproblem_solves >= 200 
-                @info "disjunctive cut added", depth[]
-                @info "node_count", n_count[]
-                number_of_subproblem_solves = 0      
-                env.master.x_value = JuMP.callback_value.(cb_data, env.master.var[:x])
-                env.master.t_value = JuMP.callback_value.(cb_data, env.master.var[:t])
-                solve_sub!(env.sub, env.master.x_value)
-                cuts, sub_obj_value = generate_cuts(env, cut_strategy)
-                if sum(env.master.t_value) <= sub_obj_value - params.gap_tolerance
-                    for _cut in cuts
-                        cut = @build_constraint(0 .>= _cut)
-                        # @info "User cut" cut
-                        MOI.submit.(env.master.model, MOI.UserCut(cb_data), cut)
+
+        if ret == 0 && ret1 == 0
+            if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL 
+                if depth[] <= 5 
+                # if depth[] <= 5 || (depth[] > 5 && n_count[] % 100 == 0 && n_count[] != 0)
+                    @info "depth", depth[]
+                    @info "node_count", n_count[]
+                    number_of_subproblem_solves = 0      
+                    env.master.x_value = JuMP.callback_value.(cb_data, env.master.var[:x])
+                    env.master.t_value = JuMP.callback_value.(cb_data, env.master.var[:t])
+                    solve_sub!(env.sub, env.master.x_value)
+                    cuts, sub_obj_value = generate_cuts(env, cut_strategy)
+                    if sum(env.master.t_value) <= sub_obj_value - params.gap_tolerance
+                        for _cut in cuts
+                            cut = @build_constraint(0 .>= _cut)
+                            # @info "User cut" cut
+                            MOI.submit.(env.master.model, MOI.UserCut(cb_data), cut)
+                        end
                     end
                 end
             end
+        else
+            @info "Wrong value for ret or ret1"
+            exit(1)
         end
     end
 

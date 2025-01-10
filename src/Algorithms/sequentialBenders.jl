@@ -80,5 +80,6 @@ end
 Check termination criteria based on gap and time limit
 """
 function is_terminated(state::BendersState, params::BendersParams, log::BendersIterationLog)
-    return state.gap <= params.gap_tolerance || get_total_time(log) >= params.time_limit #|| state.iteration >= 80
+    # return state.gap <= params.gap_tolerance || get_total_time(log) >= params.time_limit #|| state.iteration >= 80
+    return state.gap <= params.gap_tolerance || get_total_time(log) >= 100 #|| state.iteration >= 80
 end
