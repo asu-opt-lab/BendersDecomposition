@@ -16,7 +16,7 @@ using BendersDecomposition
     )
     # Test StandardUFLPMasterProblem
     @testset "StandardUFLPMasterProblem" begin
-        cut_strategy = StandardCut()
+        cut_strategy = ClassicalCut()
         mp = create_master_problem( data, cut_strategy)
 
         @test mp isa UFLPMasterProblem

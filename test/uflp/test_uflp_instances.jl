@@ -14,7 +14,7 @@ global_logger(ConsoleLogger(stderr, Logging.Warn))
 @testset "UFLP Instances Comparison" begin
     # Get all UFLP instance files
     # uflp_files = readdir("src/Datasets/locssall", join=true)
-    solver = :CPLEX
+    solver = "CPLEX"
     for i in [1:66; 68:71]
         @testset "Instance: p$(i)" begin
             # Load UFLP data
@@ -22,25 +22,25 @@ global_logger(ConsoleLogger(stderr, Logging.Warn))
             
             # Solve using standard MIP model
             milp = create_milp(data)
-            assign_solver!(milp.model, solver)
+            set_optimizer(milp.model, CPLEX.Optimizer)
             optimize!(milp.model)
             mip_objective = objective_value(milp.model)
             
             # Solve using different Benders decomposition strategies
-            cut_strategies = [StandardCut(), FatKnapsackCut(), SlimKnapsackCut()]
+            loop_strategy = Sequential()
+            cut_strategies = [ClassicalCut(), FatKnapsackCut(), SlimKnapsackCut()]
             benders_objectives = Dict()
             
             for cut_strategy in cut_strategies
                 master = create_master_problem(data, cut_strategy)
-                assign_solver!(master.model, solver)
+                set_optimizer(master.model, CPLEX.Optimizer)
                 sub = create_sub_problem(data, cut_strategy)
-                if cut_strategy == StandardCut()
-                    assign_solver!(sub.model, solver)
+                if cut_strategy == ClassicalCut()
+                    set_optimizer(sub.model, CPLEX.Optimizer)
                 end
-                params = BendersParams(600.0, 0.001)  # 10 minutes time limit, 0.1% gap tolerance
-                algo = SequentialBenders(data, master, sub, cut_strategy, params)
+                params = BendersParams(7200.0, 1e-9, solver, Dict("solver" => solver), Dict("solver" => solver), Dict("solver" => solver), true) 
 
-                result = solve!(algo)
+                result = run_Benders(data, loop_strategy, cut_strategy, params)
                 benders_objectives[typeof(cut_strategy)] = result[end, :UB]
 
                 # Compare results
