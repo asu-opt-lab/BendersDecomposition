@@ -19,8 +19,7 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
     state = DCGLPState()
 
     x_value, t_value = env.master.x_value, env.master.t_value
-    # @info "old: $(dot(env.data.fixed_costs, x_value))"
-    # @info "x_value: $x_value"
+    # obj = dot(env.data.fixed_costs, env.master.x_value) + env.master.t_value
     # for i in 1:length(x_value)
     #     if x_value[i] == 0
     #         x_value[i] += 0.2
@@ -28,9 +27,7 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
     #         x_value[i] -= 0.2
     #     end
     # end
-    # @info "new: $(dot(env.data.fixed_costs, x_value))"
-    # @info "x_value: $x_value"
-    # t_value *= 0.5
+    # t_value = obj - dot(env.data.fixed_costs, x_value)
     set_normalized_rhs.(env.dcglp.model[:conx], x_value)
     set_normalized_rhs.(env.dcglp.model[:cont], t_value)
     log.start_time = time()

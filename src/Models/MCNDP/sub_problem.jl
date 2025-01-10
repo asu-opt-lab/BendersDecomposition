@@ -70,25 +70,25 @@ function _create_base_sub_problem(data::MCNDPData)
             
             # Node balance constraint depends on whether it's origin, destination or intermediate
             if i == origin
-                demand_constraints[c,i] = @constraint(model, outflow - inflow >= 1)
-                b_iv[c,i] = 1
+                demand_constraints[c,i] = @constraint(model, outflow - inflow == 1)
+                b_iv[c,i] = normalized_rhs(demand_constraints[c,i])
             elseif i == destination
-                demand_constraints[c,i] = @constraint(model, outflow - inflow >= -1)
-                b_iv[c,i] = -1
+                demand_constraints[c,i] = @constraint(model, outflow - inflow == -1)
+                b_iv[c,i] = normalized_rhs(demand_constraints[c,i])
             else
-                demand_constraints[c,i] = @constraint(model, outflow - inflow >= 0)
-                b_iv[c,i] = 0
+                demand_constraints[c,i] = @constraint(model, outflow - inflow == 0)
+                b_iv[c,i] = normalized_rhs(demand_constraints[c,i])
             end
 
             # if i == origin
-            #     demand_constraints[k,i] = @constraint(model, -outflow + inflow == -1)
-            #     b_iv[k,i] = -1
+            #     demand_constraints[c,i] = @constraint(model, -outflow + inflow == -1)
+            #     b_iv[c,i] = -1
             # elseif i == destination
-            #     demand_constraints[k,i] = @constraint(model, -outflow + inflow == 1)
-            #     b_iv[k,i] = 1
+            #     demand_constraints[c,i] = @constraint(model, -outflow + inflow == 1)
+            #     b_iv[c,i] = 1
             # else
-            #     demand_constraints[k,i] = @constraint(model, -outflow + inflow == 0)
-            #     b_iv[k,i] = 0
+            #     demand_constraints[c,i] = @constraint(model, -outflow + inflow == 0)
+            #     b_iv[c,i] = 0
             # end
         end
     end

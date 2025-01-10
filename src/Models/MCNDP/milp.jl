@@ -45,7 +45,7 @@ function create_milp(data::MCNDPData)
                 0
             end
             
-            cut = @constraint(model, outflow - inflow >= rhs)
+            cut = @constraint(model, outflow - inflow == rhs)
         end
     end
 

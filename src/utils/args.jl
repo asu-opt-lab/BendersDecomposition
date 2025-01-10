@@ -18,6 +18,16 @@ function parse_commandline()
             help = "Output directory"
             default = "experiments"
             arg_type = String
+        "--snip_no"
+            help = "SNIP number"
+            default = 1
+            arg_type = Int
+            required = false
+        "--budget"
+            help = "Budget"
+            default = 30.0
+            arg_type = Float64
+            required = false
     end
 
     return parse_args(s)
@@ -28,7 +38,7 @@ function load_benders_params(config)
     alg_params = config["algorithm_params"]
     solver_params = config["solver_params"]
     # Check if using disjunctive cuts
-    is_disjunctive = get(config["cut_strategy"], "type", "STANDARD_CUT") == "DISJUNCTIVE_CUT"
+    is_disjunctive = get(config["cut_strategy"], "type", "CLASSICAL_CUT") == "DISJUNCTIVE_CUT"
     
     # Create BendersParams with values from config
     if is_disjunctive
@@ -60,7 +70,7 @@ function load_cut_strategy(config)
     # Check cut strategy type
     if cut_config["type"] == "DISJUNCTIVE_CUT"
         # Convert string to corresponding cut strategy type
-        base_strategy = if cut_config["base_cut_strategy"] == "STANDARD_CUT"
+        base_strategy = if cut_config["base_cut_strategy"] == "CLASSICAL_CUT"
             ClassicalCut()
         elseif cut_config["base_cut_strategy"] == "FAT_KNAPSACK_CUT"
             FatKnapsackCut()
@@ -132,5 +142,17 @@ function load_all_you_need()
     return instance, output_dir, cut_strategy, benders_params
 end
 
-
-
+function load_snip_data()
+    args = parse_commandline()
+    instance = args["instance"]
+    snip_no = args["snip_no"]
+    budget = args["budget"]
+    output_dir = args["output_dir"]
+    config = TOML.parsefile(args["config"])
+    @info config
+    
+    benders_params = load_benders_params(config)
+    cut_strategy = load_cut_strategy(config)
+    
+    return instance, snip_no, budget, output_dir, cut_strategy, benders_params
+end
