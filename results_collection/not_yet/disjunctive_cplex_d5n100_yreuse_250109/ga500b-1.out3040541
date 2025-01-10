@@ -1,0 +1,36 @@
+Set parameter TokenServer to value "gurobi01.sol.rc.asu.edu"
+Version identifier: 22.1.1.0 | 2022-11-28 | 9160aff4d
+CPXPARAM_Threads                                 1
+CPXPARAM_Simplex_Tolerances_Feasibility          1.0000000000000001e-09
+CPXPARAM_TimeLimit                               7115.7845299243927
+CPXPARAM_MIP_Tolerances_MIPGap                   1.0000000000000001e-09
+CPXPARAM_MIP_Tolerances_Integrality              0
+Generic callback                                 0x60
+MIP Presolve modified 2 coefficients.
+Reduced MIP has 8046 rows, 1000 columns, and 264753 nonzeros.
+Reduced MIP has 500 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (5.73 ticks)
+Found incumbent of value 1257318.000000 after 0.40 sec. (47.54 ticks)
+Probing time = 0.00 sec. (5.33 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Root relaxation solution time = 1.78 sec. (2126.33 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                      1257318.0000  -5.00000e+08              --- 
+      0     0   533364.8266   119  1257318.0000   533364.8266    10118   57.58%
+*     0+    0                       589041.7196   533364.8266             9.45%
+*     0+    0                       542549.0000   533364.8266             1.69%
+      0     2   533366.2392   122   542549.0000   533366.2415    10118    1.69%
+Elapsed time = 17.78 sec. (13684.06 ticks, tree = 0.01 MB, solutions = 4)
+      2     4   533446.4168   122   542549.0000   533366.3443    12619    1.69%
+      3     5   534025.4384   110   542549.0000   533384.3649    16715    1.69%
+      4     6   534302.9614    95   542549.0000   533384.3649    18414    1.69%
+      5     7   534432.4837    95   542549.0000   533384.3649    21437    1.69%
+      6     8   534687.2405    93   542549.0000   533384.3649    25544    1.69%
+      7     9   534511.8296    99   542549.0000   533384.3649    28882    1.69%
+      8    10   534927.5618    94   542549.0000   533384.3649    34191    1.69%
+      9    11   534565.5847   103   542549.0000   533384.3649    36172    1.69%

@@ -1,0 +1,2 @@
+node_count,elapsed_time,pure_callback_time,objective_bound,objective_value,relative_gap
+21574,7201.47559094429,7192.886244058609,791143.0744272898,796280.0,0.006451154835874601

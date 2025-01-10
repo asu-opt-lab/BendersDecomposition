@@ -1,0 +1,46 @@
+Set parameter TokenServer to value "gurobi01.sol.rc.asu.edu"
+Version identifier: 22.1.1.0 | 2022-11-28 | 9160aff4d
+CPXPARAM_Threads                                 1
+CPXPARAM_Simplex_Tolerances_Feasibility          1.0000000000000001e-09
+CPXPARAM_TimeLimit                               7117.7489848136902
+CPXPARAM_MIP_Tolerances_MIPGap                   1.0000000000000001e-09
+CPXPARAM_MIP_Tolerances_Integrality              0
+Generic callback                                 0x60
+Reduced MIP has 8851 rows, 1000 columns, and 278040 nonzeros.
+Reduced MIP has 500 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (6.03 ticks)
+Found incumbent of value 1243934.000000 after 0.40 sec. (50.04 ticks)
+Probing time = 0.00 sec. (5.48 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Root relaxation solution time = 2.23 sec. (2625.96 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                      1243934.0000  -5.00000e+08              --- 
+      0     0   532755.1320   136  1243934.0000   532755.1320    11584   57.17%
+*     0+    0                       587548.6594   532755.1320             9.33%
+*     0+    0                       542600.0000   532755.1320             1.81%
+      0     2   532755.1471   135   542600.0000   532755.1676    11584    1.81%
+Elapsed time = 18.93 sec. (14942.20 ticks, tree = 0.01 MB, solutions = 4)
+      2     4   533615.0730   122   542600.0000   532758.8666    18544    1.81%
+      3     5   532762.6385   136   542600.0000   532758.8857    19044    1.81%
+      4     6   533766.4061   119   542600.0000   532762.6554    21452    1.81%
+      5     7   532817.7954   136   542600.0000   532762.6554    24265    1.81%
+      6     8   533366.6709   120   542600.0000   532817.9036    30428    1.80%
+      7     9   533436.1195   120   542600.0000   532817.9036    34142    1.80%
+      8    10   533957.6340   115   542600.0000   532817.9036    40120    1.80%
+      9    11   533501.3672   124   542600.0000   532817.9036    42397    1.80%
+     10    12   533876.7712   114   542600.0000   532817.9036    47634    1.80%
+     11    13   533938.3356   114   542600.0000   532817.9036    49630    1.80%
+Elapsed time = 221.94 sec. (31960.43 ticks, tree = 0.19 MB, solutions = 4)
+     12    14   534223.7792   110   542600.0000   532817.9036    52901    1.80%
+     14    16   534597.6898    94   542600.0000   532817.9036    56292    1.80%
+     16    18   535096.6869    78   542600.0000   532817.9036    61751    1.80%
+     17    19   535232.8903    85   542600.0000   532817.9036    63206    1.80%
+     19    21   535554.1870    73   542600.0000   532817.9036    65893    1.80%
+*    20+   20                       538253.0000   532817.9036             1.01%
+     20    22   535793.0080    59   538253.0000   532817.9036    68207    1.01%
+     26    28   536804.1995    42   538253.0000   532817.9036    70374    1.01%

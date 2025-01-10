@@ -1,0 +1,50 @@
+Set parameter TokenServer to value "gurobi01.sol.rc.asu.edu"
+Version identifier: 22.1.1.0 | 2022-11-28 | 9160aff4d
+CPXPARAM_Threads                                 1
+CPXPARAM_Simplex_Tolerances_Feasibility          1.0000000000000001e-09
+CPXPARAM_TimeLimit                               7065.5701940059662
+CPXPARAM_MIP_Tolerances_MIPGap                   1.0000000000000001e-09
+CPXPARAM_MIP_Tolerances_Integrality              0
+Generic callback                                 0x60
+Reduced MIP has 6195 rows, 1500 columns, and 392406 nonzeros.
+Reduced MIP has 750 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.01 sec. (8.41 ticks)
+Found incumbent of value 1.2033168e+07 after 0.52 sec. (68.09 ticks)
+Probing time = 0.00 sec. (6.13 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Root relaxation solution time = 0.71 sec. (972.04 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                       1.20332e+07  -7.50000e+08              --- 
+      0     0   872507.8672    76   1.20332e+07   872507.8672     4561   92.75%
+*     0+    0                      1207441.0081   872507.8672            27.74%
+*     0+    0                      1022146.0000   872507.8672            14.64%
+      0     0   873645.8419    80  1022146.0000      Cuts: 96     4908   14.53%
+*     0+    0                      1008366.0000   873645.8419            13.36%
+      0     0   874451.7421    80  1008366.0000      Cuts: 99     5361   13.28%
+      0     0   874824.7197    79  1008366.0000      Cuts: 71     5702   13.24%
+      0     0   874871.7655    80  1008366.0000      Cuts: 24     5886   13.24%
+      0     0   874892.4039    79  1008366.0000 UserPurge2: 11     6001   13.24%
+      0     0   874931.2976    80  1008366.0000 UserPurge2: 11     6069   13.23%
+      0     0   874932.6792    80  1008366.0000 UserPurge2: 3     6104   13.23%
+*     0+    0                       911433.0000   874932.6792             4.00%
+      0     2   875074.8693    78   911433.0000   875074.9625     6104    3.99%
+Elapsed time = 863.96 sec. (11119.81 ticks, tree = 0.01 MB, solutions = 6)
+      1     3   875839.1980    88   911433.0000   875076.8820    17007    3.99%
+      2     4   882071.8723    77   911433.0000   875839.2699    35429    3.91%
+      3     5   875973.0872    88   911433.0000   875840.5015    38475    3.91%
+Advanced basis not built.
+
+Mixed integer rounding cuts applied:  2
+User cuts applied:  21826
+
+Root node processing (before b&c):
+  Real time             =  863.96 sec. (11115.48 ticks)
+Sequential b&c:
+  Real time             = 6278.70 sec. (30871.73 ticks)
+                          ------------
+Total (root+branch&cut) = 7142.66 sec. (41987.21 ticks)

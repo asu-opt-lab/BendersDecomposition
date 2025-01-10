@@ -1,0 +1,29 @@
+Set parameter TokenServer to value "gurobi01.sol.rc.asu.edu"
+Version identifier: 22.1.1.0 | 2022-11-28 | 9160aff4d
+CPXPARAM_Threads                                 1
+CPXPARAM_Simplex_Tolerances_Feasibility          1.0000000000000001e-09
+CPXPARAM_TimeLimit                               6959.9722108840942
+CPXPARAM_MIP_Tolerances_MIPGap                   1.0000000000000001e-09
+CPXPARAM_MIP_Tolerances_Integrality              0
+Generic callback                                 0x60
+MIP Presolve modified 1 coefficients.
+Reduced MIP has 12823 rows, 1500 columns, and 535874 nonzeros.
+Reduced MIP has 750 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.01 sec. (11.52 ticks)
+Found incumbent of value 1880086.000000 after 0.49 sec. (93.94 ticks)
+Probing time = 0.00 sec. (7.40 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Root relaxation solution time = 5.44 sec. (6041.67 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                      1880086.0000  -7.50000e+08              --- 
+      0     0   789657.2265   164  1880086.0000   789657.2265    19936   58.00%
+*     0+    0                       870015.9354   789657.2265             9.24%
+Heuristic still looking.
+      0     2   789657.2265   164   870015.9354   789657.2575    19936    9.24%
+Elapsed time = 46.84 sec. (32281.11 ticks, tree = 0.01 MB, solutions = 3)
+      1     3   789662.2427   163   870015.9354   789657.3716    21026    9.24%
