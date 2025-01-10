@@ -1,0 +1,71 @@
+# Algorithm parameters
+[algorithm_params]
+time_limit = 3600.0
+gap_tolerance = 1e-6
+solver = "Gurobi"
+verbose = true
+
+
+# Solver specific parameters
+[solver_params.master]
+solver = "Gurobi"
+
+[solver_params.sub]
+solver = "Gurobi"
+
+[solver_params.dcglp]
+solver = "Gurobi"
+
+
+# Cut strategy configuration
+[cut_strategy]
+type = "DISJUNCTIVE_CUT"
+base_cut_strategy = "KNAPSACK_CUT"
+norm_type = "LINFNORM"
+cut_strengthening = "PURE_DISJUNCTION"
+use_two_sided_cuts = true
+include_master_cuts = false
+reuse_dcglp = false
+verbose = true
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# config = Dict{String, Any}(
+#     "algorithm_params" => Dict{String, Any}(
+#         "time_limit" => 3600.0,
+#         "gap_tolerance" => 1.0e-6,
+#         "main_verbose" => true,
+#         "dcglp_verbose" => false,
+#         "solver" => "CPLEX"
+#     ),
+#     "solver_params" => Dict{String, Any}(
+#         "master" => Dict{String, Any}(
+#             "CPX_PARAM_SCRIND" => 0,
+#             "CPX_PARAM_EPGAP" => 1.0e-4
+#         ),
+#         "sub" => Dict{String, Any}(
+#             "CPX_PARAM_SCRIND" => 0
+#         ),
+#         "dcglp" => Dict{String, Any}()  
+#     ),
+#     "cut_strategy" => Dict{String, Any}(
+#         "type" => "DISJUNCTION_SYSTEM",
+#         "base_cut_strategy" => "STANDARD_CUT",
+#         "norm_type" => "L2NORM",
+#         "cut_strengthening" => "PURE_DISJUNCTION",
+#         "use_two_sided_cuts" => true,
+#         "include_master_cuts" => true
+#     )
+# )
