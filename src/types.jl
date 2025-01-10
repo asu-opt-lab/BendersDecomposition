@@ -50,6 +50,17 @@ struct MCNDPData <: AbstractData
     capacities::Vector{Float64}     # Arc capacities
     demands::Vector{Tuple{Int,Int,Float64}} # Demands (origin, destination, quantity)
 end
+
+struct SNIPData <: AbstractData
+    num_nodes::Int
+    num_scenarios::Int
+    scenarios::Vector{Tuple{Int,Int,Float64}} # (from_node, to_node, probability)
+    D::Vector{Tuple{Int,Int,Float64,Float64}} # (from_node, to_node, r, q)
+    A_minus_D::Vector{Tuple{Int,Int,Float64}} # (from_node, to_node, r)
+    ψ::Vector{Vector{Float64}} # ψ matrix
+    budget::Float64
+end
+
 # ============================================================================
 # Algorithm Strategy Types
 # ============================================================================
@@ -98,7 +109,7 @@ end
 # ============================================================================
 # Exports
 # ============================================================================
-export CFLPData, UFLPData
+export CFLPData, UFLPData, SCFLPData, SNIPData
 export Sequential, Callback, StochasticSequential
 export ClassicalCut, FatKnapsackCut, SlimKnapsackCut, KnapsackCut
 export PureDisjunctiveCut, StrengthenedDisjunctiveCut

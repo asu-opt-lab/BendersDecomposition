@@ -1,11 +1,11 @@
 function solve!(env::BendersEnv, ::Callback, cut_strategy::CutStrategy, params::BendersParams)
 
     start_time = time()
-    # time_limit = params.time_limit
-    # params.time_limit = 600
-    # df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy, params)
-    # params.time_limit = time_limit
-    # params.time_limit -= df_root_node_preprocessing.total_time[end]
+    time_limit = params.time_limit
+    params.time_limit = 600
+    df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy, params)
+    params.time_limit = time_limit
+    params.time_limit -= df_root_node_preprocessing.total_time[end]
 
     function lazy_callback(cb_data)
         status = JuMP.callback_node_status(cb_data, env.master.model)
@@ -35,25 +35,19 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::CutStrategy, params::
     @info "objective bound" JuMP.objective_bound(env.master.model)
     @info "objective value" JuMP.objective_value(env.master.model)
     @info "relative gap" JuMP.relative_gap(env.master.model)
-    # df_callback = DataFrame(
-    #     node_count = JuMP.node_count(env.master.model),
-    #     elapsed_time = time() - start_time,
-    #     objective_bound = JuMP.objective_bound(env.master.model),
-    #     objective_value = JuMP.objective_value(env.master.model),
-    #     relative_gap = JuMP.relative_gap(env.master.model)
-    # )
-    
-    # return df_root_node_preprocessing, df_callback
+    return JuMP.objective_value(env.master.model),time() - start_time
 end
+
+
 
 function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, params::BendersParams)
     start_time = time()
-    time_limit = params.time_limit
-    params.time_limit = 600
-    df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy.base_cut_strategy, params)
-    params.time_limit = time_limit
-    params.time_limit -= df_root_node_preprocessing.total_time[end]
-    df2 = root_node_preprocessing!(env, cut_strategy, params)
+    # time_limit = params.time_limit
+    # params.time_limit = 600
+    # df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy.base_cut_strategy, params)
+    # params.time_limit = time_limit
+    # params.time_limit -= df_root_node_preprocessing.total_time[end]
+    # df2 = root_node_preprocessing!(env, cut_strategy, params)
     number_of_subproblem_solves = 0
 
     function lazy_callback(cb_data)
@@ -97,6 +91,7 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
     end
 
     # Use the closure callbacks
+    set_binary.(env.master.model[:x])
     set_attribute(env.master.model, MOI.LazyConstraintCallback(), lazy_callback)
     set_attribute(env.master.model, MOI.UserCutCallback(), user_callback)
 
@@ -111,15 +106,6 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
     @info "objective bound" JuMP.objective_bound(env.master.model)
     @info "objective value" JuMP.objective_value(env.master.model)
     @info "relative gap" JuMP.relative_gap(env.master.model)
-    # df_callback = DataFrame(
-    #     node_count = JuMP.node_count(env.master.model),
-    #     elapsed_time = time() - start_time,
-    #     objective_bound = JuMP.objective_bound(env.master.model),
-    #     objective_value = JuMP.objective_value(env.master.model),
-    #     relative_gap = JuMP.relative_gap(env.master.model)
-    # )
-    
-    # return df_root_node_preprocessing, df_callback
 end
 
 

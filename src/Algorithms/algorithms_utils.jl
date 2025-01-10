@@ -96,7 +96,11 @@ end
 
 
 function update_upper_bound_and_gap!(state::BendersState, env::BendersEnv, sub_obj_val::Float64)
-    state.UB = min(state.UB, sub_obj_val + dot(env.data.fixed_costs, env.master.x_value))  # UB should always take the minimum value
+    if env.data isa SNIPData
+        state.UB = min(state.UB, sub_obj_val)  # UB should always take the minimum value
+    else
+        state.UB = min(state.UB, sub_obj_val + dot(env.data.fixed_costs, env.master.x_value))
+    end
     update_gap!(state)
 end
 
