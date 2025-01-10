@@ -13,7 +13,7 @@ using BendersDecomposition
     )
 
     @testset "StandardUFLPSubProblem" begin
-        cut_strategy = StandardCut()
+        cut_strategy = ClassicalCut()
         sp = create_sub_problem(data, cut_strategy)
 
         # Test struct type and components
