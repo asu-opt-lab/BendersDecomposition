@@ -31,3 +31,9 @@ function add_norm_specific_components!(model::Model, data::UFLPData, ::FatKnapsa
         error("Unsupported norm type: $(typeof(norm_type))")
     end
 end
+
+function add_problem_specific_constraints!(model::Model, data::UFLPData, ::StandardNorm)
+end
+
+function add_problem_specific_constraints!(model::Model, data::UFLPData, ::LNorm)
+end

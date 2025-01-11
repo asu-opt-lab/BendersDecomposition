@@ -1,4 +1,4 @@
-function get_subproblem_value(env::BendersEnv)
+function get_subproblem_value(env::BendersEnv, cut_strategy::CutStrategy)
     
     # # Check if master.x_value is close enough to integer values
     if !all(x -> isapprox(x, round(x), atol=1e-4), env.master.x_value)
@@ -12,6 +12,11 @@ function get_subproblem_value(env::BendersEnv)
     else
         error("Subproblem is not feasible or optimal")
     end
+end
+
+function get_subproblem_value(env::BendersEnv, cut_strategy::Union{FatKnapsackCut, SlimKnapsackCut})
+    critical_items, sub_obj_val = generate_cut_coefficients(env.sub, env.master.x_value, cut_strategy)
+    return sub_obj_val
 end
 
 function select_disjunctive_inequality(x_value)

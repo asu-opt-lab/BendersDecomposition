@@ -31,6 +31,19 @@ function generate_cut_coefficients(sub::AbstractSubProblem, korv_values, base_cu
     return true, dual_values, obj_value
 end
 
+function generate_cut_coefficients(sub::AbstractSubProblem, korv_values::NamedTuple, base_cut_strategy::FatKnapsackCut)
+    if isapprox(korv_values.constant, 0.0, atol=1e-05)
+        return false, [], sum(korv_values.t)
+    end
+    input = @. abs(korv_values.x / korv_values.constant) # abs value
+    solve_sub!(sub, input)
+    dual_values, obj_value = generate_cut_coefficients(sub, input, base_cut_strategy)
+    obj_value *= korv_values.constant
+    if obj_value <= sum(korv_values.t) - 1e-04
+        return false, [], sum(korv_values.t)
+    end
+    return true, dual_values, obj_value
+end
 
 # ============================================================================
 # Different types of cuts for the DCGLP

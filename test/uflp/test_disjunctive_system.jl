@@ -9,7 +9,7 @@ using BendersDecomposition
 global_logger(ConsoleLogger(stderr, Logging.Warn))
 
 @testset "UFLP Disjunctive System Tests" begin
-    solver = :CPLEX
+    solver = "CPLEX"
     
     # Test on a few representative instances
     for i in [1:66;68:71]
@@ -19,22 +19,18 @@ global_logger(ConsoleLogger(stderr, Logging.Warn))
             
             # Solve using standard MIP model for comparison
             milp = create_milp(data)
-            assign_solver!(milp.model, solver)
+            set_optimizer(milp.model, CPLEX.Optimizer)
             optimize!(milp.model)
             mip_objective = objective_value(milp.model)
             
-            disjunctive_system = DisjunctionSystem(L1Norm(), FatKnapsackCut())
-            # Solve using disjunctive Benders
-            master = create_master_problem(data, disjunctive_system._cut_strategy)
-            relax_integrality(master.model)
-            assign_solver!(master.model, solver)
-            sub = create_sub_problem(data, disjunctive_system._cut_strategy)
-            # assign_solver!(sub.model, solver)
+            # disjunctive_system = DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true,true)
+            # disjunctive_system = DisjunctiveCut(SlimKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true,true)
+            disjunctive_system = DisjunctiveCut(ClassicalCut(), L1Norm(), PureDisjunctiveCut(), true, true, true,true)
+            loop_strategy = Sequential()
             
-            params = BendersParams(600.0, 0.001)  # 10 minutes time limit, 0.1% gap tolerance
-            algo = SequentialBenders(data, master, sub, disjunctive_system, params)
+            params = BendersParams(7200.0, 1e-9, solver, Dict("solver" => solver), Dict("solver" => solver), Dict("solver" => solver), true) 
             
-            result = solve!(algo)
+            result = run_Benders(data, loop_strategy, disjunctive_system, params)
             disjunctive_objective = result[end, :UB]
             
             # Compare results
@@ -42,7 +38,7 @@ global_logger(ConsoleLogger(stderr, Logging.Warn))
             
             # Print results
             @printf("Instance: p%d | MIP: %.4f | Disjunctive: %.4f | Iterations: %d | Time: %.2f\n",
-                    i, mip_objective, disjunctive_objective, result[end, :iter], result[end, :elapsed_time])
+                    i, mip_objective, disjunctive_objective, result[end, :iter], result[end, :total_time])
         end
     end
 end

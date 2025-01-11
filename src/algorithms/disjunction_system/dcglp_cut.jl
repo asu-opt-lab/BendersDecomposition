@@ -1,6 +1,6 @@
 function generate_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
 
-    sub_obj_val = get_subproblem_value(env) #checked
+    sub_obj_val = get_subproblem_value(env, cut_strategy.base_cut_strategy) #checked
 
     disjunctive_inequality = select_disjunctive_inequality(env.master.x_value)
 
@@ -83,10 +83,10 @@ end
 
 function update_bounds!(state, k_values, v_values, other_values, obj_value_k, obj_value_v, t_value, norm_type::LNorm)
     state.LB = other_values.τ
-    diff_st = obj_value_k .+ obj_value_v .- t_value
+    diff_st = obj_value_k .+ obj_value_v .- sum(t_value)
     state.UB = update_UB!(state.UB, other_values.sx, diff_st, norm_type)
-    state.UB_k = obj_value_k .- k_values.t
-    state.UB_v = obj_value_v .- v_values.t
+    state.UB_k = obj_value_k .- sum(k_values.t)
+    state.UB_v = obj_value_v .- sum(v_values.t)
     state.gap = (state.UB - state.LB)/abs(state.UB) * 100
 end
 
@@ -110,7 +110,7 @@ function merge_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
     # master_disjunctive_cut = @expression(env.master.model, _γ₀ + dot(_γₓ, env.master.var[:x]) + dot(_γₜ, env.master.var[:t]))
     push!(env.dcglp.γ_values, (γ₀, γₓ, γₜ))
     # @info "γ₀: $γ₀, γₓ: $γₓ, γₜ: $γₜ"
-    @info "γ₀/γₜ: $(γ₀/γₜ)"
+    # @info "γ₀/γₜ: $(γ₀/γₜ)"
     master_disjunctive_cut = @expression(env.master.model, γ₀ + dot(γₓ, env.master.var[:x]) + dot(γₜ, env.master.var[:t]))
     if cut_strategy.include_master_cuts
         push!(env.dcglp.master_cuts, [master_disjunctive_cut])

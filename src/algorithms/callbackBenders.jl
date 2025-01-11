@@ -15,7 +15,7 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::CutStrategy, params::
             
             solve_sub!(env.sub, env.master.x_value)
             cuts, sub_obj_value = generate_cuts(env, cut_strategy)
-            if value_t <= sub_obj_value - 1e-06
+            if sum(value_t) <= sub_obj_value - 1e-06
                 for _cut in cuts
                     cut = @build_constraint(0 >= _cut)
                     MOI.submit(env.master.model, MOI.LazyConstraint(cb_data), cut)
@@ -61,7 +61,7 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
             
             solve_sub!(env.sub, env.master.x_value)
             cuts, sub_obj_value = generate_cuts(env, cut_strategy.base_cut_strategy)
-            if value_t <= sub_obj_value - 1e-06
+            if sum(value_t) <= sub_obj_value - 1e-06
                 for _cut in cuts
                     cut = @build_constraint(0 >= _cut)
                     MOI.submit(env.master.model, MOI.LazyConstraint(cb_data), cut)
@@ -80,7 +80,7 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
             
             solve_sub!(env.sub, env.master.x_value)
             cuts, sub_obj_value = generate_cuts(env, cut_strategy)
-            if env.master.t_value <= sub_obj_value - 1e-06
+            if sum(env.master.t_value) <= sub_obj_value - 1e-06
                 for _cut in cuts
                     cut = @build_constraint(0 .>= _cut)
                     # @info "User cut" cut
