@@ -71,22 +71,26 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
 end
 
 
+# function is_terminated(state, log)
+#     return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || (state.UB_k <= 1e-3 && state.UB_v <= 1e-3) || get_total_time(log) >= 200 || state.iteration >= 50
+# end
 function is_terminated(state, log)
-    return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || (state.UB_k <= 1e-3 && state.UB_v <= 1e-3) || get_total_time(log) >= 200 || state.iteration >= 50
+    return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || get_total_time(log) >= 200 || state.iteration >= 50
 end
+
 
 
 function print_dcglp_iteration_info(state, log)
     @printf("   Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.2f%% | UB_k: %11.4f | UB_v: %11.4f \n",
-           state.iteration, state.LB, state.UB, state.gap, state.UB_k, state.UB_v)
+           state.iteration, state.LB, state.UB, state.gap, sum(state.UB_k), sum(state.UB_v))
 end
 
 function update_bounds!(state, k_values, v_values, other_values, obj_value_k, obj_value_v, t_value, norm_type::LNorm)
     state.LB = other_values.τ
-    diff_st = obj_value_k .+ obj_value_v .- sum(t_value)
+    diff_st = obj_value_k .+ obj_value_v .- t_value
     state.UB = update_UB!(state.UB, other_values.sx, diff_st, norm_type)
-    state.UB_k = obj_value_k .- sum(k_values.t)
-    state.UB_v = obj_value_v .- sum(v_values.t)
+    state.UB_k = obj_value_k .- k_values.t
+    state.UB_v = obj_value_v .- v_values.t
     state.gap = (state.UB - state.LB)/abs(state.UB) * 100
 end
 

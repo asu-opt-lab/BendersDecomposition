@@ -16,7 +16,7 @@ end
 
 function get_subproblem_value(env::BendersEnv, cut_strategy::Union{FatKnapsackCut, SlimKnapsackCut})
     critical_items, sub_obj_val = generate_cut_coefficients(env.sub, env.master.x_value, cut_strategy)
-    return sub_obj_val
+    return sum(sub_obj_val)
 end
 
 function select_disjunctive_inequality(x_value)

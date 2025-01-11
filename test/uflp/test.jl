@@ -19,7 +19,7 @@ solver = "Gurobi"
 # ]
 
 instances=[
-    "ga500a-1"
+    "ga250a-3"
 ]
 
 # instances = [1:66;68:71]
