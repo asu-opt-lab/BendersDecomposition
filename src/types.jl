@@ -1,4 +1,14 @@
 # ============================================================================
+# Exports
+# ============================================================================
+export CFLPData, UFLPData, SCFLPData, SNIPData
+export Sequential, Callback, StochasticSequential
+export ClassicalCut, FatKnapsackCut, SlimKnapsackCut, KnapsackCut
+export PureDisjunctiveCut, StrengthenedDisjunctiveCut
+export StandardNorm, L1Norm, L2Norm, LInfNorm
+export DisjunctiveCut
+
+# ============================================================================
 # Abstract type hierarchy
 # ============================================================================
 abstract type AbstractData end
@@ -68,6 +78,7 @@ end
 struct Sequential <: SolutionProcedure end
 struct Callback <: SolutionProcedure end
 struct StochasticSequential <: SolutionProcedure end
+struct StochasticCallback <: SolutionProcedure end
 
 # Cut strategies
 struct ClassicalCut <: CutStrategy end
@@ -106,15 +117,7 @@ struct DisjunctiveCut <: CutStrategy
     verbose::Bool
 end
 
-# ============================================================================
-# Exports
-# ============================================================================
-export CFLPData, UFLPData, SCFLPData, SNIPData
-export Sequential, Callback, StochasticSequential
-export ClassicalCut, FatKnapsackCut, SlimKnapsackCut, KnapsackCut
-export PureDisjunctiveCut, StrengthenedDisjunctiveCut
-export StandardNorm, L1Norm, L2Norm, LInfNorm
-export DisjunctiveCut
+
 
 
 
