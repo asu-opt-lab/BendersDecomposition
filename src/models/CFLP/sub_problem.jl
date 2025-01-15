@@ -1,19 +1,58 @@
 export StandardCFLPSubProblem
 
+"""
+    AbstractCFLPSubProblem <: AbstractSubProblem
+
+Abstract type for CFLP subproblems. Serves as a parent type for different subproblem variants.
+"""
 abstract type AbstractCFLPSubProblem <: AbstractSubProblem end
 
+"""
+    StandardCFLPSubProblem <: AbstractCFLPSubProblem
+
+A mutable struct representing the standard subproblem formulation for the Capacitated Facility Location Problem (CFLP).
+
+# Fields
+- `model::Model`: The underlying JuMP optimization model
+- `fixed_x_constraints::Vector{ConstraintRef}`: Constraints fixing x as x̂
+- `other_constraints::Vector{ConstraintRef}`: Other problem constraints including demand satisfaction and capacity
+"""
 mutable struct StandardCFLPSubProblem <: AbstractCFLPSubProblem
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
     other_constraints::Vector{ConstraintRef}
 end
 
+"""
+    FacilityKnapsackInfo
+
+A struct containing information needed for knapsack cut generation.
+
+# Fields
+- `costs::Matrix{Float64}`: Transportation costs between facilities and customers
+- `demands::Vector{Float64}`: Customer demands
+- `capacity::Vector{Float64}`: Facility capacities
+"""
 struct FacilityKnapsackInfo
     costs::Matrix{Float64}
     demands::Vector{Float64}
     capacity::Vector{Float64}
 end
 
+"""
+    KnapsackCFLPSubProblem <: AbstractCFLPSubProblem
+
+A mutable struct representing the knapsack-based subproblem formulation for the CFLP.
+
+# Fields
+- `model::Model`: The underlying JuMP optimization model
+- `fixed_x_constraints::Vector{ConstraintRef}`: Constraints fixing facility opening decisions
+- `other_constraints::Vector{ConstraintRef}`: Other problem constraints
+- `demand_constraints::Vector{ConstraintRef}`: Customer demand satisfaction constraints for knapsack technique
+- `facility_knapsack_info::FacilityKnapsackInfo`: Information for knapsack cut generation
+
+This variant of the subproblem includes additional structure for generating knapsack-based cuts.
+"""
 mutable struct KnapsackCFLPSubProblem <: AbstractCFLPSubProblem
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
