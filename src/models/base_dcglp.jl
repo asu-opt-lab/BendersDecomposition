@@ -1,5 +1,21 @@
 export DCGLP
 
+"""
+    DCGLP <: AbstractDCGLP
+
+A mutable struct representing a Disjunctive Cut Generation Linear Program (DCGLP).
+
+# Fields
+- `model::Model`: The underlying JuMP optimization model
+- `γ_constraints::Dict{Symbol,Any}`: Dictionary storing the gamma constraints of the model (γ₀, γₓ, γₜ)
+- `γ_values::Vector{Tuple{Float64, Vector{Float64}, Union{Float64, Vector{Float64}}}}`: Vector storing gamma values
+- `disjunctive_inequalities_constraints::Vector{ConstraintRef}`: Vector of disjunctive inequality constraints for each index selected
+- `dcglp_constraints::Any`: Storage for disjunctive cuts
+- `master_cuts::Any`: Storage for cuts being added to the master problem
+
+The DCGLP is used to generate cutting planes for disjunctive programming problems,
+particularly useful in mixed-integer programming.
+"""
 mutable struct DCGLP <: AbstractDCGLP
     model::Model
     γ_constraints::Dict{Symbol,Any}
@@ -20,10 +36,13 @@ function create_dcglp(data::AbstractData, disjunction_system::DisjunctiveCut)
     return DCGLP(model, collect_constraints(model), [], [], [], [])
 end
 
-# Function to create the base model for StandardNorm
+# ============================================================================
+# create_base_model
+# ============================================================================
 function create_base_model(data::AbstractData, ::StandardNorm)
     model = Model()
-    N = data.n_facilities
+
+    N = get_problem_size(data)
 
     # Define variables
     @variable(model, τ)
@@ -34,9 +53,7 @@ function create_base_model(data::AbstractData, ::StandardNorm)
 
 
     # Add constraints
-    # @constraint(model, consigma1, τ >= k₀*(constant+1) - coef'kₓ) 
     @constraint(model, coneta1[j in 1:N], τ >= -k₀ + kₓ[j]) 
-    # @constraint(model, consigma2, τ >= -v₀*constant + coef'vₓ ) 
     @constraint(model, coneta2[j in 1:N], τ >= -v₀ + vₓ[j])
     @constraint(model, conv1[j in 1:N], τ >= -kₓ[j])
     @constraint(model, conv2[j in 1:N], τ >= -vₓ[j])
@@ -54,7 +71,7 @@ function create_base_model(data::AbstractData, ::LNorm)
     model = Model()
 
     # Define problem dimensions
-    N = data.n_facilities
+    N = get_problem_size(data)
 
     # Define variables
     @variable(model, τ)
@@ -80,9 +97,16 @@ function create_base_model(data::AbstractData, ::LNorm)
     return model
 end
 
-# function add_problem_specific_constraints!(model::Model, data::AbstractData) end
+# ============================================================================
+# add_problem_specific_constraints!
+# ============================================================================
+function add_problem_specific_constraints!(model::Model, data::AbstractData) 
+    @warn "No problem specific constraints implemented for data type: $(typeof(data))"
+end
 
-# Generic function to add t constraints
+# ============================================================================
+# add_t_constraints!
+# ============================================================================
 function add_t_constraints!(model::Model, ::AbstractData, ::CutStrategy, ::StandardNorm)
     @variable(model, kₜ)
     @variable(model, vₜ)
@@ -96,12 +120,14 @@ function add_t_constraints!(model::Model, ::AbstractData, ::CutStrategy, ::LNorm
     @constraint(model, cont, kₜ + vₜ - st == 0)
 end
 
-# Function to add norm-specific components for StandardNorm
+# ============================================================================
+# add_norm_specific_components!
+# ============================================================================
 function add_norm_specific_components!(model::Model, data::AbstractData, ::CutStrategy, norm_type::StandardNorm) end
 
-# Function to add norm-specific components for LNorm (ScalarDimension)
+
 function add_norm_specific_components!(model::Model, data::AbstractData, ::CutStrategy, norm_type::LNorm)
-    N = data.n_facilities
+    N = get_problem_size(data)
     if norm_type == L1Norm()
         @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.NormInfinityCone(1 + N + 1))
     elseif norm_type == L2Norm()
@@ -113,9 +139,16 @@ function add_norm_specific_components!(model::Model, data::AbstractData, ::CutSt
     end
 end
 
+# ============================================================================
+# helper functions
+# ============================================================================
 collect_constraints(model::Model) = Dict{Symbol,Any}(
     :γ₀ => model[:con0],
     :γₓ => model[:conx],
     :γₜ => model[:cont]
 )
 
+get_problem_size(data::SNIPData) = length(data.D)
+get_problem_size(data::Union{CFLPData, UFLPData, SCFLPData, MCNDPData}) = data.n_facilities
+get_problem_size(data::Any) = error("Unsupported data type: $(typeof(data)). " *
+    "Supported types are: SNIPData, CFLPData, UFLPData, SCFLPData, MCNDPData")
