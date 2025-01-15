@@ -2,6 +2,21 @@ export SCFLPMasterProblem
 
 abstract type AbstractSCFLPMasterProblem <: AbstractMasterProblem end
 
+"""
+    SCFLPMasterProblem <: AbstractSCFLPMasterProblem
+
+A mutable struct representing the master problem for the Stochastic Capacitated Facility Location Problem (SCFLP).
+
+# Fields
+- `model::Model`: The underlying JuMP optimization model
+- `var::Dict`: Dictionary storing the problem variables (x, t)
+- `obj_value::Float64`: Current objective value of the master problem
+- `x_value::Vector{Float64}`: Current values of the integer variables x
+- `t_value::Vector{Float64}`: Current values of the variables t for each scenario
+
+# Related Functions
+    create_master_problem(data::SCFLPData, cut_strategy::Union{ClassicalCut, KnapsackCut})
+"""
 mutable struct SCFLPMasterProblem <: AbstractSCFLPMasterProblem
     model::Model
     var::Dict
@@ -23,9 +38,6 @@ function create_master_problem(data::SCFLPData, cut_strategy::Union{ClassicalCut
     # Add capacity constraint for maximum demand scenario
     max_demand = maximum(sum(demands) for demands in data.demands)
     @constraint(model, sum(data.capacities[i] * x[i] for i in 1:N) >= max_demand)
-    # for scenario in 1:data.n_scenarios
-    #     @constraint(model, sum(data.capacities[i] * x[i] for i in 1:N) >= sum(data.demands[scenario]))
-    # end
     
     return SCFLPMasterProblem(model, Dict(:x => x, :t => t), 0.0, zeros(N), zeros(data.n_scenarios))
 end

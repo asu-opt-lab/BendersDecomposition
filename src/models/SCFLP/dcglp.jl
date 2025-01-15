@@ -1,3 +1,7 @@
+# ============================================================================
+# add_problem_specific_constraints!
+# ============================================================================
+
 function add_problem_specific_constraints!(model::Model, data::SCFLPData, ::StandardNorm)
     N = data.n_facilities
     S = data.n_scenarios
@@ -11,6 +15,11 @@ function add_problem_specific_constraints!(model::Model, data::SCFLPData, ::LNor
     @constraint(model, conw1[s = 1:S], 0 >= -sum(data.capacities[j]*model[:kₓ][j] for j in 1:N) + sum(data.demands[s])*model[:k₀])
     @constraint(model, conw2[s = 1:S], 0 >= -sum(data.capacities[j]*model[:vₓ][j] for j in 1:N) + sum(data.demands[s])*model[:v₀])
 end
+
+
+# ============================================================================
+# add_t_constraints!
+# ============================================================================
 
 # for multiple t variables
 function add_t_constraints!(model::Model, data::SCFLPData, ::Union{ClassicalCut, KnapsackCut}, ::StandardNorm)
@@ -31,6 +40,10 @@ function add_t_constraints!(model::Model, data::SCFLPData, ::Union{ClassicalCut,
     return γₜconstarint
 end
 
+
+# ============================================================================
+# add_norm_specific_components!
+# ============================================================================
 
 function add_norm_specific_components!(model::Model, data::SCFLPData, ::Union{ClassicalCut, KnapsackCut}, norm_type::LNorm)
     N = data.n_facilities

@@ -1,3 +1,7 @@
+export CFLPMasterProblem
+
+abstract type AbstractCFLPMasterProblem <: AbstractMasterProblem end
+
 """
     CFLPMasterProblem <: AbstractCFLPMasterProblem
 
@@ -12,17 +16,7 @@ A mutable struct representing the master problem for the Capacitated Facility Lo
 
 # Related Functions
     create_master_problem(data::CFLPData, cut_strategy::Union{ClassicalCut, KnapsackCut})
-
-Creates and returns a new CFLPMasterProblem instance with:
-- Binary variables for facility opening decisions
-- Capacity constraints ensuring total facility capacity meets demand
-- Objective minimizing facility opening costs plus auxiliary costs
 """
-export CFLPMasterProblem
-
-
-abstract type AbstractCFLPMasterProblem <: AbstractMasterProblem end
-
 mutable struct CFLPMasterProblem <: AbstractCFLPMasterProblem
     model::Model
     var::Dict

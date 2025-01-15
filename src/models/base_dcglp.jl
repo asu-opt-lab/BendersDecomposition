@@ -107,36 +107,20 @@ end
 # ============================================================================
 # add_t_constraints!
 # ============================================================================
-function add_t_constraints!(model::Model, ::AbstractData, ::CutStrategy, ::StandardNorm)
-    @variable(model, kₜ)
-    @variable(model, vₜ)
-    @constraint(model, cont, kₜ + vₜ == 0)
-end
 
-function add_t_constraints!(model::Model, ::AbstractData, ::CutStrategy, ::LNorm)
-    @variable(model, kₜ)
-    @variable(model, vₜ)
-    @variable(model, st)
-    @constraint(model, cont, kₜ + vₜ - st == 0)
+function add_t_constraints!(model::Model, ::AbstractData, ::CutStrategy, ::AbstractNormType)
+    @error "No t constraints implemented for data type: $(typeof(data)) and cut strategy: $(typeof(cut_strategy)) and norm type: $(typeof(norm_type))"
 end
 
 # ============================================================================
 # add_norm_specific_components!
 # ============================================================================
+
 function add_norm_specific_components!(model::Model, data::AbstractData, ::CutStrategy, norm_type::StandardNorm) end
 
 
 function add_norm_specific_components!(model::Model, data::AbstractData, ::CutStrategy, norm_type::LNorm)
-    N = get_problem_size(data)
-    if norm_type == L1Norm()
-        @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.NormInfinityCone(1 + N + 1))
-    elseif norm_type == L2Norm()
-        @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.SecondOrderCone(1 + N + 1))
-    elseif norm_type == LInfNorm()
-        @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.NormOneCone(1 + N + 1))
-    else
-        error("Unsupported norm type: $(typeof(norm_type))")
-    end
+    @error "No norm specific components implemented for data type: $(typeof(data)) and cut strategy: $(typeof(cut_strategy)) and norm type: $(typeof(norm_type))"
 end
 
 # ============================================================================

@@ -1,10 +1,6 @@
-export StandardCFLPSubProblem
+export StandardCFLPSubProblem, KnapsackCFLPSubProblem
 
-"""
-    AbstractCFLPSubProblem <: AbstractSubProblem
 
-Abstract type for CFLP subproblems. Serves as a parent type for different subproblem variants.
-"""
 abstract type AbstractCFLPSubProblem <: AbstractSubProblem end
 
 """
@@ -16,6 +12,9 @@ A mutable struct representing the standard subproblem formulation for the Capaci
 - `model::Model`: The underlying JuMP optimization model
 - `fixed_x_constraints::Vector{ConstraintRef}`: Constraints fixing x as x̂
 - `other_constraints::Vector{ConstraintRef}`: Other problem constraints including demand satisfaction and capacity
+
+# Related Functions
+    create_sub_problem(data::CFLPData, ::ClassicalCut)
 """
 mutable struct StandardCFLPSubProblem <: AbstractCFLPSubProblem
     model::Model
@@ -23,16 +22,7 @@ mutable struct StandardCFLPSubProblem <: AbstractCFLPSubProblem
     other_constraints::Vector{ConstraintRef}
 end
 
-"""
-    FacilityKnapsackInfo
 
-A struct containing information needed for knapsack cut generation.
-
-# Fields
-- `costs::Matrix{Float64}`: Transportation costs between facilities and customers
-- `demands::Vector{Float64}`: Customer demands
-- `capacity::Vector{Float64}`: Facility capacities
-"""
 struct FacilityKnapsackInfo
     costs::Matrix{Float64}
     demands::Vector{Float64}
@@ -51,7 +41,8 @@ A mutable struct representing the knapsack-based subproblem formulation for the 
 - `demand_constraints::Vector{ConstraintRef}`: Customer demand satisfaction constraints for knapsack technique
 - `facility_knapsack_info::FacilityKnapsackInfo`: Information for knapsack cut generation
 
-This variant of the subproblem includes additional structure for generating knapsack-based cuts.
+# Related Functions
+    create_sub_problem(data::CFLPData, ::KnapsackCut)
 """
 mutable struct KnapsackCFLPSubProblem <: AbstractCFLPSubProblem
     model::Model

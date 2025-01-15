@@ -2,6 +2,19 @@ export StandardSNIPSubProblem
 
 abstract type AbstractSNIPSubProblem <: AbstractSubProblem end
 
+"""
+    StandardSNIPSubProblem <: AbstractSNIPSubProblem
+
+A mutable struct representing the subproblem for the Sensor Network Installation Problem (SNIP).
+
+# Fields
+- `model::Model`: The underlying JuMP optimization model
+- `fixed_x_constraints::Vector{ConstraintRef}`: Constraints fixing the x variables to 0
+- `other_constraints::Vector{ConstraintRef}`: Other constraints for the subproblem
+
+# Related Functions
+    create_sub_problem(data::SNIPData, cut_strategy::ClassicalCut)
+"""
 mutable struct StandardSNIPSubProblem <: AbstractSNIPSubProblem
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
