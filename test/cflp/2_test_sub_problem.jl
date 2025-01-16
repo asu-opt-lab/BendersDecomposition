@@ -21,6 +21,7 @@ using BendersDecomposition
         @test sp isa StandardCFLPSubProblem
         @test sp.model isa Model
         @test length(sp.fixed_x_constraints) == data.n_facilities
+        @test !isempty(sp.other_constraints)
 
         # Test model constraints
         # Test demand satisfaction constraints (=)
@@ -33,6 +34,30 @@ using BendersDecomposition
 
         # Test objective function type
         @test objective_function(sp.model) isa JuMP.GenericAffExpr{Float64,JuMP.VariableRef}
+    end
+
+    @testset "KnapsackCFLPSubProblem" begin
+        cut_strategy = KnapsackCut()
+        sp = create_sub_problem(data, cut_strategy)
+
+        # Test struct type and components
+        @test sp isa KnapsackCFLPSubProblem
+        @test sp.model isa Model
+        @test length(sp.fixed_x_constraints) == data.n_facilities
+        @test !isempty(sp.other_constraints)
+        @test length(sp.demand_constraints) == data.n_customers
+
+        # Test facility knapsack info
+        @test sp.facility_knapsack_info isa BendersDecomposition.FacilityKnapsackInfo
+        @test size(sp.facility_knapsack_info.costs) == (data.n_facilities, data.n_customers)
+        @test length(sp.facility_knapsack_info.demands) == data.n_customers
+        @test length(sp.facility_knapsack_info.capacity) == data.n_facilities
+
+        # Test model constraints (same structure as StandardCFLPSubProblem)
+        @test num_constraints(sp.model, AffExpr, MOI.EqualTo{Float64}) == 
+            data.n_customers + data.n_facilities
+        @test num_constraints(sp.model, AffExpr, MOI.LessThan{Float64}) == 
+            data.n_facilities * data.n_customers + data.n_facilities
     end
 
 end

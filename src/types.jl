@@ -1,7 +1,7 @@
 # ============================================================================
 # Exports
 # ============================================================================
-export CFLPData, UFLPData, SCFLPData, SNIPData
+export CFLPData, UFLPData, SCFLPData, MCNDPData,SNIPData
 export Sequential, Callback, StochasticSequential
 export ClassicalCut, FatKnapsackCut, SlimKnapsackCut, KnapsackCut
 export PureDisjunctiveCut, StrengthenedDisjunctiveCut

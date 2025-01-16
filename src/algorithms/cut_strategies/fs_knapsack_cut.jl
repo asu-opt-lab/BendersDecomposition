@@ -15,7 +15,7 @@ function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Floa
    
     # Pre-allocate arrays for better performance
     critical_pairs = Vector{Tuple{Int,Int}}(undef, J)
-    obj_values::Float64 = 0.0
+    obj_values = Vector{Float64}(undef, J)
 
     # Process each facility
     for j in 1:J
@@ -28,7 +28,7 @@ function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Floa
         critical_pairs[j] = (j, k)
 
         # Calculate objective value contribution
-        obj_values += c_sorted[k] - (k > 1 ? sum((c_sorted[k] - c_sorted[i]) * x_sorted[i] for i in 1:k-1) : 0)
+        obj_values[j] = c_sorted[k] - (k > 1 ? sum((c_sorted[k] - c_sorted[i]) * x_sorted[i] for i in 1:k-1) : 0)
     end
 
     return critical_items, obj_values
@@ -56,16 +56,6 @@ function build_cuts(master::AbstractMasterProblem, sub::AbstractSubProblem, crit
 end
 
 
-"""
-Find the critical item index in a facility's sorted customer list.
-
-# Arguments
-- `c::Vector{Float64}`: Vector of sorted costs/demands
-- `x::Vector{Float64}`: Vector of corresponding x values
- 
-# Returns
-- Integer index of the critical item
-"""
 function find_critical_item(c::Vector{Float64}, x::Vector{Float64})
     cumsum_x = cumsum(x)
     k = findfirst(>=(1), cumsum_x)
