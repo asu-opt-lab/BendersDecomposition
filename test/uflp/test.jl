@@ -7,8 +7,8 @@ using Logging
 using BendersDecomposition
 
 
-# solver = "CPLEX"
-solver = "Gurobi"
+solver = "CPLEX"
+# solver = "Gurobi"
     
 # instances=[
 #     "ga500a-1" "ga500a-2" "ga500a-3" "ga500a-4" "ga500a-5"
@@ -31,24 +31,13 @@ for i in instances
     # data = read_uflp_benchmark_data("p$i")
     @info i
 
-    disjunctive_system = DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true,true)
-    # disjunctive_system = DisjunctiveCut(ClassicalCut(), L1Norm(), PureDisjunctiveCut(), true, true, true,true)
+    disjunctive_system = DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), false, true, true,true)
+    # disjunctive_system = DisjunctiveCut(ClassicalCut(), L1Norm(), PureDisjunctiveCut(), false, true, true,true)
     # disjunctive_system = DisjunctiveCut(SlimKnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true,true)
-    @info disjunctive_system
-    # params = BendersParams(
-    #     300.0,
-    #     1e-5, # *100 already
-    #     solver,
-    #     Dict("solver" => solver),
-    #     Dict("solver" => solver),
-    #     Dict("solver" => solver),
-    #     # Dict(:solver => :Gurobi),
-    #     true
-    #     # false
-    # )
-
+    # @info disjunctive_system
+    
     params = BendersParams(
-        7200.0,
+        600.0,
         1e-3, # *100 already
         solver,
         Dict("solver" => solver),
@@ -62,6 +51,6 @@ for i in instances
     # result = run_Benders(data, Sequential(), ClassicalCut(), params)
     # result = run_Benders(data, Sequential(), FatKnapsackCut(), params)
     # result = run_Benders(data, Callback(), FatKnapsackCut(), params)
-    result = run_Benders(data, Sequential(), disjunctive_system, params)
-    # result = run_Benders(data, Callback(), disjunctive_system, params)
+    # result = run_Benders(data, Sequential(), disjunctive_system, params)
+    result = run_Benders(data, Callback(), disjunctive_system, params)
 end

@@ -25,7 +25,7 @@ function generate_cut_coefficients(sub::AbstractSubProblem, korv_values, base_cu
     solve_sub!(sub, input)
     dual_values, obj_value = generate_cut_coefficients(sub, input, base_cut_strategy)
     obj_value *= korv_values.constant
-    if obj_value <= korv_values.t - 1e-04
+    if obj_value <= korv_values.t + 1e-04
         return false, [], korv_values.t
     end
     return true, dual_values, obj_value
@@ -33,16 +33,18 @@ end
 
 function generate_cut_coefficients(sub::AbstractSubProblem, korv_values::NamedTuple, base_cut_strategy::FatKnapsackCut)
     if isapprox(korv_values.constant, 0.0, atol=1e-05)
-        return false, [], korv_values.t
+        return fill(false, length(korv_values.t)), [], korv_values.t
     end
     input = @. abs(korv_values.x / korv_values.constant) # abs value
-    solve_sub!(sub, input)
     dual_values, obj_value = generate_cut_coefficients(sub, input, base_cut_strategy)
     obj_value *= korv_values.constant
-    if sum(obj_value) <= sum(korv_values.t) - 1e-04
-        return false, [], korv_values.t
+    if_add_cuts = fill(true, length(dual_values))
+    indices = findall(i -> (obj_value - korv_values.t)[i] <= 1e-04, eachindex(korv_values.t))
+    if length(indices) == length(dual_values)
+        return fill(false, length(korv_values.t)), [], korv_values.t
     end
-    return true, dual_values, obj_value
+    if_add_cuts[indices] .= false
+    return if_add_cuts, dual_values, obj_value
 end
 
 # ============================================================================
@@ -89,9 +91,26 @@ function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::Ab
     return [cut_k], [cut_v], [cut]
 end
 
+function _build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, critical_items::Vector{Int}, ::FatKnapsackCut)
+    expressions_k = []
+    expressions_v = []
+    expressions_master = []
+    add_cuts_indices = []
+    for j in 1:length(critical_items)
+        if critical_items[j] != false
+            push!(add_cuts_indices, j)
+            k = critical_items[j]
+            c_sorted = sub.sorted_cost_demands[j]
+            sorted_indices = sub.sorted_indices[j]
+            push!(expressions_k, @expression(dcglp.model, c_sorted[k] * dcglp.model[:k₀] - sum((c_sorted[k] - c_sorted[i]) * dcglp.model[:kₓ][sorted_indices[i]] for i in 1:k-1)))
+            push!(expressions_v, @expression(dcglp.model, c_sorted[k] * dcglp.model[:v₀] - sum((c_sorted[k] - c_sorted[i]) * dcglp.model[:vₓ][sorted_indices[i]] for i in 1:k-1)))
+            push!(expressions_master, @expression(master.model, c_sorted[k] - sum((c_sorted[k] - c_sorted[i]) * master.model[:x][sorted_indices[i]] for i in 1:k-1)))
+        end
+    end
+    return add_cuts_indices, expressions_k, expressions_v, expressions_master
+end
 
-# fat or slim Knapsack cuts
-function _build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, critical_items::Vector{Int}, ::Union{FatKnapsackCut, SlimKnapsackCut})
+function _build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, critical_items::Vector{Int}, ::SlimKnapsackCut)
     expressions_k = []
     expressions_v = []
     expressions_master = []
@@ -107,10 +126,10 @@ function _build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::A
 end
 
 function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, critical_items::Vector{Int}, ::FatKnapsackCut)
-    expressions_k, expressions_v, expressions_master = _build_cuts(dcglp, master, sub, critical_items, FatKnapsackCut())
-    return [@expression(dcglp.model, expr_k - dcglp.model[:kₜ][j]) for (j, expr_k) in enumerate(expressions_k)], 
-           [@expression(dcglp.model, expr_v - dcglp.model[:vₜ][j]) for (j, expr_v) in enumerate(expressions_v)],
-           [@expression(master.model, expr_master - master.model[:t][j]) for (j, expr_master) in enumerate(expressions_master)]
+    add_cuts_indices, expressions_k, expressions_v, expressions_master = _build_cuts(dcglp, master, sub, critical_items, FatKnapsackCut())
+    return [@expression(dcglp.model, expr_k - dcglp.model[:kₜ][add_cuts_indices[j]]) for (j, expr_k) in enumerate(expressions_k)], 
+           [@expression(dcglp.model, expr_v - dcglp.model[:vₜ][add_cuts_indices[j]]) for (j, expr_v) in enumerate(expressions_v)],
+           [@expression(master.model, expr_master - master.model[:t][add_cuts_indices[j]]) for (j, expr_master) in enumerate(expressions_master)]
 end
 
 function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, critical_items::Vector{Int}, ::SlimKnapsackCut)

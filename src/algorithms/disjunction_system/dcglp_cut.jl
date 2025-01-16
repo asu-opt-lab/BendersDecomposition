@@ -58,18 +58,24 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
         cut_strategy.verbose && print_dcglp_iteration_info(state, log)
 
         is_terminated(state, log) && break
-        
-        if if_add_cuts_k
+
+        if any(if_add_cuts_k)
+            dual_info_k = mark_no_cuts_indices(if_add_cuts_k, dual_info_k)
             add_cuts_k!(env, dual_info_k, cut_strategy)
         end
-        if if_add_cuts_v
+        if any(if_add_cuts_v)
+            dual_info_v = mark_no_cuts_indices(if_add_cuts_v, dual_info_v)
             add_cuts_v!(env, dual_info_v, cut_strategy)
         end
-        
-    end
 
+    end
 end
 
+function mark_no_cuts_indices(if_add_cuts, dual_info)
+    false_indices = findall(i -> false .== if_add_cuts[i], eachindex(if_add_cuts))
+    !isempty(false_indices) && (dual_info[false_indices] .= false) 
+    return dual_info
+end
 
 # function is_terminated(state, log)
 #     return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || (state.UB_k <= 1e-3 && state.UB_v <= 1e-3) || get_total_time(log) >= 200 || state.iteration >= 50
