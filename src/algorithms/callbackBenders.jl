@@ -47,7 +47,7 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
     # df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy.base_cut_strategy, params)
     # params.time_limit = time_limit
     # params.time_limit -= df_root_node_preprocessing.total_time[end]
-    # df2 = root_node_preprocessing!(env, cut_strategy, params)
+    df2 = root_node_preprocessing!(env, cut_strategy, params)
     number_of_subproblem_solves = 0
 
     function lazy_callback(cb_data)
@@ -80,7 +80,10 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
             
             solve_sub!(env.sub, env.master.x_value)
             cuts, sub_obj_value = generate_cuts(env, cut_strategy)
-            if sum(env.master.t_value) <= sub_obj_value - 1e-06
+            τ = value(env.dcglp.model[:τ])
+
+            if τ > 0
+                println(τ, number_of_subproblem_solves)
                 for _cut in cuts
                     cut = @build_constraint(0 .>= _cut)
                     # @info "User cut" cut
