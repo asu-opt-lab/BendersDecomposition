@@ -1,21 +1,4 @@
-# Single iteration information
-"""
-    DCGLPIterationInfo
 
-Stores information about a single iteration of the DCGLP (Disjunctive Cut Generating Linear Program) algorithm.
-
-# Fields
-- `iter::Int`: Current iteration number
-- `LB::Float64`: Lower bound
-- `UB::Float64`: Upper bound
-- `UB_k::Float64`: Upper bound for k-subproblem
-- `UB_v::Float64`: Upper bound for v-subproblem
-- `gap::Float64`: Optimality gap
-- `master_time::Float64`: Time spent in master problem
-- `sub_k_time::Float64`: Time spent in k-subproblem
-- `sub_v_time::Float64`: Time spent in v-subproblem
-- `total_time::Float64`: Total elapsed time
-"""
 struct DCGLPIterationInfo
     iter::Int
     LB::Float64
@@ -29,20 +12,7 @@ struct DCGLPIterationInfo
     total_time::Float64
 end
 
-# Stores the current state of the Benders algorithm
-"""
-    DCGLPState
 
-Maintains the current state of the Benders algorithm for DCGLP.
-
-# Fields
-- `iteration::Int`: Current iteration count
-- `LB::Float64`: Current lower bound
-- `UB::Float64`: Current upper bound
-- `UB_k::Float64`: Current upper bound for k-subproblem
-- `UB_v::Float64`: Current upper bound for v-subproblem
-- `gap::Float64`: Current optimality gap
-"""
 mutable struct DCGLPState
     iteration::Int
     LB::Float64
@@ -62,18 +32,7 @@ mutable struct DCGLPState
     end
 end
 
-"""
-    DCGLPIterationLog
 
-Tracks the history and timing information for the DCGLP algorithm.
-
-# Fields
-- `iterations::Vector{DCGLPIterationInfo}`: History of all iterations
-- `start_time::Float64`: Algorithm start time
-- `master_time::Float64`: Cumulative time spent in master problem
-- `sub_k_time::Float64`: Cumulative time spent in k-subproblem
-- `sub_v_time::Float64`: Cumulative time spent in v-subproblem
-"""
 mutable struct DCGLPIterationLog
     iterations::Vector{DCGLPIterationInfo}
     start_time::Float64
@@ -116,7 +75,7 @@ end
 
 
 
-function generate_strengthened_cuts(dcglp::DCGLP, ::PureDisjunctiveCut)
+function generate_disjunctive_cuts(dcglp::DCGLP, ::PureDisjunctiveCut)
     optimize!(dcglp.model)
     γₜ = dual.(dcglp.model[:cont])
     γ₀ = dual(dcglp.model[:con0])
@@ -124,16 +83,8 @@ function generate_strengthened_cuts(dcglp::DCGLP, ::PureDisjunctiveCut)
     return γ₀, γₓ, γₜ
 end
 
-"""
-    generate_strengthened_cuts(dcglp::DCGLP, ::StrengthenedDisjunctiveCut)
 
-Generate strengthened disjunctive cuts.
-
-Returns a tuple (γ₀, γₓ, γₜ) representing coefficients for the constant term,
-decision variables, and time variable respectively. This method computes stronger
-valid inequalities using dual information.
-"""
-function generate_strengthened_cuts(dcglp::DCGLP, ::StrengthenedDisjunctiveCut)
+function generate_disjunctive_cuts(dcglp::DCGLP, ::StrengthenedDisjunctiveCut)
     optimize!(dcglp.model)
     
     σ₁::Float64 = dual(dcglp.disjunctive_inequalities_constraints[1])

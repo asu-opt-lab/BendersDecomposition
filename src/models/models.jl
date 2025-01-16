@@ -19,8 +19,7 @@ A concrete subtype of `AbstractMasterProblem`
 function create_master_problem end
 
 """
-    create_sub_problem(data::AbstractData, cut_strategy::CutStrategy
-)
+    create_sub_problem(data::AbstractData, cut_strategy::CutStrategy)
 
 Create the sub problem formulation for Benders decomposition.
 
@@ -38,8 +37,7 @@ A concrete subtype of `AbstractSubProblem`
 function create_sub_problem end
 
 """
-    create_dcglp(data::AbstractData, cut_strategy::CutStrategy
-)
+    create_dcglp(data::AbstractData, cut_strategy::CutStrategy)
 
 Create the Dual Cut Generation Linear Program (DCGLP) formulation.
 

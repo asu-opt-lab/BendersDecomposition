@@ -1,6 +1,6 @@
 function generate_cuts_stochastic(env::BendersEnv, cut_strategy::DisjunctiveCut)
 
-    sub_obj_val = get_subproblems_value(env) #checked
+    sub_obj_val = get_subproblems_value_stochastic(env) #checked
 
     disjunctive_inequality = select_disjunctive_inequality(env.master.x_value)
 
@@ -10,26 +10,27 @@ function generate_cuts_stochastic(env::BendersEnv, cut_strategy::DisjunctiveCut)
     
     cuts = merge_cuts_stochastic(env, cut_strategy)
 
+    @info "through"
     return cuts, sub_obj_val
 end
 
-function get_subproblems_value(env::BendersEnv)
+function get_subproblems_value_stochastic(env::BendersEnv)
     # # Check if master.x_value is close enough to integer values
     if !all(x -> isapprox(x, round(x), atol=1e-4), env.master.x_value)
-        return Inf
+        return Inf*ones(env.data.num_scenarios)
     end
-    sub_obj_val_collection = 0
-    for scenario in 1:env.data.n_scenarios
+    sub_obj_val_collection = Float64[]
+    for scenario in 1:env.data.num_scenarios
         solve_sub!(env.sub.sub_problems[scenario], env.master.x_value)
         if dual_status(env.sub.sub_problems[scenario].model) == FEASIBLE_POINT
-            sub_obj_val_collection += objective_value(env.sub.sub_problems[scenario].model)
+            push!(sub_obj_val_collection, objective_value(env.sub.sub_problems[scenario].model))
         elseif dual_status(env.sub.sub_problems[scenario].model) == INFEASIBLE_POINT
-            sub_obj_val_collection += Inf
+            push!(sub_obj_val_collection, Inf)
         else
             error("Subproblem is not feasible or optimal")
         end
     end
-    return sub_obj_val_collection/env.data.n_scenarios
+    return sub_obj_val_collection
 end
 
 function solve_dcglp_stochastic!(env::BendersEnv, cut_strategy::DisjunctiveCut)
@@ -57,12 +58,13 @@ function solve_dcglp_stochastic!(env::BendersEnv, cut_strategy::DisjunctiveCut)
         log.master_time += master_time
 
         sub_k_time = @elapsed begin
-            for scenario in 1:env.data.n_scenarios
+            for scenario in 1:env.data.num_scenarios
+
                 if isapprox(k_values.constant, 0.0, atol=1e-05)
                     if_add_cuts_k, dual_info_k, obj_value_k = false, [], k_values.t[scenario]
                 else
                     if_add_cuts_k, dual_info_k, obj_value_k = generate_cut_coefficients_stochastic(env.sub.sub_problems[scenario], k_values, cut_strategy.base_cut_strategy)
-                    if obj_value_k <= k_values.t[scenario] - 1e-04
+                    if obj_value_k <= k_values.t[scenario] + 1e-04
                         if_add_cuts_k, dual_info_k, obj_value_k = false, [], k_values.t[scenario]
                     end
                 end
@@ -73,7 +75,7 @@ function solve_dcglp_stochastic!(env::BendersEnv, cut_strategy::DisjunctiveCut)
                     if_add_cuts_v, dual_info_v, obj_value_v = false, [], v_values.t[scenario]
                 else
                     if_add_cuts_v, dual_info_v, obj_value_v = generate_cut_coefficients_stochastic(env.sub.sub_problems[scenario], v_values, cut_strategy.base_cut_strategy)
-                    if obj_value_v <= v_values.t[scenario] - 1e-04
+                    if obj_value_v <= v_values.t[scenario] + 1e-04
                         if_add_cuts_v, dual_info_v, obj_value_v = false, [], v_values.t[scenario]
                     end
                 end
@@ -93,7 +95,8 @@ function solve_dcglp_stochastic!(env::BendersEnv, cut_strategy::DisjunctiveCut)
 
         is_terminated_stochastic(state, log) && break
         
-        for scenario in 1:env.data.n_scenarios
+        for scenario in 1:env.data.num_scenarios
+
             if if_add_cuts_k_collection[scenario]
                 add_cuts_k!(env, dual_info_k_collection[scenario], cut_strategy, scenario)
             end
@@ -178,13 +181,9 @@ function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::Ab
 end
 
 function merge_cuts_stochastic(env::BendersEnv, cut_strategy::DisjunctiveCut)
-    γ₀, γₓ, γₜ = generate_strengthened_cuts(env.dcglp, cut_strategy.cut_strengthening_type)
-    # @info "γ₀: $γ₀"
-    # @info "γₓ: $γₓ"
-    # @info "γₜ: $γₜ"
+    γ₀, γₓ, γₜ = generate_disjunctive_cuts(env.dcglp, cut_strategy.cut_strengthening_type)
     push!(env.dcglp.γ_values, (γ₀, γₓ, γₜ))
     master_disjunctive_cut = @expression(env.master.model, γ₀ + dot(γₓ, env.master.var[:x]) + dot(γₜ, env.master.var[:t]))
-    @info "disjunctive_cut: $master_disjunctive_cut"
     if cut_strategy.include_master_cuts
         push!(env.dcglp.master_cuts, [master_disjunctive_cut])
         return env.dcglp.master_cuts

@@ -13,21 +13,10 @@ function generate_cuts(env::BendersEnv, ::KnapsackCut, scenario::Int)
     return cut, sub_obj_val
 end
 
-function μ_term(sub::AbstractSubProblem, μ::Float64)
-    return μ
-end
+μ_term(sub::AbstractSubProblem, μ::Float64) = μ
+μ_term(sub::KnapsackCFLPSubProblem, μ::Vector{Float64}) = sum(μ)
+μ_term(sub::KnapsackMCNDPSubProblem, μ::Matrix{Float64}) = sum(μ .* sub.b_iv)
 
-function μ_term(sub::KnapsackCFLPSubProblem, μ::Vector{Float64})
-    return sum(μ)
-end
-
-function μ_term(sub::KnapsackMCNDPSubProblem, μ::Matrix{Float64})
-   sum_all = sum(μ .* sub.b_iv)
-#    @info "μ: $μ"
-#    @info "sub.b_iv: $(sub.b_iv)"
-#    @info sum(μ .* sub.b_iv, dims = 2)
-    return sum_all
-end
 
 function generate_cut_coefficients(sub::KnapsackCFLPSubProblem, x_value::Vector{Float64}, ::KnapsackCut)
     status = dual_status(sub.model)
@@ -54,14 +43,12 @@ function generate_cut_coefficients(sub::KnapsackCFLPSubProblem, x_value::Vector{
         if has_duals(sub.model)
             coefficients_x = dual.(sub.fixed_x_constraints)
             constant_term = dot(dual.(sub.other_constraints), normalized_rhs.(sub.other_constraints))
+            return (constant_term, coefficients_x, 0.0), Inf
         else
-            @error "Infeasible subproblem has no dual solution"
             throw(ErrorException("Infeasible subproblem has no dual solution"))
         end
-        return (constant_term, coefficients_x, 0.0), Inf
         
     else
-        @error "Dual status of subproblem is neither feasible nor infeasible: $status"
         throw(ErrorException("Unexpected dual status"))
     end
 end
@@ -121,39 +108,19 @@ function generate_cut_coefficients(sub::KnapsackMCNDPSubProblem, x_value::Vector
                     [d[3] for d in demands], 
                     capacity[j], 
                     _μ[:,j])
-                # KP_values[j] = test_knapsack_cut_infeasible(
-                #     costs[j]*ones(sub.data.num_commodities), 
-                #     [d[3] for d in demands], 
-                #     capacity[j], 
-                #     _μ[:,j])
             end
             return (μ, KP_values, 0.0), Inf
         else
-            @error "Infeasible subproblem has no dual solution"
             throw(ErrorException("Infeasible subproblem has no dual solution"))
         end
         
     else
-        @error "Dual status of subproblem is neither feasible nor infeasible: $status"
         throw(ErrorException("Unexpected dual status"))
     end
 end
 
-"""
-    calculate_KP_value(costs::Vector{Float64}, demands::Vector{Float64}, capacity::Float64, μ::Vector{Float64}, ::KnapsackCut)
 
-Calculate knapsack problem value using a greedy approach based on cost-to-demand ratios.
 
-# Arguments
-- `costs::Vector{Float64}`: Vector of assignment costs
-- `demands::Vector{Float64}`: Vector of customer demands
-- `capacity::Float64`: Facility capacity
-- `μ::Vector{Float64}`: Dual values from demand constraints
-- `::KnapsackCut`: Cut strategy type
-
-# Returns
-- Optimal value of the knapsack problem
-"""
 function calculate_KP_value(costs::Vector{Float64}, demands::Vector{Float64}, capacity::Float64, μ::Vector{Float64})
     n = length(demands)
     
@@ -228,6 +195,10 @@ function calculate_KP_value_infeasible(costs::Vector{Float64}, demands::Vector{F
     return kp_value
 end
 
+# ============================================================================
+# Helper functions,for testing, don't remove 
+# ============================================================================
+
 # function calculate_KP_value(costs::Vector{Float64}, demands::Vector{Float64}, capacity::Float64, μ::Vector{Float64})
 #     # Calculate ratios and store indices
 #     n = length(demands)
@@ -257,37 +228,37 @@ end
 #     return kp_value
 # end
 
-function test_knapsack_cut(costs::Vector{Float64}, demands::Vector{Float64}, capacity::Float64, μ::Vector{Float64})
-    model = Model(CPLEX.Optimizer)
-    set_optimizer_attribute(model, MOI.Silent(), true)
+# function test_knapsack_cut(costs::Vector{Float64}, demands::Vector{Float64}, capacity::Float64, μ::Vector{Float64})
+#     model = Model(CPLEX.Optimizer)
+#     set_optimizer_attribute(model, MOI.Silent(), true)
     
-    @variable(model, 0 <= z[1:length(demands)] <= 1)
-    @objective(model, Min, sum((demands[j] * costs[j] - μ[j]) * z[j] for j in 1:length(demands)))
-    # @objective(model, Min, sum((μ[j] - demands[j] * costs[j]) * z[j] for j in 1:length(demands)))
-    @constraint(model, sum(demands[j] * z[j] for j in 1:length(demands)) <= capacity)
+#     @variable(model, 0 <= z[1:length(demands)] <= 1)
+#     @objective(model, Min, sum((demands[j] * costs[j] - μ[j]) * z[j] for j in 1:length(demands)))
+#     # @objective(model, Min, sum((μ[j] - demands[j] * costs[j]) * z[j] for j in 1:length(demands)))
+#     @constraint(model, sum(demands[j] * z[j] for j in 1:length(demands)) <= capacity)
     
-    optimize!(model)
-    # println(model)
-    z_values = value.(z)
-    z_rounded = [v < 0.001 ? 0.0 : (v > 0.999 ? 1.0 : v) for v in z_values]
+#     optimize!(model)
+#     # println(model)
+#     z_values = value.(z)
+#     z_rounded = [v < 0.001 ? 0.0 : (v > 0.999 ? 1.0 : v) for v in z_values]
     
-    return objective_value(model)
-end
+#     return objective_value(model)
+# end
 
 
-function test_knapsack_cut_infeasible(costs::Vector{Float64}, demands::Vector{Float64}, capacity::Float64, μ::Vector{Float64})
-    model = Model(CPLEX.Optimizer)
-    # set_optimizer_attribute(model, "InfUnbdInfo", 1)
-    set_optimizer_attribute(model, MOI.Silent(), true)
+# function test_knapsack_cut_infeasible(costs::Vector{Float64}, demands::Vector{Float64}, capacity::Float64, μ::Vector{Float64})
+#     model = Model(CPLEX.Optimizer)
+#     # set_optimizer_attribute(model, "InfUnbdInfo", 1)
+#     set_optimizer_attribute(model, MOI.Silent(), true)
     
-    @variable(model, 0 <= z[1:length(demands)] <= 1)
-    @objective(model, Min, sum( -μ[j] * z[j] for j in 1:length(demands)))
-    @constraint(model, sum(demands[j] * z[j] for j in 1:length(demands)) <= capacity)
-    # println(model)
-    optimize!(model)
-    # @info termination_status(model)
-    z_values = value.(z)
-    z_rounded = [v < 0.001 ? 0.0 : (v > 0.999 ? 1.0 : v) for v in z_values]
+#     @variable(model, 0 <= z[1:length(demands)] <= 1)
+#     @objective(model, Min, sum( -μ[j] * z[j] for j in 1:length(demands)))
+#     @constraint(model, sum(demands[j] * z[j] for j in 1:length(demands)) <= capacity)
+#     # println(model)
+#     optimize!(model)
+#     # @info termination_status(model)
+#     z_values = value.(z)
+#     z_rounded = [v < 0.001 ? 0.0 : (v > 0.999 ? 1.0 : v) for v in z_values]
     
-    return objective_value(model)
-end
+#     return objective_value(model)
+# end

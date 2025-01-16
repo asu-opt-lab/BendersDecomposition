@@ -1,19 +1,8 @@
 function solve_and_get_dcglp_values(model::Model, norm_type::LNorm)
     optimize!(model)
-    # GRBprintquality(model)
-    # GRBgetenv(model)
-    # kappa = MOI.get(model, Gurobi.ModelAttribute("KappaExact"))
-    # @info "KappaExact: $kappa"
     k_values = (constant = value(model[:k₀]), x = value.(model[:kₓ]), t = value.(model[:kₜ]))
     v_values = (constant = value(model[:v₀]), x = value.(model[:vₓ]), t = value.(model[:vₜ]))
     other_values = (τ = value(model[:τ]), sx = value.(model[:sx]))
-
-    # @info "k_values.x ./ k_values.constant: $(k_values.x ./ k_values.constant)"
-    # @info "k_values.t ./ k_values.constant: $(k_values.t ./ k_values.constant)"
-    # @info "v_values.x ./ v_values.constant: $(v_values.x ./ v_values.constant)"
-    # @info "v_values.t ./ v_values.constant: $(v_values.t ./ v_values.constant)"
-    # @info "k_values.t + v_values.t: $(k_values.t + v_values.t)"
-    # @info "k_values.x + v_values.x: $(k_values.x + v_values.x)"
     return k_values, v_values, other_values
 end
 
