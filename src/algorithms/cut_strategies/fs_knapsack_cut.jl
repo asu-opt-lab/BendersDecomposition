@@ -14,7 +14,7 @@ function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Floa
     J = length(sub.sorted_indices)
    
     # Pre-allocate arrays for better performance
-    critical_items = Vector{Int}(undef, J)
+    critical_pairs = Vector{Tuple{Int,Int}}(undef, J)
     obj_values::Float64 = 0.0
 
     # Process each facility
@@ -25,7 +25,7 @@ function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Floa
 
         # Find critical item and calculate contribution
         k = find_critical_item(c_sorted, x_sorted)
-        critical_items[j] = k
+        critical_pairs[j] = (j, k)
 
         # Calculate objective value contribution
         obj_values += c_sorted[k] - (k > 1 ? sum((c_sorted[k] - c_sorted[i]) * x_sorted[i] for i in 1:k-1) : 0)
