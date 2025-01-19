@@ -101,6 +101,7 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
     @info "objective bound" JuMP.objective_bound(env.master.model)
     @info "objective value" JuMP.objective_value(env.master.model)
     @info "relative gap" JuMP.relative_gap(env.master.model)
+    return JuMP.objective_value(env.master.model),time() - start_time
 end
 
 

@@ -1,17 +1,22 @@
-function get_subproblem_value(env::BendersEnv)
+function get_subproblem_value(sub::AbstractSubProblem, x_value::Vector{Float64}, cut_strategy::CutStrategy)
     
     # # Check if master.x_value is close enough to integer values
-    if !all(x -> isapprox(x, round(x), atol=1e-4), env.master.x_value)
+    if !all(x -> isapprox(x, round(x), atol=1e-4), x_value)
         return Inf
     end
     
-    if dual_status(env.sub.model) == FEASIBLE_POINT
-        return objective_value(env.sub.model)
-    elseif dual_status(env.sub.model) == INFEASIBLE_POINT
+    if dual_status(sub.model) == FEASIBLE_POINT
+        return objective_value(sub.model)
+    elseif dual_status(sub.model) == INFEASIBLE_POINT
         return Inf
     else
         error("Subproblem is not feasible or optimal")
     end
+end
+
+function get_subproblem_value(sub::KnapsackUFLPSubProblem, x_value::Vector{Float64}, cut_strategy::FatKnapsackCut)
+    _, sub_obj_val = generate_cut_coefficients(sub, x_value, cut_strategy)
+    return sub_obj_val  
 end
 
 function select_disjunctive_inequality(x_value)

@@ -26,7 +26,7 @@ mutable struct UFLPMasterProblem <: AbstractUFLPMasterProblem
 end
 
 
-function create_master_problem(data::UFLPData, cut_strategy::CutStrategy)
+function create_master_problem(data::UFLPData, cut_strategy::Union{ClassicalCut, FatKnapsackCut})
 
     model = Model()
 

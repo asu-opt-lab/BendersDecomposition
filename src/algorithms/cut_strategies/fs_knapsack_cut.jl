@@ -3,9 +3,9 @@ function generate_cuts(env::BendersEnv, cut_strategy::Union{FatKnapsackCut, Slim
     # return vector
     critical_items, obj_values = generate_cut_coefficients(env.sub, env.master.x_value, cut_strategy)
     
-    cuts = Vector{Any}(undef, length(critical_items))
-    for (index, critical_item) in enumerate(critical_items)
-        cuts[index] = build_cut(env.master, env.sub, (index, critical_item), cut_strategy)
+    cuts = Vector{Any}(undef, length(critical_pairs))
+    for (index, critical_item) in critical_pairs
+        cuts[index] = build_cut(env.master, env.sub, critical_item, cut_strategy)
     end
 
     return cuts, obj_values
@@ -16,7 +16,7 @@ function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Floa
     J = length(sub.sorted_indices)
    
     # Pre-allocate arrays for better performance
-    critical_items = Vector{Int}(undef, J) # (index of the facility, critical item)
+    critical_pairs = Vector{Tuple{Int,Int}}(undef, J) # (index of the facility, critical item)
     obj_values = Vector{Float64}(undef, J)
 
     # Process each facility
@@ -27,13 +27,13 @@ function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Floa
 
         # Find critical item and calculate contribution
         k = find_critical_item(c_sorted, x_sorted)
-        critical_items[j] = k
+        critical_pairs[j] = (j, k)
 
         # Calculate objective value contribution
         obj_values[j] = c_sorted[k] - (k > 1 ? sum((c_sorted[k] - c_sorted[i]) * x_sorted[i] for i in 1:k-1) : 0)
     end
 
-    return critical_items, obj_values
+    return critical_pairs, obj_values
 end
 
 function build_cut(master::AbstractMasterProblem, sub::AbstractSubProblem, (index,critical_items)::Tuple{Int,Int}, ::Union{FatKnapsackCut, SlimKnapsackCut})

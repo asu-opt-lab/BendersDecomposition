@@ -108,7 +108,7 @@ end
 # add_t_constraints!
 # ============================================================================
 
-function add_t_constraints!(model::Model, ::AbstractData, ::CutStrategy, ::AbstractNormType)
+function add_t_constraints!(model::Model, data::AbstractData, cut_strategy::CutStrategy, norm_type::AbstractNormType)
     @error "No t constraints implemented for data type: $(typeof(data)) and cut strategy: $(typeof(cut_strategy)) and norm type: $(typeof(norm_type))"
 end
 
@@ -116,10 +116,10 @@ end
 # add_norm_specific_components!
 # ============================================================================
 
-function add_norm_specific_components!(model::Model, data::AbstractData, ::CutStrategy, norm_type::StandardNorm) end
+function add_norm_specific_components!(model::Model, data::AbstractData, cut_strategy::CutStrategy, norm_type::StandardNorm) end
 
 
-function add_norm_specific_components!(model::Model, data::AbstractData, ::CutStrategy, norm_type::LNorm)
+function add_norm_specific_components!(model::Model, data::AbstractData, cut_strategy::CutStrategy, norm_type::LNorm)
     @error "No norm specific components implemented for data type: $(typeof(data)) and cut strategy: $(typeof(cut_strategy)) and norm type: $(typeof(norm_type))"
 end
 

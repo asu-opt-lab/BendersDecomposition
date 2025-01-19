@@ -1,6 +1,6 @@
 function generate_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
 
-    sub_obj_val = get_subproblem_value(env) 
+    sub_obj_val = get_subproblem_value(env.sub, env.master.x_value, cut_strategy.base_cut_strategy) 
 
     disjunctive_inequality = select_disjunctive_inequality(env.master.x_value)
 
@@ -34,12 +34,12 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
         log.master_time += master_time
 
         sub_k_time = @elapsed begin
-            if_add_cuts_k, dual_info_k, obj_value_k = generate_cut_coefficients(env.sub, k_values, cut_strategy.base_cut_strategy)
+            dual_info_k, obj_value_k = generate_cut_coefficients(env.sub, k_values, cut_strategy.base_cut_strategy)
         end
         log.sub_k_time += sub_k_time
         
         sub_v_time = @elapsed begin
-            if_add_cuts_v, dual_info_v, obj_value_v = generate_cut_coefficients(env.sub, v_values, cut_strategy.base_cut_strategy)
+            dual_info_v, obj_value_v = generate_cut_coefficients(env.sub, v_values, cut_strategy.base_cut_strategy)
         end
         log.sub_v_time += sub_v_time
 
@@ -51,10 +51,10 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
 
         is_terminated(state, log) && break
         
-        if if_add_cuts_k
+        if dual_info_k != []
             add_cuts_k!(env, dual_info_k, cut_strategy)
         end
-        if if_add_cuts_v
+        if dual_info_v != []
             add_cuts_v!(env, dual_info_v, cut_strategy)
         end
         
@@ -64,13 +64,13 @@ end
 
 
 function is_terminated(state, log)
-    return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || (state.UB_k <= 1e-3 && state.UB_v <= 1e-3) || get_total_time(log) >= 200 || state.iteration >= 50
+    return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || get_total_time(log) >= 200 || state.iteration >= 50 #|| (state.UB_k <= 1e-3 && state.UB_v <= 1e-3) 
 end
 
 
 function print_dcglp_iteration_info(state, log)
     @printf("   Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.2f%% | UB_k: %11.4f | UB_v: %11.4f \n",
-           state.iteration, state.LB, state.UB, state.gap, state.UB_k, state.UB_v)
+           state.iteration, state.LB, state.UB, state.gap, sum(state.UB_k), sum(state.UB_v))
 end
 
 function update_bounds!(state, k_values, v_values, other_values, obj_value_k, obj_value_v, t_value, norm_type::LNorm)
@@ -91,7 +91,7 @@ function merge_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
     push!(env.dcglp.γ_values, (γ₀, γₓ, γₜ))
     master_disjunctive_cut = @expression(env.master.model, γ₀ + dot(γₓ, env.master.var[:x]) + dot(γₜ, env.master.var[:t]))
     if cut_strategy.include_master_cuts
-        push!(env.dcglp.master_cuts, [master_disjunctive_cut])
+        push!(env.dcglp.master_cuts, master_disjunctive_cut)
         return env.dcglp.master_cuts
     end
     return master_disjunctive_cut
