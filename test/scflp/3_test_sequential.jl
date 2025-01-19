@@ -11,18 +11,18 @@ using BendersDecomposition
 @testset "SCFLP Sequential Benders Tests" begin
     solver = "CPLEX"
     # solver = :Gurobi
-    data = read_stochastic_capacited_facility_location_problem("f50-c50-s512-r10-1")
+    data = read_stochastic_capacited_facility_location_problem("f25-c50-s64-r10-1")
 
     # Create and solve MIP reference model
-    # milp = create_milp(data)
-    # set_optimizer(milp.model, CPLEX.Optimizer)
-    # optimize!(milp.model)
-    # mip_obj = objective_value(milp.model)
+    milp = create_milp(data)
+    set_optimizer(milp.model, CPLEX.Optimizer)
+    optimize!(milp.model)
+    mip_obj = objective_value(milp.model)
 
     # Test different cut strategies
     loop_strategy = StochasticSequential()
     cut_strategies = Dict(
-        # "Standard" => ClassicalCut()
+        "Standard" => ClassicalCut(),
         "Knapsack" => KnapsackCut()
     )
     params = BendersParams(

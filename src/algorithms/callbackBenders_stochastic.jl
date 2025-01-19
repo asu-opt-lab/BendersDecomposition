@@ -1,11 +1,11 @@
 function solve!(env::BendersEnv, ::StochasticCallback, cut_strategy::CutStrategy, params::BendersParams)
 
     start_time = time()
-    time_limit = params.time_limit
-    params.time_limit = 600
-    df_root_node_preprocessing = root_node_stochastic_preprocessing!(env, cut_strategy, params)
-    params.time_limit = time_limit
-    params.time_limit -= df_root_node_preprocessing.total_time[end]
+    # time_limit = params.time_limit
+    # params.time_limit = 600
+    # df_root_node_preprocessing = root_node_stochastic_preprocessing!(env, cut_strategy, params)
+    # params.time_limit = time_limit
+    # params.time_limit -= df_root_node_preprocessing.total_time[end]
 
     function lazy_callback(cb_data)
         status = JuMP.callback_node_status(cb_data, env.master.model)
@@ -31,16 +31,16 @@ function solve!(env::BendersEnv, ::StochasticCallback, cut_strategy::CutStrategy
     MOI.set(env.master.model, MOI.RelativeGapTolerance(), params.gap_tolerance*1e-2) # make sure the relative gap is small
 
     # turn off CPLEX cuts
-    set_optimizer_attribute(env.master.model, "CPX_PARAM_CUTSFACTOR", 0)
-    set_optimizer_attribute(env.master.model, "CPX_PARAM_CLIQUES", -1)
-    set_optimizer_attribute(env.master.model, "CPX_PARAM_COVERS", -1)
-    set_optimizer_attribute(env.master.model, "CPX_PARAM_FLOWCOVERS", -1)
-    set_optimizer_attribute(env.master.model, "CPX_PARAM_FRACCUTS", -1)
-    set_optimizer_attribute(env.master.model, "CPX_PARAM_GUBCOVERS", -1)
-    # set_optimizer_attribute(env.master.model, "CPX_PARAM_IMPLIED", -1)
-    set_optimizer_attribute(env.master.model, "CPX_PARAM_MCFCUTS", -1)
-    set_optimizer_attribute(env.master.model, "CPX_PARAM_MIRCUTS", -1)
-    set_optimizer_attribute(env.master.model, "CPX_PARAM_ZEROHALFCUTS", -1)
+    # set_optimizer_attribute(env.master.model, "CPX_PARAM_CUTSFACTOR", 0)
+    # set_optimizer_attribute(env.master.model, "CPX_PARAM_CLIQUES", -1)
+    # set_optimizer_attribute(env.master.model, "CPX_PARAM_COVERS", -1)
+    # set_optimizer_attribute(env.master.model, "CPX_PARAM_FLOWCOVERS", -1)
+    # set_optimizer_attribute(env.master.model, "CPX_PARAM_FRACCUTS", -1)
+    # set_optimizer_attribute(env.master.model, "CPX_PARAM_GUBCOVERS", -1)
+    # # set_optimizer_attribute(env.master.model, "CPX_PARAM_IMPLIED", -1)
+    # set_optimizer_attribute(env.master.model, "CPX_PARAM_MCFCUTS", -1)
+    # set_optimizer_attribute(env.master.model, "CPX_PARAM_MIRCUTS", -1)
+    # set_optimizer_attribute(env.master.model, "CPX_PARAM_ZEROHALFCUTS", -1)
 
     set_time_limit_sec(env.master.model, params.time_limit)
     set_optimizer_attribute(env.master.model, MOI.Silent(), false)

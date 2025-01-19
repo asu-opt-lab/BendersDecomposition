@@ -14,7 +14,7 @@ function generate_cuts(env::BendersEnv, ::KnapsackCut, scenario::Int)
 end
 
 μ_term(sub::AbstractSubProblem, μ::Float64) = μ
-μ_term(sub::KnapsackCFLPSubProblem, μ::Vector{Float64}) = sum(μ)
+μ_term(sub::Union{KnapsackCFLPSubProblem, KnapsackSCFLPSubProblem}, μ::Vector{Float64}) = sum(μ)
 μ_term(sub::KnapsackMCNDPSubProblem, μ::Matrix{Float64}) = sum(μ .* sub.b_iv)
 
 

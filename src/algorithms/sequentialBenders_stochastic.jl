@@ -45,6 +45,7 @@ function solve!(env::BendersEnv, ::StochasticSequential, cut_strategy::CutStrate
         end
     end
     
+    return to_dataframe(log)
 end
 
 function solve!(env::BendersEnv, ::StochasticSequential, cut_strategy::DisjunctiveCut, params::BendersParams)

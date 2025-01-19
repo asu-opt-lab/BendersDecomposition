@@ -62,12 +62,8 @@ end
 function add_disjunctive_cut!(dcglp::DCGLP)
     if !isempty(dcglp.γ_values)
         γ₀, γₓ, γₜ = dcglp.γ_values[end]
-        # const_factor = 1e02
-        # @constraint(dcglp.model, const_factor*(γ₀*dcglp.model[:k₀] + dot(γₓ, dcglp.model[:kₓ]) + dot(γₜ, dcglp.model[:kₜ])) <= const_factor*1e-06)
-        # @constraint(dcglp.model, const_factor*(γ₀*dcglp.model[:v₀] + dot(γₓ, dcglp.model[:vₓ]) + dot(γₜ, dcglp.model[:vₜ])) <= const_factor*1e-06)
         @constraint(dcglp.model, γ₀*dcglp.model[:k₀] + dot(γₓ, dcglp.model[:kₓ]) + dot(γₜ, dcglp.model[:kₜ]) <= 0)
         @constraint(dcglp.model, γ₀*dcglp.model[:v₀] + dot(γₓ, dcglp.model[:vₓ]) + dot(γₜ, dcglp.model[:vₜ]) <= 0)    
-
     end
 end
 

@@ -12,7 +12,7 @@ using BendersDecomposition
 
 
 @testset "CFLP Sequential Benders Tests" begin
-    solver = :CPLEX
+    solver = "CPLEX"
     # solver = :Gurobi
     instances = [1:66; 68:71]
     # instances = [25]
@@ -30,15 +30,15 @@ using BendersDecomposition
             # Test different cut strategies
             loop_strategy = Sequential()
             cut_strategies = Dict(
-                "Standard" => ClassicalCut(),
+                "Classical" => ClassicalCut(),
                 "Knapsack" => KnapsackCut()
             )
             params = BendersParams(
                 600.0,
                 0.00001,
                 solver,
-                Dict(:solver => solver),
-                Dict(:solver => solver),
+                Dict("solver" => solver),
+                Dict("solver" => solver),
                 Dict(),
                 false
             )

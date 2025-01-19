@@ -14,7 +14,7 @@ using BendersDecomposition
 @testset "CFLP Sequential Benders Tests" begin
     solver = "Gurobi"
     # solver = :Gurobi
-    K = "07"
+    K = "04"
     instances = ["r$K.$j.dow" for j in 1:9]
     for i in instances
         @testset "Instance: $i" begin
@@ -28,11 +28,10 @@ using BendersDecomposition
             mip_obj = objective_value(milp.model)
             @info mip_obj
             # Test different cut strategies
-            # loop_strategy = Sequential()
             loop_strategy = Callback()
             cut_strategies = Dict(
-                "Standard" => ClassicalCut()
-                # "Knapsack" => KnapsackCut()
+                "Standard" => ClassicalCut(),
+                "Knapsack" => KnapsackCut()
             )
             params = BendersParams(
                 600.0,
@@ -46,12 +45,8 @@ using BendersDecomposition
             benders_UB = Dict()
             benders_LB = Dict()
             for (name, strategy) in cut_strategies
-                result = run_Benders(data, loop_strategy, strategy, params)
-                @info mip_obj
-                benders_LB[name] = result[end, :LB]
-                benders_UB[name] = result[end, :UB]
-                @test isapprox(mip_obj, result[end, :LB], atol=0.1)
-                @test isapprox(mip_obj, result[end, :UB], atol=0.1)
+                obj_value, _ = run_Benders(data, loop_strategy, strategy, params)
+                @test isapprox(mip_obj, obj_value, atol=0.1)
             end
             @printf("Instance: %s | MIP: %.2f | ", i, mip_obj)
             for (cut_type, lb) in benders_LB

@@ -48,7 +48,7 @@ end
 
 function create_sub_problem(data::SCFLPData, cut_strategy::Union{ClassicalCut, KnapsackCut})
     @debug "Building Subproblem for SCFLP (Standard)"
-    sub_problems = map(1:data.n_scenarios) do scenario
+    sub_problems = map(1:data.num_scenarios) do scenario
         data_scenario = create_scenario_data(data, scenario)
         create_sub_problem(data_scenario, cut_strategy)
     end

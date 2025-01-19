@@ -2,7 +2,7 @@
 # Exports
 # ============================================================================
 export CFLPData, UFLPData, SCFLPData, MCNDPData,SNIPData
-export Sequential, Callback, StochasticSequential
+export Sequential, Callback, StochasticSequential, StochasticCallback
 export ClassicalCut, FatKnapsackCut, SlimKnapsackCut, KnapsackCut
 export PureDisjunctiveCut, StrengthenedDisjunctiveCut
 export StandardNorm, L1Norm, L2Norm, LInfNorm
@@ -43,7 +43,7 @@ end
 struct SCFLPData <: AbstractData
     n_facilities::Int
     n_customers::Int
-    n_scenarios::Int
+    num_scenarios::Int
     capacities::Vector{Float64}
     demands::Vector{Vector{Float64}}
     fixed_costs::Vector{Float64}

@@ -10,7 +10,6 @@ function generate_cuts_stochastic(env::BendersEnv, cut_strategy::DisjunctiveCut)
     
     cuts = merge_cuts_stochastic(env, cut_strategy)
 
-    @info "through"
     return cuts, sub_obj_val
 end
 

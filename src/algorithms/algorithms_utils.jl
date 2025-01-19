@@ -68,11 +68,26 @@ end
 
 
 function update_upper_bound_and_gap!(state::BendersState, env::BendersEnv, sub_obj_val_collection::Vector{Float64})
-
-    state.UB = min(state.UB, sum(sub_obj_val_collection[k] * env.data.scenarios[k][3] for k in 1:env.data.num_scenarios))  
+    if env.data isa SCFLPData
+        state.UB = min(state.UB, mean(sub_obj_val_collection) + dot(env.data.fixed_costs, env.master.x_value))  
+    elseif env.data isa UFLPData
+        state.UB = min(state.UB, sum(sub_obj_val_collection) + dot(env.data.fixed_costs, env.master.x_value))  
+    else
+        state.UB = min(state.UB, sum(sub_obj_val_collection[k] * env.data.scenarios[k][3] for k in 1:env.data.num_scenarios))  
+    end
     update_gap!(state)
 end
 
 
-
+function to_dataframe(log::BendersIterationLog)
+    return DataFrame(
+        iter = [info.iter for info in log.iterations],
+        LB = [info.LB for info in log.iterations],
+        UB = [info.UB for info in log.iterations],
+        gap = [info.gap for info in log.iterations],
+        master_time = [info.master_time for info in log.iterations],
+        sub_time = [info.sub_time for info in log.iterations],
+        total_time = [info.total_time for info in log.iterations]
+    )
+end
 
