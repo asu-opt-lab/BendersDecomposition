@@ -12,50 +12,48 @@ using BendersDecomposition
 
 
 @testset "CFLP Sequential Benders Tests" begin
-    solver = "Gurobi"
+    solver = "CPLEX"
     # solver = :Gurobi
-    K = "07"
-    instances = ["r$K.$j.dow" for j in 1:9]
+    instances = [1:66; 68:71]
+    # instances = [25]
     for i in instances
-        @testset "Instance: $i" begin
+        @testset "Instance: p$i" begin
             # Load data
-            data = read_mcndp_instance(i)
+            data = read_cflp_benchmark_data("p$i")
             
             # Create and solve MIP reference model
             milp = create_milp(data)
             set_optimizer(milp.model, CPLEX.Optimizer)
             optimize!(milp.model)
             mip_obj = objective_value(milp.model)
-            @info mip_obj
+            
             # Test different cut strategies
-            # loop_strategy = Sequential()
-            loop_strategy = Callback()
+            loop_strategy = Sequential()
             cut_strategies = Dict(
-                "Standard" => ClassicalCut()
-                # "Knapsack" => KnapsackCut()
+                "Classical" => ClassicalCut(),
+                "Knapsack" => KnapsackCut()
             )
             params = BendersParams(
                 600.0,
                 0.00001,
                 solver,
                 Dict("solver" => solver),
-                Dict("solver" => solver, "InfUnbdInfo" => 1),
                 Dict("solver" => solver),
-                true
+                Dict(),
+                false
             )
             benders_UB = Dict()
             benders_LB = Dict()
             for (name, strategy) in cut_strategies
                 result = run_Benders(data, loop_strategy, strategy, params)
-                @info mip_obj
                 benders_LB[name] = result[end, :LB]
                 benders_UB[name] = result[end, :UB]
                 @test isapprox(mip_obj, result[end, :LB], atol=0.1)
                 @test isapprox(mip_obj, result[end, :UB], atol=0.1)
             end
-            @printf("Instance: %s | MIP: %.2f | ", i, mip_obj)
+            @printf("Instance: p%d | %-5s: %.2f | ", i, "MIP", mip_obj)
             for (cut_type, lb) in benders_LB
-                @printf("%s: %.2f | ", string(cut_type), lb)
+                @printf("%-5s: %.2f | ", string(cut_type), lb)
             end
             println()
         end

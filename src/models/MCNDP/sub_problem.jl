@@ -1,21 +1,42 @@
-export StandardMCNDPSubProblem
+export StandardMCNDPSubProblem, KnapsackMCNDPSubProblem
 
 abstract type AbstractMCNDPSubProblem <: AbstractSubProblem end
 
+"""
+    StandardMCNDPSubProblem <: AbstractMCNDPSubProblem
+
+A mutable struct representing the standard subproblem formulation for the Multi-Commodity Network Design Problem (MCNDP).
+
+# Fields
+- `model::Model`: The underlying JuMP optimization model
+- `fixed_x_constraints::Vector{ConstraintRef}`: Constraints fixing arc selection decisions (x)
+- `other_constraints::Vector{ConstraintRef}`: Problem constraints including flow conservation and capacity limits
+
+# Related Functions
+    create_sub_problem(data::MCNDPData, ::ClassicalCut)
+"""
 mutable struct StandardMCNDPSubProblem <: AbstractMCNDPSubProblem
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
     other_constraints::Vector{ConstraintRef}
 end
 
-# struct MCNDPKnapsackInfo
-#     costs::Vector{Float64}
-#     demands::Vector{Tuple{Int,Int,Float64}}
-#     capacity::Vector{Float64}
-#     num_node::Int
-#     num_arc::Int
-# end
+"""
+    KnapsackMCNDPSubProblem <: AbstractMCNDPSubProblem
 
+A mutable struct representing the knapsack-based subproblem formulation for the MCNDP.
+
+# Fields
+- `model::Model`: The underlying JuMP optimization model
+- `fixed_x_constraints::Vector{ConstraintRef}`: Constraints fixing arc selection decisions
+- `other_constraints::Vector{ConstraintRef}`: General problem constraints
+- `demand_constraints::Matrix{ConstraintRef}`: Flow conservation constraints for each commodity-node pair
+- `data::MCNDPData`: Problem instance data
+- `b_iv::Matrix{Float64}`: Right-hand side values for flow conservation constraints
+
+# Related Functions
+    create_sub_problem(data::MCNDPData, ::KnapsackCut)
+"""
 mutable struct KnapsackMCNDPSubProblem <: AbstractMCNDPSubProblem
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
@@ -79,17 +100,6 @@ function _create_base_sub_problem(data::MCNDPData)
                 demand_constraints[c,i] = @constraint(model, outflow - inflow == 0)
                 b_iv[c,i] = normalized_rhs(demand_constraints[c,i])
             end
-
-            # if i == origin
-            #     demand_constraints[c,i] = @constraint(model, -outflow + inflow == -1)
-            #     b_iv[c,i] = -1
-            # elseif i == destination
-            #     demand_constraints[c,i] = @constraint(model, -outflow + inflow == 1)
-            #     b_iv[c,i] = 1
-            # else
-            #     demand_constraints[c,i] = @constraint(model, -outflow + inflow == 0)
-            #     b_iv[c,i] = 0
-            # end
         end
     end
 

@@ -1,26 +1,21 @@
 function solve!(env::BendersEnv, ::Callback, cut_strategy::CutStrategy, params::BendersParams)
 
     start_time = time()
-    time_limit = params.time_limit
-    params.time_limit = 600
-    df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy, params)
-    params.time_limit = time_limit
-    params.time_limit -= df_root_node_preprocessing.total_time[end]
+    # time_limit = params.time_limit
+    # params.time_limit = 600
+    # df_root_node_preprocessing = root_node_preprocessing!(env, cut_strategy, params)
+    # params.time_limit = time_limit
+    # params.time_limit -= df_root_node_preprocessing.total_time[end]
 
     function lazy_callback(cb_data)
         status = JuMP.callback_node_status(cb_data, env.master.model)
         if status == MOI.CALLBACK_NODE_STATUS_INTEGER         
             env.master.x_value = JuMP.callback_value.(cb_data, env.master.var[:x])
-            value_t = JuMP.callback_value.(cb_data, env.master.var[:t])
+            env.master.t_value = JuMP.callback_value.(cb_data, env.master.var[:t])
             
             solve_sub!(env.sub, env.master.x_value)
             cuts, sub_obj_value = generate_cuts(env, cut_strategy)
-            if value_t <= sub_obj_value - 1e-06
-                for _cut in cuts
-                    cut = @build_constraint(0 >= _cut)
-                    MOI.submit(env.master.model, MOI.LazyConstraint(cb_data), cut)
-                end
-            end
+            add_cuts!(env, cuts, sub_obj_value, cb_data)
         end
     end
 
@@ -106,6 +101,7 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
     @info "objective bound" JuMP.objective_bound(env.master.model)
     @info "objective value" JuMP.objective_value(env.master.model)
     @info "relative gap" JuMP.relative_gap(env.master.model)
+    return JuMP.objective_value(env.master.model),time() - start_time
 end
 
 
@@ -117,4 +113,20 @@ function root_node_preprocessing!(env::BendersEnv, cut_strategy::CutStrategy, pa
     df = solve!(env, Sequential(), cut_strategy, params)
     set_binary.(env.master.model[:x])
     return df
+end
+
+function add_cuts!(env::BendersEnv, expressions::Vector{Any}, sub_obj_values::Vector{Float64}, cb_data)
+    for (idx, (expr, sub_obj)) in enumerate(zip(expressions, sub_obj_values))
+        if env.master.t_value[idx] <= sub_obj - 1e-06
+            cut = @build_constraint(0 >= expr)
+            MOI.submit(env.master.model, MOI.LazyConstraint(cb_data), cut)
+        end
+    end
+end
+
+function add_cuts!(env::BendersEnv, expression::Any, sub_obj_value::Float64, cb_data)
+    if env.master.t_value <= sub_obj_value - 1e-06
+        cut = @build_constraint(0 >= expression)
+        MOI.submit(env.master.model, MOI.LazyConstraint(cb_data), cut)
+    end
 end
