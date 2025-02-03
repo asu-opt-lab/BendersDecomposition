@@ -2,11 +2,36 @@ export StandardUFLPSubProblem, KnapsackUFLPSubProblem
 
 abstract type AbstractUFLPSubProblem <: AbstractSubProblem end
 
+"""
+    StandardUFLPSubProblem <: AbstractUFLPSubProblem
+
+A mutable struct representing the subproblem for the Unconstrained Facility Location Problem (UFLP) with a classical cut.
+
+# Fields
+- `model::Model`: The underlying JuMP optimization model
+- `fixed_x_constraints::Vector{ConstraintRef}`: Constraints fixing the x variables to 0
+
+# Related Functions
+    create_sub_problem(data::UFLPData, cut_strategy::ClassicalCut)
+"""
 mutable struct StandardUFLPSubProblem <: AbstractUFLPSubProblem
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
 end
 
+"""
+    KnapsackUFLPSubProblem <: AbstractUFLPSubProblem
+
+A mutable struct representing the subproblem for the Unconstrained Facility Location Problem (UFLP) with a knapsack cut.
+
+# Fields
+- `sorted_cost_demands::Vector{Vector{Float64}}`: Sorted cost demands for each customer
+- `sorted_indices::Vector{Vector{Int}}`: Sorted indices for each customer
+- `selected_k::Dict`: Dictionary storing the selected k values for each customer
+
+# Related Functions
+    create_sub_problem(data::UFLPData, cut_strategy::Union{FatKnapsackCut, SlimKnapsackCut})
+"""
 mutable struct KnapsackUFLPSubProblem <: AbstractUFLPSubProblem
     sorted_cost_demands::Vector{Vector{Float64}}
     sorted_indices::Vector{Vector{Int}}

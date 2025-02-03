@@ -13,9 +13,9 @@ using BendersDecomposition
     solver = "CPLEX"
     
     # Test on a few representative instances
-    # for i in [1:66;68:71]
+    for i in [1:66;68:71]
     # for i in 29:66
-    for i in [14,30,60,71]
+    # for i in [25]
         @testset "Instance: p$(i)" begin
             # Load CFLP data
             data = read_cflp_benchmark_data("p$(i)")
@@ -26,9 +26,10 @@ using BendersDecomposition
             optimize!(milp.model)
             mip_objective = objective_value(milp.model)
             
-
-            # disjunctive_system = DisjunctiveCut(ClassicalCut(), L1Norm(), PureDisjunctiveCut(), true, true, false,true)
-            disjunctive_system = DisjunctiveCut(KnapsackCut(), LInfNorm(), PureDisjunctiveCut(), true, false,false,false)
+            loop_strategy = Callback()
+            disjunctive_system = DisjunctiveCut(ClassicalCut(), L1Norm(), PureDisjunctiveCut(), true, true, true,true)
+            # disjunctive_system = DisjunctiveCut(KnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true,true)
+            # disjunctive_system = DisjunctiveCut(KnapsackCut(), LInfNorm(), PureDisjunctiveCut(), true, false,false,false)
             
             params = BendersParams(
                 60.0,
@@ -41,16 +42,12 @@ using BendersDecomposition
                 true
                 # false
             )
-            result = run_Benders(data, Sequential(), disjunctive_system, params)
-            disjunctive_LB = result[end, :LB] # Use LB instead of UB
-            disjunctive_UB = result[end, :UB]
-            # Compare results
-            @test isapprox(mip_objective, disjunctive_LB, atol=1e-1)
-            # Test if LB is approximately equal to UB
-            @test isapprox(disjunctive_LB, disjunctive_UB, atol=1e-1)
-            # Print results
-            @printf("Instance: p%d | MIP: %.4f | Disjunctive_LB: %.4f | Disjunctive_UB: %.4f |Iterations: %d | Time: %.2f\n",
-                    i, mip_objective, disjunctive_LB, disjunctive_UB, result[end, :iter], result[end, :total_time])
+            benders_UB = Dict()
+            benders_LB = Dict()
+
+            obj_value, _ = run_Benders(data, loop_strategy, disjunctive_system, params)
+            @test isapprox(mip_objective, obj_value, atol=0.1)
+
         end
     end
 end

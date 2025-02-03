@@ -16,17 +16,17 @@ function solve!(env::BendersEnv, ::StochasticSequential, cut_strategy::CutStrate
         log.master_time += master_time
         
         # Solve sub problem
-        sub_obj_val_collection = 0
+        sub_obj_val_collection = Float64[]
         cuts_collection = []
         sub_time = @elapsed begin
-            for scenario in 1:env.data.n_scenarios
+            for scenario in 1:env.data.num_scenarios
                 solve_sub!(env.sub.sub_problems[scenario], env.master.x_value)
                 cuts, sub_obj_val = generate_cuts(env, cut_strategy, scenario)
-                sub_obj_val_collection += sub_obj_val
+                push!(sub_obj_val_collection, sub_obj_val)
                 push!(cuts_collection, cuts)
             end
         end
-        update_upper_bound_and_gap!(state, env, sub_obj_val_collection/env.data.n_scenarios)
+        update_upper_bound_and_gap!(state, env, sub_obj_val_collection)
         log.sub_time += sub_time
         
         # Update state and record information
@@ -66,6 +66,7 @@ function solve!(env::BendersEnv, ::StochasticSequential, cut_strategy::Disjuncti
         sub_time = @elapsed begin
             cuts, sub_obj_val = generate_cuts_stochastic(env, cut_strategy)
         end
+        # @info sub_obj_val
         update_upper_bound_and_gap!(state, env, sub_obj_val)
         log.sub_time += sub_time
         

@@ -1,6 +1,6 @@
 function generate_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
 
-    sub_obj_val = get_subproblem_value(env) #checked
+    sub_obj_val = get_subproblem_value(env.sub, env.master.x_value, cut_strategy.base_cut_strategy) 
 
     disjunctive_inequality = select_disjunctive_inequality(env.master.x_value)
 
@@ -14,20 +14,14 @@ function generate_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
 end
 
 function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
-    # set_optimizer_attribute(env.dcglp.model, MOI.Silent(), false)
+
     log = DCGLPIterationLog()
     state = DCGLPState()
 
     x_value, t_value = env.master.x_value, env.master.t_value
-    # obj = dot(env.data.fixed_costs, env.master.x_value) + env.master.t_value
-    # for i in 1:length(x_value)
-    #     if x_value[i] == 0
-    #         x_value[i] += 0.2
-    #     elseif x_value[i] == 1
-    #         x_value[i] -= 0.2
-    #     end
-    # end
-    # t_value = obj - dot(env.data.fixed_costs, x_value)
+    @info "x_value: $x_value"
+    @info "t_value: $t_value"
+
     set_normalized_rhs.(env.dcglp.model[:conx], x_value)
     set_normalized_rhs.(env.dcglp.model[:cont], t_value)
     log.start_time = time()
@@ -42,12 +36,12 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
         log.master_time += master_time
 
         sub_k_time = @elapsed begin
-            if_add_cuts_k, dual_info_k, obj_value_k = generate_cut_coefficients(env.sub, k_values, cut_strategy.base_cut_strategy)
+            dual_info_k, obj_value_k = generate_cut_coefficients(env.sub, k_values, cut_strategy.base_cut_strategy)
         end
         log.sub_k_time += sub_k_time
         
         sub_v_time = @elapsed begin
-            if_add_cuts_v, dual_info_v, obj_value_v = generate_cut_coefficients(env.sub, v_values, cut_strategy.base_cut_strategy)
+            dual_info_v, obj_value_v = generate_cut_coefficients(env.sub, v_values, cut_strategy.base_cut_strategy)
         end
         log.sub_v_time += sub_v_time
 
@@ -59,10 +53,10 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
 
         is_terminated(state, log) && break
         
-        if if_add_cuts_k
+        if dual_info_k != []
             add_cuts_k!(env, dual_info_k, cut_strategy)
         end
-        if if_add_cuts_v
+        if dual_info_v != []
             add_cuts_v!(env, dual_info_v, cut_strategy)
         end
         
@@ -72,13 +66,13 @@ end
 
 
 function is_terminated(state, log)
-    return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || (state.UB_k <= 1e-3 && state.UB_v <= 1e-3) || get_total_time(log) >= 200 || state.iteration >= 50
+    return state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || get_total_time(log) >= 200 || state.iteration >= 50 #|| (state.UB_k <= 1e-3 && state.UB_v <= 1e-3) 
 end
 
 
 function print_dcglp_iteration_info(state, log)
     @printf("   Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.2f%% | UB_k: %11.4f | UB_v: %11.4f \n",
-           state.iteration, state.LB, state.UB, state.gap, state.UB_k, state.UB_v)
+           state.iteration, state.LB, state.UB, state.gap, sum(state.UB_k), sum(state.UB_v))
 end
 
 function update_bounds!(state, k_values, v_values, other_values, obj_value_k, obj_value_v, t_value, norm_type::LNorm)
@@ -95,27 +89,50 @@ update_UB!(UB,_sx,diff_st,::L2Norm) = min(UB,norm([ _sx; diff_st], 2))
 update_UB!(UB,_sx,diff_st,::LInfNorm) = min(UB,norm([ _sx; diff_st], 1))
 
 function merge_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
-    γ₀, γₓ, γₜ = generate_strengthened_cuts(env.dcglp, cut_strategy.cut_strengthening_type)
-    if γₜ == 0
-        const_factor = 1e-04
-    else 
-        # const_factor = 1
-        const_factor  = 1e-05
-    end
-    _γ₀ = γ₀ / const_factor
-    _γₓ = γₓ ./ const_factor
-    _γₜ = γₜ / const_factor
-    # push!(env.dcglp.γ_values, (_γ₀, _γₓ, _γₜ))
-    # @info "_γ₀: $_γ₀, _γₓ: $_γₓ, _γₜ: $_γₜ"
-    # master_disjunctive_cut = @expression(env.master.model, _γ₀ + dot(_γₓ, env.master.var[:x]) + dot(_γₜ, env.master.var[:t]))
+    γ₀, γₓ, γₜ = generate_disjunctive_cuts(env.dcglp, cut_strategy.cut_strengthening_type)
     push!(env.dcglp.γ_values, (γ₀, γₓ, γₜ))
-    # @info "γ₀: $γ₀, γₓ: $γₓ, γₜ: $γₜ"
-    @info "γ₀/γₜ: $(γ₀/γₜ)"
     master_disjunctive_cut = @expression(env.master.model, γ₀ + dot(γₓ, env.master.var[:x]) + dot(γₜ, env.master.var[:t]))
+    @info "master_disjunctive_cut: $master_disjunctive_cut"
     if cut_strategy.include_master_cuts
-        push!(env.dcglp.master_cuts, [master_disjunctive_cut])
+        push!(env.dcglp.master_cuts, master_disjunctive_cut)
         return env.dcglp.master_cuts
     end
     return master_disjunctive_cut
 end
 
+# ============================================================================
+# Generate strengthened cuts for the DCGLP
+# ============================================================================
+
+function generate_disjunctive_cuts(dcglp::DCGLP, ::PureDisjunctiveCut)
+    optimize!(dcglp.model)
+    γₜ = dual.(dcglp.model[:cont])
+    γ₀ = dual(dcglp.model[:con0])
+    γₓ = dual.(dcglp.model[:conx])
+    return γ₀, γₓ, γₜ
+end
+
+
+function generate_disjunctive_cuts(dcglp::DCGLP, ::StrengthenedDisjunctiveCut)
+    optimize!(dcglp.model)
+    
+    σ₁::Float64 = dual(dcglp.disjunctive_inequalities_constraints[1])
+    σ₂::Float64 = dual(dcglp.disjunctive_inequalities_constraints[2])
+    γₜ::Float64 = dual(dcglp.γ_constraints[:γₜ])
+    γ₀::Float64 = dual(dcglp.γ_constraints[:γ₀])
+    γₓ::Vector{Float64} = dual.(dcglp.γ_constraints[:γₓ])
+    if iszero(σ₁) && iszero(σ₂)
+        return γ₀, γₓ, γₜ
+    end
+    γ₁ = γₓ .- dual.(dcglp.model[:conv1])
+    γ₂ = γₓ .- dual.(dcglp.model[:conv2])
+    σ_sum = σ₂ + σ₁
+    if !iszero(σ_sum)
+        m = (γ₁ .- γ₂) / σ_sum
+        m_lb = floor.(m)
+        m_ub = ceil.(m)
+        γₓ = min.(γ₁-σ₁*m_lb, γ₂+σ₂*m_ub)
+    end
+    
+    return γ₀, γₓ, γₜ
+end

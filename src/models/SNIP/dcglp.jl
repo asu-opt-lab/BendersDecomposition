@@ -2,37 +2,24 @@
 # add_problem_specific_constraints!
 # ============================================================================
 
-function add_problem_specific_constraints!(model::Model, data::SCFLPData, ::StandardNorm)
-    N = data.n_facilities
-    S = data.n_scenarios
-    @constraint(model, conw1[s = 1:S], model[:τ] >= -sum(data.capacities[j]*model[:kₓ][j] for j in 1:N) + sum(data.demands[s])*model[:k₀])
-    @constraint(model, conw2[s = 1:S], model[:τ] >= -sum(data.capacities[j]*model[:vₓ][j] for j in 1:N) + sum(data.demands[s])*model[:v₀])
+function add_problem_specific_constraints!(model::Model, data::SNIPData, ::AbstractNormType)
 end
-
-function add_problem_specific_constraints!(model::Model, data::SCFLPData, ::LNorm)
-    N = data.n_facilities
-    S = data.n_scenarios
-    @constraint(model, conw1[s = 1:S], 0 >= -sum(data.capacities[j]*model[:kₓ][j] for j in 1:N) + sum(data.demands[s])*model[:k₀])
-    @constraint(model, conw2[s = 1:S], 0 >= -sum(data.capacities[j]*model[:vₓ][j] for j in 1:N) + sum(data.demands[s])*model[:v₀])
-end
-
 
 # ============================================================================
 # add_t_constraints!
 # ============================================================================
 
-# for multiple t variables
-function add_t_constraints!(model::Model, data::SCFLPData, ::Union{ClassicalCut, KnapsackCut}, ::StandardNorm)
-    M = data.n_scenarios
+function add_t_constraints!(model::Model, data::SNIPData, ::ClassicalCut, ::StandardNorm)
+    M = data.num_scenarios
     @variable(model, kₜ[1:M])
     @variable(model, vₜ[1:M])
     γₜconstarint = @constraint(model, cont[i=1:M], kₜ[i] + vₜ[i] == 0)
     return γₜconstarint
 end
 
-function add_t_constraints!(model::Model, data::SCFLPData, ::Union{ClassicalCut, KnapsackCut}, ::LNorm)
+function add_t_constraints!(model::Model, data::SNIPData, ::ClassicalCut, ::LNorm)
     
-    M = data.n_scenarios
+    M = data.num_scenarios
     @variable(model, kₜ[1:M])
     @variable(model, vₜ[1:M])
     @variable(model, st[1:M])
@@ -40,14 +27,13 @@ function add_t_constraints!(model::Model, data::SCFLPData, ::Union{ClassicalCut,
     return γₜconstarint
 end
 
-
 # ============================================================================
 # add_norm_specific_components!
 # ============================================================================
 
-function add_norm_specific_components!(model::Model, data::SCFLPData, ::Union{ClassicalCut, KnapsackCut}, norm_type::LNorm)
-    N = data.n_facilities
-    M = data.n_scenarios
+function add_norm_specific_components!(model::Model, data::SNIPData, ::ClassicalCut, norm_type::LNorm)
+    N = length(data.D)
+    M = data.num_scenarios
     dim = 1 + N + M
     if norm_type == L1Norm()
         @constraint(model, concone, [model[:τ]; model[:sx]; model[:st]] in MOI.NormInfinityCone(dim))

@@ -1,15 +1,4 @@
 """
-Core algorithms module containing Benders decomposition implementations and cut strategies.
-
-This module provides:
-- Abstract interfaces for Benders algorithms
-- Cut generation strategies
-- Implementation of sequential and callback-based Benders methods
-- Specialized cut systems including standard, knapsack and disjunctive cuts
-"""
-
-# Abstract interface for Benders algorithms
-"""
     solve!(env::BendersEnv, loop::SolutionProcedure, cut_strategy::CutStrategy, params::BendersParams)
 
 Main entry point for solving a problem using Benders decomposition.
@@ -76,9 +65,10 @@ include("algorithms_utils.jl")
 include("sequentialBenders.jl") 
 include("sequentialBenders_stochastic.jl")
 include("callbackBenders.jl")
+include("callbackBenders_stochastic.jl")
 
 # Include cut strategy implementations
-include("cut_strategies/standard_cut.jl")
+include("cut_strategies/classical_cut.jl")
 include("cut_strategies/knapsack_cut.jl")
 include("cut_strategies/fs_knapsack_cut.jl")
 
