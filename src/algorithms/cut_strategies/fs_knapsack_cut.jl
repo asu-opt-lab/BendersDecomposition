@@ -1,7 +1,7 @@
 function generate_cuts(env::BendersEnv, cut_strategy::Union{FatKnapsackCut, SlimKnapsackCut})
 
     # return vector
-    critical_items, obj_values = generate_cut_coefficients(env.sub, env.master.x_value, cut_strategy)
+    critical_pairs, obj_values = generate_cut_coefficients(env.sub, env.master.x_value, cut_strategy)
     
     cuts = Vector{Any}(undef, length(critical_pairs))
     for (index, critical_item) in critical_pairs

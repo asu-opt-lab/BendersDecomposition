@@ -7,9 +7,10 @@ function get_subproblem_value(sub::AbstractSubProblem, x_value::Vector{Float64},
     
     if dual_status(sub.model) == FEASIBLE_POINT
         return objective_value(sub.model)
-    elseif dual_status(sub.model) == INFEASIBLE_POINT
+    elseif dual_status(sub.model) == INFEASIBILITY_CERTIFICATE
         return Inf
     else
+        @info dual_status(sub.model)
         error("Subproblem is not feasible or optimal")
     end
 end
@@ -25,7 +26,7 @@ function select_disjunctive_inequality(x_value)
     index = argmin(gap_x)
     a = zeros(Int, length(x_value))
     a[index] = 1
-    @debug "Selected disjunction index: $index"
+    @info "Selected disjunction index: $index"
     return a, 0
 end
 

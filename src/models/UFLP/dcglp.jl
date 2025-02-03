@@ -2,9 +2,14 @@
 # add_problem_specific_constraints!
 # ============================================================================
 
-function add_problem_specific_constraints!(model::Model, data::UFLPData, ::AbstractNormType) 
-    @constraint(model, sum(model[:kₓ]) >= 2*model[:k₀])
-    @constraint(model, sum(model[:vₓ]) >= 2*model[:v₀])
+function add_problem_specific_constraints!(model::Model, data::UFLPData, ::LNorm) 
+    @constraint(model, 0 >= - sum(model[:kₓ]) + 2*model[:k₀])
+    @constraint(model, 0 >= - sum(model[:vₓ]) + 2*model[:v₀])
+end
+
+function add_problem_specific_constraints!(model::Model, data::UFLPData, ::StandardNorm) 
+    @constraint(model, model[:τ] >= - sum(model[:kₓ]) + 2*model[:k₀])
+    @constraint(model, model[:τ] >= - sum(model[:vₓ]) + 2*model[:v₀])
 end
 
 # ============================================================================

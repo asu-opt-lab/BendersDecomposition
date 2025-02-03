@@ -19,6 +19,8 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
     state = DCGLPState()
 
     x_value, t_value = env.master.x_value, env.master.t_value
+    @info "x_value: $x_value"
+    @info "t_value: $t_value"
 
     set_normalized_rhs.(env.dcglp.model[:conx], x_value)
     set_normalized_rhs.(env.dcglp.model[:cont], t_value)
@@ -90,6 +92,7 @@ function merge_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
     γ₀, γₓ, γₜ = generate_disjunctive_cuts(env.dcglp, cut_strategy.cut_strengthening_type)
     push!(env.dcglp.γ_values, (γ₀, γₓ, γₜ))
     master_disjunctive_cut = @expression(env.master.model, γ₀ + dot(γₓ, env.master.var[:x]) + dot(γₜ, env.master.var[:t]))
+    @info "master_disjunctive_cut: $master_disjunctive_cut"
     if cut_strategy.include_master_cuts
         push!(env.dcglp.master_cuts, master_disjunctive_cut)
         return env.dcglp.master_cuts

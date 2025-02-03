@@ -8,17 +8,13 @@ end
 
 function generate_cut_coefficients(sub::AbstractSubProblem, korv_values, base_cut_strategy::CutStrategy)
     if isapprox(korv_values.constant, 0.0, atol=1e-05)
-        return  [], korv_values.t
+        return  [], max.(0, korv_values.t)
     end
     input_x = @. abs(korv_values.x / korv_values.constant) # abs value
     solve_sub!(sub, input_x)
     dual_values, obj_value = generate_cut_coefficients(sub, input_x, base_cut_strategy)
     obj_value *= korv_values.constant
-    # @info "obj_value: $obj_value"
-    # @info "t_values: $(korv_values.t)"
-    correct_cut_and_obj_values!(dual_values, obj_value, korv_values.t)
-    # @info "obj_value: $obj_value"
-    # @info "t_values: $(korv_values.t)"
+    dual_values, obj_value = correct_cut_and_obj_values!(dual_values, obj_value, korv_values.t)
     return  dual_values, obj_value
 end
 
@@ -27,6 +23,7 @@ function correct_cut_and_obj_values!(dual_values::Any, obj_value::Float64, t_val
         dual_values = []
         obj_value = t_values
     end
+    return dual_values, obj_value
 end
 
 function correct_cut_and_obj_values!(dual_values::Any, obj_value::Vector{Float64}, t_values::Vector{Float64})
@@ -44,7 +41,7 @@ function correct_cut_and_obj_values!(dual_values::Any, obj_value::Vector{Float64
     else
         deleteat!(dual_values, findall(.!valid_indices))
     end
-
+    return dual_values, obj_value
 end
 
 # ============================================================================
@@ -117,13 +114,6 @@ function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::Ab
     end
     return expressions_k, expressions_v, expressions_master
 end
-
-# function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, critical_items::Vector{Int}, ::SlimKnapsackCut)
-#     expressions_k, expressions_v, expressions_master = _build_cuts(dcglp, master, sub, critical_items, SlimKnapsackCut())
-#     return [@expression(dcglp.model, sum(expressions_k) - sum(dcglp.model[:kₜ]))],
-#            [@expression(dcglp.model, sum(expressions_v) - sum(dcglp.model[:vₜ]))],
-#            [@expression(master.model, sum(expressions_master) - sum(master.model[:t]))]
-# end
 
 # classical cut
 function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, coeff_info::Tuple{Float64, Vector{Float64}, Float64}, ::ClassicalCut)

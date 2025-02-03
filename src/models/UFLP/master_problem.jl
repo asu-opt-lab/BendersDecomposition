@@ -38,7 +38,7 @@ function create_master_problem(data::UFLPData, cut_strategy::Union{ClassicalCut,
 
     @objective(model, Min, sum(data.fixed_costs .* x) + sum(t))
     @constraint(model, sum(x) >= 2)
-    
+
     t_zeros = cut_strategy == FatKnapsackCut() ? zeros(M) : 0.0
     
     return UFLPMasterProblem(model, Dict(:x => x, :t => t), 0.0, zeros(N), t_zeros)
