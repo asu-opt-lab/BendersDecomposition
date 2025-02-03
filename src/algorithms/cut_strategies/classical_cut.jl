@@ -34,12 +34,10 @@ function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Floa
             constant_term = dot(dual.(sub.other_constraints), normalized_rhs.(sub.other_constraints))
             return (coefficients_t, coefficients_x, constant_term), Inf
         else
-            @error "Infeasible subproblem has no dual solution"
             throw(ErrorException("Infeasible subproblem has no dual solution"))
         end
         
     else
-        @error "Dual status of subproblem is neither feasible nor infeasible: $status"
         throw(ErrorException("Unexpected dual status"))
     end
 end

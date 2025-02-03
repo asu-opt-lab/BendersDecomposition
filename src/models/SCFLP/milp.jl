@@ -11,7 +11,7 @@ function create_milp(data::SCFLPData)
     set_optimizer_attribute(model, MOI.Silent(), true)
 
     # Extract problem dimensions
-    N, M, S = data.n_facilities, data.n_customers, data.n_scenarios
+    N, M, S = data.n_facilities, data.n_customers, data.num_scenarios
 
     # Define variables
     @variable(model, x[1:N], Bin)

@@ -10,6 +10,7 @@ function parse_commandline()
             help = "Instance name (overrides config file)"
             default = "f10-c10-r3-1"
             arg_type = String
+            required = true
         "--config"
             help = "Path to configuration file"
             default = "src/utils/config.toml"
@@ -34,125 +35,100 @@ function parse_commandline()
 end
 
 
-function load_benders_params(config)
-    alg_params = config["algorithm_params"]
-    solver_params = config["solver_params"]
-    # Check if using disjunctive cuts
-    is_disjunctive = get(config["cut_strategy"], "type", "CLASSICAL_CUT") == "DISJUNCTIVE_CUT"
+function load_benders_params(config::Dict)
+    alg_params = get(config, "algorithm_params", Dict())
+    solver_params = get(config, "solver_params", Dict())
+    cut_type = get(config["cut_strategy"], "type", "CLASSICAL_CUT")
     
-    # Create BendersParams with values from config
-    if is_disjunctive
-        return BendersParams(
-            alg_params["time_limit"],
-            alg_params["gap_tolerance"],
-            alg_params["solver"],
-            solver_params["master"],
-            solver_params["sub"],
-            solver_params["dcglp"],  # Only for disjunctive cuts
-            alg_params["verbose"],
-        )
-    else
-        return BendersParams(
-            alg_params["time_limit"],
-            alg_params["gap_tolerance"],
-            alg_params["solver"],
-            solver_params["master"],
-            solver_params["sub"],
-            Dict{String,Any}(),  # dcglp solver params
-            alg_params["verbose"],
-        )
-    end
+    time_limit = get(alg_params, "time_limit", 3600)
+    gap_tolerance = get(alg_params, "gap_tolerance", 1e-4)
+    solver = get(alg_params, "solver", "GUROBI")
+    verbose = get(alg_params, "verbose", true)
+    
+    return BendersParams(
+        time_limit,
+        gap_tolerance,
+        solver,
+        get(solver_params, "master", Dict()),
+        get(solver_params, "sub", Dict()),
+        cut_type == "DISJUNCTIVE_CUT" ? get(solver_params, "dcglp", Dict()) : Dict{String,Any}(),
+        verbose
+    )
 end
 
-function load_cut_strategy(config)
-    cut_config = config["cut_strategy"]
+
+const CUT_STRATEGY_MAP = Dict(
+    "CLASSICAL_CUT" => ClassicalCut,
+    "FAT_KNAPSACK_CUT" => FatKnapsackCut,
+    "SLIM_KNAPSACK_CUT" => SlimKnapsackCut,
+    "KNAPSACK_CUT" => KnapsackCut
+)
+
+const NORM_TYPE_MAP = Dict(
+    "STANDARD_NORM" => StandardNorm,
+    "L1NORM" => L1Norm,
+    "L2NORM" => L2Norm,
+    "LINFNORM" => LInfNorm
+)
+
+const STRENGTHENING_MAP = Dict(
+    "PURE_DISJUNCTION" => PureDisjunctiveCut,
+    "STRENGTHENED_DISJUNCTION" => StrengthenedDisjunctiveCut
+)
+
+function load_cut_strategy(config::Dict)
+    cut_config = get(config, "cut_strategy", Dict())
+    cut_type = get(cut_config, "type", "CLASSICAL_CUT")
     
-    # Check cut strategy type
-    if cut_config["type"] == "DISJUNCTIVE_CUT"
-        # Convert string to corresponding cut strategy type
-        base_strategy = if cut_config["base_cut_strategy"] == "CLASSICAL_CUT"
-            ClassicalCut()
-        elseif cut_config["base_cut_strategy"] == "FAT_KNAPSACK_CUT"
-            FatKnapsackCut()
-        elseif cut_config["base_cut_strategy"] == "SLIM_KNAPSACK_CUT"
-            SlimKnapsackCut()
-        elseif cut_config["base_cut_strategy"] == "KNAPSACK_CUT"
-            KnapsackCut()
-        else
+    if cut_type == "DISJUNCTIVE_CUT"
+        base_strategy = get(CUT_STRATEGY_MAP, cut_config["base_cut_strategy"]) do
             error("Unknown base cut strategy: $(cut_config["base_cut_strategy"])")
         end
         
-        # Convert string to corresponding norm type
-        norm_type = if cut_config["norm_type"] == "STANDARD_NORM"
-            StandardNorm()
-        elseif cut_config["norm_type"] == "L1NORM"
-            L1Norm()
-        elseif cut_config["norm_type"] == "L2NORM"
-            L2Norm()
-        elseif cut_config["norm_type"] == "LINFNORM"
-            LInfNorm()
-        else
+        norm_type = get(NORM_TYPE_MAP, cut_config["norm_type"]) do
             error("Unknown norm type: $(cut_config["norm_type"])")
         end
         
-        # Convert string to corresponding cut strengthening type
-        strengthening = if cut_config["cut_strengthening"] == "PURE_DISJUNCTION"
-            PureDisjunctiveCut()
-        elseif cut_config["cut_strengthening"] == "STRENGTHENED_DISJUNCTION"
-            StrengthenedDisjunctiveCut()
-        else
+        strengthening = get(STRENGTHENING_MAP, cut_config["cut_strengthening"]) do
             error("Unknown cut strengthening type: $(cut_config["cut_strengthening"])")
         end
         
-        # Create and return the DisjunctiveCut
-
-
         return DisjunctiveCut(
-            base_strategy,
-            norm_type,
-            strengthening,
-            cut_config["use_two_sided_cuts"],
-            cut_config["include_master_cuts"],
-            cut_config["reuse_dcglp"],
-            cut_config["verbose"]
-            )
+            base_strategy(),
+            norm_type(),
+            strengthening(),
+            get(cut_config, "use_two_sided_cuts", false),
+            get(cut_config, "include_master_cuts", true),
+            get(cut_config, "reuse_dcglp", true),
+            get(cut_config, "verbose", false)
+        )
     else
-        # Handle standard cut strategy
-        return if cut_config["type"] == "STANDARD_CUT"
-            ClassicalCut()
-        elseif cut_config["type"] == "KNAPSACK_CUT"
-            KnapsackCut()
-        else
-            error("Unknown cut strategy type: $(cut_config["type"])")
-        end
+        return get(CUT_STRATEGY_MAP, cut_type) do
+            error("Unknown cut strategy type: $cut_type")
+        end()
     end
 end
 
-# Update the main configuration loading
-function load_all_you_need()
+function load_base_config()
     args = parse_commandline()
-    instance = args["instance"]
-    output_dir = args["output_dir"]
     config = TOML.parsefile(args["config"])
-    @info config
-    
-    benders_params = load_benders_params(config)
-    cut_strategy = load_cut_strategy(config)
-    
-    return instance, output_dir, cut_strategy, benders_params
+    return args, config
+end
+
+function load_all_you_need()
+    args, config = load_base_config()
+    return args["instance"], 
+           args["output_dir"], 
+           load_cut_strategy(config), 
+           load_benders_params(config)
 end
 
 function load_snip_data()
-    args = parse_commandline()
-    instance = args["instance"]
-    snip_no = args["snip_no"]
-    budget = args["budget"]
-    output_dir = args["output_dir"]
-    config = TOML.parsefile(args["config"])
-    @info config
-    
-    benders_params = load_benders_params(config)
-    cut_strategy = load_cut_strategy(config)
-    
-    return instance, snip_no, budget, output_dir, cut_strategy, benders_params
+    args, config = load_base_config()
+    return args["instance"], 
+           args["snip_no"], 
+           args["budget"], 
+           args["output_dir"], 
+           load_cut_strategy(config), 
+           load_benders_params(config)
 end

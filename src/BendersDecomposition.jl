@@ -16,10 +16,10 @@ Parameters for configuring the Benders decomposition algorithm.
 # Arguments
 - `time_limit::Float64`: Maximum allowed runtime in seconds
 - `gap_tolerance::Float64`: Optimality gap tolerance for convergence
-- `solver::Symbol`: Optimization solver to use (e.g. :CPLEX, :Gurobi)
-- `master_attributes::Dict{Symbol,Any}`: Solver-specific attributes for master problem
-- `sub_attributes::Dict{Symbol,Any}`: Solver-specific attributes for subproblem
-- `dcglp_attributes::Dict{Symbol,Any}`: Solver-specific attributes for DCGLP
+- `solver::String`: Optimization solver to use (e.g. "CPLEX", "Gurobi")
+- `master_attributes::Dict{String,Any}`: Solver-specific attributes for master problem
+- `sub_attributes::Dict{String,Any}`: Solver-specific attributes for subproblem
+- `dcglp_attributes::Dict{String,Any}`: Solver-specific attributes for DCGLP
 - `verbose::Bool`: Whether to print detailed progress information
 """
 mutable struct BendersParams
@@ -41,7 +41,7 @@ Environment containing all components needed for Benders decomposition.
 # Arguments
 - `data::AbstractData`: Problem instance data
 - `master::AbstractMasterProblem`: Master problem formulation
-- `sub::AbstractSubProblem`: Subproblem formulation  
+- `sub::Union{AbstractSubProblem,Vector{AbstractSubProblem}}`: Subproblem formulation(s)
 - `dcglp::Union{Nothing,DCGLP}`: Optional DCGLP component for cut generation
 """
 mutable struct BendersEnv
@@ -62,24 +62,35 @@ Construct a BendersEnv with the given problem data and configuration.
 - `params::BendersParams`: Algorithm parameters
 """
 function BendersEnv(data::AbstractData, cut_strategy::CutStrategy, params::BendersParams)
+    master = create_and_configure_master(data, cut_strategy, params)
+    sub = create_and_configure_sub(data, cut_strategy, params)
+    dcglp = create_and_configure_dcglp(data, cut_strategy, params)
+    return BendersEnv(data, master, sub, dcglp)
+end
+
+# Helper functions
+function create_and_configure_master(data, cut_strategy, params)
     master = create_master_problem(data, cut_strategy)
     assign_attributes!(master.model, params.master_attributes)
+    return master
+end
+
+function create_and_configure_sub(data, cut_strategy, params)
     sub = create_sub_problem(data, cut_strategy)
-    if sub isa AbstractSCFLPSubProblem
-        for scenario_sub in sub.sub_problems
-            assign_attributes!(scenario_sub.model, params.sub_attributes)
-        end
-    elseif sub isa KnapsackUFLPSubProblem
-    else
+    if sub isa Union{AbstractSCFLPSubProblem, AbstractSNIPSubProblem}
+        foreach(scenario_sub -> assign_attributes!(scenario_sub.model, params.sub_attributes), 
+                sub.sub_problems)
+    elseif !isa(sub, KnapsackUFLPSubProblem)
         assign_attributes!(sub.model, params.sub_attributes)
     end
-    if cut_strategy isa DisjunctiveCut
-        dcglp = create_dcglp(data, cut_strategy)
-        assign_attributes!(dcglp.model, params.dcglp_attributes)
-    else
-        dcglp = nothing
-    end
-    return BendersEnv(data, master, sub, dcglp)
+    return sub
+end
+
+function create_and_configure_dcglp(data, cut_strategy, params)
+    cut_strategy isa DisjunctiveCut || return nothing
+    dcglp = create_dcglp(data, cut_strategy)
+    assign_attributes!(dcglp.model, params.dcglp_attributes)
+    return dcglp
 end
 
 export BendersEnv
@@ -99,11 +110,6 @@ Execute Benders decomposition algorithm to solve the given problem instance.
 - `DataFrame`: Solution statistics including bounds and timing information
 """
 function run_Benders(data::AbstractData, loop_strategy::SolutionProcedure, cut_strategy::CutStrategy, params::BendersParams)
-    env = BendersEnv(data, cut_strategy, params)
-    solve!(env, loop_strategy, cut_strategy, params)
-end
-
-function run_Benders(data::AbstractData, loop_strategy::StochasticSequential, cut_strategy::CutStrategy, params::BendersParams)
     env = BendersEnv(data, cut_strategy, params)
     solve!(env, loop_strategy, cut_strategy, params)
 end

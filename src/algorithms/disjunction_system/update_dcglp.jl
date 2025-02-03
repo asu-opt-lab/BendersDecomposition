@@ -1,17 +1,23 @@
-function get_subproblem_value(env::BendersEnv)
+function get_subproblem_value(sub::AbstractSubProblem, x_value::Vector{Float64}, cut_strategy::CutStrategy)
     
     # # Check if master.x_value is close enough to integer values
-    if !all(x -> isapprox(x, round(x), atol=1e-4), env.master.x_value)
+    if !all(x -> isapprox(x, round(x), atol=1e-4), x_value)
         return Inf
     end
     
-    if dual_status(env.sub.model) == FEASIBLE_POINT
-        return objective_value(env.sub.model)
-    elseif dual_status(env.sub.model) == INFEASIBLE_POINT
+    if dual_status(sub.model) == FEASIBLE_POINT
+        return objective_value(sub.model)
+    elseif dual_status(sub.model) == INFEASIBILITY_CERTIFICATE
         return Inf
     else
+        @info dual_status(sub.model)
         error("Subproblem is not feasible or optimal")
     end
+end
+
+function get_subproblem_value(sub::KnapsackUFLPSubProblem, x_value::Vector{Float64}, cut_strategy::FatKnapsackCut)
+    _, sub_obj_val = generate_cut_coefficients(sub, x_value, cut_strategy)
+    return sub_obj_val  
 end
 
 function select_disjunctive_inequality(x_value)
@@ -20,7 +26,7 @@ function select_disjunctive_inequality(x_value)
     index = argmin(gap_x)
     a = zeros(Int, length(x_value))
     a[index] = 1
-    @debug "Selected disjunction index: $index"
+    @info "Selected disjunction index: $index"
     return a, 0
 end
 
@@ -62,12 +68,8 @@ end
 function add_disjunctive_cut!(dcglp::DCGLP)
     if !isempty(dcglp.γ_values)
         γ₀, γₓ, γₜ = dcglp.γ_values[end]
-        # const_factor = 1e02
-        # @constraint(dcglp.model, const_factor*(γ₀*dcglp.model[:k₀] + dot(γₓ, dcglp.model[:kₓ]) + dot(γₜ, dcglp.model[:kₜ])) <= const_factor*1e-06)
-        # @constraint(dcglp.model, const_factor*(γ₀*dcglp.model[:v₀] + dot(γₓ, dcglp.model[:vₓ]) + dot(γₜ, dcglp.model[:vₜ])) <= const_factor*1e-06)
         @constraint(dcglp.model, γ₀*dcglp.model[:k₀] + dot(γₓ, dcglp.model[:kₓ]) + dot(γₜ, dcglp.model[:kₜ]) <= 0)
         @constraint(dcglp.model, γ₀*dcglp.model[:v₀] + dot(γₓ, dcglp.model[:vₓ]) + dot(γₜ, dcglp.model[:vₜ]) <= 0)    
-
     end
 end
 

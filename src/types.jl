@@ -1,4 +1,14 @@
 # ============================================================================
+# Exports
+# ============================================================================
+export CFLPData, UFLPData, SCFLPData, MCNDPData,SNIPData
+export Sequential, Callback, StochasticSequential, StochasticCallback
+export ClassicalCut, FatKnapsackCut, SlimKnapsackCut, KnapsackCut
+export PureDisjunctiveCut, StrengthenedDisjunctiveCut
+export StandardNorm, L1Norm, L2Norm, LInfNorm
+export DisjunctiveCut
+
+# ============================================================================
 # Abstract type hierarchy
 # ============================================================================
 abstract type AbstractData end
@@ -33,7 +43,7 @@ end
 struct SCFLPData <: AbstractData
     n_facilities::Int
     n_customers::Int
-    n_scenarios::Int
+    num_scenarios::Int
     capacities::Vector{Float64}
     demands::Vector{Vector{Float64}}
     fixed_costs::Vector{Float64}
@@ -68,12 +78,15 @@ end
 struct Sequential <: SolutionProcedure end
 struct Callback <: SolutionProcedure end
 struct StochasticSequential <: SolutionProcedure end
+struct StochasticCallback <: SolutionProcedure end
 
 # Cut strategies
 struct ClassicalCut <: CutStrategy end
-struct FatKnapsackCut <: CutStrategy end
-struct SlimKnapsackCut <: CutStrategy end
-struct KnapsackCut <: CutStrategy end
+struct UnifiedCut <: CutStrategy end
+abstract type CustomizedCut <: CutStrategy end
+struct FatKnapsackCut <: CustomizedCut end
+struct SlimKnapsackCut <: CustomizedCut end
+struct KnapsackCut <: CustomizedCut end
 
 # ============================================================================
 # Cut Strengthening Types
@@ -106,15 +119,7 @@ struct DisjunctiveCut <: CutStrategy
     verbose::Bool
 end
 
-# ============================================================================
-# Exports
-# ============================================================================
-export CFLPData, UFLPData, SCFLPData, SNIPData
-export Sequential, Callback, StochasticSequential
-export ClassicalCut, FatKnapsackCut, SlimKnapsackCut, KnapsackCut
-export PureDisjunctiveCut, StrengthenedDisjunctiveCut
-export StandardNorm, L1Norm, L2Norm, LInfNorm
-export DisjunctiveCut
+
 
 
 

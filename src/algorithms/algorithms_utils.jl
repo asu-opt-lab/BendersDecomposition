@@ -1,21 +1,3 @@
-"""
-Utility module for Benders decomposition algorithm implementation.
-Provides data structures and helper functions to track algorithm state,
-iteration information, and performance metrics.
-"""
-
-"""
-Stores information about a single iteration of the Benders algorithm.
-
-Fields:
-- iter::Int : Current iteration number
-- LB::Float64 : Lower bound value
-- UB::Float64 : Upper bound value
-- gap::Float64 : Optimality gap (%)
-- master_time::Float64 : Time spent solving master problem
-- sub_time::Float64 : Time spent solving subproblem
-- total_time::Float64 : Total elapsed time
-"""
 struct IterationInfo
     iter::Int
     LB::Float64
@@ -26,15 +8,6 @@ struct IterationInfo
     total_time::Float64
 end
 
-"""
-Maintains the current state of the Benders decomposition algorithm.
-
-Fields:
-- iteration::Int : Current iteration count
-- UB::Float64 : Current upper bound
-- LB::Float64 : Current lower bound
-- gap::Float64 : Current optimality gap (%)
-"""
 mutable struct BendersState
     iteration::Int
     UB::Float64
@@ -52,15 +25,6 @@ mutable struct BendersState
     end
 end
 
-"""
-Tracks and stores iteration history and timing information.
-
-Fields:
-- iterations::Vector{IterationInfo} : Log of all iterations
-- start_time::Float64 : Algorithm start timestamp
-- master_time::Float64 : Cumulative master problem solve time
-- sub_time::Float64 : Cumulative subproblem solve time
-"""
 mutable struct BendersIterationLog
     iterations::Vector{IterationInfo}
     start_time::Float64
@@ -96,10 +60,20 @@ end
 
 
 function update_upper_bound_and_gap!(state::BendersState, env::BendersEnv, sub_obj_val::Float64)
-    if env.data isa SNIPData
-        state.UB = min(state.UB, sub_obj_val)  # UB should always take the minimum value
+
+    state.UB = min(state.UB, sub_obj_val + dot(env.data.fixed_costs, env.master.x_value))
+
+    update_gap!(state)
+end
+
+
+function update_upper_bound_and_gap!(state::BendersState, env::BendersEnv, sub_obj_val_collection::Vector{Float64})
+    if env.data isa SCFLPData
+        state.UB = min(state.UB, mean(sub_obj_val_collection) + dot(env.data.fixed_costs, env.master.x_value))  
+    elseif env.data isa UFLPData
+        state.UB = min(state.UB, sum(sub_obj_val_collection) + dot(env.data.fixed_costs, env.master.x_value))  
     else
-        state.UB = min(state.UB, sub_obj_val + dot(env.data.fixed_costs, env.master.x_value))
+        state.UB = min(state.UB, sum(sub_obj_val_collection[k] * env.data.scenarios[k][3] for k in 1:env.data.num_scenarios))  
     end
     update_gap!(state)
 end
@@ -116,5 +90,4 @@ function to_dataframe(log::BendersIterationLog)
         total_time = [info.total_time for info in log.iterations]
     )
 end
-
 
