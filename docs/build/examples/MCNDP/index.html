@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Multi-Commodity Network Design Problem · BendersDecomposition.jl</title><meta name="title" content="Multi-Commodity Network Design Problem · BendersDecomposition.jl"/><meta property="og:title" content="Multi-Commodity Network Design Problem · BendersDecomposition.jl"/><meta property="twitter:title" content="Multi-Commodity Network Design Problem · BendersDecomposition.jl"/><meta name="description" content="Documentation for BendersDecomposition.jl."/><meta property="og:description" content="Documentation for BendersDecomposition.jl."/><meta property="twitter:description" content="Documentation for BendersDecomposition.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">BendersDecomposition.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../../tutorial/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorial/beginner/">Beginner Tutorial</a></li><li><a class="tocitem" href="../../tutorial/advanced/">Advanced Tutorial</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../intro/">Introduction</a></li><li><a class="tocitem" href="../CFLP/">Capacitated Facility Location Problem</a></li><li><a class="tocitem" href="../UFLP/">Uncapacitated Facility Location Problem</a></li><li class="is-active"><a class="tocitem" href>Multi-Commodity Network Design Problem</a><ul class="internal"><li><a class="tocitem" href="#Example"><span>Example</span></a></li></ul></li><li><a class="tocitem" href="../SCFLP/">Stochastic Capacitated Facility Location Problem</a></li><li><a class="tocitem" href="../SNIP/">Stochastic Network Interdiction Problem</a></li></ul></li><li><a class="tocitem" href="../../api/">API Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Multi-Commodity Network Design Problem</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Multi-Commodity Network Design Problem</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/ASUKaiwenFang/BendersDecomposition" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/ASUKaiwenFang/BendersDecomposition/blob/main/docs/src/examples/MCNDP.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Multi-Commodity-Network-Design-Problem"><a class="docs-heading-anchor" href="#Multi-Commodity-Network-Design-Problem">Multi-Commodity Network Design Problem</a><a id="Multi-Commodity-Network-Design-Problem-1"></a><a class="docs-heading-anchor-permalink" href="#Multi-Commodity-Network-Design-Problem" title="Permalink"></a></h1><p>Consider this problem:</p><p class="math-container">\[\begin{aligned}
+[\text{MCNDP}] \quad \min &amp; \sum_{i\in I}\sum_{j\in A}d_ic_{ij}x_{ij} + \sum_{j\in A}f_jy_j \\
+\text{s.t.} \quad &amp; \sum_{j\in A_v^+}x_{ij} - \sum_{j\in A_v^-}x_{ij} = b_{iv} &amp; \forall i \in I, v \in V \\
+&amp; \sum_{i\in I}d_i x_{ij} \leq s_jy_j &amp; \forall j \in A \\
+&amp; x_{ij} \leq y_j &amp; \forall i \in I, j \in A \\
+&amp; \mathbf{x} \geq \mathbf{0}, \mathbf{y} \in Y
+\end{aligned}\]</p><h2 id="Example"><a class="docs-heading-anchor" href="#Example">Example</a><a id="Example-1"></a><a class="docs-heading-anchor-permalink" href="#Example" title="Permalink"></a></h2><pre><code class="language-julia hljs">using BendersDecomposition
+using Gurobi
+using JuMP</code></pre><p>Let&#39;s solve this simple instance directly using a solver.</p><pre><code class="language-julia hljs">data = read_mcndp_instance(&quot;r01.1.dow&quot;; filepath=joinpath(dirname(dirname(dirname(@__DIR__))), &quot;data&quot;, &quot;NDR&quot;))
+milp = create_milp(data)
+set_optimizer(milp.model, Gurobi.Optimizer)
+set_optimizer_attribute(milp.model, MOI.Silent(), false)
+optimize!(milp.model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Set parameter Username
+Academic license - for non-commercial use only - expires 2025-11-19
+Set parameter OutputFlag to value 1
+Set parameter OutputFlag to value 1
+Gurobi Optimizer version 12.0.0 build v12.0.0rc1 (mac64[arm] - Darwin 24.1.0 24B83)
+
+CPU model: Apple M1 Pro
+Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
+
+Optimize a model with 485 rows, 385 columns and 1785 nonzeros
+Model fingerprint: 0x439b8f24
+Variable types: 350 continuous, 35 integer (35 binary)
+Coefficient statistics:
+  Matrix range     [1e+00, 6e+02]
+  Objective range  [1e+02, 8e+03]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+00, 1e+00]
+Found heuristic solution: objective 196511.00000
+Presolve removed 18 rows and 5 columns
+Presolve time: 0.00s
+Presolved: 467 rows, 380 columns, 1650 nonzeros
+Variable types: 345 continuous, 35 integer (35 binary)
+
+Root relaxation: objective 7.407900e+04, 69 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+*    0     0               0    74079.000000 74079.0000  0.00%     -    0s
+
+Explored 1 nodes (69 simplex iterations) in 0.00 seconds (0.00 work units)
+Thread count was 8 (of 8 available processors)
+
+Solution count 2: 74079 196511
+
+Optimal solution found (tolerance 1.00e-04)
+Best objective 7.407900000000e+04, best bound 7.407900000000e+04, gap 0.0000%
+
+User-callback calls 382, time in user-callback 0.00 sec</code></pre><p>Then, let&#39;s solve this problem using Benders decomposition.</p><pre><code class="language-julia hljs">solver = &quot;Gurobi&quot;
+params = BendersParams(
+    60.0, # Time limit
+    0.00001, # Tolerance
+    solver,
+    Dict(&quot;solver&quot; =&gt; solver),
+    Dict(&quot;solver&quot; =&gt; solver, &quot;InfUnbdInfo&quot; =&gt; 1),
+    Dict(),
+    true # verbose
+)
+cut_strategy = ClassicalCut()
+solution_procedure = Sequential()
+run_Benders(data, solution_procedure, cut_strategy, params)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Set parameter InfUnbdInfo to value 1
+Iter:    1 | LB: -1000000.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    2 | LB: -999327.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    3 | LB: -998886.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    4 | LB: -998285.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.01
+Iter:    5 | LB: -998029.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.01
+Iter:    6 | LB: -998017.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.01) | Elapsed:   0.01
+Iter:    7 | LB: -997909.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.01) | Elapsed:   0.01
+Iter:    8 | LB: -997927.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.01) | Elapsed:   0.01
+Iter:    9 | LB: -997825.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.01) | Elapsed:   0.01
+Iter:   10 | LB: -997546.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.01) | Elapsed:   0.01
+Iter:   11 | LB: -997403.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.01) | Elapsed:   0.01
+Iter:   12 | LB: -997403.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.02
+Iter:   13 | LB: -997224.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.02
+Iter:   14 | LB: -997189.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.02
+Iter:   15 | LB: -997135.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.02
+Iter:   16 | LB: -997022.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.02
+Iter:   17 | LB: -996992.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.03
+Iter:   18 | LB: -996975.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.02) | Elapsed:   0.03
+Iter:   19 | LB: -996873.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.02, S:   0.02) | Elapsed:   0.03
+Iter:   20 | LB: -996754.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.02, S:   0.02) | Elapsed:   0.04
+Iter:   21 | LB: -996730.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.03, S:   0.02) | Elapsed:   0.04
+Iter:   22 | LB: -996694.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.03, S:   0.02) | Elapsed:   0.05
+Iter:   23 | LB: -996664.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.03, S:   0.02) | Elapsed:   0.05
+Iter:   24 | LB: -996670.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.04, S:   0.02) | Elapsed:   0.06
+Iter:   25 | LB: -996658.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.04, S:   0.02) | Elapsed:   0.07
+Iter:   26 | LB: -996611.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.05, S:   0.02) | Elapsed:   0.07
+Iter:   27 | LB: -996641.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.05, S:   0.02) | Elapsed:   0.08
+Iter:   28 | LB: -996580.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.06, S:   0.02) | Elapsed:   0.08
+Iter:   29 | LB: -996534.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.06, S:   0.03) | Elapsed:   0.09
+Iter:   30 | LB: -996516.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.07, S:   0.03) | Elapsed:   0.09
+Iter:   31 | LB: -996456.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.07, S:   0.03) | Elapsed:   0.10
+Iter:   32 | LB: -996456.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.08, S:   0.03) | Elapsed:   0.11
+Iter:   33 | LB: -996450.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.08, S:   0.03) | Elapsed:   0.12
+Iter:   34 | LB: -996350.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.09, S:   0.03) | Elapsed:   0.13
+Iter:   35 | LB: -996367.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.10, S:   0.03) | Elapsed:   0.13
+Iter:   36 | LB: -996349.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.11, S:   0.03) | Elapsed:   0.14
+Iter:   37 | LB: -996337.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.12, S:   0.03) | Elapsed:   0.15
+Iter:   38 | LB: -996331.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.13, S:   0.03) | Elapsed:   0.17
+Iter:   39 | LB: -996319.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.14, S:   0.04) | Elapsed:   0.18
+Iter:   40 | LB: -996313.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.15, S:   0.04) | Elapsed:   0.19
+Iter:   41 | LB: -996301.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.16, S:   0.04) | Elapsed:   0.20
+Iter:   42 | LB: -996242.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.18, S:   0.04) | Elapsed:   0.22
+Iter:   43 | LB: -996266.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.19, S:   0.04) | Elapsed:   0.23
+Iter:   44 | LB: -996236.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.20, S:   0.04) | Elapsed:   0.24
+Iter:   45 | LB: -996206.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.22, S:   0.04) | Elapsed:   0.26
+Iter:   46 | LB: -996188.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.23, S:   0.04) | Elapsed:   0.28
+Iter:   47 | LB: -996164.0000 | UB: 100419.0000 | Gap: 1092.007% | Time: (M:   0.26, S:   0.04) | Elapsed:   0.31
+Iter:   48 | LB:  -32965.0000 | UB: 100419.0000 | Gap:  132.827% | Time: (M:   0.26, S:   0.05) | Elapsed:   0.31
+Iter:   49 | LB:  -32656.0000 | UB: 100419.0000 | Gap:  132.520% | Time: (M:   0.26, S:   0.05) | Elapsed:   0.31
+Iter:   50 | LB:  -32548.0000 | UB: 100419.0000 | Gap:  132.412% | Time: (M:   0.26, S:   0.05) | Elapsed:   0.31
+Iter:   51 | LB:  -32503.0000 | UB: 100419.0000 | Gap:  132.367% | Time: (M:   0.26, S:   0.05) | Elapsed:   0.31
+Iter:   52 | LB:  -31173.0000 | UB:  81092.0000 | Gap:  138.442% | Time: (M:   0.26, S:   0.05) | Elapsed:   0.31
+Iter:   53 | LB:   64494.0000 | UB:  81092.0000 | Gap:   20.468% | Time: (M:   0.27, S:   0.05) | Elapsed:   0.32
+Iter:   54 | LB:   64578.0000 | UB:  81092.0000 | Gap:   20.365% | Time: (M:   0.27, S:   0.05) | Elapsed:   0.32
+Iter:   55 | LB:   64637.0000 | UB:  81092.0000 | Gap:   20.292% | Time: (M:   0.27, S:   0.05) | Elapsed:   0.33
+Iter:   56 | LB:   64667.0000 | UB:  81092.0000 | Gap:   20.255% | Time: (M:   0.28, S:   0.05) | Elapsed:   0.34
+Iter:   57 | LB:   64703.0000 | UB:  81092.0000 | Gap:   20.210% | Time: (M:   0.29, S:   0.05) | Elapsed:   0.34
+Iter:   58 | LB:   64881.0000 | UB:  81092.0000 | Gap:   19.991% | Time: (M:   0.30, S:   0.05) | Elapsed:   0.35
+Iter:   59 | LB:   65125.0000 | UB:  81092.0000 | Gap:   19.690% | Time: (M:   0.30, S:   0.05) | Elapsed:   0.36
+Iter:   60 | LB:   65262.0000 | UB:  81092.0000 | Gap:   19.521% | Time: (M:   0.32, S:   0.06) | Elapsed:   0.37
+Iter:   61 | LB:   65310.0000 | UB:  81092.0000 | Gap:   19.462% | Time: (M:   0.33, S:   0.06) | Elapsed:   0.39
+Iter:   62 | LB:   65411.0000 | UB:  81092.0000 | Gap:   19.337% | Time: (M:   0.35, S:   0.06) | Elapsed:   0.41
+Iter:   63 | LB:   65423.0000 | UB:  81092.0000 | Gap:   19.322% | Time: (M:   0.37, S:   0.06) | Elapsed:   0.44
+Iter:   64 | LB:   65435.0000 | UB:  81092.0000 | Gap:   19.308% | Time: (M:   0.39, S:   0.06) | Elapsed:   0.45
+Iter:   65 | LB:   65441.0000 | UB:  81092.0000 | Gap:   19.300% | Time: (M:   0.40, S:   0.06) | Elapsed:   0.47
+Iter:   66 | LB:   65453.0000 | UB:  81092.0000 | Gap:   19.286% | Time: (M:   0.42, S:   0.06) | Elapsed:   0.49
+Iter:   67 | LB:   65566.0000 | UB:  81092.0000 | Gap:   19.146% | Time: (M:   0.43, S:   0.06) | Elapsed:   0.49
+Iter:   68 | LB:   65614.0000 | UB:  81092.0000 | Gap:   19.087% | Time: (M:   0.44, S:   0.06) | Elapsed:   0.51
+Iter:   69 | LB:   65637.0000 | UB:  81092.0000 | Gap:   19.059% | Time: (M:   0.46, S:   0.06) | Elapsed:   0.52
+Iter:   70 | LB:   65911.0000 | UB:  81092.0000 | Gap:   18.721% | Time: (M:   0.47, S:   0.06) | Elapsed:   0.53
+Iter:   71 | LB:   66031.0000 | UB:  78590.0000 | Gap:   15.980% | Time: (M:   0.48, S:   0.06) | Elapsed:   0.55
+Iter:   72 | LB:   66054.0000 | UB:  78590.0000 | Gap:   15.951% | Time: (M:   0.49, S:   0.06) | Elapsed:   0.56
+Iter:   73 | LB:   66227.0000 | UB:  78590.0000 | Gap:   15.731% | Time: (M:   0.49, S:   0.06) | Elapsed:   0.56
+Iter:   74 | LB:   66322.0000 | UB:  78590.0000 | Gap:   15.610% | Time: (M:   0.50, S:   0.06) | Elapsed:   0.57
+Iter:   75 | LB:   68018.0000 | UB:  76442.0000 | Gap:   11.020% | Time: (M:   0.50, S:   0.07) | Elapsed:   0.57
+Iter:   76 | LB:   73989.0000 | UB:  76442.0000 | Gap:    3.209% | Time: (M:   0.51, S:   0.07) | Elapsed:   0.58
+Iter:   77 | LB:   74079.0000 | UB:  74079.0000 | Gap:    0.000% | Time: (M:   0.51, S:   0.07) | Elapsed:   0.58</code></pre><p>If you want to use knapsack cuts, you can use the following code:</p><pre><code class="language-julia hljs">cut_strategy = KnapsackCut()
+solution_procedure = Sequential()
+run_Benders(data, solution_procedure, cut_strategy, params)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Set parameter InfUnbdInfo to value 1
+Iter:    1 | LB: -1000000.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    2 | LB: -999327.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    3 | LB: -998886.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    4 | LB: -998285.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    5 | LB: -998029.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    6 | LB: -998017.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.01
+Iter:    7 | LB: -997909.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.01
+Iter:    8 | LB: -997927.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.01
+Iter:    9 | LB: -997825.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.01
+Iter:   10 | LB: -997546.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.01
+Iter:   11 | LB: -997403.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.00) | Elapsed:   0.01
+Iter:   12 | LB: -997403.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.01
+Iter:   13 | LB: -997224.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.01
+Iter:   14 | LB: -997189.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.02
+Iter:   15 | LB: -997135.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.02
+Iter:   16 | LB: -996992.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.02
+Iter:   17 | LB: -996975.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.02
+Iter:   18 | LB: -996873.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.01, S:   0.01) | Elapsed:   0.02
+Iter:   19 | LB: -996737.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.02, S:   0.01) | Elapsed:   0.03
+Iter:   20 | LB: -996688.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.02, S:   0.01) | Elapsed:   0.03
+Iter:   21 | LB: -996683.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.02, S:   0.01) | Elapsed:   0.03
+Iter:   22 | LB: -996641.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.03, S:   0.01) | Elapsed:   0.04
+Iter:   23 | LB: -996593.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.03, S:   0.01) | Elapsed:   0.04
+Iter:   24 | LB: -996582.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.04, S:   0.01) | Elapsed:   0.05
+Iter:   25 | LB: -996540.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.04, S:   0.01) | Elapsed:   0.05
+Iter:   26 | LB: -996550.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.05, S:   0.01) | Elapsed:   0.06
+Iter:   27 | LB: -996515.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.06, S:   0.01) | Elapsed:   0.07
+Iter:   28 | LB: -996485.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.07, S:   0.01) | Elapsed:   0.08
+Iter:   29 | LB: -996480.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.07, S:   0.01) | Elapsed:   0.09
+Iter:   30 | LB: -996468.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.08, S:   0.01) | Elapsed:   0.09
+Iter:   31 | LB: -996450.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.09, S:   0.01) | Elapsed:   0.10
+Iter:   32 | LB: -996443.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.10, S:   0.02) | Elapsed:   0.11
+Iter:   33 | LB: -996384.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.10, S:   0.02) | Elapsed:   0.12
+Iter:   34 | LB: -996349.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.11, S:   0.02) | Elapsed:   0.13
+Iter:   35 | LB: -996302.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.12, S:   0.02) | Elapsed:   0.14
+Iter:   36 | LB: -996242.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.15, S:   0.02) | Elapsed:   0.16
+Iter:   37 | LB: -996236.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.17, S:   0.02) | Elapsed:   0.19
+Iter:   38 | LB: -996212.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.20, S:   0.02) | Elapsed:   0.22
+Iter:   39 | LB: -996188.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.22, S:   0.02) | Elapsed:   0.24
+Iter:   40 | LB: -996187.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.25, S:   0.02) | Elapsed:   0.27
+Iter:   41 | LB: -996183.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.28, S:   0.02) | Elapsed:   0.30
+Iter:   42 | LB: -996182.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.30, S:   0.02) | Elapsed:   0.32
+Iter:   43 | LB: -996170.0000 | UB:         Inf | Gap:      NaN% | Time: (M:   0.32, S:   0.02) | Elapsed:   0.35
+Iter:   44 | LB: -996164.0000 | UB: 100419.0000 | Gap: 1092.007% | Time: (M:   0.35, S:   0.02) | Elapsed:   0.38
+Iter:   45 | LB:  -31254.0000 | UB: 100419.0000 | Gap:  131.124% | Time: (M:   0.35, S:   0.02) | Elapsed:   0.38
+Iter:   46 | LB:  -31002.0000 | UB: 100419.0000 | Gap:  130.873% | Time: (M:   0.35, S:   0.02) | Elapsed:   0.38
+Iter:   47 | LB:   57121.0000 | UB: 100419.0000 | Gap:   43.117% | Time: (M:   0.36, S:   0.03) | Elapsed:   0.39
+Iter:   48 | LB:   57150.0000 | UB: 100419.0000 | Gap:   43.088% | Time: (M:   0.36, S:   0.03) | Elapsed:   0.39
+Iter:   49 | LB:   57157.0000 | UB: 100419.0000 | Gap:   43.081% | Time: (M:   0.37, S:   0.03) | Elapsed:   0.40
+Iter:   50 | LB:   57162.0000 | UB: 100419.0000 | Gap:   43.077% | Time: (M:   0.37, S:   0.03) | Elapsed:   0.40
+Iter:   51 | LB:   57246.0000 | UB: 100419.0000 | Gap:   42.993% | Time: (M:   0.38, S:   0.03) | Elapsed:   0.41
+Iter:   52 | LB:   57263.0000 | UB: 100419.0000 | Gap:   42.976% | Time: (M:   0.38, S:   0.03) | Elapsed:   0.41
+Iter:   53 | LB:   57317.0000 | UB: 100419.0000 | Gap:   42.922% | Time: (M:   0.39, S:   0.03) | Elapsed:   0.42
+Iter:   54 | LB:   57323.0000 | UB: 100419.0000 | Gap:   42.916% | Time: (M:   0.39, S:   0.03) | Elapsed:   0.42
+Iter:   55 | LB:   57323.0000 | UB: 100419.0000 | Gap:   42.916% | Time: (M:   0.40, S:   0.03) | Elapsed:   0.43
+Iter:   56 | LB:   57335.0000 | UB:  88664.0000 | Gap:   35.335% | Time: (M:   0.41, S:   0.03) | Elapsed:   0.44
+Iter:   57 | LB:   57651.0000 | UB:  75394.0000 | Gap:   23.534% | Time: (M:   0.41, S:   0.03) | Elapsed:   0.45
+Iter:   58 | LB:   62224.0000 | UB:  75394.0000 | Gap:   17.468% | Time: (M:   0.41, S:   0.03) | Elapsed:   0.45
+Iter:   59 | LB:   68791.0000 | UB:  75394.0000 | Gap:    8.758% | Time: (M:   0.42, S:   0.03) | Elapsed:   0.45
+Iter:   60 | LB:   74073.0000 | UB:  75394.0000 | Gap:    1.752% | Time: (M:   0.42, S:   0.03) | Elapsed:   0.45
+Iter:   61 | LB:   74079.0000 | UB:  74079.0000 | Gap:    0.000% | Time: (M:   0.42, S:   0.03) | Elapsed:   0.46</code></pre><p>If you want to use callback methods, you can use the following code:</p><pre><code class="language-julia hljs">cut_strategy = ClassicalCut()
+solution_procedure = Callback()
+run_Benders(data, solution_procedure, cut_strategy, params)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Set parameter InfUnbdInfo to value 1
+Set parameter OutputFlag to value 1
+Set parameter MIPGap to value 1.0000000000000001e-07
+Set parameter TimeLimit to value 60
+Set parameter OutputFlag to value 1
+Set parameter LazyConstraints to value 1
+Gurobi Optimizer version 12.0.0 build v12.0.0rc1 (mac64[arm] - Darwin 24.1.0 24B83)
+
+CPU model: Apple M1 Pro
+Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
+
+Non-default parameters:
+TimeLimit  60
+MIPGap  1.0000000000000001e-07
+LazyConstraints  1
+
+Optimize a model with 0 rows, 36 columns and 0 nonzeros
+Model fingerprint: 0x73705e8b
+Variable types: 1 continuous, 35 integer (35 binary)
+Coefficient statistics:
+  Matrix range     [0e+00, 0e+00]
+  Objective range  [1e+00, 6e+02]
+  Bounds range     [1e+06, 1e+06]
+  RHS range        [0e+00, 0e+00]
+Presolve time: 0.00s
+Presolved: 0 rows, 36 columns, 0 nonzeros
+Variable types: 1 continuous, 35 integer (35 binary)
+
+Root relaxation: objective -9.993270e+05, 1 iterations, 0.00 seconds (0.00 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 -999327.00    0    -          - -999327.00      -     -    0s
+     0     0 -998886.00    0    -          - -998886.00      -     -    0s
+     0     0 -998429.41    0    1          - -998429.41      -     -    0s
+     0     0 -997304.76    0    2          - -997304.76      -     -    0s
+     0     0 -997260.59    0    8          - -997260.59      -     -    0s
+     0     0 -997251.57    0   10          - -997251.57      -     -    0s
+     0     0 -997249.88    0    7          - -997249.88      -     -    0s
+     0     0 -997224.00    0    -          - -997224.00      -     -    0s
+     0     0 -997189.00    0    -          - -997189.00      -     -    0s
+     0     0 -997133.27    0   13          - -997133.27      -     -    0s
+     0     0 -997047.72    0   12          - -997047.72      -     -    0s
+     0     0 -997037.49    0   14          - -997037.49      -     -    0s
+     0     0 -996992.72    0   14          - -996992.72      -     -    0s
+     0     0 -996992.72    0   14          - -996992.72      -     -    0s
+     0     0 -996986.00    0    -          - -996986.00      -     -    0s
+     0     0 -996943.71    0   13          - -996943.71      -     -    0s
+     0     0 -996940.35    0   13          - -996940.35      -     -    0s
+     0     0 -996935.52    0   13          - -996935.52      -     -    0s
+     0     0 -996935.33    0   13          - -996935.33      -     -    0s
+     0     0 -996915.44    0   10          - -996915.44      -     -    0s
+     0     0 -996914.63    0   10          - -996914.63      -     -    0s
+     0     0 -996865.44    0   14          - -996865.44      -     -    0s
+     0     0 -996819.62    0   17          - -996819.62      -     -    0s
+     0     0 -996810.01    0   17          - -996810.01      -     -    0s
+     0     0 -996807.52    0   17          - -996807.52      -     -    0s
+     0     0 -996793.78    0   16          - -996793.78      -     -    0s
+     0     0 -996760.85    0   17          - -996760.85      -     -    0s
+     0     0 -996760.51    0   15          - -996760.51      -     -    0s
+     0     0 -996735.04    0   18          - -996735.04      -     -    0s
+     0     0 -996716.18    0   16          - -996716.18      -     -    0s
+     0     0 -996705.18    0   18          - -996705.18      -     -    0s
+     0     0 -996703.95    0   19          - -996703.95      -     -    0s
+     0     0 -996694.04    0   18          - -996694.04      -     -    0s
+     0     0 -996694.04    0   18          - -996694.04      -     -    0s
+     0     2 -996687.19    0   18          - -996687.19      -     -    0s
+* 1862  1380              25    104440.00000 -996182.00  1054%   3.2    0s
+* 2959  1140              18    74674.000000 -995954.94  1434%   3.1    0s
+H 3145   928                    74079.000000 64987.9050  12.3%   3.1    0s
+
+Cutting planes:
+  Gomory: 1
+  Cover: 3
+  MIR: 24
+  Flow cover: 5
+  Relax-and-lift: 2
+  Lazy constraints: 6
+
+Explored 3149 nodes (10030 simplex iterations) in 0.30 seconds (0.09 work units)
+Thread count was 8 (of 8 available processors)
+
+Solution count 3: 74079 74674 104440
+
+Optimal solution found (tolerance 1.00e-07)
+Best objective 7.407900000000e+04, best bound 7.407900000000e+04, gap 0.0000%
+
+User-callback calls 6749, time in user-callback 0.20 sec</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../UFLP/">« Uncapacitated Facility Location Problem</a><a class="docs-footer-nextpage" href="../SCFLP/">Stochastic Capacitated Facility Location Problem »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Tuesday 4 February 2025 15:02">Tuesday 4 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
