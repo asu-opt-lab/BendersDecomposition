@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Uncapacitated Facility Location Problem · BendersDecomposition.jl</title><meta name="title" content="Uncapacitated Facility Location Problem · BendersDecomposition.jl"/><meta property="og:title" content="Uncapacitated Facility Location Problem · BendersDecomposition.jl"/><meta property="twitter:title" content="Uncapacitated Facility Location Problem · BendersDecomposition.jl"/><meta name="description" content="Documentation for BendersDecomposition.jl."/><meta property="og:description" content="Documentation for BendersDecomposition.jl."/><meta property="twitter:description" content="Documentation for BendersDecomposition.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">BendersDecomposition.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../../tutorial/introduction/">Introduction</a></li><li><a class="tocitem" href="../../tutorial/beginner/">Beginner Tutorial</a></li><li><a class="tocitem" href="../../tutorial/advanced/">Advanced Tutorial</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../intro/">Introduction</a></li><li><a class="tocitem" href="../CFLP/">Capacitated Facility Location Problem</a></li><li class="is-active"><a class="tocitem" href>Uncapacitated Facility Location Problem</a><ul class="internal"><li><a class="tocitem" href="#Formulation"><span>Formulation</span></a></li><li><a class="tocitem" href="#Example"><span>Example</span></a></li></ul></li><li><a class="tocitem" href="../MCNDP/">Multi-Commodity Network Design Problem</a></li><li><a class="tocitem" href="../SCFLP/">Stochastic Capacitated Facility Location Problem</a></li><li><a class="tocitem" href="../SNIP/">Stochastic Network Interdiction Problem</a></li></ul></li><li><a class="tocitem" href="../../api/">API Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Uncapacitated Facility Location Problem</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Uncapacitated Facility Location Problem</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/ASUKaiwenFang/BendersDecomposition" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/ASUKaiwenFang/BendersDecomposition/blob/main/docs/src/examples/UFLP.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Uncapacitated-Facility-Location-Problem"><a class="docs-heading-anchor" href="#Uncapacitated-Facility-Location-Problem">Uncapacitated Facility Location Problem</a><a id="Uncapacitated-Facility-Location-Problem-1"></a><a class="docs-heading-anchor-permalink" href="#Uncapacitated-Facility-Location-Problem" title="Permalink"></a></h1><h2 id="Formulation"><a class="docs-heading-anchor" href="#Formulation">Formulation</a><a id="Formulation-1"></a><a class="docs-heading-anchor-permalink" href="#Formulation" title="Permalink"></a></h2><p>Consider this problem:</p><p class="math-container">\[\begin{aligned}
+\min \ &amp; \sum_{i \in [I]}f_{i} x_{i} + \sum_{i \in [I]}\sum_{j \in [J]} c_{ij}d_{i}y_{ij} \\
+\text{s.t.} \ &amp; \sum_{i \in [I]} y_{ij} \geq 1, \ \forall j \in [J] \\
+&amp; y_{ij} \leq x_i, \ \forall i \in [I], j \in [J] \\
+&amp; x \in \mathbb B^{I}, y \in \mathbb{R}_{+}^{I \times J}
+\end{aligned}\]</p><h2 id="Example"><a class="docs-heading-anchor" href="#Example">Example</a><a id="Example-1"></a><a class="docs-heading-anchor-permalink" href="#Example" title="Permalink"></a></h2><pre><code class="language-julia hljs">using BendersDecomposition
+using CPLEX
+using JuMP</code></pre><p>Let&#39;s solve this simple instance directly using a solver.</p><pre><code class="language-julia hljs">data = read_uflp_benchmark_data(&quot;p1&quot;; filepath=joinpath(dirname(dirname(dirname(@__DIR__))), &quot;data&quot;, &quot;locssall&quot;))
+milp = create_milp(data)
+set_optimizer(milp.model, CPLEX.Optimizer)
+set_optimizer_attribute(milp.model, MOI.Silent(), false)
+optimize!(milp.model)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Version identifier: 22.1.1.0 | 2022-11-28 | 9160aff4d
+Tried aggregator 1 time.
+Reduced MIP has 550 rows, 510 columns, and 1500 nonzeros.
+Reduced MIP has 10 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.77 ticks)
+Probing time = 0.00 sec. (0.06 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 550 rows, 510 columns, and 1500 nonzeros.
+Reduced MIP has 10 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.90 ticks)
+Probing time = 0.00 sec. (0.06 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 8 threads.
+Root relaxation solution time = 0.00 sec. (0.39 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                       291917.0000        0.0000           100.00%
+*     0     0      integral     0   137396.0000   137396.0000       12    0.00%
+Elapsed time = 0.00 sec. (3.11 ticks, tree = 0.00 MB, solutions = 2)
+
+Root node processing (before b&amp;c):
+  Real time             =    0.00 sec. (3.13 ticks)
+Parallel b&amp;c, 8 threads:
+  Real time             =    0.00 sec. (0.00 ticks)
+  Sync time (average)   =    0.00 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&amp;cut) =    0.00 sec. (3.13 ticks)</code></pre><p>Then, let&#39;s solve this problem using Benders decomposition.</p><pre><code class="language-julia hljs">solver = &quot;CPLEX&quot;
+params = BendersParams(
+    60.0, # Time limit
+    0.00001, # Tolerance
+    solver,
+    Dict(&quot;solver&quot; =&gt; solver),
+    Dict(&quot;solver&quot; =&gt; solver),
+    Dict(),
+    true # verbose
+)
+cut_strategy = ClassicalCut()
+solution_procedure = Sequential()
+run_Benders(data, solution_procedure, cut_strategy, params)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter:    1 | LB: -999376.0000 | UB: 407648.0000 | Gap:  345.157% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    2 | LB: -886645.0000 | UB: 147987.0000 | Gap:  699.137% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    3 | LB:  137396.0000 | UB: 137396.0000 | Gap:    0.000% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00</code></pre><p>If you want to use knapsack cuts, you can use the following code:</p><pre><code class="language-julia hljs">cut_strategy = FatKnapsackCut()
+solution_procedure = Sequential()
+run_Benders(data, solution_procedure, cut_strategy, params)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Iter:    1 | LB: -49999376.0000 | UB: 407648.0000 | Gap: 12365.331% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    2 | LB: -253568.0000 | UB: 168798.0000 | Gap:  250.220% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    3 | LB:  136751.0000 | UB: 168798.0000 | Gap:   18.985% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    4 | LB:  137080.0000 | UB: 143895.0000 | Gap:    4.736% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00
+Iter:    5 | LB:  137396.0000 | UB: 137396.0000 | Gap:    0.000% | Time: (M:   0.00, S:   0.00) | Elapsed:   0.00</code></pre><p>If you want to use callback methods, you can use the following code:</p><pre><code class="language-julia hljs">cut_strategy = ClassicalCut()
+solution_procedure = Callback()
+run_Benders(data, solution_procedure, cut_strategy, params)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Version identifier: 22.1.1.0 | 2022-11-28 | 9160aff4d
+CPXPARAM_Threads                                 1
+CPXPARAM_TimeLimit                               60
+CPXPARAM_MIP_Tolerances_MIPGap                   1.0000000000000001e-07
+Generic callback                                 0x20
+Tried aggregator 1 time.
+Reduced MIP has 1 rows, 11 columns, and 10 nonzeros.
+Reduced MIP has 10 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.00 ticks)
+Probing time = 0.00 sec. (0.00 ticks)
+Tried aggregator 1 time.
+Reduced MIP has 1 rows, 11 columns, and 10 nonzeros.
+Reduced MIP has 10 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.00 ticks)
+Probing time = 0.00 sec. (0.00 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Root relaxation solution time = 0.00 sec. (0.00 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0     0      integral     0   137396.0000  -999376.0000        1  827.37%
+Elapsed time = 0.00 sec. (0.04 ticks, tree = 0.00 MB, solutions = 1)
+
+User cuts applied:  2
+
+Root node processing (before b&amp;c):
+  Real time             =    0.00 sec. (0.04 ticks)
+Sequential b&amp;c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&amp;cut) =    0.00 sec. (0.04 ticks)</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../CFLP/">« Capacitated Facility Location Problem</a><a class="docs-footer-nextpage" href="../MCNDP/">Multi-Commodity Network Design Problem »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Tuesday 4 February 2025 15:02">Tuesday 4 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
