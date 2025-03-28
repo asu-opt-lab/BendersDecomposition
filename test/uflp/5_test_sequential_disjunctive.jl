@@ -15,7 +15,7 @@ using BendersDecomposition
     # Test on a few representative instances
     # for i in [1:66;68:71]
     # for i in 29:66
-    for i in [30]
+    for i in [1]
         @testset "Instance: p$(i)" begin
             # Load CFLP data
             data = read_uflp_benchmark_data("p$(i)")
@@ -27,8 +27,8 @@ using BendersDecomposition
             mip_objective = objective_value(milp.model)
             
 
-            # disjunctive_system = DisjunctiveCut(ClassicalCut(), L1Norm(), PureDisjunctiveCut(), true, false, true, true)
-            disjunctive_system = DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), false, false, true, true)
+            disjunctive_system = DisjunctiveCut(ClassicalCut(), L1Norm(), PureDisjunctiveCut(), false, true, false,true)
+            # disjunctive_system = DisjunctiveCut(FatKnapsackCut(), L1Norm(), PureDisjunctiveCut(), false, true, true,true)
             
             params = BendersParams(
                 60.0,
