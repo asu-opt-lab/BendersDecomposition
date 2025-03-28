@@ -186,9 +186,7 @@ function read_Orlib_data(filename::String;filepath="data/M/R"::AbstractString)
     end
 end
 
-# ============================================================================
-# SCFLP
-# ============================================================================
+
 function read_stochastic_capacited_facility_location_problem(filename::String;filepath="data/SCFLP/"::AbstractString)
     fullpath = joinpath(filepath, join([filename, ".json"]))
     loaded_json = open(fullpath, "r") do file
@@ -206,9 +204,6 @@ function read_stochastic_capacited_facility_location_problem(filename::String;fi
     return SCFLPData(n_facilities, n_customers, n_scenarios, capacities, demands, fixed_costs, costs)
 end
 
-# ============================================================================
-# MCNDP
-# ============================================================================
 
 function read_mcndp_instance(filename::String;filepath="data/NDR/"::AbstractString)
     fullpath = joinpath(filepath, filename)
@@ -267,10 +262,6 @@ function read_mcndp_instance(filename::String;filepath="data/NDR/"::AbstractStri
         )
     end
 end
-
-# ============================================================================
-# SNIP
-# ============================================================================
 
 function create_node_mapping(D, A_minus_D, S)
     # Collect all nodes that appear in the network

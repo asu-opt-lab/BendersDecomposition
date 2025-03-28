@@ -1,0 +1,24 @@
+# Algorithm parameters
+[algorithm_params]
+time_limit = 3600.0
+gap_tolerance = 1e-6
+solver = "CPLEX"
+verbose = true
+
+
+# Solver specific parameters
+[solver_params.master]
+solver = "CPLEX"
+
+[solver_params.sub]
+solver = "CPLEX"
+
+[solver_params.dcglp]
+solver = "CPLEX"
+
+# Cut strategy configuration
+[cut_strategy]
+type = "FAT_KNAPSACK_CUT"
+
+# now we use linear relaxation UB for the master problem
+# params.time_limit = 600

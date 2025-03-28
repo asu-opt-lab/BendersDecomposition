@@ -82,11 +82,9 @@ struct StochasticCallback <: SolutionProcedure end
 
 # Cut strategies
 struct ClassicalCut <: CutStrategy end
-struct UnifiedCut <: CutStrategy end
-abstract type CustomizedCut <: CutStrategy end
-struct FatKnapsackCut <: CustomizedCut end
-struct SlimKnapsackCut <: CustomizedCut end
-struct KnapsackCut <: CustomizedCut end
+struct FatKnapsackCut <: CutStrategy end
+struct SlimKnapsackCut <: CutStrategy end
+struct KnapsackCut <: CutStrategy end
 
 # ============================================================================
 # Cut Strengthening Types
