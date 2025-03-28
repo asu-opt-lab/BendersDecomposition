@@ -18,22 +18,27 @@ particularly useful in mixed-integer programming.
 """
 mutable struct DCGLP <: AbstractDCGLP
     model::Model
+    var_kv_x::Dict
     γ_constraints::Dict{Symbol,Any}
     γ_values::Vector{Tuple{Float64, Vector{Float64}, Union{Float64, Vector{Float64}}}}
     disjunctive_inequalities_constraints::Vector{ConstraintRef}
     dcglp_constraints::Any
     master_cuts::Any
+    strengthen_used::Vector{Int64}
+    disjuncindex_cut_pairs::Dict
+    prev_dcglp_disjuncuts::Any
+    split_index::Vector{Int64}
 end
 
 # Function to create the DCGLP model
 function create_dcglp(data::AbstractData, disjunction_system::DisjunctiveCut)
 
-    model = create_base_model(data, disjunction_system.norm_type)
+    model, var_kv_x = create_base_model(data, disjunction_system.norm_type)
     add_problem_specific_constraints!(model, data, disjunction_system.norm_type)
     add_t_constraints!(model, data, disjunction_system.base_cut_strategy, disjunction_system.norm_type)
     add_norm_specific_components!(model, data, disjunction_system.base_cut_strategy, disjunction_system.norm_type)
 
-    return DCGLP(model, collect_constraints(model), [], [], [], [])
+    return DCGLP(model, var_kv_x, collect_constraints(model), [], [], [], [], [], Dict(), [], [])
 end
 
 # ============================================================================
@@ -75,8 +80,10 @@ function create_base_model(data::AbstractData, ::LNorm)
 
     # Define variables
     @variable(model, τ)
+    # @variable(model, k₀)
     @variable(model, k₀>=0)
     @variable(model, kₓ[1:N])
+    # @variable(model, v₀)
     @variable(model, v₀>=0)
     @variable(model, vₓ[1:N])
     @variable(model, sx[1:N])
@@ -89,12 +96,14 @@ function create_base_model(data::AbstractData, ::LNorm)
     @constraint(model, coneta2[j in 1:N], 0 >= -v₀ + vₓ[j])
     @constraint(model, conv1[j in 1:N], 0 >= -kₓ[j])
     @constraint(model, conv2[j in 1:N], 0 >= -vₓ[j])
+    # @constraint(model, conk0, k₀>=0)
+    # @constraint(model, conv0, v₀>=0)
 
     # Add γ constraints
     @constraint(model, con0, k₀ + v₀ == 1)
     @constraint(model, conx[i=1:N], kₓ[i] + vₓ[i] - sx[i] == 0)  #x̂
 
-    return model
+    return model, Dict(:kₓ => kₓ, :vₓ => vₓ)
 end
 
 # ============================================================================

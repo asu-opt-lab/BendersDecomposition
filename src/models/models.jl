@@ -25,7 +25,8 @@ Create the sub problem formulation for Benders decomposition.
 
 # Arguments
 - `data::AbstractData`: Problem-specific data structure
-- `cut_strategy::CutStrategy`: Strategy for generating Benders cuts
+- `cut_strategy::CutStrategy
+`: Strategy for generating Benders cuts
 
 # Returns
 A concrete subtype of `AbstractSubProblem` 
@@ -42,7 +43,8 @@ Create the Dual Cut Generation Linear Program (DCGLP) formulation.
 
 # Arguments
 - `data::AbstractData`: Problem-specific data structure
-- `cut_strategy::CutStrategy`: Strategy for generating Benders cuts
+- `cut_strategy::CutStrategy
+`: Strategy for generating Benders cuts
 
 # Returns
 `DCGLP` structure 

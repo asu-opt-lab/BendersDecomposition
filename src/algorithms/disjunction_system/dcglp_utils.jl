@@ -20,15 +20,16 @@ mutable struct DCGLPState
     UB_k::Union{Vector{Float64}, Float64}
     UB_v::Union{Vector{Float64}, Float64}
     gap::Float64
+    LB_set::Vector{Float64}
 
     # Constructor with default values
     function DCGLPState()
-        new(0, -Inf, Inf, Inf, Inf, Inf)
+        new(0, -Inf, Inf, Inf, Inf, Inf, [])
     end
 
     # Constructor with specified values
     function DCGLPState(LB::Float64, UB::Float64, UB_k::Float64, UB_v::Float64, gap::Float64, iteration::Int = 0)
-        new(iteration, UB, LB, UB_k, UB_v, gap)
+        new(iteration, UB, LB, UB_k, UB_v, gap, [])
     end
 end
 

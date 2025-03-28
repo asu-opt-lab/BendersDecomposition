@@ -74,6 +74,7 @@ include("cut_strategies/fs_knapsack_cut.jl")
 
 # Include disjunctive cut system
 include("disjunction_system/dcglp_cut.jl")
+include("disjunction_system/dcglp_cut_lifting.jl")
 include("disjunction_system/dcglp_cut_stochastic.jl")
 include("disjunction_system/update_dcglp.jl")
 include("disjunction_system/solve_dcglp.jl")

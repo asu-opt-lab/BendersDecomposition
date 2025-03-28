@@ -196,7 +196,7 @@ function calculate_KP_value_infeasible(costs::Vector{Float64}, demands::Vector{F
 end
 
 # ============================================================================
-# Helper functions, for testing, don't remove 
+# Helper functions,for testing, don't remove 
 # ============================================================================
 
 # function calculate_KP_value(costs::Vector{Float64}, demands::Vector{Float64}, capacity::Float64, μ::Vector{Float64})

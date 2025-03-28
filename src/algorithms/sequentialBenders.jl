@@ -18,10 +18,28 @@ function solve!(env::BendersEnv, ::Sequential, cut_strategy::CutStrategy, params
         # Solve sub problem
         sub_time = @elapsed begin
             solve_sub!(env.sub, env.master.x_value)
-            cuts, sub_obj_val = generate_cuts(env, cut_strategy)
+            # cuts, sub_obj_val = generate_cuts(env, cut_strategy)
+            cuts, sub_obj_val, coeff_matrix = generate_cuts(env, cut_strategy)
             update_upper_bound_and_gap!(state, env, sub_obj_val)
         end
         log.sub_time += sub_time
+        # println(maximum(env.data.fixed_costs) - minimum(env.data.fixed_costs))
+        # println("fixed cost of x1: $(env.data.fixed_costs[1])")
+        # println("coefficient of x1 of benders cut for each J: $(coeff_matrix[1, :])")
+        # println("minimum coefficient of x1 of benders cut: $(minimum(coeff_matrix[1, :]))")
+        # println("all fixed costs: $(env.data.fixed_costs)")
+        # println("minimum coefficient of x of benders cut for each J: $(vec(minimum(coeff_matrix, dims=2)))")
+        # println("fixed cost + minimum coefficent for each J: $(env.data.fixed_costs + vec(minimum(coeff_matrix, dims=2)))")
+        # println("maximum of the summation value among J: $(maximum(env.data.fixed_costs + vec(minimum(coeff_matrix, dims=2))))")
+
+        # println("fixed cost of x1: $(env.data.fixed_costs[1])")
+        # println("coefficient of x of benders cut for J1: $(coeff_matrix[:, 1])")
+        # println("coefficient of x1 of benders cut: $(coeff_matrix[1, :][1])")
+        # println("all fixed costs: $(env.data.fixed_costs)")
+        # println("fixed cost + minimum coefficent for each J: $(env.data.fixed_costs + coeff_matrix[:, 1])")
+        # println("fixed cost + matrix: $((coeff_matrix .+ env.data.fixed_costs)[:, 1])")
+        # println("min value of the matrix: $(minimum(coeff_matrix .+ env.data.fixed_costs))")
+        # println("max value of the matrix: $(maximum(coeff_matrix .+ env.data.fixed_costs))")
         
         # Update state and record information
         record_iteration!(log, state)
@@ -66,7 +84,6 @@ function solve_sub!(sub::KnapsackUFLPSubProblem, x_value::Vector{Float64})
     # No need to solve sub problem (knapsack)
 end
 
-
 """
 Print iteration information if verbose mode is on
 """
@@ -80,5 +97,6 @@ end
 Check termination criteria based on gap and time limit
 """
 function is_terminated(state::BendersState, params::BendersParams, log::BendersIterationLog)
-    return state.gap <= params.gap_tolerance || get_total_time(log) >= params.time_limit #|| state.iteration >= 10
+    # return state.gap <= params.gap_tolerance || get_total_time(log) >= params.time_limit #|| state.iteration >= 10
+    return state.gap <= 1e-2 || get_total_time(log) >= params.time_limit #|| state.iteration >= 10
 end
