@@ -20,9 +20,12 @@ end
 
 function generate_cut_coefficients(sub::KnapsackCFLPSubProblem, x_value::Vector{Float64}, ::KnapsackCut)
     status = dual_status(sub.model)
-    
+    @info "dual status" status
+    @info "termination status" termination_status(sub.model)
+    @info "result count" result_count = MOI.get(sub.model, MOI.ResultCount())
     if status == FEASIBLE_POINT
-        subObjVal = objective_value(sub.model)
+        # subObjVal = objective_value(sub.model)
+        subObjVal = Inf
         μ = dual.(sub.demand_constraints)
 
         # Get facility knapsack info
@@ -49,6 +52,7 @@ function generate_cut_coefficients(sub::KnapsackCFLPSubProblem, x_value::Vector{
         end
         
     else
+        @info "Unexpected dual status: $status"
         throw(ErrorException("Unexpected dual status"))
     end
 end

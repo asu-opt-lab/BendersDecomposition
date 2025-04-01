@@ -14,33 +14,34 @@ using BendersDecomposition
 @testset "CFLP Sequential Benders Tests" begin
     solver = "CPLEX"
     # solver = :Gurobi
-    instances = [1:66; 68:71]
-    # instances = [25]
+    # instances = [1:66; 68:71]
+    instances = [25]
     for i in instances
         @testset "Instance: p$i" begin
             # Load data
             data = read_cflp_benchmark_data("p$i")
-            
+            # data = read_GK_data("f700-c700-r5-3")
+
             # Create and solve MIP reference model
-            milp = create_milp(data)
-            set_optimizer(milp.model, CPLEX.Optimizer)
-            optimize!(milp.model)
-            mip_obj = objective_value(milp.model)
+            # milp = create_milp(data)
+            # set_optimizer(milp.model, CPLEX.Optimizer)
+            # optimize!(milp.model)
+            # mip_obj = objective_value(milp.model)
             
             # Test different cut strategies
             loop_strategy = Sequential()
             cut_strategies = Dict(
-                "Classical" => ClassicalCut(),
-                "Knapsack" => KnapsackCut()
+                "Classical" => ClassicalCut()
+                # "Knapsack" => KnapsackCut()
             )
             params = BendersParams(
-                600.0,
+                20.0,
                 0.00001,
                 solver,
                 Dict("solver" => solver),
                 Dict("solver" => solver),
                 Dict(),
-                false
+                true
             )
             benders_UB = Dict()
             benders_LB = Dict()

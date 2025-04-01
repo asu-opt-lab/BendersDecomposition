@@ -4,12 +4,12 @@
 # Define variables to make the script more readable and maintainable
 
 # config_path="scripts/config/config_cflp_benchmark.toml"
-config_path="scripts/config/config_cflp_disjunctive.toml"
+config_path="scripts/config/config_scflp_disjunctive_1.toml"
 
 JOBSCRIPT_DIR="scripts"
 # OUTPUT_DIR="experiments/cflp_callback_benchmark_hard_cplex"
 # OUTPUT_DIR="experiments/scflp_sequential_benchmark_cplex"
-OUTPUT_DIR="experiments/scflp_sequential_disjunctive_cplex"
+OUTPUT_DIR="experiments/scflp_sequential_disjunctive_gurobi_3"
 
 # Create necessary directories
 mkdir -p "${OUTPUT_DIR}"

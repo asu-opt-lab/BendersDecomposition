@@ -27,6 +27,8 @@ end
 function add_t_constraints!(model::Model, ::CFLPData, ::Union{ClassicalCut, KnapsackCut}, ::LNorm)
     @variable(model, kₜ)
     @variable(model, vₜ)
+    @constraint(model, kₜ >= -1e6 * model[:k₀])
+    @constraint(model, vₜ >= -1e6 * model[:v₀])
     @variable(model, st)
     @constraint(model, cont, kₜ + vₜ - st == 0)
 end

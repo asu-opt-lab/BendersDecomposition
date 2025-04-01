@@ -1,15 +1,12 @@
 module BendersDecomposition
 
 using Printf, StatsBase, Random, Distributions, LinearAlgebra, ArgParse, DataFrames, CSV, JSON
-using JuMP, CPLEX, Gurobi
-include("CPLEXWrapper.jl")
-using .CPLEXWrapper
+using JuMP, CPLEX #, Gurobi
 
 # Include supporting files
 include("types.jl")
 include("models/models.jl") 
 include("utils/utils.jl")
-# include("/home/inhosin/BendersDecomposition-perosnal/src/CPLEXWrapper.jl")
 
 """
     BendersParams(time_limit, gap_tolerance, solver, master_attributes, sub_attributes, dcglp_attributes, verbose)
@@ -114,7 +111,6 @@ Execute Benders decomposition algorithm to solve the given problem instance.
 """
 function run_Benders(data::AbstractData, loop_strategy::SolutionProcedure, cut_strategy::CutStrategy, params::BendersParams)
     env = BendersEnv(data, cut_strategy, params)
-    # relax_integrality(env.master.model)
     solve!(env, loop_strategy, cut_strategy, params)
 end
 

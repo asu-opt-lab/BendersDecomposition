@@ -1,9 +1,5 @@
 function solve_and_get_dcglp_values(model::Model, norm_type::LNorm)
     optimize!(model)
-    if termination_status(model) != OPTIMAL
-        println("DCGLP model not solved to optimality")
-        return nothing, nothing, nothing
-    end
     k_values = (constant = value(model[:k₀]), x = value.(model[:kₓ]), t = value.(model[:kₜ]))
     v_values = (constant = value(model[:v₀]), x = value.(model[:vₓ]), t = value.(model[:vₜ]))
     other_values = (τ = value(model[:τ]), sx = value.(model[:sx]))
@@ -13,16 +9,13 @@ end
 function generate_cut_coefficients(sub::AbstractSubProblem, korv_values, base_cut_strategy::CutStrategy)
     if isapprox(korv_values.constant, 0.0, atol=1e-05)
         return  [], max.(0, korv_values.t)
+        # return  [], korv_values.t
     end
     input_x = @. abs(korv_values.x / korv_values.constant) # abs value
     solve_sub!(sub, input_x)
     dual_values, obj_value = generate_cut_coefficients(sub, input_x, base_cut_strategy)
     obj_value *= korv_values.constant
-    # @info "obj_value: $obj_value"
-    # @info "t_values: $(korv_values.t)"
     dual_values, obj_value = correct_cut_and_obj_values!(dual_values, obj_value, korv_values.t)
-    # @info "obj_value: $obj_value"
-    # @info "t_values: $(korv_values.t)"
     return  dual_values, obj_value
 end
 
@@ -57,6 +50,7 @@ end
 # ============================================================================
 
 function add_cuts_k!(env::BendersEnv, dual_info_k, cut_strategy::CutStrategy)
+    # μ, KP_values, coeff_t = dual_info_k 
     cuts_k, cuts_v, cuts_master = build_cuts(env.dcglp, env.master, env.sub, dual_info_k, cut_strategy.base_cut_strategy)
     push!(env.dcglp.dcglp_constraints, @constraint(env.dcglp.model, 0 .>= cuts_k))
     if cut_strategy.use_two_sided_cuts 
@@ -70,6 +64,7 @@ function add_cuts_k!(env::BendersEnv, dual_info_k, cut_strategy::CutStrategy)
 end
 
 function add_cuts_v!(env::BendersEnv, dual_info_v, cut_strategy::CutStrategy)
+    # μ, KP_values, coeff_t = dual_info_v 
     cuts_k, cuts_v, cuts_master = build_cuts(env.dcglp, env.master, env.sub, dual_info_v, cut_strategy.base_cut_strategy)
     push!(env.dcglp.dcglp_constraints, @constraint(env.dcglp.model, 0 .>= cuts_v))
     if cut_strategy.use_two_sided_cuts 
@@ -88,7 +83,17 @@ function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::Ab
     μ, KP_values, coeff_t = coeff_info
     cut_k = @expression(dcglp.model, coeff_t * dcglp.model[:kₜ] + μ_term(sub, μ) * dcglp.model[:k₀] + sum(KP_values .* dcglp.model[:kₓ]))
     cut_v = @expression(dcglp.model, coeff_t * dcglp.model[:vₜ] + μ_term(sub, μ) * dcglp.model[:v₀] + sum(KP_values .* dcglp.model[:vₓ]))
-    cut = @expression(master.model, coeff_t * master.var[:t] + μ_term(sub, μ) + sum(KP_values .* master.var[:x]))
+    cut = @expression(master.model, coeff_t * master.var[:t] + μ_term(sub, μ) + sum(KP_values .* master.var[:x])) # for the callback
+    # cut = nothing
+    # violation = coeff_t * master.t_value + μ_term(sub, μ) + sum(KP_values .* master.x_value)
+    # # @info "lhs: $(abs(coeff_t) * master.t_value)"
+    # # @info "rhs: $(μ_term(sub, μ) + sum(KP_values .* master.x_value))"
+    # if violation >= 1e-04
+    #     cut = @expression(master.model, coeff_t * master.var[:t] + μ_term(sub, μ) + sum(KP_values .* master.var[:x]))
+    # else
+    #     println("Cut is too small: $(violation)")
+    # end
+
     return cut_k, cut_v, cut
 end
 
@@ -103,55 +108,22 @@ end
 
 
 # fat or slim Knapsack cuts
-# function _build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, (index, critical_items)::Tuple{Int,Int}, ::Union{FatKnapsackCut, SlimKnapsackCut})
-#     k = critical_items
-#     c_sorted = sub.sorted_cost_demands[index]
-#     sorted_indices = sub.sorted_indices[index]
-#     expressions_k = @expression(dcglp.model, -dcglp.model[:kₜ][index] + c_sorted[k] * dcglp.model[:k₀] - sum((c_sorted[k] - c_sorted[i]) * dcglp.model[:kₓ][sorted_indices[i]] for i in 1:k-1))
-#     expressions_v = @expression(dcglp.model, -dcglp.model[:vₜ][index] + c_sorted[k] * dcglp.model[:v₀] - sum((c_sorted[k] - c_sorted[i]) * dcglp.model[:vₓ][sorted_indices[i]] for i in 1:k-1))
-#     expressions_master = @expression(master.model, -master.model[:t][index] + c_sorted[k] - sum((c_sorted[k] - c_sorted[i]) * master.model[:x][sorted_indices[i]] for i in 1:k-1))
-#     return expressions_k, expressions_v, expressions_master
-# end
-
-# function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, critical_pairs::Vector{Tuple{Int,Int}}, ::FatKnapsackCut)
-#     expressions_k = Vector{Any}(undef, length(critical_pairs))
-#     expressions_v = Vector{Any}(undef, length(critical_pairs))
-#     expressions_master = Vector{Any}(undef, length(critical_pairs))
-#     for (i,(index, critical_item)) in enumerate(critical_pairs)
-#         expressions_k[i], expressions_v[i], expressions_master[i] = _build_cuts(dcglp, master, sub, (index, critical_item), FatKnapsackCut())
-#     end
-#     return expressions_k, expressions_v, expressions_master
-# end
-
-# only violated all found 
 function _build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, (index, critical_items)::Tuple{Int,Int}, ::Union{FatKnapsackCut, SlimKnapsackCut})
     k = critical_items
     c_sorted = sub.sorted_cost_demands[index]
     sorted_indices = sub.sorted_indices[index]
     expressions_k = @expression(dcglp.model, -dcglp.model[:kₜ][index] + c_sorted[k] * dcglp.model[:k₀] - sum((c_sorted[k] - c_sorted[i]) * dcglp.model[:kₓ][sorted_indices[i]] for i in 1:k-1))
     expressions_v = @expression(dcglp.model, -dcglp.model[:vₜ][index] + c_sorted[k] * dcglp.model[:v₀] - sum((c_sorted[k] - c_sorted[i]) * dcglp.model[:vₓ][sorted_indices[i]] for i in 1:k-1))
-    
-    collection = []
-    expressions_master = nothing
-    master_t = master.t_value[index] 
-    sub_obj = c_sorted[k] - (k > 1 ? sum((c_sorted[k] - c_sorted[i]) * master.x_value[sorted_indices[i]] for i in 1:k-1) : 0)
-    if sub_obj - master_t > 1e-04 
-        # push!(collection, sub_obj - master_t)
-        # println("index", index)
-        # println(master_t, sub_obj)
-        expressions_master = @expression(master.model, -master.model[:t][index] + c_sorted[k] - sum((c_sorted[k] - c_sorted[i]) * master.model[:x][sorted_indices[i]] for i in 1:k-1))
-    end
-    # println(sort(collection))
+    expressions_master = @expression(master.model, -master.model[:t][index] + c_sorted[k] - sum((c_sorted[k] - c_sorted[i]) * master.model[:x][sorted_indices[i]] for i in 1:k-1))
     return expressions_k, expressions_v, expressions_master
 end
 
 function build_cuts(dcglp::AbstractDCGLP, master::AbstractMasterProblem, sub::AbstractSubProblem, critical_pairs::Vector{Tuple{Int,Int}}, ::FatKnapsackCut)
     expressions_k = Vector{Any}(undef, length(critical_pairs))
     expressions_v = Vector{Any}(undef, length(critical_pairs))
-    expressions_master = []
+    expressions_master = Vector{Any}(undef, length(critical_pairs))
     for (i,(index, critical_item)) in enumerate(critical_pairs)
-        expressions_k[i], expressions_v[i], expressions_master_cut = _build_cuts(dcglp, master, sub, (index, critical_item), FatKnapsackCut())
-        expressions_master_cut !== nothing && push!(expressions_master, expressions_master_cut)
+        expressions_k[i], expressions_v[i], expressions_master[i] = _build_cuts(dcglp, master, sub, (index, critical_item), FatKnapsackCut())
     end
     return expressions_k, expressions_v, expressions_master
 end

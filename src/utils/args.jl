@@ -1,6 +1,6 @@
 using ArgParse
 using TOML
-export parse_commandline, load_benders_params, load_cut_strategy, load_all_you_need
+export parse_commandline, load_benders_params, load_cut_strategy, load_all_you_need, load_snip_data
 
 function parse_commandline()
     s = ArgParseSettings()
@@ -123,8 +123,47 @@ function load_all_you_need()
            load_benders_params(config)
 end
 
+
+
+function parse_commandline_1()
+    s = ArgParseSettings()
+
+    @add_arg_table! s begin
+        "--instance"
+            help = "Instance name (overrides config file)"
+            arg_type = Int
+            required = true
+        "--config"
+            help = "Path to configuration file"
+            default = "src/utils/config.toml"
+            arg_type = String
+        "--output_dir"
+            help = "Output directory"
+            default = "experiments"
+            arg_type = String
+        "--snip_no"
+            help = "SNIP number"
+            default = 1
+            arg_type = Int
+            required = false
+        "--budget"
+            help = "Budget"
+            default = 30.0
+            arg_type = Float64
+            required = false
+    end
+
+    return parse_args(s)
+end
+
+function load_base_config_1()
+    args = parse_commandline_1()
+    config = TOML.parsefile(args["config"])
+    return args, config
+end
+
 function load_snip_data()
-    args, config = load_base_config()
+    args, config = load_base_config_1()
     return args["instance"], 
            args["snip_no"], 
            args["budget"], 
