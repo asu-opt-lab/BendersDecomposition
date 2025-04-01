@@ -1,0 +1,40 @@
+This package contains M-type problems for uncapacitated facility 
+location. There are 37 files in the package:
+
+In /M/O
+MO1 - MO5		O-type problems
+MO1.opt - MO5.opt	optimal solutions
+
+In /M/P
+MP1 - MP5		P-type problems
+MP1.opt - MP5.opt	optimal solutions
+
+In /M/Q
+MQ1 - MQ5		Q-type problems
+MQ1.bub - MQ5.bub	best found solutions
+
+In /M/R
+MR1 - MR5		R-type problems
+MR1.bub - MR5.bub	best found solutions
+
+In /M/S, /M/T
+MS1, MT1		S- and T-type problems
+MS1.bub, MT1.bub	best found solutions
+
+The file structure is as follows:
+On the first line there are the the number of facilities and cities.
+Then there are two sections. In the first section of the file we have
+on each line the following data for one facility
+[capacity] [opening cost] 
+In the second section we have for each city data in the following form:
+[demand of city] [cost connect. to facility 1] ... [cost connect. to facility n]
+
+The solutions are denoted in the following form. For each city there is the 
+number of the facility which the city is connected to in the solution. Here 
+the first number is for the first city, the second number for the second 
+city and so on. The cities are ordered according to their data in the 
+problem file.
+
+
+
+Martin Hoefer, 2002
