@@ -2,14 +2,16 @@
 # add_problem_specific_constraints!
 # ============================================================================
 
-function add_problem_specific_constraints!(model::Model, data::UFLPData, ::LNorm)
-    @constraint(model, 0 >= - sum(model[:kₓ]) + 2*model[:k₀])
-    @constraint(model, 0 >= - sum(model[:vₓ]) + 2*model[:v₀])
+function add_problem_specific_constraints!(model::Model, data::UFLPData, ::LNorm) 
+    @constraint(model, conw1, 0 >= - sum(model[:kₓ]) + 2*model[:k₀])
+    @constraint(model, conw2, 0 >= - sum(model[:vₓ]) + 2*model[:v₀])
 end
-function add_problem_specific_constraints!(model::Model, data::UFLPData, ::StandardNorm)
-    @constraint(model, model[:τ] >= - sum(model[:kₓ]) + 2*model[:k₀])
-    @constraint(model, model[:τ] >= - sum(model[:vₓ]) + 2*model[:v₀])
+
+function add_problem_specific_constraints!(model::Model, data::UFLPData, ::StandardNorm) 
+    @constraint(model, conw1, model[:τ] >= - sum(model[:kₓ]) + 2*model[:k₀])
+    @constraint(model, conw2, model[:τ] >= - sum(model[:vₓ]) + 2*model[:v₀])
 end
+
 
 # ============================================================================
 # add_t_constraints!
@@ -23,8 +25,6 @@ end
 function add_t_constraints!(model::Model, ::UFLPData, ::ClassicalCut, ::LNorm)
     @variable(model, kₜ)
     @variable(model, vₜ)
-    @constraint(model, kₜ >= -1e6 * model[:k₀])
-    @constraint(model, vₜ >= -1e6 * model[:v₀])
     @variable(model, st)
     @constraint(model, cont, kₜ + vₜ - st == 0)
 end
@@ -42,10 +42,8 @@ function add_t_constraints!(model::Model, data::UFLPData, ::FatKnapsackCut, ::LN
     M = data.n_customers
     @variable(model, kₜ[1:M])
     @variable(model, vₜ[1:M])
-    @constraint(model, kₜ .>= -1e6 * model[:k₀])
-    @constraint(model, vₜ .>= -1e6 * model[:v₀])
     @variable(model, st[1:M])
-    γₜconstarint = @constraint(model, cont[i=1:M], kₜ[i] + vₜ[i] - st[i] == 0)
+    γₜconstarint = @constraint(model, cont[i=1:M], kₜ[i] + vₜ[i] - st[i] == 0) #()*vector[i]
     return γₜconstarint
 end
 

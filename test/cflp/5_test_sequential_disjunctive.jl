@@ -14,12 +14,12 @@ using BendersDecomposition
     
     # Test on a few representative instances
     # for i in [1:66;68:71]
-    # for i in 29:66
-    for i in [49]
+    # for i in 1:30
+    for i in [10]
         @testset "Instance: p$(i)" begin
             # Load CFLP data
-            data = read_cflp_benchmark_data("p$(i)")
-            
+            # data = read_cflp_benchmark_data("p$(i)")
+            data = read_GK_data("f100-c100-r5-1")
             # Solve using standard MIP model for comparison
             milp = create_milp(data)
             set_optimizer(milp.model, CPLEX.Optimizer)
@@ -27,12 +27,13 @@ using BendersDecomposition
             mip_objective = objective_value(milp.model)
             
 
-            # disjunctive_system = DisjunctiveCut(ClassicalCut(), L1Norm(), PureDisjunctiveCut(), true, true, true,true)
-            disjunctive_system = DisjunctiveCut(KnapsackCut(), L1Norm(), PureDisjunctiveCut(), false, false, false,true)
-            # disjunctive_system = DisjunctiveCut(KnapsackCut(), LInfNorm(), PureDisjunctiveCut(), true, false,false,false)
-            
+            # disjunctive_system = DisjunctiveCut(ClassicalCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, true)
+            disjunctive_system = DisjunctiveCut(KnapsackCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, true)
+            # disjunctive_system = DisjunctiveCut(KnapsackCut(), L1Norm(), PureDisjunctiveCut(), false, false,false,true)
+            # disjunctive_system = DisjunctiveCut(KnapsackCut(), L1Norm(), StrengthenedDisjunctiveCut(), false, false, false, true)
+
             params = BendersParams(
-                60.0,
+                600.0,
                 1e-5, # *100 already
                 solver,
                 Dict("solver" => solver),
