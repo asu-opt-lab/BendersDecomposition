@@ -30,7 +30,14 @@ using BendersDecomposition
             loop_strategy = Callback()
             # disjunctive_system = DisjunctiveCut(ClassicalCut(), L1Norm(), PureDisjunctiveCut(), true, true, true, true)
             # disjunctive_system = DisjunctiveCut(KnapsackCut(), L1Norm(), PureDisjunctiveCut(), false, false, false, true)
-            disjunctive_system = DisjunctiveCut(KnapsackCut(), L1Norm(), StrengthenedDisjunctiveCut(), true, true, false, true)
+            disjunctive_system = DisjunctiveCut(
+                KnapsackCut(), 
+                L1Norm(), 
+                StrengthenedDisjunctiveCut(), 
+                true, # two_side_cut or not
+                true, # add all found benders cuts or not
+                false, # reuse dcglp or not
+                true) # verbose
 
             # disjunctive_system = DisjunctiveCut(KnapsackCut(), LInfNorm(), PureDisjunctiveCut(), true, false,false,false)
             
@@ -38,12 +45,12 @@ using BendersDecomposition
                 6000.0,
                 1e-5, # *100 already
                 solver,
-                Dict("solver" => solver),
-                Dict("solver" => solver),
+                Dict("solver" => solver), # params for master problem
+                Dict("solver" => solver), # params for subproblem
                 # Dict("solver" => solver, "CPX_PARAM_LPMETHOD" => 2),  # 2 for dual simplex
-                Dict("solver" => solver),
+                Dict("solver" => solver), # params for dcglp
                 # Dict(:solver => :Gurobi),
-                true
+                true # verbose
                 # false
             )
             benders_UB = Dict()
