@@ -1,6 +1,6 @@
 # Algorithm parameters
 [algorithm_params]
-time_limit = 7200.0
+time_limit = 3600.0
 gap_tolerance = 1e-3
 solver = "CPLEX"
 verbose = true
@@ -19,4 +19,5 @@ solver = "CPLEX"
 
 # Cut strategy configuration
 [cut_strategy]
-type = "KNAPSACK_CUT"
+type = "CLASSICAL_CUT"
+# type = "KNAPSACK_CUT"

@@ -24,7 +24,7 @@ function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Floa
         coefficients_x = dual.(sub.fixed_x_constraints)
         coefficients_t = -1.0 
         constant_term = sub_obj_val - dot(coefficients_x, x_value)
-        
+        # constant_term = dot(dual.(sub.other_constraints), normalized_rhs.(sub.other_constraints))
         return (coefficients_t, coefficients_x, constant_term), sub_obj_val
         
     elseif status == INFEASIBILITY_CERTIFICATE
