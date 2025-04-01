@@ -25,35 +25,55 @@ function solve_dcglp!(env::BendersEnv, cut_strategy::DisjunctiveCut)
     x_value = env.master.x_value
     t_value = objective_value(env.sub.model) #perturbation
 
-    set_optimizer_attribute(env.sub.model, "CPX_PARAM_LPMETHOD", 2)
-    set_optimizer_attribute(env.sub.model, "CPX_PARAM_EPOPT", 1e-06)
-    set_optimizer_attribute(env.sub.model, "CPX_PARAM_ITLIM", 5000)
-    set_optimizer_attribute(env.sub.model, MOI.Silent(), false)
+    # set_optimizer_attribute(env.sub.model, "CPX_PARAM_LPMETHOD", 2)
+    # set_optimizer_attribute(env.sub.model, "CPX_PARAM_EPOPT", 1e-06)
+    # set_optimizer_attribute(env.sub.model, "CPX_PARAM_ITLIM", 5000)
+    # set_optimizer_attribute(env.sub.model, MOI.Silent(), false)
 
     set_normalized_rhs.(env.dcglp.model[:conx], x_value)
     set_normalized_rhs.(env.dcglp.model[:cont], t_value)
     log.start_time = time()
+
+    subs = [deepcopy(env.sub); deepcopy(env.sub)]
+    sub_times = [0.0; 0.0]
+    iterates = Dict() # 1 for k; 2 for nu
+    dual_info = Dict()
 
     while true
 
         state.iteration += 1
 
         master_time = @elapsed begin
-            k_values, v_values, other_values = solve_and_get_dcglp_values(env.dcglp.model, cut_strategy.norm_type)
+            iterates[1], iterates[2], other_values = solve_and_get_dcglp_values(env.dcglp.model, cut_strategy.norm_type)
         end
         log.master_time += master_time
 
-        sub_k_time = @elapsed begin
-            dual_info_k, obj_value_k = generate_cut_coefficients(env.sub, k_values, cut_strategy.base_cut_strategy)
-        end
-        log.sub_k_time += sub_k_time
+        # sub_k_time = @elapsed begin
+        #     dual_info_k, obj_value_k = generate_cut_coefficients(env.sub, k_values, cut_strategy.base_cut_strategy)
+        # end
+        # log.sub_k_time += sub_k_time
         
-        sub_v_time = @elapsed begin
-            dual_info_v, obj_value_v = generate_cut_coefficients(env.sub, v_values, cut_strategy.base_cut_strategy)
+        # sub_v_time = @elapsed begin
+        #     dual_info_v, obj_value_v = generate_cut_coefficients(env.sub, v_values, cut_strategy.base_cut_strategy)
+        # end
+        # log.sub_v_time += sub_v_time
+        my_lock = Threads.ReentrantLock()
+        Threads.@threads for i in 1:Threads.nthreads()
+            sub_times[i] = @elapsed begin
+                Threads.lock(my_lock) do
+                    dual_info[i] = generate_cut_coefficients(subs[i], iterates[i], cut_strategy.base_cut_strategy)
+                end
+                # dual_info_k, obj_value_k = generate_cut_coefficients(subs[i], k_nu_values[i], cut_strategy.base_cut_strategy)
+            end
         end
-        log.sub_v_time += sub_v_time
+        log.sub_k_time += sub_times[1]
+        log.sub_v_time += sub_times[2]
+        dual_info_k = dual_info[1][1]
+        obj_value_k = dual_info[1][2]
+        dual_info_v = dual_info[2][1]
+        obj_value_v = dual_info[2][2]
 
-        update_bounds!(state, k_values, v_values, other_values, obj_value_k, obj_value_v, t_value, cut_strategy.norm_type)
+        update_bounds!(state, iterates[1], iterates[2], other_values, obj_value_k, obj_value_v, t_value, cut_strategy.norm_type)
         
         record_iteration!(log, state)
 
