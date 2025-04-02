@@ -193,12 +193,7 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
 
                 println("Indices where lb=ub=0: $(length(zeros_indices))")
                 println("Indices where lb=ub=1: $(length(ones_indices))")
-                
-                set_optimizer_attribute(env.sub.model, "CPX_PARAM_LPMETHOD", 0)
-                set_optimizer_attribute(env.sub.model, "CPX_PARAM_EPOPT", 1e-06)
-                set_optimizer_attribute(env.sub.model, "CPX_PARAM_ITLIM", 9223372036800000000)
-                set_optimizer_attribute(env.sub.model, MOI.Silent(), true) 
-                # set_optimizer_attribute(env.sub.model, "CPXPARAM_MIP_Display", 3)    
+                   
                 solve_sub!(env.sub, env.master.x_value)
                 if zeros_indices == [] || ones_indices == []
                     cuts, sub_obj_value = generate_cuts(env, cut_strategy)
@@ -225,6 +220,7 @@ function solve!(env::BendersEnv, ::Callback, cut_strategy::DisjunctiveCut, param
     set_time_limit_sec(env.master.model, params.time_limit)
     set_optimizer_attribute(env.master.model, MOI.Silent(), false)
     set_optimizer_attribute(env.master.model, "CPXPARAM_MIP_Display", 3)
+    set_optimizer_attribute(env.master.model, "CPX_PARAM_RANDOMSEED", 1234)
     # set_optimizer_attribute(env.master.model, "CPX_PARAM_EPINT", 0.0)
     # set_optimizer_attribute(env.master.model, "CPX_PARAM_EPGAP", 1e-9)
     # set_optimizer_attribute(env.master.model, "CPX_PARAM_EPRHS", 1e-9)
