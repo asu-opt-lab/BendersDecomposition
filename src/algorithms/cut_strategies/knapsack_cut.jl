@@ -20,10 +20,8 @@ end
 
 function generate_cut_coefficients(sub::KnapsackCFLPSubProblem, x_value::Vector{Float64}, ::KnapsackCut)
     status = dual_status(sub.model)
-    
     if status == FEASIBLE_POINT
-        # subObjVal = objective_value(sub.model)
-        subObjVal = Inf
+        subObjVal = objective_value(sub.model)
         μ = dual.(sub.demand_constraints)
 
         # Get facility knapsack info

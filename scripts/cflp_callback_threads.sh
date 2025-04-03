@@ -11,7 +11,7 @@ JOBSCRIPT_DIR="scripts"
 # OUTPUT_DIR="experiments_all/cflp_frequency"
 
 config_path="scripts/config/config_cflp_disjunctive_1.toml"
-OUTPUT_DIR="experiments_appro_app_test/cflp_disjunctive_4500node_knapsack_gap50_TTF_perturbed_2"
+OUTPUT_DIR="experiments_appro_app_test/cflp_disjunctive_4500node_knapsack_gap50_TTF_perturbed_threads"
 # OUTPUT_DIR="experiments_appro_new_new/cflp_disjunctive_classical_700"
 
 # Create necessary directories
@@ -107,8 +107,7 @@ for instance in "${instances[@]}"; do
     echo "#SBATCH -p htc" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -c 14" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -n 14" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH --nodelist=pcc036" >> "${JOBSCRIPT_FILE}"
 
     echo "#SBATCH -t 0-04:00:00" >> "${JOBSCRIPT_FILE}"
@@ -122,7 +121,7 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=. scripts/cflp_callback.jl --instance ${instance} --output_dir ${OUTPUT_DIR} --config ${config_path}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --threads=14 --project=. scripts/cflp_callback_threads.jl --instance ${instance} --output_dir ${OUTPUT_DIR} --config ${config_path}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

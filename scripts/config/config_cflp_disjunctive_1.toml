@@ -1,6 +1,6 @@
 # Algorithm parameters
 [algorithm_params]
-time_limit = 3600.0
+time_limit = 360.0
 gap_tolerance = 1e-5
 solver = "CPLEX"
 verbose = true
