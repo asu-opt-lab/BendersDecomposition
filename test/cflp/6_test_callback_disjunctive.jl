@@ -36,7 +36,7 @@ using BendersDecomposition
                 StrengthenedDisjunctiveCut(), 
                 true, # two_side_cut or not
                 true, # add all found benders cuts or not
-                false, # reuse dcglp or not
+                true, # reuse dcglp or not
                 true) # verbose
 
             # disjunctive_system = DisjunctiveCut(KnapsackCut(), LInfNorm(), PureDisjunctiveCut(), true, false,false,false)
