@@ -19,39 +19,39 @@ function get_subproblem_value(sub::KnapsackUFLPSubProblem, x_value::Vector{Float
     return sub_obj_val  
 end
 
-function select_disjunctive_inequality(x_value)
-
-    gap_x = @. abs(x_value - 0.5)
-    index = argmin(gap_x)
-    a = zeros(Int, length(x_value))
-    a[index] = 1
-    @info "Selected disjunction index: $index, gap_x: $(x_value[index])"
-    return a, 0
-end
-
 # function select_disjunctive_inequality(x_value)
 
 #     gap_x = @. abs(x_value - 0.5)
-#     most_frac_index = argmin(gap_x)
-
-#     tol1, tol2 = 0.2, 0.8
-    
-#     frac_indices = filter(i -> tol1 <= x_value[i] <= tol2, eachindex(x_value))
-#     if !isempty(frac_indices)
-#         index = rand(frac_indices)
-#     else
-#         index = most_frac_index
-#     end
-    
+#     index = argmin(gap_x)
 #     a = zeros(Int, length(x_value))
 #     a[index] = 1
-
-#     @info "Selected disjunction index: $index"
-#     @info "Most fractional index: $most_frac_index"
-#     println("Selected disjunction index: ", index)
-#     @debug "Selected disjunction index: $index"
+#     @info "Selected disjunction index: $index, gap_x: $(x_value[index])"
 #     return a, 0
 # end
+
+function select_disjunctive_inequality(x_value)
+
+    gap_x = @. abs(x_value - 0.5)
+    most_frac_index = argmin(gap_x)
+
+    tol1, tol2 = 0.2, 0.8
+    
+    frac_indices = filter(i -> tol1 <= x_value[i] <= tol2, eachindex(x_value))
+    if !isempty(frac_indices)
+        index = rand(frac_indices)
+    else
+        index = most_frac_index
+    end
+    
+    a = zeros(Int, length(x_value))
+    a[index] = 1
+
+    @info "Selected disjunction index: $index"
+    @info "Most fractional index: $most_frac_index"
+    println("Selected disjunction index: ", index)
+    @debug "Selected disjunction index: $index"
+    return a, 0
+end
 
 function update_dcglp!(dcglp::DCGLP, disjunctive_inequality::Tuple{Vector{Int}, Int}, disjunction_system::DisjunctiveCut)
     replace_disjunctive_inequality!(dcglp, disjunctive_inequality, disjunction_system.norm_type)
