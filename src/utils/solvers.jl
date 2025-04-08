@@ -7,7 +7,7 @@ export assign_attributes!
 
 function assign_attributes!(model::Model, config::Dict{String,Any})
     # Set solver based on config
-    @info config
+    # @info config 
     if config["solver"] == "Gurobi"
         set_optimizer(model, () -> Gurobi.Optimizer(GRB_ENV[]))
         # set_optimizer(model, Gurobi.Optimizer)
