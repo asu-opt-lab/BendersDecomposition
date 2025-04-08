@@ -7,7 +7,7 @@ struct IterationInfo
     sub_time::Float64
     total_time::Float64
 end
-
+# BendersState needed? 
 mutable struct BendersState
     iteration::Int
     UB::Float64
@@ -30,9 +30,10 @@ mutable struct BendersIterationLog
     start_time::Float64
     master_time::Float64
     sub_time::Float64
+    is_in_L::Bool
 
     function BendersIterationLog()
-        new(IterationInfo[], time(), 0.0, 0.0)
+        new(IterationInfo[], time(), 0.0, 0.0, false)
     end
 end
 
@@ -59,24 +60,24 @@ function update_gap!(state::BendersState)
 end
 
 
-function update_upper_bound_and_gap!(state::BendersState, env::BendersEnv, sub_obj_val::Float64)
+function update_upper_bound_and_gap!(state::BendersState, env::BendersEnv, sub_obj_val::Vector{Float64})
 
-    state.UB = min(state.UB, sub_obj_val + dot(env.data.fixed_costs, env.master.x_value))
+    state.UB = min(state.UB, env.data.c_t' * sub_obj_val + env.data.c_x' * env.master.x_value)
 
     update_gap!(state)
 end
 
 
-function update_upper_bound_and_gap!(state::BendersState, env::BendersEnv, sub_obj_val_collection::Vector{Float64})
-    if env.data isa SCFLPData
-        state.UB = min(state.UB, mean(sub_obj_val_collection) + dot(env.data.fixed_costs, env.master.x_value))  
-    elseif env.data isa UFLPData
-        state.UB = min(state.UB, sum(sub_obj_val_collection) + dot(env.data.fixed_costs, env.master.x_value))  
-    else
-        state.UB = min(state.UB, sum(sub_obj_val_collection[k] * env.data.scenarios[k][3] for k in 1:env.data.num_scenarios))  
-    end
-    update_gap!(state)
-end
+# function update_upper_bound_and_gap!(state::BendersState, env::BendersEnv, sub_obj_val_collection::Vector{Float64})
+#     if env.data isa SCFLPData
+#         state.UB = min(state.UB, mean(sub_obj_val_collection) + dot(env.data.c, env.master.x_value))  
+#     elseif env.data isa UFLPData
+#         state.UB = min(state.UB, sum(sub_obj_val_collection) + dot(env.data.c, env.master.x_value))  
+#     else
+#         state.UB = min(state.UB, sum(sub_obj_val_collection[k] * env.data.scenarios[k][3] for k in 1:env.data.num_scenarios))  
+#     end
+#     update_gap!(state)
+# end
 
 
 function to_dataframe(log::BendersIterationLog)

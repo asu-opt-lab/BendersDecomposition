@@ -57,56 +57,56 @@ function load_benders_params(config::Dict)
 end
 
 
-const CUT_STRATEGY_MAP = Dict(
-    "CLASSICAL_CUT" => ClassicalCut,
-    "FAT_KNAPSACK_CUT" => FatKnapsackCut,
-    "SLIM_KNAPSACK_CUT" => SlimKnapsackCut,
-    "KNAPSACK_CUT" => KnapsackCut
-)
+# const CUT_STRATEGY_MAP = Dict(
+#     "CLASSICAL_CUT" => ClassicalCut,
+#     "FAT_KNAPSACK_CUT" => FatKnapsackCut,
+#     "SLIM_KNAPSACK_CUT" => SlimKnapsackCut,
+#     "KNAPSACK_CUT" => KnapsackCut
+# )
 
-const NORM_TYPE_MAP = Dict(
-    "STANDARD_NORM" => StandardNorm,
-    "L1NORM" => L1Norm,
-    "L2NORM" => L2Norm,
-    "LINFNORM" => LInfNorm
-)
+# const NORM_TYPE_MAP = Dict(
+#     "STANDARD_NORM" => StandardNorm,
+#     "LpNORM" => LpNorm,
+#     # "L2NORM" => L2Norm,
+#     # "LINFNORM" => LInfNorm
+# )
 
-const STRENGTHENING_MAP = Dict(
-    "PURE_DISJUNCTION" => PureDisjunctiveCut,
-    "STRENGTHENED_DISJUNCTION" => StrengthenedDisjunctiveCut
-)
+# const STRENGTHENING_MAP = Dict(
+#     "PURE_DISJUNCTION" => PureDisjunctiveCut,
+#     "STRENGTHENED_DISJUNCTION" => StrengthenedDisjunctiveCut
+# )
 
 function load_cut_strategy(config::Dict)
-    cut_config = get(config, "cut_strategy", Dict())
-    cut_type = get(cut_config, "type", "CLASSICAL_CUT")
+    # cut_config = get(config, "cut_strategy", Dict())
+    # cut_type = get(cut_config, "type", "CLASSICAL_CUT")
     
-    if cut_type == "DISJUNCTIVE_CUT"
-        base_strategy = get(CUT_STRATEGY_MAP, cut_config["base_cut_strategy"]) do
-            error("Unknown base cut strategy: $(cut_config["base_cut_strategy"])")
-        end
+    # if cut_type == "DISJUNCTIVE_CUT"
+    #     base_strategy = get(CUT_STRATEGY_MAP, cut_config["base_cut_strategy"]) do
+    #         error("Unknown base cut strategy: $(cut_config["base_cut_strategy"])")
+    #     end
         
-        norm_type = get(NORM_TYPE_MAP, cut_config["norm_type"]) do
-            error("Unknown norm type: $(cut_config["norm_type"])")
-        end
+    #     norm_type = get(NORM_TYPE_MAP, cut_config["norm_type"]) do
+    #         error("Unknown norm type: $(cut_config["norm_type"])")
+    #     end
         
-        strengthening = get(STRENGTHENING_MAP, cut_config["cut_strengthening"]) do
-            error("Unknown cut strengthening type: $(cut_config["cut_strengthening"])")
-        end
+    #     strengthening = get(STRENGTHENING_MAP, cut_config["cut_strengthening"]) do
+    #         error("Unknown cut strengthening type: $(cut_config["cut_strengthening"])")
+    #     end
         
-        return DisjunctiveCut(
-            base_strategy(),
-            norm_type(),
-            strengthening(),
-            get(cut_config, "use_two_sided_cuts", false),
-            get(cut_config, "include_master_cuts", true),
-            get(cut_config, "reuse_dcglp", true),
-            get(cut_config, "verbose", false)
-        )
-    else
-        return get(CUT_STRATEGY_MAP, cut_type) do
-            error("Unknown cut strategy type: $cut_type")
-        end()
-    end
+    #     return DisjunctiveCut(
+    #         base_strategy(),
+    #         norm_type(),
+    #         strengthening(),
+    #         get(cut_config, "use_two_sided_cuts", false),
+    #         get(cut_config, "include_master_cuts", true),
+    #         get(cut_config, "reuse_dcglp", true),
+    #         get(cut_config, "verbose", false)
+    #     )
+    # else
+    #     return get(CUT_STRATEGY_MAP, cut_type) do
+    #         error("Unknown cut strategy type: $cut_type")
+    #     end()
+    # end
 end
 
 function load_base_config()
