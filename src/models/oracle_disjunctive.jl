@@ -11,10 +11,11 @@ mutable struct DisjunctiveOracleState
     omega_t_::Vector{Vector{Float64}}
     # UB_v::Vector{Float64}
     gap::Float64
+    consecutive_no_improvement::Int
 
     # Constructor with default values
     function DisjunctiveOracleState() 
-        new(0, 0.0, [0.0; 0.0], [false; false], Vector{Vector{Float64}}(undef, 2), -Inf, Inf, Vector{Vector{Float64}}(undef,2), 100.0)
+        new(0, 0.0, [0.0; 0.0], [false; false], Vector{Vector{Float64}}(undef, 2), -Inf, Inf, Vector{Vector{Float64}}(undef,2), 100.0, 0)
     end
 end
 
@@ -74,7 +75,7 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
         new(dcglp, typical_oracles, norm, split_index_selection_rule, strengthened, add_benders_cuts_to_master, reuse_dcglp, verbose)
     end
 end
-function add_normalization_constraint(data::Data, dcglp::Model, norm::LpNorm, var_vec::Vector{VariableRef})
+function add_normalization_constraint(data::Data, dcglp::Model, norm::AbstractNorm, var_vec::Vector{VariableRef})
     error("update add_normalization_constraint for $(typeof(norm))")
 end
 function add_normalization_constraint(data::Data, dcglp::Model, norm::LpNorm, var_vec::Vector{VariableRef})
@@ -106,7 +107,7 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 
-    return solve_dcglp!(oracle, t_value)
+    return solve_dcglp!(oracle, x_value, t_value)
 end
 
 function select_disjunctive_inequality(x_value::Vector{Float64}, ::MostFractional)
@@ -114,30 +115,34 @@ function select_disjunctive_inequality(x_value::Vector{Float64}, ::MostFractiona
     gap_x = @. abs(x_value - 0.5)
     index = argmin(gap_x)
     
-    phi = zeros(Int, length(x_value))
-    phi[index] = 1
+    phi = zeros(Float64, length(x_value))
+    phi[index] = 1.0
 
     @debug "Most fractional simple split index: $index"
-    return phi, 0
+    return phi, 0.0
 end
 
 function select_disjunctive_inequality(x_value::Vector{Float64}, ::RandomFractional; tol_frac_lower = 0.2, tol_frac_upper = 0.8)
     
     frac_indices = filter(i -> tol_frac_lower <= x_value[i] <= tol_frac_upper, eachindex(x_value))
-    if !isempty(frac_indices)
-        index = rand(frac_indices)
-        phi = zeros(Int, length(x_value))
-        phi[index] = 1
-        phi_0 = 0
-        @debug "Random simple split index: $index"
-    else
-        phi, phi_0= select_disjunctive_inequality(x_value, MostFractional())
+    if isempty(frac_indices)
+        frac_indices = collect(1:length(x_value))
     end
+
+    index = rand(frac_indices)
+    phi = zeros(Float64, length(x_value))
+    phi[index] = 1.0
+    phi_0 = 0.0
+    @debug "Random simple split index: $index"
+    # else
+        # phi, phi_0 = select_disjunctive_inequality(x_value, MostFractional())
+    # end
     
     return phi, phi_0
 end
 
-function replace_disjunctive_inequality!(dcglp::Model, phi::Vector{Int}, phi_0::Int)
+function replace_disjunctive_inequality!(dcglp::Model, phi::Vector{Float64}, phi_0::Float64)
+    # storing phi, phi_0 as Int type results in numerical issues
     if haskey(dcglp, :con_split_kappa)
         delete(dcglp, dcglp[:con_split_kappa]) 
         unregister(dcglp, :con_split_kappa)
@@ -152,8 +157,9 @@ function replace_disjunctive_inequality!(dcglp::Model, phi::Vector{Int}, phi_0::
     @constraint(dcglp, con_split_nu, 0 >= -dcglp[:omega_0][2]*phi_0 + phi' * dcglp[:omega_x][2,:])
 end
 
-function solve_dcglp!(oracle::DisjunctiveOracle, t_value::Vector{Float64}; zero_tol = 1e-4)
+function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; zero_tol = 1e-9)
 
+    # setting: halt_limit = 3, 
     log = DisjunctiveOracleLog()
     state = DisjunctiveOracleState()
     dcglp = oracle.dcglp
@@ -171,6 +177,8 @@ function solve_dcglp!(oracle::DisjunctiveOracle, t_value::Vector{Float64}; zero_
     # cuts for master
     hyperplanes = Vector{Hyperplane}()
 
+    prev_lb = -Inf
+
     while true
         state.iteration += 1
 
@@ -184,9 +192,12 @@ function solve_dcglp!(oracle::DisjunctiveOracle, t_value::Vector{Float64}; zero_
                 end
                 other_values = (tau = value(dcglp[:tau]), sx = value.(dcglp[:sx]))
                 state.LB = other_values.tau
+            elseif termination_status(dcglp) == ALMOST_INFEASIBLE
+                @error "dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue, yielding the trivial hyperplane"
+                return false, [Hyperplane(length(x_value), length(t_value))], fill(Inf, length(t_value)) # return trivial hyperplane
             else
                 throw(ErrorException("dcglp master termination status: $(termination_status(dcglp))"))
-                # if infeasible, then the milp is infeasible
+                # if infeasible, then the problem is infeasible
             end
         end
         log.master_time += state.master_time
@@ -199,14 +210,18 @@ function solve_dcglp!(oracle::DisjunctiveOracle, t_value::Vector{Float64}; zero_
                 state.oracle_times[i] = @elapsed begin
                     if omega_value[:z][i] >= zero_tol
                         state.is_in_L[i], hyperplanes_a, state.sub_obj_vals[i] = generate_cuts(typical_oracles[i], omega_value[:x][i] / omega_value[:z][i], omega_value[:t][i] / omega_value[:z][i])
-
+                        # adjust the tolerance with respect to dcglp: (sum(state.sub_obj_vals[i]) - sum(t_value)) * omega_value[:z][i] < zero_tol
                         if !state.is_in_L[i]
                             for k=1:2 # add to both kappa and nu systems
                                 append!(benders_cuts[i], @expression(dcglp, [j=1:length(hyperplanes_a)],
                                 hyperplanes_a[j].a_0 * dcglp[:omega_0][k] + hyperplanes_a[j].a_x' * dcglp[:omega_x][k,:] + hyperplanes_a[j].a_t' * dcglp[:omega_t][k,:]))
                             end
                             if oracle.add_benders_cuts_to_master
-                                append!(hyperplanes, hyperplanes_a)
+                                for h in hyperplanes_a
+                                    if h.a_0 + h.a_x' * x_value + h.a_t' * t_value >= zero_tol
+                                        push!(hyperplanes, h)
+                                    end
+                                end
                             end
                         end
                     else
@@ -226,16 +241,27 @@ function solve_dcglp!(oracle::DisjunctiveOracle, t_value::Vector{Float64}; zero_
 
         oracle.verbose && print_dcglp_iteration_info(state)
 
+        lb_improvement = abs(prev_lb) < zero_tol ? abs(state.LB - prev_lb) : abs((state.LB - prev_lb) / prev_lb) * 100
+        # Check for improvement
+        if lb_improvement < zero_tol
+            state.consecutive_no_improvement += 1
+        else
+            # Reset counter if there's improvement
+            state.consecutive_no_improvement = 0
+        end
+
         is_terminated(state, log) && break
         if haskey(dcglp, :con_benders)
             append!(dcglp[:con_benders], @constraint(dcglp, 0 .>= [benders_cuts[1]; benders_cuts[2]]))
         else
             @constraint(dcglp, con_benders, 0 .>= [benders_cuts[1]; benders_cuts[2]])
         end
+
+        prev_lb = state.LB
     end
 
     if other_values.tau >= zero_tol
-        gamma_t, gamma_x, gamma_0 = oracle.strengthened ? generate_strengthened_disjunctive_cuts(oracle.dcglp) : generate_disjunctive_cut(oracle.dcglp)
+        gamma_x, gamma_t, gamma_0 = oracle.strengthened ? generate_strengthened_disjunctive_cuts(oracle.dcglp) : generate_disjunctive_cut(oracle.dcglp)
 
         # # should store it in oracle based on index 
         # cuts[i] = @expression(dcglp, [i=1:2, j=1:length(constant)],
@@ -247,25 +273,25 @@ function solve_dcglp!(oracle::DisjunctiveOracle, t_value::Vector{Float64}; zero_
 
         return false, hyperplanes, fill(Inf, length(t_value))
     else
-        return true, [Hyperplane(length(omega_value[:x][1]), length(t_value))], t_value
+        return true, [Hyperplane(length(x_value), length(t_value))], t_value
     end
     # statistics_of_disjunctive_cuts(env)
 end
 
 function generate_disjunctive_cut(dcglp::Model)
-    gamma_t = dual.(dcglp[:cont])
     gamma_x = dual.(dcglp[:conx])
+    gamma_t = dual.(dcglp[:cont])
     gamma_0 = dual(dcglp[:con0])
     
-    return gamma_t, gamma_x, gamma_0
+    return gamma_x, gamma_t, gamma_0
 end
 
 function generate_strengthened_disjunctive_cuts(dcglp::Model; zero_tol = 1e-6)
     
     σ₁ = dual(dcglp[:con_split_kappa])
     σ₂ = dual(dcglp[:con_split_nu])
-    gamma_t = dual.(dcglp[:cont])
     gamma_x = dual.(dcglp[:conx])
+    gamma_t = dual.(dcglp[:cont])
     gamma_0 = dual(dcglp[:con0])
 
     println("DCGLP Sigma Values: [σ₁: $σ₁, σ₂: $σ₂]")
@@ -280,7 +306,7 @@ function generate_strengthened_disjunctive_cuts(dcglp::Model; zero_tol = 1e-6)
         gamma_x = min.(a₁-σ₁*m_lb, a₂+σ₂*m_ub)
     end
     
-    return gamma_t, gamma_x, gamma_0
+    return gamma_x, gamma_t, gamma_0
 end
 
 
@@ -302,8 +328,8 @@ function print_dcglp_iteration_info(state::DisjunctiveOracleState)
            state.iteration, state.LB, state.UB, state.gap, sum(state.omega_t_[1]), sum(state.omega_t_[2]), state.master_time, state.oracle_times[1], state.oracle_times[2])
 end
 
-function is_terminated(state::DisjunctiveOracleState, log::DisjunctiveOracleLog)
-    return state.is_in_L[1] && state.is_in_L[2] || state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || time() - log.start_time >= 1000 || state.iteration >= 250 
+function is_terminated(state::DisjunctiveOracleState, log::DisjunctiveOracleLog; halt_limit = 3)
+    return state.is_in_L[1] && state.is_in_L[2] || state.consecutive_no_improvement >= halt_limit || state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || time() - log.start_time >= 1000 || state.iteration >= 250 
 end
 
 
