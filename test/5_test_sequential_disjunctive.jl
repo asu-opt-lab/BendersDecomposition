@@ -2,7 +2,7 @@
 # when no fractional value exists, randomly choose any index
 # streamline the definition for attributes: model vs dcglp
 # verbose for master and oracle directly
-# add_benders_cuts_to_master only for violated ones by (x_value, t_value)
+# add_benders_cuts_to_master only for violated ones by (x_value, t_value) -- done; set the fraction?
 # test strengthening technique -- should work
 # test multiple scenarios -- should work
 # test fat knapsack -- should work
