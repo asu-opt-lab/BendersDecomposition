@@ -1,24 +1,21 @@
 export ClassicalOracle, SeparableOracle, DisjunctiveOracle, generate_cut_coefficients, Hyperplane, aggregate
 
-
 mutable struct Hyperplane
     
-    a_x::Vector{Float64}
-    a_t::Vector{Float64}
+    a_x::SparseVector{Float64, Int} #Vector{Float64}
+    a_t::SparseVector{Float64, Int} #Vector{Float64}
     a_0::Float64
 
-    # a_x_indices
-    # a_x_value
     function Hyperplane(a_x::Vector{Float64}, 
         a_t::Vector{Float64},
         a_0::Float64)
-        
-        new(a_x, a_t, a_0)
+
+        new(dropzeros!(sparsevec(a_x)), dropzeros!(sparsevec(a_t)), a_0)
     end
 
     function Hyperplane(dim_x::Int, dim_t::Int)
         # trivial hyperplane
-        new(zeros(dim_x), zeros(dim_t), 0.0)
+        new(spzeros(dim_x), spzeros(dim_t), 0.0)
     end
 
     Hyperplane() = new()
@@ -68,33 +65,31 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
     end
 end
 
-function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6)
+function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-8)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     optimize!(oracle.model)
     status = dual_status(oracle.model)
-
-    h = Hyperplane(length(x_value), length(t_value))
 
     if status == FEASIBLE_POINT
         sub_obj_val = objective_value(oracle.model)
 
         if sub_obj_val >= t_value[1] + tol
-            h.a_x = dual.(oracle.fixed_x_constraints) 
-            h.a_t = [-1.0] 
-            h.a_0 = sub_obj_val - h.a_x'*x_value 
+            a_x = dual.(oracle.fixed_x_constraints) 
+            a_t = [-1.0] 
+            a_0 = sub_obj_val - a_x'*x_value 
             
-            return false, [h], [sub_obj_val]
+            return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         end
         
-        return true, [h], t_value
+        return true, [Hyperplane(length(x_value), length(t_value))], t_value
 
     elseif status == INFEASIBILITY_CERTIFICATE
         if has_duals(oracle.model)
-            h.a_x = dual.(oracle.fixed_x_constraints)
-            h.a_t = [0.0]
-            h.a_0 = dual.(oracle.other_constraints)'*normalized_rhs.(oracle.other_constraints)
+            a_x = dual.(oracle.fixed_x_constraints)
+            a_t = [0.0]
+            a_0 = dual.(oracle.other_constraints)' * normalized_rhs.(oracle.other_constraints)
             # @info coefficients_t' * t_value + coefficients_x' * x_value + constant_term
-            return false, [h], [Inf]
+            return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
         else
             throw(ErrorException("ClassicalOracle: Infeasible subproblem has no dual solution"))
         end
@@ -116,7 +111,7 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
         # correct dimension for t_j's
         for h in hyperplanes[j]
             coeff_t = h.a_t[1]
-            h.a_t = zeros(length(t_value)) 
+            h.a_t = spzeros(length(t_value)) 
             h.a_t[j] = coeff_t
         end
     end

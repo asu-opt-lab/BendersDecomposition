@@ -34,14 +34,12 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
     optimize!(oracle.model)
     status = dual_status(oracle.model)
 
-    h = Hyperplane(length(x_value),length(t_value))
-
     if status == FEASIBLE_POINT
         sub_obj_val = objective_value(oracle.model)
 
         if sub_obj_val >= t_value[1] + tol
             μ = dual.(oracle.model[:demand])
-            h.a_t = [-1.0] 
+            a_t = [-1.0] 
             
             # Get facility knapsack info
             costs = oracle.facility_knapsack_info.costs
@@ -54,19 +52,19 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
                 KP_values[i] = calculate_KP_value(costs[i,:], demands, capacity[i], μ)
             end
 
-            h.a_x = KP_values # Vector{Float64}
-            h.a_0 = sum(μ) 
-            return false, [h], [sub_obj_val]
+            a_x = KP_values # Vector{Float64}
+            a_0 = sum(μ) 
+            return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
-            return true, [h], t_value
+            return true, [Hyperplane(length(x_value),length(t_value))], t_value
         end
         
     elseif status == INFEASIBILITY_CERTIFICATE
         if has_duals(oracle.model)
-            h.a_x = dual.(oracle.fixed_x_constraints)
-            h.a_t = [0.0]
-            h.a_0 = dual.(oracle.other_constraints)'*normalized_rhs.(oracle.other_constraints)
-            return false, [h], [Inf]
+            a_x = dual.(oracle.fixed_x_constraints)
+            a_t = [0.0]
+            a_0 = dual.(oracle.other_constraints)'*normalized_rhs.(oracle.other_constraints)
+            return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
         else
             throw(ErrorException("CFLKnapsackOracle oracle: Infeasible subproblem has no dual solution"))
         end

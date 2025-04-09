@@ -21,8 +21,8 @@ try
             optimize!(env.master.model)
             if is_solved_and_feasible(env.master.model; allow_local = false, dual = false)
                 env.master.obj_value = JuMP.objective_value(env.master.model)
-                env.master.x_value = value.(env.master.var[:x])
-                env.master.t_value = value.(env.master.var[:t])
+                env.master.x_value = value.(env.master.model[:x])
+                env.master.t_value = value.(env.master.model[:t])
                 state.LB = env.master.obj_value
             else 
                 throw(ErrorException("master termination status: $(termination_status(env.master.model))"))
@@ -42,7 +42,7 @@ try
 
             # need to differential dim_t = 1 or > 1
             cuts = !log.is_in_L ? @expression(env.master.model, [j=1:length(hyperplanes)],
-            hyperplanes[j].a_0 + hyperplanes[j].a_x'*env.master.var[:x] + hyperplanes[j].a_t'*env.master.var[:t]) : []
+            hyperplanes[j].a_0 + hyperplanes[j].a_x'*env.master.model[:x] + hyperplanes[j].a_t'*env.master.model[:t]) : []
 
             if kelley_mode && sub_obj_val != NaN
                 # Check termination criteria

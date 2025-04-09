@@ -19,7 +19,6 @@ A mutable struct representing the master problem for the Capacitated Facility Lo
 """
 mutable struct Master <: AbstractMaster
     model::Model
-    var::Dict
     obj_value::Float64
     x_value::Vector{Float64}
     t_value::Vector{Float64}
@@ -35,6 +34,6 @@ mutable struct Master <: AbstractMaster
 
         @objective(model, Min, data.c_x'* x + data.c_t'* t)
 
-        new(model, Dict(:x => x, :t => t), 0.0, zeros(data.dim_x), zeros(data.dim_t))
+        new(model, 0.0, zeros(data.dim_x), zeros(data.dim_t))
     end
 end

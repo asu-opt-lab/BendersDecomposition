@@ -1,3 +1,6 @@
+# To-Do: 
+# 1. need to be able to change the setting for SeqInOut: e.g., stabilizing point
+# 2. assign attributes to the structure, not to JuMP Model: e.g., one may want to setting for CFLKnapsackOracle (e.g., slim, add_only_violated_cuts)
 using Test
 using JuMP
 using CPLEX
@@ -13,8 +16,8 @@ include("$(dirname(@__DIR__))/example/uflp/oracle.jl")
 include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
 @testset verbose = true "UFLP Sequential Benders Tests" begin
-    # instances = setdiff(1:71, [67])
-    instances = 30:35
+    instances = setdiff(1:71, [67])
+    # instances = 30:35
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -35,7 +38,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                 0.00001,
                 Dict("solver" => "CPLEX"),
                 Dict("solver" => "CPLEX"),
-                true
+                false
             )
 
             # solve mip for reference
@@ -101,7 +104,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
-                    oracle = UFLKnapsackOracle(data) 
+                    oracle = UFLKnapsackOracle(data, add_only_violated_cuts=true) 
 
                     env = BendersEnv(data, master, oracle, Seq())
                     run_Benders(env, params)
@@ -115,7 +118,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
-                    oracle = UFLKnapsackOracle(data) 
+                    oracle = UFLKnapsackOracle(data, add_only_violated_cuts=true) 
 
                     env = BendersEnv(data, master, oracle, SeqInOut())
                     run_Benders(env, params)
@@ -133,7 +136,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
-                    oracle = UFLKnapsackOracle(data; slim=true) 
+                    oracle = UFLKnapsackOracle(data; slim=true, add_only_violated_cuts=false) # add_only_violated_cuts = true makes it very slow
 
                     env = BendersEnv(data, master, oracle, Seq())
                     run_Benders(env, params)
@@ -147,7 +150,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
-                    oracle = UFLKnapsackOracle(data; slim=true) 
+                    oracle = UFLKnapsackOracle(data; slim=true, add_only_violated_cuts=false) 
 
                     env = BendersEnv(data, master, oracle, SeqInOut())
                     run_Benders(env, params)
@@ -164,8 +167,8 @@ include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
 include("$(dirname(@__DIR__))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Sequential Benders Tests" begin
-    # instances = setdiff(1:71, [67])
-    instances = 30:35
+    instances = setdiff(1:71, [67])
+    # instances = 30:35
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -349,7 +352,7 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
             end 
             @testset "Knapsack oracle" begin
                 @testset "SeqInOut" begin
-                    @info "solving f25-c50-s64-r10-$i - classical oracle - seqInOut..."
+                    @info "solving f25-c50-s64-r10-$i - knapsack oracle - seqInOut..."
                     master = Master(data)
                     assign_attributes!(master.model, params.master_attributes)
                     # problem specific constraints
@@ -368,7 +371,7 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
                 end
                 
                 @testset "Seq" begin        
-                    @info "solving f25-c50-s64-r10-$i - classical oracle - seq..."
+                    @info "solving f25-c50-s64-r10-$i - knapsack oracle - seq..."
                     master = Master(data)
                     assign_attributes!(master.model, params.master_attributes)
                     # problem specific constraints
