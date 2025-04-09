@@ -193,7 +193,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                 other_values = (tau = value(dcglp[:tau]), sx = value.(dcglp[:sx]))
                 state.LB = other_values.tau
             elseif termination_status(dcglp) == ALMOST_INFEASIBLE
-                @error "dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue, yielding the typical Benders cut"
+                @warn "dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue, yielding the typical Benders cut"
                 return generate_cuts(typical_oracles[1], x_value, t_value)
             else
                 throw(ErrorException("dcglp master termination status: $(termination_status(dcglp))"))
@@ -260,19 +260,19 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
         prev_lb = state.LB
     end
 
-    if other_values.tau >= zero_tol
+    if state.LB >= zero_tol
         gamma_x, gamma_t, gamma_0 = oracle.strengthened ? generate_strengthened_disjunctive_cuts(oracle.dcglp) : generate_disjunctive_cut(oracle.dcglp)
 
         # # should store it in oracle based on index 
         # cuts[i] = @expression(dcglp, [i=1:2, j=1:length(constant)],
         #                 constant[j]*dcglp[:omega_0][i] + coeff_x[j]'*dcglp[:omega_x][i,:] + coeff_t[j]'*dcglp[:omega_t][i,:])
-
         push!(hyperplanes, Hyperplane(gamma_x, gamma_t, gamma_0))
         
         # push!(oracle.gamma_values, (gamma_t, gamma_x, gamma_0))
 
         return false, hyperplanes, fill(Inf, length(t_value))
     else
+        # should be changed
         return true, [Hyperplane(length(x_value), length(t_value))], t_value
     end
     # statistics_of_disjunctive_cuts(env)
@@ -286,7 +286,7 @@ function generate_disjunctive_cut(dcglp::Model)
     return gamma_x, gamma_t, gamma_0
 end
 
-function generate_strengthened_disjunctive_cuts(dcglp::Model; zero_tol = 1e-6)
+function generate_strengthened_disjunctive_cuts(dcglp::Model; zero_tol = 1e-5)
     
     σ₁ = dual(dcglp[:con_split_kappa])
     σ₂ = dual(dcglp[:con_split_nu])
@@ -296,19 +296,18 @@ function generate_strengthened_disjunctive_cuts(dcglp::Model; zero_tol = 1e-6)
 
     println("DCGLP Sigma Values: [σ₁: $σ₁, σ₂: $σ₂]")
 
-    a₁ = gamma_x .- dual.(dcglp[:condelta][1])
-    a₂ = gamma_x .- dual.(dcglp[:condelta][2])
+    a₁ = -gamma_x .- dual.(dcglp[:condelta][1])
+    a₂ = -gamma_x .- dual.(dcglp[:condelta][2])
     σ_sum = σ₂ + σ₁
-    if σ_sum > zero_tol
+    if σ_sum >= zero_tol
         m = (a₁ .- a₂) / σ_sum
         m_lb = floor.(m)
         m_ub = ceil.(m)
-        gamma_x = min.(a₁-σ₁*m_lb, a₂+σ₂*m_ub)
+        gamma_x = -min.(a₁-σ₁*m_lb, a₂+σ₂*m_ub)
     end
     
     return gamma_x, gamma_t, gamma_0
 end
-
 
 function update_upper_bound_and_gap!(state::DisjunctiveOracleState, omega_values, other_values, t_value, norm::AbstractNorm)
     error("update update_upper_bound_and_gap! for $(typeof(norm))")

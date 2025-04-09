@@ -88,9 +88,7 @@ try
         prev_lb = state.LB
 
         # Generate and add cuts
-        for cut in cuts
-            @constraint(env.master.model, 0 >= cut)
-        end
+        @constraint(env.master.model, 0 .>= cuts)
     end
     
     return to_dataframe(log)
