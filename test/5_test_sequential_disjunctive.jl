@@ -16,6 +16,7 @@
 # 1. DisjunctiveOracle: Setting CPX_PARAM_EPRHS tightly (e.g., < 1e-6) results in dcglp terminating with ALMOST_INFEASIBLE --> set it tightly (1e-9) and outputs a typical Benders cut when dcglp is ALMOST_INFEASIBLE
 # 2. DisjunctiveOracle: Setting zero_tol in solve_dcglp! large (e.g., 1e-4) results in disjunctive Benders with reuse_dcglp = true terminating with incorrect solution --> set it tightly as 1e-9
 # 3. DisjunctiveOracle: solve_dcglp! becomes stall since the true violation should be multipled with omega_value[:z], which can be fairly small --> terminate dcglp when LB does not improve for a certain number of iterations
+# 4. DisjunctiveOracle: the fat-knapsack-based disjunctive cut may have a sparse gamma_t, so adding only disjunctive cut does not improve lower bound, add_benders_cuts_to_master should be set at true
 using Test
 using JuMP
 using Gurobi, CPLEX
@@ -30,9 +31,9 @@ include("$(dirname(@__DIR__))/example/uflp/data_reader.jl")
 include("$(dirname(@__DIR__))/example/uflp/oracle.jl")
 include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
-@testset verbose = true "UFLP Sequential Benders Tests" begin
-    instances = setdiff(1:71, [67])
-    # instances = 21:30
+@testset verbose = true "UFLP Sequential Benders Tests -- MIP master" begin
+    # instances = setdiff(1:71, [67])
+    instances = 21:30
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -67,27 +68,31 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             @testset "Classical oracle" begin
                 @testset "Seq" begin        
                     @info "solving p$i - classical oracle - seq..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
-                    update_model!(master, data)
+                    for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false]
+                        @testset "strengthened $strengthened; add_benders_cuts_to_master $add_benders_cuts_to_master reuse_dcglp $reuse_dcglp" begin
+                            master = Master(data)
+                            assign_attributes!(master.model, params.master_attributes)
+                            # problem specific constraints
+                            update_model!(master, data)
 
-                    typical_oracles = [ClassicalOracle(data); ClassicalOracle(data)] # for kappa & nu
-                    for k=1:2
-                        assign_attributes!(typical_oracles[k].model, params.oracle_attributes)
-                        # problem specific 
-                        update_model!(typical_oracles[k], data)
+                            typical_oracles = [ClassicalOracle(data); ClassicalOracle(data)] # for kappa & nu
+                            for k=1:2
+                                assign_attributes!(typical_oracles[k].model, params.oracle_attributes)
+                                # problem specific 
+                                update_model!(typical_oracles[k], data)
+                            end
+
+                            # define disjunctive_oracle_attributes and add all the setting to there
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(Inf), RandomFractional(); strengthened=strengthened, add_benders_cuts_to_master=add_benders_cuts_to_master, reuse_dcglp=reuse_dcglp, verbose=true) # when not reusing, all combinations are correct
+                            assign_attributes!(disjunctive_oracle.dcglp, params.oracle_attributes)
+
+                            env = BendersEnv(data, master, disjunctive_oracle, Seq())
+                            run_Benders(env, params)
+                            @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                        end
                     end
-
-                    # define disjunctive_oracle_attributes and add all the setting to there
-                    disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(Inf), RandomFractional(); strengthened=true, add_benders_cuts_to_master=false, reuse_dcglp=true, verbose=true) # when not reusing, all combinations are correct
-                    assign_attributes!(disjunctive_oracle.dcglp, params.oracle_attributes)
-
-                    env = BendersEnv(data, master, disjunctive_oracle, Seq())
-                    run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
                 end
-                # # SeqInOut for disjunctive oracle is actually unnecessary extra, but it works though
+                # # SeqInOut for DisjunctiveOracle is actually unnecessary extra, but it works though
                 # @testset "SeqInOut" begin
                 #     @info "solving p$i - classical oracle - seqInOut..."
                 #     master = Master(data)
@@ -122,46 +127,55 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             @assert dim_x == length(data.c_x)
             @assert dim_t == length(data.c_t)
 
-            # @testset "fat knapsack oracle" begin
-            #     @testset "Seq" begin
-            #         @info "solving p$i - fat Knapsack oracle - seq..."
-            #         master = Master(data)
-            #         assign_attributes!(master.model, params.master_attributes)
-            #         # problem specific constraints
-            #         update_model!(master, data)
+            @testset "fat knapsack oracle" begin
+                # fat-knapsack-based disjunctive cut has sparse gamma_t, so adding only disjunctive cut does not improve lower bound
+                @testset "Seq" begin
+                    @info "solving p$i - fat Knapsack oracle - seq..."
+                    for strengthened in [true; false], add_benders_cuts_to_master in [true], reuse_dcglp in [true; false]
+                        @testset "strengthened $strengthened; add_benders_cuts_to_master $add_benders_cuts_to_master reuse_dcglp $reuse_dcglp" begin
+                            master = Master(data)
+                            assign_attributes!(master.model, params.master_attributes)
+                            # problem specific constraints
+                            update_model!(master, data)
 
-            #         # model-free knapsack-based cuts
-            #         typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
+                            # model-free knapsack-based cuts
+                            typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
 
-            #         # define disjunctive_oracle_attributes and add all the setting to there
-            #         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(1.0), RandomFractional(); strengthened=false, add_benders_cuts_to_master=false, reuse_dcglp=false, verbose=true)
-            #         # streamline the definition for attributes: model vs dcglp
-            #         assign_attributes!(disjunctive_oracle.dcglp, params.oracle_attributes)
+                            # define disjunctive_oracle_attributes and add all the setting to there
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(1.0), RandomFractional(); strengthened=strengthened, add_benders_cuts_to_master=add_benders_cuts_to_master, reuse_dcglp=reuse_dcglp, verbose=true)
+                            # streamline the definition for attributes: model vs dcglp
+                            assign_attributes!(disjunctive_oracle.dcglp, params.oracle_attributes)
 
-            #         env = BendersEnv(data, master, disjunctive_oracle, Seq())
-            #         run_Benders(env, params)
-            #         @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
-            #     end
-            # end
+                            env = BendersEnv(data, master, disjunctive_oracle, Seq())
+                            run_Benders(env, params)
+                            @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                        end
+                    end
+                end
+            end
             @testset "slim knapsack oracle" begin
                 @testset "Seq" begin
                     @info "solving p$i - slim Knapsack oracle - seq..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
-                    update_model!(master, data)
+                    for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false]
+                        @testset "strengthened $strengthened; add_benders_cuts_to_master $add_benders_cuts_to_master reuse_dcglp $reuse_dcglp" begin
+                            master = Master(data)
+                            assign_attributes!(master.model, params.master_attributes)
+                            # problem specific constraints
+                            update_model!(master, data)
 
-                    # model-free knapsack-based cuts
-                    typical_oracles = [UFLKnapsackOracle(data, slim=true); UFLKnapsackOracle(data, slim=true)] # for kappa & nu
+                            # model-free knapsack-based cuts
+                            typical_oracles = [UFLKnapsackOracle(data, slim=true); UFLKnapsackOracle(data, slim=true)] # for kappa & nu
 
-                    # define disjunctive_oracle_attributes and add all the setting to there
-                    disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(1.0), RandomFractional(); strengthened=true, add_benders_cuts_to_master=false, reuse_dcglp=false, verbose=true)
-                    # streamline the definition for attributes: model vs dcglp
-                    assign_attributes!(disjunctive_oracle.dcglp, params.oracle_attributes)
+                            # define disjunctive_oracle_attributes and add all the setting to there
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(1.0), RandomFractional(); strengthened=strengthened, add_benders_cuts_to_master=add_benders_cuts_to_master, reuse_dcglp=reuse_dcglp, verbose=true)
+                            # streamline the definition for attributes: model vs dcglp
+                            assign_attributes!(disjunctive_oracle.dcglp, params.oracle_attributes)
 
-                    env = BendersEnv(data, master, disjunctive_oracle, Seq())
-                    run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                            env = BendersEnv(data, master, disjunctive_oracle, Seq())
+                            run_Benders(env, params)
+                            @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                        end
+                    end
                 end
             end
         end

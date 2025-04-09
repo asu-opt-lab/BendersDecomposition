@@ -27,7 +27,7 @@ try
         # Execute oracle
         oracle_time = @elapsed begin
             log.is_in_L, hyperplanes, sub_obj_val = generate_cuts(env.oracle, env.master.x_value, env.master.t_value)
-
+            
             cuts = !log.is_in_L ? @expression(env.master.model, [j=1:length(hyperplanes)], hyperplanes[j].a_0 + hyperplanes[j].a_x'*env.master.model[:x] + hyperplanes[j].a_t'*env.master.model[:t]) : []
 
             if sub_obj_val != NaN
@@ -45,9 +45,7 @@ try
         is_terminated(state, params, log) && break
 
         # Generate and add cuts
-        for cut in cuts
-            @constraint(env.master.model, 0 >= cut)
-        end
+        @constraint(env.master.model, 0 .>= cuts)
     end
     
     return to_dataframe(log)
