@@ -272,8 +272,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
 
         return false, hyperplanes, fill(Inf, length(t_value))
     else
-        # should be changed
-        return true, [Hyperplane(length(x_value), length(t_value))], t_value
+        return generate_cuts(typical_oracles[1], x_value, t_value)
     end
     # statistics_of_disjunctive_cuts(env)
 end
