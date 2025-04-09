@@ -193,8 +193,8 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                 other_values = (tau = value(dcglp[:tau]), sx = value.(dcglp[:sx]))
                 state.LB = other_values.tau
             elseif termination_status(dcglp) == ALMOST_INFEASIBLE
-                @error "dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue, yielding the trivial hyperplane"
-                return false, [Hyperplane(length(x_value), length(t_value))], fill(Inf, length(t_value)) # return trivial hyperplane
+                @error "dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue, yielding the typical Benders cut"
+                return generate_cuts(typical_oracles[1], x_value, t_value)
             else
                 throw(ErrorException("dcglp master termination status: $(termination_status(dcglp))"))
                 # if infeasible, then the problem is infeasible
