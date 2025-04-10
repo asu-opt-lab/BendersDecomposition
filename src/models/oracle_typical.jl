@@ -65,11 +65,15 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
     end
 end
 
-function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-8)
+function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-8, time_limit = 3600)
+    set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     optimize!(oracle.model)
+    if termination_status(oracle.model) == TIME_LIMIT
+        throw(TimeLimitException("Time limit reached during cut generation"))
+    end
+    
     status = dual_status(oracle.model)
-
     if status == FEASIBLE_POINT
         sub_obj_val = objective_value(oracle.model)
 
@@ -77,7 +81,6 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
             a_x = dual.(oracle.fixed_x_constraints) 
             a_t = [-1.0] 
             a_0 = sub_obj_val - a_x'*x_value 
-            
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         end
         
@@ -88,25 +91,22 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
             a_x = dual.(oracle.fixed_x_constraints)
             a_t = [0.0]
             a_0 = dual.(oracle.other_constraints)' * normalized_rhs.(oracle.other_constraints)
-            # @info coefficients_t' * t_value + coefficients_x' * x_value + constant_term
             return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
-        else
-            throw(ErrorException("ClassicalOracle: Infeasible subproblem has no dual solution"))
         end
-        
     else
-        throw(ErrorException("ClassicalOracle: Unexpected dual status"))
+        throw(UnexpectedModelStatusException("ClassicalOracle: $(status)"))
     end
 end
 
-function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6)
+function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600)
+    tic = time()
     N = oracle.N
     is_in_L = Vector{Bool}(undef,N)
     sub_obj_val = Vector{Vector{Float64}}(undef,N)
     hyperplanes = Vector{Vector{Hyperplane}}(undef,N)
     
     for j=1:N
-        is_in_L[j], hyperplanes[j], sub_obj_val[j] = generate_cuts(oracle.oracles[j], x_value, [t_value[j]]; tol=tol)
+        is_in_L[j], hyperplanes[j], sub_obj_val[j] = generate_cuts(oracle.oracles[j], x_value, [t_value[j]]; tol=tol, time_limit=get_sec_remaining(tic, time_limit))
 
         # correct dimension for t_j's
         for h in hyperplanes[j]

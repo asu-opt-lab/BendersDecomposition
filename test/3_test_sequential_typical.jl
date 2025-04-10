@@ -34,11 +34,11 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             @assert dim_t == length(data.c_t)
 
             params = BendersParams(
-                200.0,
+                200,
                 0.00001,
                 Dict("solver" => "CPLEX"),
                 Dict("solver" => "CPLEX"),
-                false
+                true
             )
 
             # solve mip for reference
@@ -64,7 +64,15 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, SeqInOut())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end
                 
                 @testset "Seq" begin        
@@ -81,7 +89,15 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, Seq())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end
             end 
 
@@ -108,7 +124,15 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, Seq())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end
                 @testset "SeqInOut" begin
                     @info "solving p$i - fat Knapsack oracle - seqInOut..."
@@ -122,7 +146,15 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, SeqInOut())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end 
             end
 
@@ -140,7 +172,15 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, Seq())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end
                 @testset "SeqInOut" begin
                     @info "solving p$i - slim Knapsack oracle - seqInOut..."
@@ -154,7 +194,15 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, SeqInOut())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end 
             end
         end
@@ -185,7 +233,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
             @assert dim_t == length(data.c_t)
 
             params = BendersParams(
-                200.0,
+                200,
                 0.00001,
                 Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9),
                 Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9),
@@ -215,9 +263,16 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, SeqInOut())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end
-                
                 @testset "Seq" begin        
                     @info "solving p$i - classical oracle - seq..."
                     master = Master(data)
@@ -232,7 +287,15 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, Seq())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end
             end 
             @testset "Knapsack oracle" begin
@@ -250,7 +313,14 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, Seq())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end
                 @testset "SeqInOut" begin
                     @info "solving p$i - knapsack oracle - seqInOut..."
@@ -266,7 +336,15 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, SeqInOut())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end 
             end
         end
@@ -296,7 +374,7 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
             @assert dim_t == length(data.c_t)
 
             params = BendersParams(
-                200.0,
+                200,
                 0.00001,
                 Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9),
                 Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9),
@@ -328,7 +406,15 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, SeqInOut())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end
                 
                 @testset "Seq" begin        
@@ -347,7 +433,15 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, Seq())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end
             end 
             @testset "Knapsack oracle" begin
@@ -367,7 +461,15 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, SeqInOut())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end
                 
                 @testset "Seq" begin        
@@ -386,7 +488,15 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
 
                     env = BendersEnv(data, master, oracle, Seq())
                     run_Benders(env, params)
-                    @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    @test env.log.termination_status == Optimal()
+                    # if env.log.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                    # elseif env.log.termination_status == TimeLimit()
+                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                    # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                    #     @test false
+                    # end
                 end
             end
         end

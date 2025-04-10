@@ -94,9 +94,16 @@ function add_normalization_constraint(data::Data, dcglp::Model, norm::LpNorm, va
     end
 end
 
-function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6)
+function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600)
 
+    tic = time()
+    
     phi, phi_0 = select_disjunctive_inequality(x_value, oracle.split_index_selection_rule)
+
+    if get_sec_remaining(tic, time_limit) <= 0.0
+        throw(TimeLimitException("Time limit reached during cut generation"))
+    end
+
     replace_disjunctive_inequality!(oracle.dcglp, phi, phi_0)
     if !oracle.reuse_dcglp
         if haskey(oracle.dcglp, :con_benders)
@@ -104,10 +111,15 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
             unregister(oracle.dcglp, :con_benders)
         end
     end
+
+    if get_sec_remaining(tic, time_limit) <= 0.0
+        throw(TimeLimitException("Time limit reached during cut generation"))
+    end
+
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 
-    return solve_dcglp!(oracle, x_value, t_value)
+    return solve_dcglp!(oracle, x_value, t_value; time_limit = time_limit)
 end
 
 function select_disjunctive_inequality(x_value::Vector{Float64}, ::MostFractional)
@@ -157,14 +169,12 @@ function replace_disjunctive_inequality!(dcglp::Model, phi::Vector{Float64}, phi
     @constraint(dcglp, con_split_nu, 0 >= -dcglp[:omega_0][2]*phi_0 + phi' * dcglp[:omega_x][2,:])
 end
 
-function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; zero_tol = 1e-9)
+function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; zero_tol = 1e-9, time_limit = time_limit)
 
     # setting: halt_limit = 3, 
     log = DisjunctiveOracleLog()
     state = DisjunctiveOracleState()
     dcglp = oracle.dcglp
-
-    log.start_time = time()
 
     # 1 for k; 2 for nu
     typical_oracles = oracle.typical_oracles
@@ -183,6 +193,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
         state.iteration += 1
 
         state.master_time = @elapsed begin
+            set_time_limit_sec(dcglp, get_sec_remaining(log.start_time, time_limit))
             optimize!(dcglp)
             if is_solved_and_feasible(dcglp; allow_local = false, dual = true)
                 for i=1:2
@@ -194,9 +205,11 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                 state.LB = other_values.tau
             elseif termination_status(dcglp) == ALMOST_INFEASIBLE
                 @warn "dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue, yielding the typical Benders cut"
-                return generate_cuts(typical_oracles[1], x_value, t_value)
+                return generate_cuts(typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
+            elseif termination_status(env.master.model) == TIME_LIMIT
+                throw(TimeLimitException("Time limit reached during dcglp solving"))
             else
-                throw(ErrorException("dcglp master termination status: $(termination_status(dcglp))"))
+                throw(UnexpectedModelStatusException("dcglp master: $(termination_status(dcglp))"))
                 # if infeasible, then the problem is infeasible
             end
         end
@@ -209,7 +222,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
             # Threads.lock(my_lock) do
                 state.oracle_times[i] = @elapsed begin
                     if omega_value[:z][i] >= zero_tol
-                        state.is_in_L[i], hyperplanes_a, state.sub_obj_vals[i] = generate_cuts(typical_oracles[i], omega_value[:x][i] / omega_value[:z][i], omega_value[:t][i] / omega_value[:z][i])
+                        state.is_in_L[i], hyperplanes_a, state.sub_obj_vals[i] = generate_cuts(typical_oracles[i], omega_value[:x][i] / omega_value[:z][i], omega_value[:t][i] / omega_value[:z][i], time_limit = get_sec_remaining(log.start_time, time_limit))
                         # adjust the tolerance with respect to dcglp: (sum(state.sub_obj_vals[i]) - sum(t_value)) * omega_value[:z][i] < zero_tol
                         if !state.is_in_L[i]
                             for k=1:2 # add to both kappa and nu systems
@@ -250,7 +263,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
             state.consecutive_no_improvement = 0
         end
 
-        is_terminated(state, log) && break
+        is_terminated(state, log, time_limit) && break
         if haskey(dcglp, :con_benders)
             append!(dcglp[:con_benders], @constraint(dcglp, 0 .>= [benders_cuts[1]; benders_cuts[2]]))
         else
@@ -272,7 +285,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
 
         return false, hyperplanes, fill(Inf, length(t_value))
     else
-        return generate_cuts(typical_oracles[1], x_value, t_value)
+        return generate_cuts(typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
     end
     # statistics_of_disjunctive_cuts(env)
 end
@@ -326,8 +339,8 @@ function print_dcglp_iteration_info(state::DisjunctiveOracleState)
            state.iteration, state.LB, state.UB, state.gap, sum(state.omega_t_[1]), sum(state.omega_t_[2]), state.master_time, state.oracle_times[1], state.oracle_times[2])
 end
 
-function is_terminated(state::DisjunctiveOracleState, log::DisjunctiveOracleLog; halt_limit = 3)
-    return state.is_in_L[1] && state.is_in_L[2] || state.consecutive_no_improvement >= halt_limit || state.gap <= 1e-3  || state.UB - state.LB <= 1e-03 || time() - log.start_time >= 1000 || state.iteration >= 250 
+function is_terminated(state::DisjunctiveOracleState, log::DisjunctiveOracleLog, time_limit::Float64; halt_limit = 3)
+    return state.is_in_L[1] && state.is_in_L[2] || state.consecutive_no_improvement >= halt_limit || state.gap <= 1e-3  || get_sec_remaining(log.start_time, time_limit) <= 0.0 || time() - log.start_time >= 1000 || state.iteration >= 250 
 end
 
 
