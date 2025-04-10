@@ -29,9 +29,14 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
 end
 
 
-function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol=1e-6)
+function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol=1e-6, time_limit = 3600)
+    set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     optimize!(oracle.model)
+    if termination_status(oracle.model) == TIME_LIMIT
+        throw(TimeLimitException("Time limit reached during cut generation"))
+    end
+
     status = dual_status(oracle.model)
 
     if status == FEASIBLE_POINT
@@ -65,12 +70,10 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
             a_t = [0.0]
             a_0 = dual.(oracle.other_constraints)'*normalized_rhs.(oracle.other_constraints)
             return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
-        else
-            throw(ErrorException("CFLKnapsackOracle oracle: Infeasible subproblem has no dual solution"))
         end
         
     else
-        throw(ErrorException("CFLKnapsackOracle oracle: Unexpected dual status $status"))
+        throw(UnexpectedModelStatusException("ClassicalOracle: $(status)"))
     end
 end
 

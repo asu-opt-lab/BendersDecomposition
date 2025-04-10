@@ -23,7 +23,8 @@ mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
     UFLKnapsackOracle() = new()
 end
 
-function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6)
+function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600)
+    tic = time()
     critical_facility = Vector{Int}(undef, oracle.J)
     for j in 1:oracle.J
         sorted_indices = oracle.sorted_indices[j]
@@ -43,11 +44,14 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
         end
     end
 
-    # is_in_L should be determined by the sum of t's, must not individually
-    is_in_L = sum(oracle.obj_values) >= sum(t_value) + tol ? false : true
+    if get_sec_remaining(tic, time_limit) <= 0.0
+        throw(TimeLimitException("Time limit reached during cut generation"))
+    end
 
     customers = findall(x -> x != -1, critical_facility)
     
+    # is_in_L should be determined by the sum of t's, must not individually
+    is_in_L = sum(oracle.obj_values) >= sum(t_value) + tol ? false : true
     if is_in_L
         return true, [Hyperplane(length(x_value), oracle.J)], t_value
     end
