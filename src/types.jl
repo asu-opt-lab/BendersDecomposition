@@ -13,7 +13,8 @@ export AbstractMaster, AbstractMip
 export AbstractOracle, AbstractTypicalOracle, AbstractDisjunctiveOracle
 export Seq, SeqInOut
 export RandomFractional, MostFractional, LargestFractional
-
+export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
+export TimeLimitException, UnexpectedModelStatusException
 # ============================================================================
 # Abstract type hierarchy
 # ============================================================================
@@ -164,10 +165,50 @@ struct LargestFractional <: SplitIndexSelectionRule end
 #     verbose::Bool
 # end
 
+abstract type TerminationStatus end
+struct NotSolved <: TerminationStatus end
+struct TimeLimit <: TerminationStatus end
+struct Optimal <: TerminationStatus end
+struct InfeasibleOrNumericalIssue <: TerminationStatus end
+
+struct TimeLimitException <: Exception 
+    msg::String
+end
+
+struct UnexpectedModelStatusException <: Exception 
+    msg::String
+end
 
 
+mutable struct BendersState
+    iteration::Int
+    master_time::Float64
+    oracle_time::Float64
+    total_time::Float64
+    is_in_L::Bool
+    LB::Float64
+    UB::Float64
+    gap::Float64
+   
+    # Constructor with specified values
+    function BendersState()
+        new(0, 0.0, 0.0, 0.0, false, -Inf, Inf, 100.0)
+    end
+end
 
-
+mutable struct BendersDecompositionLog
+    iterations::Vector{BendersState}
+    start_time::Float64
+    master_time::Float64
+    oracle_time::Float64
+    LB::Float64
+    UB::Float64
+    termination_status::TerminationStatus
+    
+    function BendersDecompositionLog()
+        new(Vector{BendersState}(), time(), 0.0, 0.0, -Inf, Inf, NotSolved())
+    end
+end
 
 
 

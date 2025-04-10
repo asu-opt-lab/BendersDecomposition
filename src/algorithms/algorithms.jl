@@ -61,9 +61,11 @@ Must be implemented by concrete cut strategy types.
 # end
 
 # Include algorithm implementations
-include("algorithms_utils.jl")
+include("utils.jl") 
 include("sequential.jl") 
 include("sequentialInOut.jl") 
+
+# include("algorithms_utils.jl")
 # include("sequentialBenders.jl") 
 # include("sequentialBenders_stochastic.jl")
 # include("sequentialBenders_test.jl") 

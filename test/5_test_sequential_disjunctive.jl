@@ -8,9 +8,11 @@
 # test fat knapsack -- should work
 # add disjunctive cut handler for dcglp
 # add lifting
-# even if disjunctiveOracle does not generate a cut, we should not terminate it; dependent on the split 
+# continuous master
+# even if disjunctiveOracle does not generate a cut, we should not terminate it --> when latest tau is close to zero, return typical Benders cut
 # define BendersSeq and BendersSeqInOut and BendersBnB
 # define BendersSeq and BendersSeqInOut and BendersBnB for disjunctive? continuous master?
+# termination parameter for dcglp
 
 # Issues:
 # 1. DisjunctiveOracle: Setting CPX_PARAM_EPRHS tightly (e.g., < 1e-6) results in dcglp terminating with ALMOST_INFEASIBLE --> set it tightly (1e-9) and outputs a typical Benders cut when dcglp is ALMOST_INFEASIBLE
@@ -83,12 +85,20 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             end
 
                             # define disjunctive_oracle_attributes and add all the setting to there
-                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(Inf), RandomFractional(); strengthened=strengthened, add_benders_cuts_to_master=add_benders_cuts_to_master, reuse_dcglp=reuse_dcglp, verbose=true) # when not reusing, all combinations are correct
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(Inf), RandomFractional(); strengthened=strengthened, add_benders_cuts_to_master=add_benders_cuts_to_master, reuse_dcglp=reuse_dcglp, verbose=false) # when not reusing, all combinations are correct
                             assign_attributes!(disjunctive_oracle.dcglp, params.oracle_attributes)
 
                             env = BendersEnv(data, master, disjunctive_oracle, Seq())
                             run_Benders(env, params)
-                            @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                            @test env.log.termination_status == Optimal()
+                            # if env.log.termination_status == Optimal()
+                                @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                            # elseif env.log.termination_status == TimeLimit()
+                            #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                            #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                            # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                            #     @test false
+                            # end
                         end
                     end
                 end
@@ -107,7 +117,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                 #         update_model!(typical_oracles[k], data)
                 #     end
                 #     # define disjunctive_oracle_attributes and add all the setting to there
-                #     disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(1.0), RandomFractional(); strengthened=true, add_benders_cuts_to_master=false, reuse_dcglp=true, verbose=true)
+                #     disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(1.0), RandomFractional(); strengthened=true, add_benders_cuts_to_master=false, reuse_dcglp=true, verbose=false)
                 #     # streamline the definition for attributes: model vs dcglp
                 #     assign_attributes!(disjunctive_oracle.dcglp, params.oracle_attributes)
 
@@ -142,13 +152,21 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
 
                             # define disjunctive_oracle_attributes and add all the setting to there
-                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(1.0), RandomFractional(); strengthened=strengthened, add_benders_cuts_to_master=add_benders_cuts_to_master, reuse_dcglp=reuse_dcglp, verbose=true)
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(1.0), RandomFractional(); strengthened=strengthened, add_benders_cuts_to_master=add_benders_cuts_to_master, reuse_dcglp=reuse_dcglp, verbose=false)
                             # streamline the definition for attributes: model vs dcglp
                             assign_attributes!(disjunctive_oracle.dcglp, params.oracle_attributes)
 
                             env = BendersEnv(data, master, disjunctive_oracle, Seq())
                             run_Benders(env, params)
-                            @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                            @test env.log.termination_status == Optimal()
+                            # if env.log.termination_status == Optimal()
+                                @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                            # elseif env.log.termination_status == TimeLimit()
+                            #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                            #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                            # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                            #     @test false
+                            # end
                         end
                     end
                 end
@@ -158,6 +176,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     @info "solving p$i - slim Knapsack oracle - seq..."
                     for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false]
                         @testset "strengthened $strengthened; add_benders_cuts_to_master $add_benders_cuts_to_master reuse_dcglp $reuse_dcglp" begin
+                        @info "strengthened $strengthened; add_benders_cuts_to_master $add_benders_cuts_to_master reuse_dcglp $reuse_dcglp"
                             master = Master(data)
                             assign_attributes!(master.model, params.master_attributes)
                             # problem specific constraints
@@ -167,13 +186,21 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             typical_oracles = [UFLKnapsackOracle(data, slim=true); UFLKnapsackOracle(data, slim=true)] # for kappa & nu
 
                             # define disjunctive_oracle_attributes and add all the setting to there
-                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(1.0), RandomFractional(); strengthened=strengthened, add_benders_cuts_to_master=add_benders_cuts_to_master, reuse_dcglp=reuse_dcglp, verbose=true)
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles, LpNorm(1.0), RandomFractional(); strengthened=strengthened, add_benders_cuts_to_master=add_benders_cuts_to_master, reuse_dcglp=reuse_dcglp, verbose=false)
                             # streamline the definition for attributes: model vs dcglp
                             assign_attributes!(disjunctive_oracle.dcglp, params.oracle_attributes)
 
                             env = BendersEnv(data, master, disjunctive_oracle, Seq())
                             run_Benders(env, params)
-                            @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                            @test env.log.termination_status == Optimal()
+                            # if env.log.termination_status == Optimal()
+                                @test isapprox(mip_opt_val, env.master.obj_value, atol=1e-5)
+                            # elseif env.log.termination_status == TimeLimit()
+                            #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+                            #     @test env.log.LB <= mip_opt_val <= env.log.UB
+                            # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+                            #     @test false
+                            # end
                         end
                     end
                 end

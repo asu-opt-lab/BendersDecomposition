@@ -2,8 +2,8 @@
 Run BendersSeqInOut
 """
 function solve!(env::BendersEnv, ::SeqInOut, params::BendersParams)
+log = BendersDecompositionLog()
 try    
-    log = BendersIterationLog()
     state = BendersState()
     stabilizing_x = ones(env.data.dim_x)
     α = 0.9
@@ -17,41 +17,43 @@ try
         state.iteration += 1
         
         # Solve master problem
-        master_time = @elapsed begin
+        state.master_time = @elapsed begin
+            set_time_limit_sec(env.master.model, get_sec_remaining(log, params))
             optimize!(env.master.model)
             if is_solved_and_feasible(env.master.model; allow_local = false, dual = false)
                 env.master.obj_value = JuMP.objective_value(env.master.model)
                 env.master.x_value = value.(env.master.model[:x])
                 env.master.t_value = value.(env.master.model[:t])
                 state.LB = env.master.obj_value
+            elseif termination_status(env.master.model) == TIME_LIMIT
+                throw(TimeLimitException("Time limit reached during master solving"))
             else 
                 throw(ErrorException("master termination status: $(termination_status(env.master.model))"))
                 # if infeasible, then the milp is infeasible
             end
         end
-        log.master_time += master_time
+        log.master_time += state.master_time
         
         # perturb point
         stabilizing_x = α * stabilizing_x + (1 - α) * env.master.x_value
         intermediate_x = λ * env.master.x_value + (1 - λ) * stabilizing_x
 
         # Execute oracle
-        oracle_time = @elapsed begin
-            
-            log.is_in_L, hyperplanes, sub_obj_val = generate_cuts(env.oracle, env.master.x_value, env.master.t_value)
+        state.oracle_time = @elapsed begin
+            state.is_in_L, hyperplanes, sub_obj_val = generate_cuts(env.oracle, env.master.x_value, env.master.t_value; time_limit = get_sec_remaining(log, params))
 
             # need to differential dim_t = 1 or > 1
-            cuts = !log.is_in_L ? @expression(env.master.model, [j=1:length(hyperplanes)],
+            cuts = !state.is_in_L ? @expression(env.master.model, [j=1:length(hyperplanes)],
             hyperplanes[j].a_0 + hyperplanes[j].a_x'*env.master.model[:x] + hyperplanes[j].a_t'*env.master.model[:t]) : []
 
             if kelley_mode && sub_obj_val != NaN
                 # Check termination criteria
                 update_upper_bound_and_gap!(state, env, sub_obj_val)
             else
-                log.is_in_L = false
+                state.is_in_L = false
             end
         end
-        log.sub_time += oracle_time
+        log.oracle_time += state.oracle_time
 
         # Update state and record information
         record_iteration!(log, state)
@@ -90,12 +92,17 @@ try
         # Generate and add cuts
         @constraint(env.master.model, 0 .>= cuts)
     end
+    env.log.termination_status = Optimal()
     
     return to_dataframe(log)
 catch e
-    @info e
-    # 1. generate_cuts throws error when dcglp master is not optimally solved
-    # 2. generate_cuts throws error when model-based oracle is not optimally solved
-    # 3. it throws error when master is not optimally solved
+    if typeof(e) <: TimeLimitException
+        log.termination_status = TimeLimit()
+    elseif typeof(e) <: UnexpectedModelStatusException
+        log.termination_status = InfeasibleOrNumericalIssue()
+    else
+        rethrow()  
+    end
+    env.log = log
 end
 end
