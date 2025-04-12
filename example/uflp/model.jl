@@ -41,3 +41,9 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data)
     append!(other_constraints, model[:demand])
     append!(other_constraints, vec(model[:facility_open]))
 end
+
+function update_model!(oracle::DisjunctiveOracle, data::Data)
+    dcglp = oracle.dcglp 
+
+    @constraint(dcglp, [i=1:2], sum(dcglp[:omega_x][i,:]) >= 2 * dcglp[:omega_0][i])
+end

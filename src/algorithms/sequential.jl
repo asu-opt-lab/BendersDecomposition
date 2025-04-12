@@ -2,7 +2,7 @@
 Run BendersSeq
 """
 function solve!(env::BendersEnv, ::Seq, params::BendersParams) 
-log = BendersDecompositionLog()
+log = BendersLog()
 try    
     state = BendersState()
     while true
@@ -24,19 +24,19 @@ try
                 # if infeasible, then the milp is infeasible
             end
         end
-        log.master_time += state.master_time
+        # log.master_time += state.master_time
         
         # Execute oracle
         state.oracle_time = @elapsed begin
             state.is_in_L, hyperplanes, sub_obj_val = generate_cuts(env.oracle, env.master.x_value, env.master.t_value; time_limit = get_sec_remaining(log, params))
             
-            cuts = !state.is_in_L ? @expression(env.master.model, [j=1:length(hyperplanes)], hyperplanes[j].a_0 + hyperplanes[j].a_x'*env.master.model[:x] + hyperplanes[j].a_t'*env.master.model[:t]) : []
-
-            if sub_obj_val != NaN
+            cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
+        
+            if sub_obj_val !== NaN
                 update_upper_bound_and_gap!(state, env, sub_obj_val)
             end
         end
-        log.oracle_time += state.oracle_time
+        # log.oracle_time += state.oracle_time
         
         # Update state and record information
         record_iteration!(log, state)
@@ -69,7 +69,7 @@ end
 """
 Print iteration information if verbose mode is on
 """
-function print_iteration_info(state::BendersState, log::BendersDecompositionLog)
+function print_iteration_info(state::BendersState, log::BendersLog)
     @printf("Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.3f%% | Time: (M: %6.2f, S: %6.2f) | Elapsed: %6.2f\n",
            state.iteration, state.LB, state.UB, state.gap, 
            state.master_time, state.oracle_time, time() - log.start_time)
@@ -78,6 +78,6 @@ end
 """
 Check termination criteria based on gap and time limit
 """
-function is_terminated(state::BendersState, params::BendersParams, log::BendersDecompositionLog)
+function is_terminated(state::BendersState, params::BendersParams, log::BendersLog)
     return state.is_in_L || state.gap <= params.gap_tolerance || get_sec_remaining(log, params) <= 0.0
 end

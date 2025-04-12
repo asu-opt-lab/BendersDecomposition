@@ -12,9 +12,10 @@ export Data, AbstractData
 export AbstractMaster, AbstractMip
 export AbstractOracle, AbstractTypicalOracle, AbstractDisjunctiveOracle
 export Seq, SeqInOut
-export RandomFractional, MostFractional, LargestFractional
+export DisjunctiveCutsAppendRule, NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
+export SplitIndexSelectionRule, RandomFractional, MostFractional, LargestFractional
 export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
-export TimeLimitException, UnexpectedModelStatusException
+export TimeLimitException, UnexpectedModelStatusException, UndefError
 # ============================================================================
 # Abstract type hierarchy
 # ============================================================================
@@ -148,9 +149,10 @@ end
 # Norm Types
 # ============================================================================
 abstract type SplitIndexSelectionRule end
-struct RandomFractional <: SplitIndexSelectionRule end
-struct MostFractional <: SplitIndexSelectionRule end
-struct LargestFractional <: SplitIndexSelectionRule end
+abstract type SimpleSplit <: SplitIndexSelectionRule end
+struct RandomFractional <: SimpleSplit end
+struct MostFractional <: SimpleSplit end
+struct LargestFractional <: SimpleSplit end
 
 # # ============================================================================
 # # Disjunction System
@@ -179,6 +181,18 @@ struct UnexpectedModelStatusException <: Exception
     msg::String
 end
 
+struct AlgorithmException <: Exception 
+    msg::String
+end
+
+struct UndefError <: Exception 
+    msg::String
+end
+
+abstract type DisjunctiveCutsAppendRule end
+struct NoDisjunctiveCuts <: DisjunctiveCutsAppendRule end
+struct AllDisjunctiveCuts <: DisjunctiveCutsAppendRule end
+struct DisjunctiveCutsSmallerIndices <: DisjunctiveCutsAppendRule end
 
 mutable struct BendersState
     iteration::Int
@@ -196,7 +210,7 @@ mutable struct BendersState
     end
 end
 
-mutable struct BendersDecompositionLog
+mutable struct BendersLog
     iterations::Vector{BendersState}
     start_time::Float64
     master_time::Float64
@@ -205,7 +219,7 @@ mutable struct BendersDecompositionLog
     UB::Float64
     termination_status::TerminationStatus
     
-    function BendersDecompositionLog()
+    function BendersLog()
         new(Vector{BendersState}(), time(), 0.0, 0.0, -Inf, Inf, NotSolved())
     end
 end
