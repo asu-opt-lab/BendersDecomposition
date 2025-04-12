@@ -2,7 +2,7 @@
 Run BendersSeqInOut
 """
 function solve!(env::BendersEnv, ::SeqInOut, params::BendersParams)
-log = BendersDecompositionLog()
+log = BendersLog()
 try    
     state = BendersState()
     stabilizing_x = ones(env.data.dim_x)
@@ -42,9 +42,7 @@ try
         state.oracle_time = @elapsed begin
             state.is_in_L, hyperplanes, sub_obj_val = generate_cuts(env.oracle, env.master.x_value, env.master.t_value; time_limit = get_sec_remaining(log, params))
 
-            # need to differential dim_t = 1 or > 1
-            cuts = !state.is_in_L ? @expression(env.master.model, [j=1:length(hyperplanes)],
-            hyperplanes[j].a_0 + hyperplanes[j].a_x'*env.master.model[:x] + hyperplanes[j].a_t'*env.master.model[:t]) : []
+            cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
 
             if kelley_mode && sub_obj_val != NaN
                 # Check termination criteria

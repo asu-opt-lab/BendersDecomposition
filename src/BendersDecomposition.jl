@@ -63,9 +63,9 @@ mutable struct BendersEnv
     master::AbstractMaster
     oracle::AbstractOracle
     loop_strategy::LoopStrategy
-    log::BendersDecompositionLog
+    log::BendersLog
     function BendersEnv(data::Data, master::AbstractMaster, oracle::AbstractOracle, loop_strategy::LoopStrategy)
-        new(data, master, oracle, loop_strategy, BendersDecompositionLog())
+        new(data, master, oracle, loop_strategy, BendersLog())
     end
 end
 
