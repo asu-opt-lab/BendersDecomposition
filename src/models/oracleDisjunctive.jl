@@ -1,33 +1,4 @@
-export DisjunctiveOracle, generate_cut_coefficients
-
-mutable struct DcglpState
-    iteration::Int
-    master_time::Float64
-    oracle_times::Vector{Float64}
-    is_in_L::Vector{Bool}
-    sub_obj_vals::Vector{Vector{Float64}}
-    LB::Float64
-    UB::Float64
-    omega_t_::Vector{Vector{Float64}}
-    gap::Float64
-    consecutive_no_improvement::Int
-
-    # Constructor with default values
-    function DcglpState() 
-        new(0, 0.0, [0.0; 0.0], [false; false], Vector{Vector{Float64}}(undef, 2), -Inf, Inf, Vector{Vector{Float64}}(undef,2), 100.0, 0)
-    end
-end
-
-mutable struct DcglpLog
-    iterations::Vector{DcglpState}
-    start_time::Float64
-    # master_time::Float64 # do we need this?
-    # oracle_times::Vector{Float64}
-    
-    function DcglpLog()
-        new(Vector{DcglpState}(), time()) #), 0.0, [0.0; 0.0])
-    end
-end
+export DisjunctiveOracle
 
 mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
     dcglp::Model
@@ -49,15 +20,15 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
     splits::Vector{Tuple{SparseVector{Float64, Int}, Float64}}
 
     function DisjunctiveOracle(data,  
-        typical_oracles::Vector{T}, #oracle_type::T, 
-        norm::AbstractNorm, 
-        split_index_selection_rule::SplitIndexSelectionRule, 
-        disjunctive_cut_append_rule::DisjunctiveCutsAppendRule; 
-        strengthened::Bool=true, 
-        add_benders_cuts_to_master::Bool=true, 
-        fraction_of_benders_cuts_to_master::Float64 = 1.0, 
-        reuse_dcglp::Bool=true, 
-        verbose::Bool=true) where {T<:AbstractTypicalOracle}
+                            typical_oracles::Vector{T}, 
+                            norm::AbstractNorm, 
+                            split_index_selection_rule::SplitIndexSelectionRule, 
+                            disjunctive_cut_append_rule::DisjunctiveCutsAppendRule; 
+                            strengthened::Bool=true, 
+                            add_benders_cuts_to_master::Bool=true, 
+                            fraction_of_benders_cuts_to_master::Float64 = 1.0, 
+                            reuse_dcglp::Bool=true, 
+                            verbose::Bool=true) where {T<:AbstractTypicalOracle}
         @debug "Building disjunctive oracle"
         dcglp = Model()
         # Define variables
@@ -82,7 +53,7 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
         @constraint(dcglp, conx, omega_x[1,:] + omega_x[2,:] - sx .== 0)
         @constraint(dcglp, cont[j=1:data.dim_t], omega_t[1,j] + omega_t[2,j] - st[j] == 0) # must be in this form to recognize it as a vector
 
-        add_normalization_constraint(data, dcglp, norm, [tau; sx; st])
+        add_normalization_constraint(data, dcglp, norm)
 
         if disjunctive_cut_append_rule == DisjunctiveCutsSmallerIndices()
             if !(typeof(split_index_selection_rule) <: SimpleSplit)
@@ -94,25 +65,6 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
         splits = Vector{Tuple{SparseVector{Float64, Int}, Float64}}()
 
         new(dcglp, typical_oracles, norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_benders_cuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, verbose, disjunctiveCutsByIndex, Vector{Hyperplane}(), splits)
-    end
-end
-
-function add_normalization_constraint(data::Data, dcglp::Model, norm::AbstractNorm, var_vec::Vector{VariableRef})
-    throw(UndefError("update add_normalization_constraint for $(typeof(norm))"))
-end
-function add_normalization_constraint(data::Data, dcglp::Model, norm::LpNorm, var_vec::Vector{VariableRef})
-    # CPLEX only accepts p=1,2,Inf
-    # if conic solver, we can use the following line
-    # @constraint(dcglp, concone, var_vec in MOI.NormCone(norm.p, data.dim_x + data.dim_t + 1))
-    
-    if norm.p == 1.0
-        @constraint(dcglp, concone, var_vec in MOI.NormOneCone(data.dim_x + data.dim_t + 1))
-    elseif norm.p == 2.0
-        @constraint(dcglp, concone, var_vec in MOI.SecondOrderCone(data.dim_x + data.dim_t + 1))
-    elseif norm.p == Inf
-        @constraint(dcglp, concone, var_vec in MOI.NormInfinityCone(data.dim_x + data.dim_t + 1))
-    else
-        throw(UndefError("Unsupported LpNorm: p=$(norm.p)"))
     end
 end
 
@@ -150,89 +102,34 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
     return solve_dcglp!(oracle, x_value, t_value; time_limit = time_limit)
 end
 
+"""
+prototypes for user-customizable functions for DisjunctiveOracle
+"""
+function add_normalization_constraint(data::Data, dcglp::Model, norm::AbstractNorm)
+    throw(UndefError("update add_normalization_constraint for $(typeof(norm))"))
+    # should add a normalization constraint to dcglp. 
+end
+
 function select_disjunctive_inequality(x_value::Vector{Float64}, split_selection_rule::SplitIndexSelectionRule; zero_tol = 1e-2)    
     throw(UndefError("update select_disjunctive_inequality for $(typeof(split_selection_rule))"))
-end
-function select_disjunctive_inequality(x_value::Vector{Float64}, ::LargestFractional; zero_tol = 1e-2)
-    
-    frac_indices = filter(i -> zero_tol <= x_value[i] <= 1.0 - zero_tol, eachindex(x_value))
-    index = isempty(frac_indices) ? rand(collect(1:length(x_value))) : argmax(frac_indices)
-    
-    phi = spzeros(length(x_value))
-    phi[index] = 1.0
-    phi_0 = 0.0
-
-    @debug "Largest fractional simple split index: $index"
-    
-    return phi, phi_0
-end
-function select_disjunctive_inequality(x_value::Vector{Float64}, ::MostFractional; zero_tol = 1e-2)
-
-    gap_x = @. abs(x_value - 0.5)
-
-    frac_indices = filter(i -> zero_tol <= x_value[i] <= 1.0 - zero_tol, eachindex(x_value))
-    index = isempty(frac_indices) ? rand(collect(1:length(x_value))) : argmin(gap_x)
-    
-    phi = spzeros(length(x_value))
-    phi[index] = 1.0
-    phi_0 = 0.0
-
-    @debug "Most fractional simple split index: $index"
-
-    return phi, phi_0
-end
-function select_disjunctive_inequality(x_value::Vector{Float64}, ::RandomFractional; zero_tol = 1e-2)
-    
-    frac_indices = filter(i -> zero_tol <= x_value[i] <= 1.0 - zero_tol, eachindex(x_value))
-    index = isempty(frac_indices) ? rand(collect(1:length(x_value))) : rand(frac_indices)
-    
-    phi = spzeros(length(x_value))
-    phi[index] = 1.0
-    phi_0 = 0.0
-
-    @debug "Random simple split index: $index"
-    
-    return phi, phi_0
+    # should return a split: phi, phi_0
 end
 
 function add_disjunctive_cuts!(oracle::DisjunctiveOracle, rule::DisjunctiveCutsAppendRule)
     throw(UndefError("update add_disjunctive_cuts! for $(typeof(rule))"))
 end
-function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::NoDisjunctiveCuts)
-    # do nothing
-end
-function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::AllDisjunctiveCuts)
-    # do nothing; added at the time of generation
-end
-function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::DisjunctiveCutsSmallerIndices)
-    
-    @assert typeof(oracle.split_index_selection_rule) <: SimpleSplit
 
-    dcglp = oracle.dcglp
-    if haskey(dcglp, :con_disjunctive)
-        delete(dcglp, dcglp[:con_disjunctive]) 
-        unregister(dcglp, :con_disjunctive)
-    end
-    
-    index = get_split_index(oracle)
+include("oracleDisjunctiveInterface.jl")
 
-    disjunctiveCuts = index > 1 ? reduce(vcat, [oracle.disjunctiveCutsByIndex[i] for i = 1:index-1]) : Vector{Hyperplane}()
-    cuts = Vector{AffExpr}()
-    for k = 1:2 # add to both kappa and nu systems
-        append!(cuts, hyperplanes_to_expression(dcglp, disjunctiveCuts, dcglp[:omega_x][k,:], dcglp[:omega_t][k,:], dcglp[:omega_0][k]))
-    end
-
-    @constraint(dcglp, con_disjunctive, 0 .>= cuts)
-end
-
+"""
+utility functions for DisjunctiveOracle
+"""
 function get_split_index(oracle::DisjunctiveOracle)
     if !(typeof(oracle.split_index_selection_rule) <: SimpleSplit)
         throw(AlgorithmException("get_split_index is only valid for SimpleSplit"))
     end
     return findfirst(x -> x > 0.5, oracle.splits[end][1])
 end
-
-
 
 function replace_disjunctive_inequality!(oracle::DisjunctiveOracle)
     dcglp = oracle.dcglp
@@ -262,11 +159,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
 
     # 1 for k; 2 for nu
     typical_oracles = oracle.typical_oracles
-    # dcglp iterate
-    omega_value = Dict(:x => Vector{Vector{Float64}}(undef, 2), 
-                        :t => Vector{Vector{Float64}}(undef, 2), 
-                        :z => Vector{Float64}(undef, 2)) 
-    other_values = (tau = -Inf, sx = Vector{Float64}())
 
     # cuts for master
     hyperplanes = Vector{Hyperplane}()
@@ -306,7 +198,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
             # Threads.lock(my_lock) do
                 state.oracle_times[i] = @elapsed begin
                     if omega_value[:z][i] >= zero_tol
-                        state.is_in_L[i], hyperplanes_a, state.sub_obj_vals[i] = generate_cuts(typical_oracles[i], omega_value[:x][i] / omega_value[:z][i], omega_value[:t][i] / omega_value[:z][i], time_limit = get_sec_remaining(log.start_time, time_limit))
+                        state.is_in_L[i], hyperplanes_a, state.f_x[i] = generate_cuts(typical_oracles[i], omega_value[:x][i] / omega_value[:z][i], omega_value[:t][i] / omega_value[:z][i], time_limit = get_sec_remaining(log.start_time, time_limit))
                         # adjust the tolerance with respect to dcglp: (sum(state.sub_obj_vals[i]) - sum(t_value)) * omega_value[:z][i] < zero_tol
                         if !state.is_in_L[i]
                             for k = 1:2 # add to both kappa and nu systems
@@ -369,45 +261,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
     # statistics_of_disjunctive_cuts(env)
 end
 
-function add_constraints(model::Model, constr_symbol::Symbol, exprs::Vector{AffExpr})
-    # add constraints in the form of 0 .>= expr
-    if haskey(model, constr_symbol)
-        append!(model[constr_symbol], @constraint(model, 0 .>= exprs))
-    else
-        model[constr_symbol] = @constraint(model, 0 .>= exprs)
-    end
-end
-
-function check_lb_improvement!(state::DcglpState, prev_lb::Float64; zero_tol = 1e-8, tol_imprv = 1e-4)
-    lb_improvement = abs(prev_lb) < zero_tol ? abs(state.LB - prev_lb) : abs((state.LB - prev_lb) / prev_lb) * 100
-    # Check for improvement
-    if lb_improvement < tol_imprv
-        state.consecutive_no_improvement += 1
-    else
-        # Reset counter if there's improvement
-        state.consecutive_no_improvement = 0
-    end
-end
-function evaluate_violation(h::Hyperplane, x_value::Vector{Float64}, t_value::Vector{Float64}; zero_tol = 1e-6)
-    return h.a_0 + h.a_x' * x_value + h.a_t' * t_value >= zero_tol
-end
-function select_top_fraction(a::Vector{Hyperplane}, f::Function, p::Float64)
-    @assert 0 < p ≤ 1 "Fraction p must be in (0, 1]"
-    
-    # Apply function f to each element of a
-    scores = f.(a)
-    
-    # Get the indices that would sort scores in descending order
-    sorted_indices = sortperm(scores, rev=true)
-    
-    # How many elements to select
-    k = ceil(Int, p * length(a))
-    
-    # Get the top-k indices and return corresponding elements from a
-    top_indices = sorted_indices[1:k]
-    return a[top_indices]
-end
-
 function generate_disjunctive_cut(dcglp::Model)
     gamma_x = dual.(dcglp[:conx])
     gamma_t = dual.(dcglp[:cont])
@@ -439,28 +292,86 @@ function generate_strengthened_disjunctive_cuts(dcglp::Model; zero_tol = 1e-5)
     return gamma_x, gamma_t, gamma_0
 end
 
+"""
+utility functions for Dcglp
+"""
+mutable struct DcglpState <: AbstractDcglpState
+    master_time::Float64
+    oracle_times::Vector{Float64}
+    omega_values::Dict{Symbol,Vector}
+    other_values::Dict{Symbol,Any}
+    f_x::Vector{Vector{Float64}}
+    omega_t_::Vector{Vector{Float64}}
+    is_in_L::Vector{Bool}
+    LB::Float64
+    UB::Float64
+    gap::Float64
+
+    # Constructor with default values
+    function DcglpState() 
+        new(0.0, 
+            [0.0; 0.0], 
+            Dict(:x => Vector{Vector{Float64}}(undef, 2), 
+                 :t => Vector{Vector{Float64}}(undef, 2), 
+                 :z => Vector{Float64}(undef, 2)), 
+            Dict(:tau => -Inf, :sx => Vector{Float64}()), 
+            Vector{Vector{Float64}}(undef, 2), 
+            Vector{Vector{Float64}}(undef, 2), 
+            [false; false], 
+            -Inf, 
+            Inf, 
+            100.0)
+    end
+end
+
+mutable struct DcglpLog <: AbstractDcglpLog
+    n_iter::Int
+    iterations::Vector{DcglpState}
+    start_time::Float64
+    consecutive_no_improvement::Int
+    # master_time::Float64 # do we need this?
+    # oracle_times::Vector{Float64}
+    
+    function DcglpLog()
+        new(0, Vector{DcglpState}(), time(), 0)
+    end
+end
+
+# # the followings are for loop: 
+# function update_upper_bound_and_gap!(state::AbstractLoopState, omega_values, other_values, t_value, f::function)
+# end
+
 function update_upper_bound_and_gap!(state::DcglpState, omega_values, other_values, t_value, norm::AbstractNorm)
     throw(UndefError("update update_upper_bound_and_gap! for $(typeof(norm))"))
 end
 
 function update_upper_bound_and_gap!(state::DcglpState, omega_values, other_values, t_value, norm::LpNorm)
+    state.omega_values
+    state.other_values
     for i=1:2 
-        state.omega_t_[i] = state.is_in_L[i] ? omega_values[:t][i] : state.sub_obj_vals[i] * omega_values[:z][i]
+        state.omega_t_[i] = state.is_in_L[i] ? state.omega_values[:t][i] : state.f_x[i] * state.omega_values[:z][i]
     end
     st_ = state.omega_t_[1] .+ state.omega_t_[2] .- t_value
+    evaluation = f(st_, state.t_value)
+    (t1, t2) -> LinearAlgebra.norm([other_values.sx; t1 .+ t2 .- t_value], norm.p)
     state.UB = min(state.UB, LinearAlgebra.norm([other_values.sx; st_], norm.p))
     state.gap = (state.UB - state.LB) / abs(state.UB) * 100
 end
 
-function print_dcglp_iteration_info(state::DcglpState)
+"""
+Print iteration information if verbose mode is on
+"""
+function print_iteration_info(state::DcglpState, log::DcglpLog)
     @printf("   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | UB_k: %8.2f | UB_v: %8.2f | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
-           state.iteration, state.LB, state.UB, state.gap, sum(state.omega_t_[1]), sum(state.omega_t_[2]), state.master_time, state.oracle_times[1], state.oracle_times[2])
+           log.n_iter, state.LB, state.UB, state.gap, sum(state.omega_t_[1]), sum(state.omega_t_[2]), state.master_time, state.oracle_times[1], state.oracle_times[2])
 end
 
-function is_terminated(state::DcglpState, log::DcglpLog, time_limit::Float64; halt_limit = 3)
-    return state.is_in_L[1] && state.is_in_L[2] || state.consecutive_no_improvement >= halt_limit || state.gap <= 1e-3  || get_sec_remaining(log.start_time, time_limit) <= 0.0 || time() - log.start_time >= 1000 || state.iteration >= 250 
+"""
+Check termination criteria
+"""
+function is_terminated(state::DcglpState, log::DcglpLog, params::BendersParams; time_limit::Float64)
+    return state.is_in_L[1] && state.is_in_L[2] || log.consecutive_no_improvement >= param.dcglp.halt_limit || state.gap <= params.dcglp.gap_tolerance  || get_sec_remaining(log.start_time, time_limit) <= 0.0 || time() - log.start_time >= param.dcglp.time_limit || log.n_iter >= param.dcglp.iter_limit
 end
-
 
 
 

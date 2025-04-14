@@ -10,12 +10,13 @@ export StandardNorm, LpNorm, AbstractNorm
 
 export Data, AbstractData
 export AbstractMaster, AbstractMip
-export AbstractOracle, AbstractTypicalOracle, AbstractDisjunctiveOracle
+export AbstractOracle
 export Seq, SeqInOut
 export DisjunctiveCutsAppendRule, NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
 export SplitIndexSelectionRule, RandomFractional, MostFractional, LargestFractional
 export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
 export TimeLimitException, UnexpectedModelStatusException, UndefError
+export Hyperplane, aggregate
 # ============================================================================
 # Abstract type hierarchy
 # ============================================================================
@@ -33,8 +34,6 @@ abstract type LoopStrategy end
 abstract type AbstractMip end
 abstract type AbstractMaster end
 abstract type AbstractOracle end
-abstract type AbstractTypicalOracle <: AbstractOracle end
-abstract type AbstractDisjunctiveOracle <: AbstractOracle end
 
 
 # ============================================================================
@@ -194,36 +193,47 @@ struct NoDisjunctiveCuts <: DisjunctiveCutsAppendRule end
 struct AllDisjunctiveCuts <: DisjunctiveCutsAppendRule end
 struct DisjunctiveCutsSmallerIndices <: DisjunctiveCutsAppendRule end
 
-mutable struct BendersState
-    iteration::Int
-    master_time::Float64
-    oracle_time::Float64
-    total_time::Float64
-    is_in_L::Bool
-    LB::Float64
-    UB::Float64
-    gap::Float64
-   
-    # Constructor with specified values
-    function BendersState()
-        new(0, 0.0, 0.0, 0.0, false, -Inf, Inf, 100.0)
-    end
-end
 
-mutable struct BendersLog
-    iterations::Vector{BendersState}
-    start_time::Float64
-    master_time::Float64
-    oracle_time::Float64
-    LB::Float64
-    UB::Float64
-    termination_status::TerminationStatus
+# state is structure containing all necessary information regarding the iteration of each loop: DCGLP, BendersSeq, BendersSeqInOut
+# state and log needs to contains all necessary information for termination, update_bound, and print_dcglp_iteration_info
+abstract type AbstractLoopState end
+abstract type AbstractDcglpState <: AbstractLoopState end
+abstract type AbstractBendersSeqState <: AbstractLoopState end
+abstract type AbstractLoopLog end
+abstract type AbstractDcglpLog <: AbstractLoopLog end
+abstract type AbstractBendersSeqLog <: AbstractLoopLog end
+
+
+
+mutable struct Hyperplane
     
-    function BendersLog()
-        new(Vector{BendersState}(), time(), 0.0, 0.0, -Inf, Inf, NotSolved())
+    a_x::SparseVector{Float64, Int} #Vector{Float64}
+    a_t::SparseVector{Float64, Int} #Vector{Float64}
+    a_0::Float64
+
+    function Hyperplane(a_x::Vector{Float64}, 
+        a_t::Vector{Float64},
+        a_0::Float64)
+
+        new(dropzeros!(sparsevec(a_x)), dropzeros!(sparsevec(a_t)), a_0)
     end
+
+    function Hyperplane(dim_x::Int, dim_t::Int)
+        # trivial hyperplane
+        new(spzeros(dim_x), spzeros(dim_t), 0.0)
+    end
+
+    Hyperplane() = new()
 end
 
 
+function aggregate(hyperplanes::Vector{Hyperplane})
+    h = Hyperplane()
+    K = length(hyperplanes)
+    h.a_x = sum(hyperplanes[j].a_x for j=1:K) * 1/K # averaged for numerical stability
+    h.a_t = sum(hyperplanes[j].a_t for j=1:K) * 1/K
+    h.a_0 = sum(hyperplanes[j].a_0 for j=1:K) * 1/K
 
+    return h
+end
 

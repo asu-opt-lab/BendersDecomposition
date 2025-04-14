@@ -97,6 +97,5 @@ Create the Dual Cut Generation Linear Program (DCGLP) formulation.
 
 # unify
 include("master.jl")
-include("oracle_typical.jl")
-include("oracle_disjunctive.jl")
+include("oracle.jl")
 include("mip.jl")
