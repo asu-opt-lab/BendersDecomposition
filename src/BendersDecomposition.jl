@@ -3,10 +3,33 @@ module BendersDecomposition
 using Printf, StatsBase, Random, Distributions, LinearAlgebra, ArgParse, DataFrames, CSV, JSON, SparseArrays
 using JuMP, CPLEX #, Gurobi
 
+mutable struct DcglpParams
+    time_limit::Float64
+    gap_tolerance::Float64
+    halt_limit::Int
+    iter_limit::Int
+    verbose::Bool
+
+    function DcglpParams()
+        new(1000, 1e-3, 3, 250, true)
+    end
+end
+
+mutable struct BendersParams
+    time_limit::Float64
+    gap_tolerance::Float64
+    master_attributes::Dict{String,Any}
+    oracle_attributes::Dict{String,Any}
+    dcglp::DcglpParams
+    # dcglp_attributes::Dict{String,Any}
+    verbose::Bool
+end
+export BendersParams
+
 # Include supporting files
 include("types.jl")
-include("models/models.jl") 
 include("utils/utils.jl")
+include("models/models.jl") 
 
 """
     BendersParams(time_limit, gap_tolerance, solver, master_attributes, sub_attributes, dcglp_attributes, verbose)
@@ -31,15 +54,7 @@ Parameters for configuring the Benders decomposition algorithm.
 #     dcglp_attributes::Dict{String,Any}
 #     verbose::Bool
 # end
-mutable struct BendersParams
-    time_limit::Float64
-    gap_tolerance::Float64
-    master_attributes::Dict{String,Any}
-    oracle_attributes::Dict{String,Any}
-    # dcglp_attributes::Dict{String,Any}
-    verbose::Bool
-end
-export BendersParams
+
 
 """
     BendersEnv(data, master, sub, dcglp)
@@ -63,9 +78,12 @@ mutable struct BendersEnv
     master::AbstractMaster
     oracle::AbstractOracle
     loop_strategy::LoopStrategy
-    log::BendersLog
+
+    # result
+    obj_value::Float64
+    termination_status::TerminationStatus
     function BendersEnv(data::Data, master::AbstractMaster, oracle::AbstractOracle, loop_strategy::LoopStrategy)
-        new(data, master, oracle, loop_strategy, BendersLog())
+        new(data, master, oracle, loop_strategy, Inf, NotSolved())
     end
 end
 
