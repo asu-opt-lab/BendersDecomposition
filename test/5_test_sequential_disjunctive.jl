@@ -39,7 +39,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
 @testset verbose = true "UFLP Sequential Benders Tests -- MIP master" begin
     # instances = setdiff(1:71, [67])
-    instances = 21:21
+    instances = 21:24
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
