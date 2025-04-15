@@ -1,6 +1,3 @@
-
-
-
 function add_normalization_constraint(data::Data, dcglp::Model, norm::LpNorm)
     # CPLEX only accepts p=1,2,Inf
     # if conic solver, we can use the following line
