@@ -5,7 +5,7 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
     fixed_x_constraints::Vector{ConstraintRef}
     other_constraints::Vector{ConstraintRef}
 
-    function ClassicalOracle(data::Data; scen_idx::Int=-1)
+    function ClassicalOracle(data::Data; scen_idx::Int=-1, solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9))
         @debug "Building classical oracle"
         model = Model()
 
@@ -15,6 +15,8 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
 
         other_constr = Vector{ConstraintRef}()
 
+        assign_attributes!(model, solver_param)
+        
         new(model, fix_x, other_constr)
     end
 

@@ -3,33 +3,21 @@ module BendersDecomposition
 using Printf, StatsBase, Random, Distributions, LinearAlgebra, ArgParse, DataFrames, CSV, JSON, SparseArrays
 using JuMP, CPLEX #, Gurobi
 
-mutable struct DcglpParams
-    time_limit::Float64
-    gap_tolerance::Float64
-    halt_limit::Int
-    iter_limit::Int
-    verbose::Bool
-
-    function DcglpParams()
-        new(1000, 1e-3, 3, 250, true)
-    end
-end
-
-mutable struct BendersParams
+abstract type AbstractParams end
+mutable struct BendersParams <: AbstractParams
     time_limit::Float64
     gap_tolerance::Float64
     master_attributes::Dict{String,Any}
     oracle_attributes::Dict{String,Any}
-    dcglp::DcglpParams
     # dcglp_attributes::Dict{String,Any}
-    verbose::Bool
+    verbose::Bool # for all the modules
 end
 export BendersParams
 
 # Include supporting files
 include("types.jl")
 include("utils/utils.jl")
-include("models/models.jl") 
+include("modules/modules.jl") 
 
 """
     BendersParams(time_limit, gap_tolerance, solver, master_attributes, sub_attributes, dcglp_attributes, verbose)
@@ -150,12 +138,14 @@ Execute Benders decomposition algorithm to solve the given problem instance.
 #     solve!(env, loop_strategy, cut_strategy, params)
 # end
 
-function run_Benders(env::BendersEnv, params::BendersParams)
+include("algorithms/algorithms.jl")
+
+function run_Benders(env::BendersEnv, params::AbstractLoopParam)
     solve!(env, env.loop_strategy, params)
 end
 
 export run_Benders
 
-include("algorithms/algorithms.jl")
+
 
 end

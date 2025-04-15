@@ -10,7 +10,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     other_constraints::Vector{ConstraintRef}
     facility_knapsack_info::FacilityKnapsackInfo
 
-    function CFLKnapsackOracle(data::Data; scen_idx=-1)
+    function CFLKnapsackOracle(data::Data; scen_idx=-1, solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9))
         @debug "Building classical oracle"
         model = Model()
 
@@ -22,12 +22,13 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
 
         facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.problem.costs, data.problem.demands, data.problem.capacities) : FacilityKnapsackInfo(data.problem.costs, data.problem.demands[scen_idx], data.problem.capacities)
 
+        assign_attributes!(model, solver_param)
+        
         new(model, fix_x, other_constr, facility_knapsack_info)
     end
     
     CFLKnapsackOracle() = new()
 end
-
 
 function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol=1e-6, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
