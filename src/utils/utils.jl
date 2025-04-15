@@ -1,6 +1,5 @@
-include("utilsSolver.jl")
-# include("data_reader.jl")
-# include("data_generator.jl")
-include("args.jl")
+include("args.jl") # need to work on
 
-include("../algorithms/utils.jl")
+include("utilsSolver.jl")
+include("utilsCuts.jl")
+include("utilsLoop.jl")
