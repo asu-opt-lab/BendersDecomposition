@@ -35,17 +35,20 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             @assert dim_x == length(data.c_x)
             @assert dim_t == length(data.c_t)
 
-            params = BendersParams(
-                200,
-                0.00001,
-                Dict("solver" => "CPLEX"),
-                Dict("solver" => "CPLEX"),
-                true
-            )
+            # loop parameters
+            benders_param = BendersSeqParam(;
+                            time_limit = 200.0,
+                            gap_tolerance = 1e-6,
+                            verbose = true
+                        )
+            # solver parameters
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
+            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
+            typical_oracal_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
 
             # solve mip for reference
             mip = Mip(data)
-            assign_attributes!(mip.model, params.master_attributes)
+            assign_attributes!(mip.model, mip_solver_param)
             update_model!(mip, data)
             optimize!(mip.model)
             @assert termination_status(mip.model) == OPTIMAL
@@ -54,18 +57,15 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             @testset "Classic oracle" begin
                 @testset "SeqInOut" begin
                     @info "solving p$i - classical oracle - seqInOut..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
-                    oracle = ClassicalOracle(data)
-                    assign_attributes!(oracle.model, params.oracle_attributes)
-                    # problem specific 
+                    oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
                     update_model!(oracle, data)
-
-                    env = BendersEnv(data, master, oracle, SeqInOut())
-                    run_Benders(env, params)
+                    
+                    stabilizing_x = ones(data.dim_x)
+                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -79,18 +79,14 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                 
                 @testset "Seq" begin        
                     @info "solving p$i - classical oracle - seq..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
-                    oracle = ClassicalOracle(data)
-                    assign_attributes!(oracle.model, params.oracle_attributes)
-                    # problem specific 
+                    oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
                     update_model!(oracle, data)
 
-                    env = BendersEnv(data, master, oracle, Seq())
-                    run_Benders(env, params)
+                    env = BendersSeq(data, master, oracle; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -116,16 +112,14 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             @testset "fat knapsack oracle" begin
                 @testset "Seq" begin
                     @info "solving p$i - fat Knapsack oracle - seq..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
                     oracle = UFLKnapsackOracle(data, add_only_violated_cuts=true) 
 
-                    env = BendersEnv(data, master, oracle, Seq())
-                    run_Benders(env, params)
+                    env = BendersSeq(data, master, oracle; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -138,16 +132,15 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                 end
                 @testset "SeqInOut" begin
                     @info "solving p$i - fat Knapsack oracle - seqInOut..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
                     oracle = UFLKnapsackOracle(data, add_only_violated_cuts=true) 
 
-                    env = BendersEnv(data, master, oracle, SeqInOut())
-                    run_Benders(env, params)
+                    stabilizing_x = ones(data.dim_x)
+                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -161,19 +154,16 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             end
 
             @testset "slim knapsack oracle" begin
-                ## interestingly, aggregating only violated cuts slows down Benders significantly
                 @testset "Seq" begin
                     @info "solving p$i - slim Knapsack oracle - seq..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
                     oracle = UFLKnapsackOracle(data; slim=true, add_only_violated_cuts=false) # add_only_violated_cuts = true makes it very slow
 
-                    env = BendersEnv(data, master, oracle, Seq())
-                    run_Benders(env, params)
+                    env = BendersSeq(data, master, oracle; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -186,16 +176,15 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                 end
                 @testset "SeqInOut" begin
                     @info "solving p$i - slim Knapsack oracle - seqInOut..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
                     oracle = UFLKnapsackOracle(data; slim=true, add_only_violated_cuts=false) 
 
-                    env = BendersEnv(data, master, oracle, SeqInOut())
-                    run_Benders(env, params)
+                    stabilizing_x = ones(data.dim_x)
+                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -234,17 +223,20 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
             @assert dim_x == length(data.c_x)
             @assert dim_t == length(data.c_t)
 
-            params = BendersParams(
-                200,
-                0.00001,
-                Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9),
-                Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9),
-                false
-            )
+            # loop parameters
+            benders_param = BendersSeqParam(;
+                            time_limit = 200.0,
+                            gap_tolerance = 1e-6,
+                            verbose = true
+                        )
+            # solver parameters
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
+            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
+            typical_oracal_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
 
             # solve mip for reference
             mip = Mip(data)
-            assign_attributes!(mip.model, params.master_attributes)
+            assign_attributes!(mip.model, mip_solver_param)
             update_model!(mip, data)
             optimize!(mip.model)
             @assert termination_status(mip.model) == OPTIMAL
@@ -253,18 +245,15 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
             @testset "Classic oracle" begin
                 @testset "SeqInOut" begin
                     @info "solving p$i - classical oracle - seqInOut..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
-                    oracle = ClassicalOracle(data)
-                    assign_attributes!(oracle.model, params.oracle_attributes)
-                    # problem specific 
+                    oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
                     update_model!(oracle, data)
 
-                    env = BendersEnv(data, master, oracle, SeqInOut())
-                    run_Benders(env, params)
+                    stabilizing_x = ones(data.dim_x)
+                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -277,18 +266,14 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                 end
                 @testset "Seq" begin        
                     @info "solving p$i - classical oracle - seq..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
-                    oracle = ClassicalOracle(data)
-                    assign_attributes!(oracle.model, params.oracle_attributes)
-                    # problem specific 
+                    oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
                     update_model!(oracle, data)
 
-                    env = BendersEnv(data, master, oracle, Seq())
-                    run_Benders(env, params)
+                    env = BendersSeq(data, master, oracle; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -303,18 +288,14 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
             @testset "Knapsack oracle" begin
                 @testset "Seq" begin
                     @info "solving p$i - knapsack oracle - seq..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
-                    oracle = CFLKnapsackOracle(data)
-                    assign_attributes!(oracle.model, params.oracle_attributes)
-                    # problem specific 
+                    oracle = CFLKnapsackOracle(data; solver_param = typical_oracal_solver_param)
                     update_model!(oracle, data)
 
-                    env = BendersEnv(data, master, oracle, Seq())
-                    run_Benders(env, params)
+                    env = BendersSeq(data, master, oracle; param = benders_param)
+                    log = solve!(env)
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                     # elseif env.termination_status == TimeLimit()
@@ -326,18 +307,15 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                 end
                 @testset "SeqInOut" begin
                     @info "solving p$i - knapsack oracle - seqInOut..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
-                    oracle = CFLKnapsackOracle(data)
-                    assign_attributes!(oracle.model, params.oracle_attributes)
-                    # problem specific 
+                    oracle = CFLKnapsackOracle(data; solver_param = typical_oracal_solver_param)
                     update_model!(oracle, data)
 
-                    env = BendersEnv(data, master, oracle, SeqInOut())
-                    run_Benders(env, params)
+                    stabilizing_x = ones(data.dim_x)
+                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -375,17 +353,20 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
             @assert dim_x == length(data.c_x)
             @assert dim_t == length(data.c_t)
 
-            params = BendersParams(
-                200,
-                0.00001,
-                Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9),
-                Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9),
-                false
-            )
+            # loop parameters
+            benders_param = BendersSeqParam(;
+                            time_limit = 200.0,
+                            gap_tolerance = 1e-6,
+                            verbose = true
+                        )
+            # solver parameters
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
+            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
+            typical_oracal_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
 
             # solve mip for reference
             mip = Mip(data)
-            assign_attributes!(mip.model, params.master_attributes)
+            assign_attributes!(mip.model, mip_solver_param)
             update_model!(mip, data)
             optimize!(mip.model)
             @assert termination_status(mip.model) == OPTIMAL
@@ -394,20 +375,17 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
             @testset "Classic oracle" begin
                 @testset "SeqInOut" begin
                     @info "solving f25-c50-s64-r10-$i - classical oracle - seqInOut..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
-                    oracle = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios)
+                    oracle = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios; solver_param = typical_oracal_solver_param)
                     for j=1:oracle.N
-                        assign_attributes!(oracle.oracles[j].model, params.oracle_attributes)
-                        # problem specific 
                         update_model!(oracle.oracles[j], data, j)
                     end
 
-                    env = BendersEnv(data, master, oracle, SeqInOut())
-                    run_Benders(env, params)
+                    stabilizing_x = ones(data.dim_x)
+                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -421,20 +399,16 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
                 
                 @testset "Seq" begin        
                     @info "solving f25-c50-s64-r10-$i - classical oracle - seq..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
-                    oracle = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios)
+                    oracle = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios; solver_param = typical_oracal_solver_param)
                     for j=1:oracle.N
-                        assign_attributes!(oracle.oracles[j].model, params.oracle_attributes)
-                        # problem specific 
                         update_model!(oracle.oracles[j], data, j)
                     end
 
-                    env = BendersEnv(data, master, oracle, Seq())
-                    run_Benders(env, params)
+                    env = BendersSeq(data, master, oracle; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -449,20 +423,17 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
             @testset "Knapsack oracle" begin
                 @testset "SeqInOut" begin
                     @info "solving f25-c50-s64-r10-$i - knapsack oracle - seqInOut..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
-                    oracle = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios)
+                    oracle = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios; solver_param = typical_oracal_solver_param)
                     for j=1:oracle.N
-                        assign_attributes!(oracle.oracles[j].model, params.oracle_attributes)
-                        # problem specific 
                         update_model!(oracle.oracles[j], data, j)
                     end
 
-                    env = BendersEnv(data, master, oracle, SeqInOut())
-                    run_Benders(env, params)
+                    stabilizing_x = ones(data.dim_x)
+                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -476,20 +447,16 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
                 
                 @testset "Seq" begin        
                     @info "solving f25-c50-s64-r10-$i - knapsack oracle - seq..."
-                    master = Master(data)
-                    assign_attributes!(master.model, params.master_attributes)
-                    # problem specific constraints
+                    master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
-                    oracle = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios)
+                    oracle = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios; solver_param = typical_oracal_solver_param)
                     for j=1:oracle.N
-                        assign_attributes!(oracle.oracles[j].model, params.oracle_attributes)
-                        # problem specific 
                         update_model!(oracle.oracles[j], data, j)
                     end
 
-                    env = BendersEnv(data, master, oracle, Seq())
-                    run_Benders(env, params)
+                    env = BendersSeq(data, master, oracle; param = benders_param)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
                         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)

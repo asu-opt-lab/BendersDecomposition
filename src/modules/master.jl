@@ -23,7 +23,7 @@ mutable struct Master <: AbstractMaster
     # x_value::Vector{Float64}
     # t_value::Vector{Float64}
 
-    function Master(data::Data)
+    function Master(data::Data; solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9))
 
         @debug "Building Master Problem for CFLP"
     
@@ -34,6 +34,7 @@ mutable struct Master <: AbstractMaster
 
         @objective(model, Min, data.c_x'* x + data.c_t'* t)
 
+        assign_attributes!(model, solver_param)
         # new(model, 0.0, zeros(data.dim_x), zeros(data.dim_t))
         new(model)#, 0.0, zeros(data.dim_x), zeros(data.dim_t))
     end
