@@ -4,26 +4,18 @@ mutable struct BendersSeqInOut <: AbstractBendersSeq
     master::AbstractMaster
     oracle::AbstractOracle
 
-    param::BendersSeqParam 
-
-    stabilizing_x::Vector{Float64} 
-    α::Float64
-    λ::Float64
+    param::BendersSeqInOutParam 
 
     # result
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function BendersSeqInOut(data, master::AbstractMaster, oracle::AbstractOracle, stabilizing_x; α::Float64 = 0.9, λ::Float64 = 0.1, param::BendersSeqParam = BendersSeqParam()) 
-        new(data, master, oracle, param, stabilizing_x, α, λ, Inf, NotSolved())
+    function BendersSeqInOut(data, master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam()) 
+        new(data, master, oracle, param, Inf, NotSolved())
     end
 
-    function BendersSeqInOut(data; param::BendersSeqParam = BendersSeqParam())
-        @info "stabilizing point is set as all one vector by default"
-        stabilizing_x = ones(data.dim_x)
-        α = 0.9 
-        λ = 0.1
-        new(data, Master(data), ClassicalOracle(data), param, stabilizing_x, α, λ, Inf, NotSolved())
+    function BendersSeqInOut(data; param::BendersSeqInOutParam = BendersSeqInOutParam())
+        new(data, Master(data), ClassicalOracle(data), param, Inf, NotSolved())
     end
 end
 """
@@ -35,9 +27,9 @@ function solve!(env::BendersSeqInOut)
     log = BendersSeqLog()
     try    
         state = BendersSeqState()
-        stabilizing_x = env.stabilizing_x
-        α = env.α
-        λ = env.λ
+        stabilizing_x = param.stabilizing_x
+        α = param.α
+        λ = param.λ
         # relax_integrality(env.master.model)
         kelley_mode = false
         
