@@ -41,6 +41,14 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             gap_tolerance = 1e-6,
                             verbose = true
                         )
+            benders_inout_param = BendersSeqInOutParam(;
+                            time_limit = 200.0,
+                            gap_tolerance = 1e-6,
+                            verbose = true,
+                            stabilizing_x = ones(data.dim_x),
+                            α = 0.9,
+                            λ = 0.1
+                        )
             # solver parameters
             mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
             master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
@@ -63,8 +71,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
                     update_model!(oracle, data)
                     
-                    stabilizing_x = ones(data.dim_x)
-                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    env = BendersSeqInOut(data, master, oracle; param = benders_inout_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
@@ -138,8 +145,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     # model-free knapsack-based cuts
                     oracle = UFLKnapsackOracle(data, add_only_violated_cuts=true) 
 
-                    stabilizing_x = ones(data.dim_x)
-                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    env = BendersSeqInOut(data, master, oracle; param = benders_inout_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
@@ -182,8 +188,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     # model-free knapsack-based cuts
                     oracle = UFLKnapsackOracle(data; slim=true, add_only_violated_cuts=false) 
 
-                    stabilizing_x = ones(data.dim_x)
-                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    env = BendersSeqInOut(data, master, oracle; param = benders_inout_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
@@ -229,6 +234,14 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                             gap_tolerance = 1e-6,
                             verbose = true
                         )
+            benders_inout_param = BendersSeqInOutParam(;
+            time_limit = 200.0,
+            gap_tolerance = 1e-6,
+            verbose = true,
+            stabilizing_x = ones(data.dim_x),
+            α = 0.9,
+            λ = 0.1
+        )
             # solver parameters
             mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
             master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
@@ -252,7 +265,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                     update_model!(oracle, data)
 
                     stabilizing_x = ones(data.dim_x)
-                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_inout_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
@@ -313,8 +326,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                     oracle = CFLKnapsackOracle(data; solver_param = typical_oracal_solver_param)
                     update_model!(oracle, data)
 
-                    stabilizing_x = ones(data.dim_x)
-                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    env = BendersSeqInOut(data, master, oracle; param = benders_inout_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
@@ -359,6 +371,15 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
                             gap_tolerance = 1e-6,
                             verbose = true
                         )
+
+            benders_inout_param = BendersSeqInOutParam(;
+                time_limit = 200.0,
+                gap_tolerance = 1e-6,
+                verbose = true,
+                stabilizing_x = ones(data.dim_x),
+                α = 0.9,
+                λ = 0.1
+            )
             # solver parameters
             mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
             master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
@@ -383,8 +404,7 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
                         update_model!(oracle.oracles[j], data, j)
                     end
 
-                    stabilizing_x = ones(data.dim_x)
-                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    env = BendersSeqInOut(data, master, oracle; param = benders_inout_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
@@ -431,8 +451,7 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
                         update_model!(oracle.oracles[j], data, j)
                     end
 
-                    stabilizing_x = ones(data.dim_x)
-                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
+                    env = BendersSeqInOut(data, master, oracle; param = benders_inout_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
