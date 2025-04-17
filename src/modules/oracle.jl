@@ -1,5 +1,4 @@
-export AbstractTypicalOracle, AbstractDisjunctiveOracle, generate_cuts
-
+export AbstractTypicalOracle, AbstractDisjunctiveOracle, generate_cuts, EmptyOracleParam, set_parameter!
 """
 Abstract type for typical oracles used in Benders decomposition.
 """
@@ -31,7 +30,34 @@ Returns (to be implemented by concrete oracles):
 Throws an error if not implemented for a specific oracle type.
 """
 function generate_cuts(oracle::AbstractOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600)
-    throw(UndefError("update generate_cuts for $(typeof(AbstractOracle))"))
+    throw(UndefError("update generate_cuts for $(typeof(oracle))"))
+end
+
+"""
+Parameter struct for oracles without parameters.
+"""
+struct EmptyOracleParam <: AbstractOracleParam
+end
+
+# Common utility functions for managing oracle parameters
+
+function set_parameter!(oracle::AbstractOracle, param::AbstractOracleParam)
+  if :oracle_param ∉ fieldnames(typeof(oracle))
+      throw(UndefError("$(typeof(oracle)) must have a field named `oracle_param`"))
+  elseif typeof(oracle.oracle_param) != typeof(param)
+      throw(ArgumentError("Type mismatch: expected parameter of type $(typeof(oracle.oracle_param)), got $(typeof(param))"))
+  else
+      oracle.oracle_param = param
+  end
+end
+
+function set_parameter!(oracle::AbstractOracle, param::String, value::Any)
+  sym_param = Symbol(param)
+  if sym_param ∈ fieldnames(typeof(oracle.oracle_param))
+      setfield!(oracle.oracle_param, sym_param, value)
+  else
+      throw(ArgumentError("Parameter `$(param)` not found in `$(typeof(oracle.oracle_param))` for oracle of type `$(typeof(oracle))`"))
+  end
 end
 
 include("oracleTypicalClassical.jl")
