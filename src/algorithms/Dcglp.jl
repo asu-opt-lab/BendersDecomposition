@@ -29,7 +29,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                 elseif termination_status(dcglp) == ALMOST_INFEASIBLE
                     @warn "dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue, yielding the typical Benders cut"
                     return generate_cuts(typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
-                elseif termination_status(env.master.model) == TIME_LIMIT
+                elseif termination_status(dcglp) == TIME_LIMIT
                     throw(TimeLimitException("Time limit reached during dcglp solving"))
                 else
                     throw(UnexpectedModelStatusException("dcglp master: $(termination_status(dcglp))"))

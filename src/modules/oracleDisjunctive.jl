@@ -66,7 +66,7 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
 
         assign_attributes!(dcglp, solver_param)
         
-        add_normalization_constraint(data, dcglp, oracle_param.norm)
+        add_normalization_constraint(dcglp, oracle_param.norm)
         
         disjunctiveCutsByIndex = [Vector{Hyperplane}() for i=1:data.dim_x]
         splits = Vector{Tuple{SparseVector{Float64, Int}, Float64}}()
@@ -110,11 +110,39 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
 
     return solve_dcglp!(oracle, x_value, t_value; time_limit = time_limit)
 end
+"""
+Updates parameters of the DisjunctiveOracle. Changing the normalization updates the dcglp model, which is initially set during declaration.
+"""
+function set_parameter!(oracle::DisjunctiveOracle, param::DisjunctiveOracleParam)
+    oracle.oracle_param = param
+    if haskey(oracle.dcglp, :concone)
+        delete(oracle.dcglp, oracle.dcglp[:concone]) 
+        unregister(oracle.dcglp, :concone)
+    end
+    add_normalization_constraint(oracle.dcglp, oracle.oracle_param.norm)
+end
+  
+function set_parameter!(oracle::DisjunctiveOracle, param::String, value::Any)
+    sym_param = Symbol(param)
+    if sym_param ∈ fieldnames(typeof(oracle.oracle_param))
+        setfield!(oracle.oracle_param, sym_param, value)
+    else
+        throw(ArgumentError("Parameter `$(param)` not found in `$(typeof(oracle.oracle_param))` for oracle of type `$(typeof(oracle))`"))
+    end
+
+    if sym_param == :norm
+        if haskey(oracle.dcglp, :concone)
+            delete(oracle.dcglp, oracle.dcglp[:concone]) 
+            unregister(oracle.dcglp, :concone)
+        end
+        add_normalization_constraint(oracle.dcglp, oracle.oracle_param.norm)
+    end
+end
 
 """
 prototypes for user-customizable functions for DisjunctiveOracle
 """
-function add_normalization_constraint(data::Data, dcglp::Model, norm::AbstractNorm)
+function add_normalization_constraint(dcglp::Model, norm::AbstractNorm)
     throw(UndefError("update add_normalization_constraint for $(typeof(norm))"))
     # should add a normalization constraint to dcglp. 
 end

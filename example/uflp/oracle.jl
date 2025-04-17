@@ -29,7 +29,7 @@ mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
         cost_demands = [data.problem.costs[:,j] .* data.problem.demands[j] for j in 1:J]
         sorted_indices = [sortperm(cost_demands[j]) for j in 1:J]
         sorted_cost_demands = [cost_demands[j][sorted_indices[j]] for j in 1:J]
-
+        
         obj_values = Vector{Float64}(undef, J)
 
         new(oracle_param, sorted_cost_demands, sorted_indices, J, obj_values)
@@ -79,7 +79,7 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
         c_sorted = oracle.sorted_cost_demands[j]
 
         h = Hyperplane(length(x_value), oracle.J)
-        h.a_t[j] = -1
+        h.a_t[j] = -1.0
         h.a_0 = c_sorted[k]
         for i=1:k-1
             h.a_x[sorted_indices[i]] = -(c_sorted[k] - c_sorted[i])
@@ -92,5 +92,8 @@ end
 function find_critical_item(c::Vector{Float64}, x::Vector{Float64})
     cumsum_x = cumsum(x)
     k = findfirst(>=(1.0), cumsum_x)
-    return k === nothing ? length(c) : k
+    if k == nothing 
+        throw(AlgorithmException("`k` cannot be `nothing` as sum(x) >= 2 is enforced. Check the models."))
+    end
+    return k
 end

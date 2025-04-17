@@ -39,7 +39,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
 @testset verbose = true "UFLP Sequential Benders Tests -- MIP master" begin
     # instances = setdiff(1:71, [67])
-    instances = 1:5
+    instances = 21:25
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -204,6 +204,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 0.5, 
                                                                     reuse_dcglp=reuse_dcglp)
+                            # norm is used in the initialization.
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
                             
