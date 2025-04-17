@@ -29,7 +29,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                 elseif termination_status(dcglp) == ALMOST_INFEASIBLE
                     @warn "dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue, yielding the typical Benders cut"
                     return generate_cuts(typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
-                elseif termination_status(env.master.model) == TIME_LIMIT
+                elseif termination_status(dcglp) == TIME_LIMIT
                     throw(TimeLimitException("Time limit reached during dcglp solving"))
                 else
                     throw(UnexpectedModelStatusException("dcglp master: $(termination_status(dcglp))"))
@@ -53,8 +53,8 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                             for k = 1:2 # add to both kappa and nu systems
                                 append!(benders_cuts[i], hyperplanes_to_expression(dcglp, hyperplanes_a, dcglp[:omega_x][k,:], dcglp[:omega_t][k,:], dcglp[:omega_0][k]))
                             end
-                            if oracle.add_benders_cuts_to_master
-                                append!(hyperplanes, select_top_fraction(hyperplanes_a, h -> evaluate_violation(h, x_value, t_value), oracle.fraction_of_benders_cuts_to_master))
+                            if oracle.oracle_param.add_benders_cuts_to_master
+                                append!(hyperplanes, select_top_fraction(hyperplanes_a, h -> evaluate_violation(h, x_value, t_value), oracle.oracle_param.fraction_of_benders_cuts_to_master))
                             end
                         end
                     else
@@ -66,7 +66,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
             end
         
             if state.f_x[1] !== NaN && state.f_x[2] !== NaN
-                update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], oracle.norm.p))
+                update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], oracle.oracle_param.norm.p))
             end
 
             record_iteration!(log, state)
@@ -81,18 +81,18 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
     end
 
     if log.iterations[end].LB >= zero_tol
-        gamma_x, gamma_t, gamma_0 = oracle.strengthened ? generate_strengthened_disjunctive_cuts(oracle.dcglp) : generate_disjunctive_cut(oracle.dcglp)
+        gamma_x, gamma_t, gamma_0 = oracle.oracle_param.strengthened ? generate_strengthened_disjunctive_cuts(oracle.dcglp) : generate_disjunctive_cut(oracle.dcglp)
 
         h = Hyperplane(gamma_x, gamma_t, gamma_0)
         push!(hyperplanes, h)
         
-        if typeof(oracle.split_index_selection_rule) <: SimpleSplit
+        if typeof(oracle.oracle_param.split_index_selection_rule) <: SimpleSplit
             index = get_split_index(oracle)
             push!(oracle.disjunctiveCutsByIndex[index], h)
         end
         push!(oracle.disjunctiveCuts, h)
         
-        if oracle.disjunctive_cut_append_rule == AllDisjunctiveCuts()
+        if oracle.oracle_param.disjunctive_cut_append_rule == AllDisjunctiveCuts()
             d_cuts = Vector{AffExpr}()
             for k = 1:2 # add to both kappa and nu systems
                 append!(d_cuts, hyperplanes_to_expression(dcglp, [h], dcglp[:omega_x][k,:], dcglp[:omega_t][k,:], dcglp[:omega_0][k]))
