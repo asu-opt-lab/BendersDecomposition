@@ -116,7 +116,8 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
-                    oracle = UFLKnapsackOracle(data, add_only_violated_cuts=true) 
+                    oracle = UFLKnapsackOracle(data) 
+                    set_parameter!(oracle, "add_only_violated_cuts", true)
 
                     env = BendersSeq(data, master, oracle; param = benders_param)
                     log = solve!(env)
@@ -136,7 +137,8 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
-                    oracle = UFLKnapsackOracle(data, add_only_violated_cuts=true) 
+                    oracle = UFLKnapsackOracle(data) 
+                    set_parameter!(oracle, "add_only_violated_cuts", true)
 
                     stabilizing_x = ones(data.dim_x)
                     env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)
@@ -160,7 +162,9 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
-                    oracle = UFLKnapsackOracle(data; slim=true, add_only_violated_cuts=false) # add_only_violated_cuts = true makes it very slow
+                    oracle = UFLKnapsackOracle(data) # add_only_violated_cuts = true makes it very slow
+                    set_parameter!(oracle, "add_only_violated_cuts", false)
+                    set_parameter!(oracle, "slim", true)
 
                     env = BendersSeq(data, master, oracle; param = benders_param)
                     log = solve!(env)
@@ -180,7 +184,9 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     update_model!(master, data)
 
                     # model-free knapsack-based cuts
-                    oracle = UFLKnapsackOracle(data; slim=true, add_only_violated_cuts=false) 
+                    oracle = UFLKnapsackOracle(data) 
+                    set_parameter!(oracle, "add_only_violated_cuts", false)
+                    set_parameter!(oracle, "slim", true)
 
                     stabilizing_x = ones(data.dim_x)
                     env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_param)

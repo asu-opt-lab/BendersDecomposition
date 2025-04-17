@@ -5,7 +5,7 @@
 export AbstractBendersDecomposition
 export Data, AbstractData
 export AbstractMaster, AbstractMip
-export AbstractOracle
+export AbstractOracle, AbstractOracleParam
 export Seq, SeqInOut
 export AbstractNorm, StandardNorm, LpNorm
 export DisjunctiveCutsAppendRule, NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
@@ -21,9 +21,13 @@ abstract type AbstractMip end
 abstract type AbstractMaster end
 
 """
+Any concrete subtype of `AbstractOracle` must have a field `oracle_param<:AbstractOracleParam` containing adjustable parameters that affect the oracle's behavior. 
+The type of `oracle_param` can be EmptyOracleParam when there is no adjustable oracle parameter. 
+
 Subtypes should implement `generate_cuts` to return separating hyperplanes based on the given candidate solutions.
 """
 abstract type AbstractOracle end
+abstract type AbstractOracleParam end
 
 
 # ============================================================================
@@ -38,37 +42,6 @@ struct Data
 end
 
 # ============================================================================
-# Algorithm Strategy Types
-# ============================================================================
-# # Loop strategies
-# struct Sequential <: SolutionProcedure end
-# struct Callback <: SolutionProcedure end
-# struct StochasticSequential <: SolutionProcedure end
-# struct StochasticCallback <: SolutionProcedure end
-
-# # Cut strategies
-# struct ClassicalCut <: CutStrategy end
-# struct FatKnapsackCut <: CutStrategy end
-# struct SlimKnapsackCut <: CutStrategy end
-# struct KnapsackCut <: CutStrategy end
-
-# Oracle types
-# struct ClassicalOracle <: OracleType end
-# struct UserTypicalOracle <: OracleType end
-# Loop strategies
-abstract type LoopStrategy end
-struct Seq <: LoopStrategy end
-struct SeqInOut <: LoopStrategy end
-
-
-# # ============================================================================
-# # Cut Strengthening Types
-# # ============================================================================
-# abstract type CutStrengtheningType end
-# struct PureDisjunctiveCut <: CutStrengtheningType end
-# struct StrengthenedDisjunctiveCut <: CutStrengtheningType end
-
-# ============================================================================
 # Normalization
 # ============================================================================
 abstract type AbstractNorm end
@@ -79,10 +52,6 @@ mutable struct LpNorm <: AbstractNorm
         new(p)
     end
 end
-
-# struct L1Norm <: LpNorm end
-# struct L2Norm <: LpNorm end
-# struct LInfNorm <: LpNorm end
 
 # ============================================================================
 # Norm Types
@@ -96,15 +65,6 @@ struct LargestFractional <: SimpleSplit end
 # # ============================================================================
 # # Disjunction System
 # # ============================================================================
-# struct DisjunctiveCut <: CutStrategy
-#     base_cut_strategy::CutStrategy
-#     norm_type::AbstractNorm
-#     cut_strengthening_type::CutStrengtheningType
-#     use_two_sided_cuts::Bool
-#     include_master_cuts::Bool
-#     reuse_dcglp::Bool
-#     verbose::Bool
-# end
 
 abstract type TerminationStatus end
 struct NotSolved <: TerminationStatus end
