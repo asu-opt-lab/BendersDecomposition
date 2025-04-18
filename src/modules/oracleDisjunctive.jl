@@ -75,6 +75,7 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
     tic = time()
     
     push!(oracle.splits, select_disjunctive_inequality(x_value, oracle.split_index_selection_rule))
+    # push!(oracle.splits, select_disjunctive_inequality(oracle, x_value, oracle.split_index_selection_rule))
     
     if get_sec_remaining(tic, time_limit) <= 0.0
         throw(TimeLimitException("Time limit reached during cut generation"))

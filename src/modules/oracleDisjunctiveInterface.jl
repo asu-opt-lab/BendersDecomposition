@@ -28,6 +28,29 @@ function select_disjunctive_inequality(x_value::Vector{Float64}, ::LargestFracti
     
     return phi, phi_0
 end
+
+# function select_disjunctive_inequality(oracle::DisjunctiveOracle, x_value::Vector{Float64}, ::LargestFractional; zero_tol = 1e-2)
+#     println(x_value)
+#     prev_index = !isempty(oracle.splits) ? get_split_index(oracle) : nothing
+#     println("Previous index: $prev_index")
+
+#     frac_indices = sort(filter(i -> zero_tol <= x_value[i] <= 1.0 - zero_tol, eachindex(x_value)))
+#     index = isempty(frac_indices) ? rand(collect(1:length(x_value))) : maximum(frac_indices)
+
+#     index = index == prev_index ? rand(frac_indices) : index
+
+#     println("Fractional indices: $frac_indices")
+#     println("Largest fractional index: $index")
+#     println("Corresponding x_value: $(x_value[index])")
+#     phi = spzeros(length(x_value))
+#     phi[index] = 1.0
+#     phi_0 = 0.0
+
+#     @debug "Largest fractional simple split index: $index"
+    
+#     return phi, phi_0
+# end
+
 function select_disjunctive_inequality(x_value::Vector{Float64}, ::MostFractional; zero_tol = 1e-2)
 
     gap_x = @. abs(x_value - 0.5)
