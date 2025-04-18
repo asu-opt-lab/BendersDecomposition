@@ -39,7 +39,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
 @testset verbose = true "UFLP Sequential Benders Tests -- MIP master" begin
     # instances = setdiff(1:71, [67])
-    instances = 21:24
+    instances = 21:25
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -55,7 +55,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             @assert dim_x == length(data.c_x)
             @assert dim_t == length(data.c_t)
 
-            # loop parameters
+            # algorithm parameters
             benders_param = BendersSeqParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
@@ -68,6 +68,8 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                                     iter_limit = 250,
                                     verbose = true
                             )
+            # oracle parameters
+
             # solver parameters
             mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
             master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
@@ -100,19 +102,17 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                                 update_model!(typical_oracles[k], data)
                             end
 
-                            # define disjunctive_oracle_attributes and add all the setting to there
-                            disjunctive_oracle = DisjunctiveOracle(data, 
-                                                                    typical_oracles,
-                                                                    norm = LpNorm(p), 
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+                                                                   solver_param = dcglp_solver_param,
+                                                                   param = dcglp_param) 
+                            oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
                                                                     split_index_selection_rule = RandomFractional(),
                                                                     disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 0.5, 
-                                                                    reuse_dcglp=reuse_dcglp, 
-                                                                    verbose=true,
-                                                                    solver_param = dcglp_solver_param,
-                                                                    param = dcglp_param) 
+                                                                    reuse_dcglp=reuse_dcglp)
+                            set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
 
                             env = BendersSeq(data, master, disjunctive_oracle; param = benders_param)
@@ -142,19 +142,17 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                                 update_model!(typical_oracles[k], data)
                             end
 
-                            # define disjunctive_oracle_attributes and add all the setting to there
-                            disjunctive_oracle = DisjunctiveOracle(data, 
-                                                                    typical_oracles,
-                                                                    norm = LpNorm(p), 
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+                                                                   solver_param = dcglp_solver_param,
+                                                                   param = dcglp_param) 
+                            oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
                                                                     split_index_selection_rule = RandomFractional(),
                                                                     disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 0.5, 
-                                                                    reuse_dcglp=reuse_dcglp, 
-                                                                    verbose=true,
-                                                                    solver_param = dcglp_solver_param,
-                                                                    param = dcglp_param) 
+                                                                    reuse_dcglp=reuse_dcglp)
+                            set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
 
                             stabilizing_x = ones(data.dim_x)
@@ -196,19 +194,18 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             # model-free knapsack-based cuts
                             typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
 
-                            # define disjunctive_oracle_attributes and add all the setting to there
-                            disjunctive_oracle = DisjunctiveOracle(data, 
-                                                                    typical_oracles,
-                                                                    norm = LpNorm(p), 
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+                                                                   solver_param = dcglp_solver_param,
+                                                                   param = dcglp_param) 
+                            oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
                                                                     split_index_selection_rule = RandomFractional(),
                                                                     disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 0.5, 
-                                                                    reuse_dcglp=reuse_dcglp, 
-                                                                    verbose=true,
-                                                                    solver_param = dcglp_solver_param,
-                                                                    param = dcglp_param) 
+                                                                    reuse_dcglp=reuse_dcglp)
+                            # norm is used in the initialization.
+                            set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
                             
                             env = BendersSeq(data, master, disjunctive_oracle; param = benders_param)
@@ -235,21 +232,20 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             update_model!(master, data)
 
                             # model-free knapsack-based cuts
-                            typical_oracles = [UFLKnapsackOracle(data, slim=true); UFLKnapsackOracle(data, slim=true)] # for kappa & nu
+                            typical_oracle_param = UFLKnapsackOracleParam(slim = true)
+                            typical_oracles = [UFLKnapsackOracle(data, oracle_param = typical_oracle_param); UFLKnapsackOracle(data, oracle_param = typical_oracle_param)] # for kappa & nu
 
-                            # define disjunctive_oracle_attributes and add all the setting to there
-                            disjunctive_oracle = DisjunctiveOracle(data, 
-                                                                    typical_oracles,
-                                                                    norm = LpNorm(p), 
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+                                                                   solver_param = dcglp_solver_param,
+                                                                   param = dcglp_param) 
+                            oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
                                                                     split_index_selection_rule = RandomFractional(),
                                                                     disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 0.5, 
-                                                                    reuse_dcglp=reuse_dcglp, 
-                                                                    verbose=true,
-                                                                    solver_param = dcglp_solver_param,
-                                                                    param = dcglp_param) 
+                                                                    reuse_dcglp=reuse_dcglp)
+                            set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
                             
                             env = BendersSeq(data, master, disjunctive_oracle; param = benders_param)

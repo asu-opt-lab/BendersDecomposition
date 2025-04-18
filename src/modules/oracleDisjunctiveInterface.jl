@@ -1,15 +1,15 @@
-function add_normalization_constraint(data::Data, dcglp::Model, norm::LpNorm)
+function add_normalization_constraint(dcglp::Model, norm::LpNorm)
     # CPLEX only accepts p=1,2,Inf
     # if conic solver, we can use the following line
     # @constraint(dcglp, concone, var_vec in MOI.NormCone(norm.p, data.dim_x + data.dim_t + 1))
     var_vec = [dcglp[:tau]; dcglp[:sx]; dcglp[:st]]
     
     if norm.p == 1.0
-        @constraint(dcglp, concone, var_vec in MOI.NormOneCone(data.dim_x + data.dim_t + 1))
+        @constraint(dcglp, concone, var_vec in MOI.NormOneCone(length(var_vec)))
     elseif norm.p == 2.0
-        @constraint(dcglp, concone, var_vec in MOI.SecondOrderCone(data.dim_x + data.dim_t + 1))
+        @constraint(dcglp, concone, var_vec in MOI.SecondOrderCone(length(var_vec)))
     elseif norm.p == Inf
-        @constraint(dcglp, concone, var_vec in MOI.NormInfinityCone(data.dim_x + data.dim_t + 1))
+        @constraint(dcglp, concone, var_vec in MOI.NormInfinityCone(length(var_vec)))
     else
         throw(UndefError("Unsupported LpNorm: p=$(norm.p)"))
     end
@@ -88,7 +88,7 @@ function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::AllDisjunctiveCuts)
 end
 function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::DisjunctiveCutsSmallerIndices)
     
-    @assert typeof(oracle.split_index_selection_rule) <: SimpleSplit
+    @assert typeof(oracle.oracle_param.split_index_selection_rule) <: SimpleSplit
 
     dcglp = oracle.dcglp
     # remove all disjunctive cuts from DCGLP
