@@ -20,7 +20,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Callback Benders Tests" begin
     # instances = setdiff(1:71, [67])
-    instances = 1:1
+    instances = 1:5
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -45,7 +45,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
             # solver parameters
             mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
             master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
-            typical_oracal_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
 
             # solve mip for reference
             mip = Mip(data)
@@ -56,203 +56,45 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
             mip_opt_val = objective_value(mip.model)
 
             @testset "Classic oracle" begin
-                # @testset "no root preprocessing" begin        
-                #     @info "solving p$i - classical oracle - seq..."
-                #     master = Master(data; solver_param = master_solver_param)
-                #     update_model!(master, data)
-
-                #     oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
-                #     update_model!(oracle, data)
-
-                #     callback_param = BendersCallbackParam(;
-                #             time_limit = 400.0,
-                #             gap_tolerance = 1e-6,
-                #             verbose = true,
-                #             preprocessing_type = nothing,
-                #             root_param = nothing
-                #         )
-                #     env = BendersCallback(data, master, oracle; param = callback_param)
-                #     log = solve!(env)
-                #     @test env.termination_status == Optimal()
-                #     # if env.termination_status == Optimal()
-                #         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                #     # elseif env.termination_status == TimeLimit()
-                #     #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
-                #     #     @test env.log.LB <= mip_opt_val <= env.log.UB
-                #     # elseif env.termination_status == InfeasibleOrNumericalIssue()
-                #     #     @test false
-                #     # end
-                # end
                 @testset "Seq root preprocessing" begin        
                     @info "solving p$i - classical oracle - seq..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
-                    oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
+                    oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
                     update_model!(oracle, data)
 
+                    root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
                             verbose = true
                         )
+                    
+                    # Create root node preprocessing with oracle
+                    root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
+                    
+                    # Create callbacks
+                    lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=oracle)
+                    user_callback = UserCallback(params=UserCallbackParam(frequency=250), oracle=oracle)
+                    
+                    # Create BnB parameter
                     callback_param = BendersBnBParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
-                            verbose = true,
-                            preprocessing_type = BendersSeq,
-                            root_param = root_param
+                            verbose = true
                         )
-                    lazy_callback = LazyCallbackParam(default_lazy_callback, Dict{String, Any}())
-                    user_callback = UserCallbackParam(default_user_callback, Dict{String, Any}("frequency" => 250))
-                    env = BendersBnB(data, master, oracle, lazy_callback, user_callback; param = callback_param)
-                    log = solve!(env)
+                    
+                    # Create BendersBnB environment
+                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param=callback_param)
+                    
+                    # Solve
+                    obj_value, elapsed_time = solve!(env)
+                    
                     @test env.termination_status == Optimal()
-                    # if env.termination_status == Optimal()
-                        @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                    # elseif env.termination_status == TimeLimit()
-                    #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
-                    #     @test env.log.LB <= mip_opt_val <= env.log.UB
-                    # elseif env.termination_status == InfeasibleOrNumericalIssue()
-                    #     @test false
-                    # end
+                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                 end
-                # @testset "SeqInOut" begin
-                #     @info "solving p$i - classical oracle - seqInOut..."
-                #     master = Master(data; solver_param = master_solver_param)
-                #     update_model!(master, data)
-
-                #     oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
-                #     update_model!(oracle, data)
-
-                #     stabilizing_x = ones(data.dim_x)
-                #     root_param = BendersSeqInOutParam(;
-                #             time_limit = 200.0,
-                #             gap_tolerance = 1e-6,
-                #             verbose = true,
-                #             stabilizing_x = stabilizing_x,
-                #             α = 0.9,
-                #             λ = 0.1
-                #         )
-                #     callback_param = BendersCallbackParam(;
-                #             time_limit = 200.0,
-                #             gap_tolerance = 1e-6,
-                #             verbose = true,
-                #             preprocessing_type = BendersSeqInOut,
-                #             root_param = root_param
-                #         )
-                #     env = BendersCallback(data, master, oracle; param = callback_param)
-                #     log = solve!(env)
-                #     @test env.termination_status == Optimal()
-                #     # if env.termination_status == Optimal()
-                #         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                #     # elseif env.termination_status == TimeLimit()
-                #     #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
-                #     #     @test env.log.LB <= mip_opt_val <= env.log.UB
-                #     # elseif env.termination_status == InfeasibleOrNumericalIssue()
-                #     #     @test false
-                #     # end
-                # end
-            end 
-
-            @testset "Knapsack oracle" begin
-                # @testset "no root preprocessing" begin        
-                #     @info "solving p$i - classical oracle - seq..."
-                #     master = Master(data; solver_param = master_solver_param)
-                #     update_model!(master, data)
-
-                #     oracle = CFLKnapsackOracle(data; solver_param = typical_oracal_solver_param)
-                #     update_model!(oracle, data)
-
-                #     callback_param = BendersCallbackParam(;
-                #             time_limit = 200.0,
-                #             gap_tolerance = 1e-6,
-                #             verbose = true,
-                #             preprocessing_type = nothing,
-                #             root_param = nothing
-                #         )
-                #     env = BendersCallback(data, master, oracle; param = callback_param)
-                #     log = solve!(env)
-                #     @test env.termination_status == Optimal()
-                #     # if env.termination_status == Optimal()
-                #         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                #     # elseif env.termination_status == TimeLimit()
-                #     #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
-                #     #     @test env.log.LB <= mip_opt_val <= env.log.UB
-                #     # elseif env.termination_status == InfeasibleOrNumericalIssue()
-                #     #     @test false
-                #     # end
-                # end
-                # @testset "Seq root preprocessing" begin        
-                #     @info "solving p$i - classical oracle - seq..."
-                #     master = Master(data; solver_param = master_solver_param)
-                #     update_model!(master, data)
-
-                #     oracle = CFLKnapsackOracle(data; solver_param = typical_oracal_solver_param)
-                #     update_model!(oracle, data)
-
-                #     root_param = BendersSeqParam(;
-                #             time_limit = 200.0,
-                #             gap_tolerance = 1e-6,
-                #             verbose = true,
-                #         )
-                #     callback_param = BendersCallbackParam(;
-                #             time_limit = 200.0,
-                #             gap_tolerance = 1e-6,
-                #             verbose = true,
-                #             preprocessing_type = BendersSeq,
-                #             root_param = root_param
-                #         )
-                #     env = BendersCallback(data, master, oracle; param = callback_param)
-                #     log = solve!(env)
-                #     @test env.termination_status == Optimal()
-                #     # if env.termination_status == Optimal()
-                #         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                #     # elseif env.termination_status == TimeLimit()
-                #     #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
-                #     #     @test env.log.LB <= mip_opt_val <= env.log.UB
-                #     # elseif env.termination_status == InfeasibleOrNumericalIssue()
-                #     #     @test false
-                #     # end
-                # end
-                # @testset "SeqInOut" begin
-                #     @info "solving p$i - classical oracle - seqInOut..."
-                #     master = Master(data; solver_param = master_solver_param)
-                #     update_model!(master, data)
-
-                #     oracle = CFLKnapsackOracle(data; solver_param = typical_oracal_solver_param)
-                #     update_model!(oracle, data)
-
-                #     stabilizing_x = ones(data.dim_x)
-                #     root_param = BendersSeqInOutParam(;
-                #             time_limit = 200.0,
-                #             gap_tolerance = 1e-6,
-                #             verbose = true,
-                #             stabilizing_x = stabilizing_x,
-                #             α = 0.9,
-                #             λ = 0.1
-                #         )
-                #     callback_param = BendersCallbackParam(;
-                #             time_limit = 200.0,
-                #             gap_tolerance = 1e-6,
-                #             verbose = true,
-                #             preprocessing_type = BendersSeqInOut,
-                #             root_param = root_param
-                #         )
-                #     env = BendersCallback(data, master, oracle; param = callback_param)
-                #     log = solve!(env)
-                #     @test env.termination_status == Optimal()
-                #     # if env.termination_status == Optimal()
-                #         @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                #     # elseif env.termination_status == TimeLimit()
-                #     #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
-                #     #     @test env.log.LB <= mip_opt_val <= env.log.UB
-                #     # elseif env.termination_status == InfeasibleOrNumericalIssue()
-                #     #     @test false
-                #     # end
-                # end
-            end 
-            
+            end
         end
     end
 end
