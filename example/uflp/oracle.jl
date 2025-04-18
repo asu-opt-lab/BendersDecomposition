@@ -1,29 +1,44 @@
+mutable struct UFLKnapsackOracleParam <: AbstractOracleParam
+    slim::Bool
+    add_only_violated_cuts::Bool
+
+    function UFLKnapsackOracleParam(; slim = false, add_only_violated_cuts = false)
+        new(slim, add_only_violated_cuts)
+    end
+end
 mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
+    
+    oracle_param::UFLKnapsackOracleParam
+    
     sorted_cost_demands::Vector{Vector{Float64}}
     sorted_indices::Vector{Vector{Int}}
 
     J::Int
     obj_values::Vector{Float64}
 
-    slim::Bool
-    add_only_violated_cuts::Bool
-
-    function UFLKnapsackOracle(data; slim=false, scen_idx::Int=-1, add_only_violated_cuts=false)
+    function UFLKnapsackOracle(data; 
+                               scen_idx::Int=-1, 
+                               solver_param::Any = nothing,
+                               oracle_param::UFLKnapsackOracleParam = UFLKnapsackOracleParam())
         @debug "Building knapsack oracle for UFLP"
+        if solver_param != nothing
+            throw(AlgorithmException("UFLKnapsackOracle is solver-free, but it is given with solver_param of type $(type(solver_param))"))
+        end
+        
         J = data.problem.n_customers
         cost_demands = [data.problem.costs[:,j] .* data.problem.demands[j] for j in 1:J]
         sorted_indices = [sortperm(cost_demands[j]) for j in 1:J]
         sorted_cost_demands = [cost_demands[j][sorted_indices[j]] for j in 1:J]
-
+        
         obj_values = Vector{Float64}(undef, J)
 
-        new(sorted_cost_demands, sorted_indices, J, obj_values, slim, add_only_violated_cuts)
+        new(oracle_param, sorted_cost_demands, sorted_indices, J, obj_values)
     end
 
     UFLKnapsackOracle() = new()
 end
 
-function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600)
+function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-8, time_limit = 3600)
     tic = time()
     critical_facility = Vector{Int}(undef, oracle.J)
     for j in 1:oracle.J
@@ -40,7 +55,7 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
         if oracle.obj_values[j] >= t_value[j] + tol
             critical_facility[j] = k
         else
-            critical_facility[j] = oracle.add_only_violated_cuts ? -1 : k
+            critical_facility[j] = oracle.oracle_param.add_only_violated_cuts ? -1 : k
         end
     end
 
@@ -64,18 +79,21 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
         c_sorted = oracle.sorted_cost_demands[j]
 
         h = Hyperplane(length(x_value), oracle.J)
-        h.a_t[j] = -1
+        h.a_t[j] = -1.0
         h.a_0 = c_sorted[k]
         for i=1:k-1
             h.a_x[sorted_indices[i]] = -(c_sorted[k] - c_sorted[i])
         end
         push!(hyperplanes, h)
     end
-    return !(oracle.slim) ? (false, hyperplanes, oracle.obj_values) : (false, [aggregate(hyperplanes)], oracle.obj_values)
+    return !(oracle.oracle_param.slim) ? (false, hyperplanes, oracle.obj_values) : (false, [aggregate(hyperplanes)], oracle.obj_values)
 end
 
 function find_critical_item(c::Vector{Float64}, x::Vector{Float64})
     cumsum_x = cumsum(x)
     k = findfirst(>=(1.0), cumsum_x)
-    return k === nothing ? length(c) : k
+    if k == nothing 
+        throw(AlgorithmException("`k` cannot be `nothing` as sum(x) >= 2 is enforced. Check the models."))
+    end
+    return k
 end
