@@ -1,29 +1,27 @@
 export BendersBnB, solve!
-export LazyCallbackParam, UserCallbackParam
-export default_lazy_callback, default_user_callback
 
-Base.@kwdef struct LazyCallbackParam
-    func::Function = default_lazy_callback
-    params::Dict{String, Any} = Dict{String, Any}()
-end
+include("callback.jl")
 
-
-Base.@kwdef struct UserCallbackParam
-    func::Function = default_user_callback
-    params::Dict{String, Any} = Dict{String, Any}("frequency" => 50)
-end
-
-Base.@kwdef mutable struct BendersBnB <: AbstractBendersCallback
+mutable struct BendersBnB <: AbstractBendersCallback
     data::Data
-    master::AbstractMaster = Master(data)
-    oracle::AbstractOracle = ClassicalOracle(data)
+    master::AbstractMaster 
 
-    param::BendersBnBParam = BendersBnBParam()
-    lazy_callback::LazyCallbackParam = LazyCallbackParam()
-    user_callback::Union{UserCallbackParam, Nothing} = nothing
+    param::BendersBnBParam 
 
-    obj_value::Float64 = Inf
-    termination_status::TerminationStatus = NotSolved()
+    root_preprocessing::Union{RootNodePreprocessing, Nothing} 
+    lazy_callback::AbstractLazyCallback
+    user_callback::Union{AbstractUserCallback, Nothing} 
+
+    obj_value::Float64 
+    termination_status::TerminationStatus 
+
+    function BendersBnB(data; param::BendersBnBParam = BendersBnBParam())
+        new(data, Master(data), param, RootNodePreprocessing(data), LazyCallback(data), UserCallback(data), Inf, NotSolved())
+    end
+
+    function BendersBnB(data, master::AbstractMaster, root_preprocessing::Union{RootNodePreprocessing, Nothing}, lazy_callback::AbstractLazyCallback, user_callback::Union{AbstractUserCallback, Nothing}; param::BendersBnBParam = BendersBnBParam())
+        new(data, master, param, root_preprocessing, lazy_callback, user_callback, Inf, NotSolved())
+    end
 end
 
 function solve!(env::BendersBnB) 
@@ -31,18 +29,18 @@ function solve!(env::BendersBnB)
     param = env.param
     start_time = time()
     
-    if param.preprocessing_type !== nothing
-        root_node_time = root_node_processing!(env, param.preprocessing_type)
+    if env.root_preprocessing !== nothing
+        root_node_time = root_node_processing!(env.data, env.master, env.root_preprocessing)
     end
     
     function lazy_callback_wrapper(cb_data)
-        env.lazy_callback.func(cb_data, env, log)
+        lazy_callback(cb_data, env.master.model, log, env.lazy_callback)
     end
     set_attribute(env.master.model, MOI.LazyConstraintCallback(), lazy_callback_wrapper)
     
     if env.user_callback !== nothing
         function user_callback_wrapper(cb_data)
-            env.user_callback.func(cb_data, env, log)
+            user_callback(cb_data, env.master.model, log, env.user_callback)
         end
         set_attribute(env.master.model, MOI.UserCutCallback(), user_callback_wrapper)
     end
@@ -78,79 +76,5 @@ function solve!(env::BendersBnB)
     return env.obj_value, elapsed_time
 end
 
-function root_node_processing!(env::BendersBnB, BendersRootSeqType::Type{T}) where T <: AbstractBendersSeq
-    root_param = deepcopy(env.param.root_param)
-
-    undo = relax_integrality(env.master.model)
-    
-    root_node_time = @elapsed begin
-        BendersRootSeq = BendersRootSeqType(env.data, env.master, env.oracle; param=root_param)
-        solve!(BendersRootSeq)
-    end
-    
-    undo()
-    
-    return root_node_time
-end
-
-function default_lazy_callback(cb_data, env::BendersBnB, log::BendersBnBLog)
-    status = JuMP.callback_node_status(cb_data, env.master.model)
-    if status == MOI.CALLBACK_NODE_STATUS_INTEGER
-
-        state = BendersBnBState()
-        if solver_name(env.master.model) == "CPLEX"
-            n_count = Ref{CPXINT}()
-            ret1 = CPXcallbackgetinfoint(cb_data, CPXCALLBACKINFO_NODECOUNT, n_count)
-            state.node = n_count[]
-        end
-
-        state.values[:x] = JuMP.callback_value.(cb_data, env.master.model[:x])
-        state.values[:t] = JuMP.callback_value.(cb_data, env.master.model[:t])
-
-        state.oracle_time = @elapsed begin
-            state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, state.values[:x], state.values[:t])
-            cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
-        end
-
-        if !isempty(cuts)
-            for cut in cuts
-                cut_constraint = @build_constraint(0 >= cut)
-                MOI.submit(env.master.model, MOI.LazyConstraint(cb_data), cut_constraint)
-                state.num_cuts += 1
-            end
-        end
-        record_node!(log, state, true)
-    end
-end
 
 
-function default_user_callback(cb_data, env::BendersBnB, log::BendersBnBLog)
-    status = JuMP.callback_node_status(cb_data, env.master.model)
-    if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL
-        log.num_of_fraction_node += 1
-        if log.num_of_fraction_node >= env.user_callback.params["frequency"]
-            log.num_of_fraction_node = 0
-            state = BendersBnBState()
-            if solver_name(env.master.model) == "CPLEX"
-                n_count = Ref{CPXINT}()
-                ret1 = CPXcallbackgetinfoint(cb_data, CPXCALLBACKINFO_NODECOUNT, n_count)
-                state.node = n_count[]
-            end
-            state.values[:x] = JuMP.callback_value.(cb_data, env.master.model[:x])
-            state.values[:t] = JuMP.callback_value.(cb_data, env.master.model[:t])
-            state.oracle_time = @elapsed begin
-                state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, state.values[:x], state.values[:t])
-                cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
-            end
-    
-            if !isempty(cuts)
-                for cut in cuts
-                    cut_constraint = @build_constraint(0 >= cut)
-                    MOI.submit(env.master.model, MOI.UserCut(cb_data), cut_constraint)
-                    state.num_cuts += 1
-                end
-            end
-            record_node!(log, state, false)
-        end
-    end
-end
