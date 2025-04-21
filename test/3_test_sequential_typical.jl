@@ -270,8 +270,15 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                     oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
                     update_model!(oracle, data)
 
-                    stabilizing_x = ones(data.dim_x)
-                    env = BendersSeqInOut(data, master, oracle, stabilizing_x; param = benders_inout_param)
+                    benders_inout_param = BendersSeqInOutParam(;
+                            time_limit = 50.0,
+                            gap_tolerance = 1e-6,
+                            stabilizing_x = ones(data.dim_x),
+                            α = 0.9,
+                            λ = 0.1,
+                            verbose = true
+                        )
+                    env = BendersSeqInOut(data, master, oracle; param = benders_inout_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     # if env.termination_status == Optimal()
