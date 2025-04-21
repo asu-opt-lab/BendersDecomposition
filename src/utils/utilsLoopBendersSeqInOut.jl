@@ -18,7 +18,7 @@ mutable struct BendersSeqInOutParam <: AbstractBendersSeqParam
                         halt_limit::Int = 10000, 
                         iter_limit::Int = 1000000, 
                         verbose::Bool = true,
-                        stabilizing_x::Vector{Float64} = ones(data.dim_x),
+                        stabilizing_x::Vector{Float64}, # must be provided
                         α::Float64 = 0.9,
                         λ::Float64 = 0.1
                         ) 

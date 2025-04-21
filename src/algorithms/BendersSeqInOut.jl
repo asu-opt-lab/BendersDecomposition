@@ -58,9 +58,7 @@ function solve!(env::BendersSeqInOut)
 
                 # Execute oracle
                 state.oracle_time = @elapsed begin
-                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, intermediate_x, state.values[:t]; time_limit = get_sec_remaining(log, param))
-
-                    cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
+                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, intermediate_x, state.values[:t]; time_limit = get_sec_remaining(log, param)) # only modify the knapsack cut and classical cut
 
                     if kelley_mode 
                         if state.f_x != NaN
@@ -69,6 +67,8 @@ function solve!(env::BendersSeqInOut)
                     else
                         state.is_in_L = false
                     end
+
+                    cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
                 end
             
                 # Update state and record information
@@ -79,7 +79,8 @@ function solve!(env::BendersSeqInOut)
 
             # Check termination criteria
             is_terminated(state, log, param) && break
-
+            # @info "state.is_in_L: $(state.is_in_L)"
+            # @info "cuts: $cuts"
             # add generated cuts to master
             @constraint(env.master.model, 0 .>= cuts)
             
