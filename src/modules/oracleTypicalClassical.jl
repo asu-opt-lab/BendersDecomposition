@@ -41,14 +41,15 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
     if status == FEASIBLE_POINT
         sub_obj_val = objective_value(oracle.model)
 
-        if sub_obj_val >= t_value[1] + tol
-            a_x = dual.(oracle.fixed_x_constraints) 
-            a_t = [-1.0] 
-            a_0 = sub_obj_val - a_x'*x_value 
-            return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
-        end
         
-        return true, [Hyperplane(length(x_value), length(t_value))], t_value
+        a_x = dual.(oracle.fixed_x_constraints) 
+        a_t = [-1.0] 
+        a_0 = sub_obj_val - a_x'*x_value 
+        if sub_obj_val >= t_value[1] + tol
+            return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
+        else
+            return true, [Hyperplane(a_x, a_t, a_0)], t_value
+        end
 
     elseif status == INFEASIBILITY_CERTIFICATE
         if has_duals(oracle.model)
