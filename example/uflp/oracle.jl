@@ -67,9 +67,6 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
     
     # is_in_L should be determined by the sum of t's, must not individually
     is_in_L = sum(oracle.obj_values) >= sum(t_value) + tol ? false : true
-    if is_in_L
-        return true, [Hyperplane(length(x_value), oracle.J)], t_value
-    end
 
     hyperplanes = Vector{Hyperplane}()
     
@@ -85,6 +82,10 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
             h.a_x[sorted_indices[i]] = -(c_sorted[k] - c_sorted[i])
         end
         push!(hyperplanes, h)
+    end
+
+    if is_in_L
+        return !(oracle.oracle_param.slim) ? (true, hyperplanes, t_value) : (true, [aggregate(hyperplanes)], t_value)
     end
     return !(oracle.oracle_param.slim) ? (false, hyperplanes, oracle.obj_values) : (false, [aggregate(hyperplanes)], oracle.obj_values)
 end

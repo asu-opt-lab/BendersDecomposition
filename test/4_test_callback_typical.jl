@@ -56,12 +56,12 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
             dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
 
             # solve mip for reference
-            # mip = Mip(data)
-            # assign_attributes!(mip.model, mip_solver_param)
-            # update_model!(mip, data)
-            # optimize!(mip.model)
-            # @assert termination_status(mip.model) == OPTIMAL
-            # mip_opt_val = objective_value(mip.model)
+            mip = Mip(data)
+            assign_attributes!(mip.model, mip_solver_param)
+            update_model!(mip, data)
+            optimize!(mip.model)
+            @assert termination_status(mip.model) == OPTIMAL
+            mip_opt_val = objective_value(mip.model)
 
             @testset "Classic oracle" begin
                 # @testset "No root preprocessing" begin        
@@ -140,47 +140,47 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                 #     @test env.termination_status == Optimal()
                 #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                 # end
-                # @testset "SeqInOut root preprocessing" begin        
-                #     @info "solving p$i - classical oracle - seqinout..."
-                #     master = Master(data; solver_param = master_solver_param)
-                #     update_model!(master, data)
+                @testset "SeqInOut root preprocessing" begin        
+                    @info "solving p$i - classical oracle - seqinout..."
+                    master = Master(data; solver_param = master_solver_param)
+                    update_model!(master, data)
 
-                #     oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
-                #     update_model!(oracle, data)
+                    oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
+                    update_model!(oracle, data)
 
-                #     root_seq_type = BendersSeqInOut
-                #     root_param = BendersSeqInOutParam(;
-                #             time_limit = 200.0,
-                #             gap_tolerance = 1e-6,
-                #             stabilizing_x = ones(data.dim_x),
-                #             α = 0.9,
-                #             λ = 0.1,
-                #             verbose = true
-                #         )
+                    root_seq_type = BendersSeqInOut
+                    root_param = BendersSeqInOutParam(;
+                            time_limit = 50.0,
+                            gap_tolerance = 1e-6,
+                            stabilizing_x = ones(data.dim_x),
+                            α = 0.9,
+                            λ = 0.1,
+                            verbose = true
+                        )
                     
-                #     # Create root node preprocessing with oracle
-                #     root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
+                    # Create root node preprocessing with oracle
+                    root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
                     
-                #     # Create callbacks
-                #     lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=oracle)
-                #     user_callback = UserCallback(params=UserCallbackParam(frequency=250), oracle=oracle)
+                    # Create callbacks
+                    lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=oracle)
+                    user_callback = UserCallback(params=UserCallbackParam(frequency=250), oracle=oracle)
                     
-                #     # Create BnB parameter
-                #     callback_param = BendersBnBParam(;
-                #             time_limit = 200.0,
-                #             gap_tolerance = 1e-6,
-                #             verbose = true
-                #         )
+                    # Create BnB parameter
+                    callback_param = BendersBnBParam(;
+                            time_limit = 200.0,
+                            gap_tolerance = 1e-6,
+                            verbose = true
+                        )
                     
-                #     # Create BendersBnB environment
-                #     env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param=callback_param)
+                    # Create BendersBnB environment
+                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param=callback_param)
                     
-                #     # Solve
-                #     obj_value, elapsed_time = solve!(env)
+                    # Solve
+                    obj_value, elapsed_time = solve!(env)
                     
-                #     @test env.termination_status == Optimal()
-                #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                # end
+                    @test env.termination_status == Optimal()
+                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                end
             end
 
             @testset "CFLKnapsack oracle" begin
@@ -260,47 +260,47 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                 #     @test env.termination_status == Optimal()
                 #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                 # end
-                @testset "SeqInOut root preprocessing" begin        
-                    @info "solving p$i - CFLKnapsack oracle - seqinout..."
-                    master = Master(data; solver_param = master_solver_param)
-                    update_model!(master, data)
+                # @testset "SeqInOut root preprocessing" begin        
+                #     @info "solving p$i - CFLKnapsack oracle - seqinout..."
+                #     master = Master(data; solver_param = master_solver_param)
+                #     update_model!(master, data)
 
-                    oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
-                    update_model!(oracle, data)
+                #     oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
+                #     update_model!(oracle, data)
 
-                    root_seq_type = BendersSeqInOut
-                    root_param = BendersSeqInOutParam(;
-                            time_limit = 100.0,
-                            gap_tolerance = 1e-6,
-                            stabilizing_x = ones(data.dim_x),
-                            α = 0.9,
-                            λ = 0.1,
-                            verbose = true
-                        )
+                #     root_seq_type = BendersSeqInOut
+                #     root_param = BendersSeqInOutParam(;
+                #             time_limit = 100.0,
+                #             gap_tolerance = 1e-6,
+                #             stabilizing_x = ones(data.dim_x),
+                #             α = 0.9,
+                #             λ = 0.1,
+                #             verbose = true
+                #         )
                     
-                    # Create root node preprocessing with oracle
-                    root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
+                #     # Create root node preprocessing with oracle
+                #     root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
                     
-                    # Create callbacks
-                    lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=oracle)
-                    user_callback = UserCallback(params=UserCallbackParam(frequency=250), oracle=oracle)
+                #     # Create callbacks
+                #     lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=oracle)
+                #     user_callback = UserCallback(params=UserCallbackParam(frequency=250), oracle=oracle)
                     
-                    # Create BnB parameter
-                    callback_param = BendersBnBParam(;
-                            time_limit = 200.0,
-                            gap_tolerance = 1e-6,
-                            verbose = true
-                        )
+                #     # Create BnB parameter
+                #     callback_param = BendersBnBParam(;
+                #             time_limit = 200.0,
+                #             gap_tolerance = 1e-6,
+                #             verbose = true
+                #         )
                     
-                    # Create BendersBnB environment
-                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param=callback_param)
+                #     # Create BendersBnB environment
+                #     env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param=callback_param)
                     
-                    # Solve
-                    obj_value, elapsed_time = solve!(env)
+                #     # Solve
+                #     obj_value, elapsed_time = solve!(env)
                     
-                    @test env.termination_status == Optimal()
-                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                end
+                #     @test env.termination_status == Optimal()
+                #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                # end
             end
 
             # @testset "CFLKnapsack disjunctive oracle" begin
