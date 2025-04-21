@@ -13,12 +13,11 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
 @testset verbose = true "UFLP Sequential Benders Tests -- MIP master" begin
     # instances = setdiff(1:71, [67])
-    instances = [49]
+    instances = [49] # only instance that uses SpecializedBendersSeq
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
             problem = read_uflp_benchmark_data("p$(i)")
-            # problem = read_Simple_data("ga250a-1")
             
             # initialize dim_x, dim_t, c_x, c_t
             dim_x = problem.n_facilities
@@ -62,47 +61,46 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                 
             end
 
-            # @testset "Classical oracle" begin
-            #     @testset "SpecialSeq" begin        
-            #         @info "solving p$i - classical oracle - seq..."
-            #         # for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [DisjunctiveCutsSmallerIndices()]
-            #         for strengthened in [false], add_benders_cuts_to_master in [false], reuse_dcglp in [false], p in [Inf], disjunctive_cut_append_rule in [DisjunctiveCutsSmallerIndices()]
-            #             @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
-            #                 master = Master(data; solver_param = master_solver_param)
-            #                 update_model!(master, data)
+            @testset "Classical oracle" begin
+                @testset "SpecialSeq" begin        
+                    @info "solving p$i - classical oracle - seq..."
+                    for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [DisjunctiveCutsSmallerIndices()]
+                    # for strengthened in [false], add_benders_cuts_to_master in [true], reuse_dcglp in [false], p in [1.0], disjunctive_cut_append_rule in [DisjunctiveCutsSmallerIndices()]
+                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
+                            master = Master(data; solver_param = master_solver_param)
+                            update_model!(master, data)
 
-            #                 typical_oracles = [ClassicalOracle(data; solver_param = typical_oracal_solver_param); ClassicalOracle(data; solver_param = typical_oracal_solver_param)] # for kappa & nu
-            #                 for k=1:2
-            #                     update_model!(typical_oracles[k], data)
-            #                 end
+                            typical_oracles = [ClassicalOracle(data; solver_param = typical_oracal_solver_param); ClassicalOracle(data; solver_param = typical_oracal_solver_param)] # for kappa & nu
+                            for k=1:2
+                                update_model!(typical_oracles[k], data)
+                            end
 
-            #                 # define disjunctive_oracle_attributes and add all the setting to there
-            #                 disjunctive_oracle = DisjunctiveOracle(data, 
-            #                                                         typical_oracles,
-            #                                                         norm = LpNorm(p), 
-            #                                                         split_index_selection_rule = LargestFractional(),
-            #                                                         disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
-            #                                                         strengthened=strengthened, 
-            #                                                         add_benders_cuts_to_master=add_benders_cuts_to_master, 
-            #                                                         fraction_of_benders_cuts_to_master = 0.5, 
-            #                                                         reuse_dcglp=reuse_dcglp, 
-            #                                                         verbose=true,
-            #                                                         solver_param = dcglp_solver_param,
-            #                                                         param = dcglp_param) 
-            #                 update_model!(disjunctive_oracle, data)
+                            # define disjunctive_oracle_attributes and add all the setting to there
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+                                                                   solver_param = dcglp_solver_param,
+                                                                   param = dcglp_param) 
+                            oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
+                                                                    split_index_selection_rule = LargestFractional(),
+                                                                    disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
+                                                                    strengthened=strengthened, 
+                                                                    add_benders_cuts_to_master=add_benders_cuts_to_master, 
+                                                                    fraction_of_benders_cuts_to_master = 0.5, 
+                                                                    reuse_dcglp=reuse_dcglp)
+                            set_parameter!(disjunctive_oracle, oracle_param)
+                            update_model!(disjunctive_oracle, data)
 
-            #                 typical_oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
-            #                 update_model!(typical_oracle, data)
+                            typical_oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
+                            update_model!(typical_oracle, data)
 
-            #                 env = SpecializedBendersSeq(data, master, typical_oracle, disjunctive_oracle; param = specialized_benders_param)
-            #                 log = solve!(env)
-            #                 @test env.termination_status == Optimal()
-            #                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            env = SpecializedBendersSeq(data, master, typical_oracle, disjunctive_oracle; param = specialized_benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
 
-            #             end
-            #         end
-            #     end
-            # end 
+                        end
+                    end
+                end
+            end 
 
             # initialize dim_x, dim_t, c_x, c_t
             dim_x = problem.n_facilities
@@ -118,8 +116,8 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                 # fat-knapsack-based disjunctive cut has sparse gamma_t, so adding only disjunctive cut does not improve lower bound, setting add_benders_cuts_to_master = true
                 @testset "Seq" begin
                     @info "solving p$i - fat Knapsack oracle - seq..."
-                    # for strengthened in [true; false], add_benders_cuts_to_master in [true], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [DisjunctiveCutsSmallerIndices()]
-                    for strengthened in [false], add_benders_cuts_to_master in [false], reuse_dcglp in [false], p in [Inf], disjunctive_cut_append_rule in [DisjunctiveCutsSmallerIndices()]
+                    for strengthened in [true; false], add_benders_cuts_to_master in [true], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [DisjunctiveCutsSmallerIndices()]
+                    # for strengthened in [false], add_benders_cuts_to_master in [false], reuse_dcglp in [false], p in [2.0], disjunctive_cut_append_rule in [DisjunctiveCutsSmallerIndices()]
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
@@ -127,19 +125,18 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             # model-free knapsack-based cuts
                             typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
 
-                            # define disjunctive_oracle_attributes and add all the setting to there
-                            disjunctive_oracle = DisjunctiveOracle(data, 
-                                                                    typical_oracles,
-                                                                    norm = LpNorm(p), 
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+                                                                   solver_param = dcglp_solver_param,
+                                                                   param = dcglp_param) 
+                            oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
                                                                     split_index_selection_rule = LargestFractional(),
                                                                     disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 0.5, 
-                                                                    reuse_dcglp=reuse_dcglp, 
-                                                                    verbose=true,
-                                                                    solver_param = dcglp_solver_param,
-                                                                    param = dcglp_param) 
+                                                                    reuse_dcglp=reuse_dcglp)
+                            # norm is used in the initialization.
+                            set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
 
                             typical_oracle = UFLKnapsackOracle(data)
