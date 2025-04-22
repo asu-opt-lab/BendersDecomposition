@@ -79,8 +79,7 @@ function solve!(env::BendersSeqInOut)
 
             # Check termination criteria
             is_terminated(state, log, param) && break
-            # @info "state.is_in_L: $(state.is_in_L)"
-            # @info "cuts: $cuts"
+
             # add generated cuts to master
             @constraint(env.master.model, 0 .>= cuts)
             

@@ -28,7 +28,7 @@ mutable struct BendersSeqInOutParam <: AbstractBendersSeqParam
 end
 
 """
-Check termination criteria for the Sequential Benders loop.
+Check termination criteria for the Sequential Benders InOut loop.
 
 Terminates if:
 - `is_in_L` is true (termination via feasibility).

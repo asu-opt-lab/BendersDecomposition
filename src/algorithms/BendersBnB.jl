@@ -1,6 +1,7 @@
-export BendersBnB, solve!
+export BendersBnB
 
-include("callback.jl") # must be included first
+include("callback/preprocessing.jl") # must be included first
+include("callback/callback.jl") # must be included first
  
 """
     BendersBnB <: AbstractBendersCallback
@@ -99,8 +100,8 @@ function solve!(env::BendersBnB)
     end
     
     # Configure solver parameters
-    if param.time_limit - root_node_time <= 5.0
-        throw(ArgumentError("Time limit is too short to solve the master problem. Please increase the time limit."))
+    if param.time_limit <= root_node_time
+        throw(TimeLimitException("Time limit reached before BnB starts, please increase the time limit."))
     end
     set_time_limit_sec(env.master.model, param.time_limit - root_node_time)
     set_optimizer_attribute(env.master.model, MOI.Silent(), !param.verbose)
