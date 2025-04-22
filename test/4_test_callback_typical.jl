@@ -56,12 +56,12 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
             dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
 
             # solve mip for reference
-            mip = Mip(data)
-            assign_attributes!(mip.model, mip_solver_param)
-            update_model!(mip, data)
-            optimize!(mip.model)
-            @assert termination_status(mip.model) == OPTIMAL
-            mip_opt_val = objective_value(mip.model)
+            # mip = Mip(data)
+            # assign_attributes!(mip.model, mip_solver_param)
+            # update_model!(mip, data)
+            # optimize!(mip.model)
+            # @assert termination_status(mip.model) == OPTIMAL
+            # mip_opt_val = objective_value(mip.model)
 
             @testset "Classic oracle" begin
                 # @testset "No root preprocessing" begin        
@@ -83,7 +83,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                 #     root_preprocessing = NoRootNodePreprocessing()
                     
                 #     # Create callbacks
-                #     lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=oracle)
+                #     lazy_callback = LazyCallback(oracle=oracle)
                 #     user_callback = NoUserCallback()
                     
                 #     # Create BnB parameter
@@ -121,7 +121,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                 #     root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
                     
                 #     # Create callbacks
-                #     lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=oracle)
+                #     lazy_callback = LazyCallback(oracle=oracle)
                 #     user_callback = UserCallback(params=UserCallbackParam(frequency=250), oracle=oracle)
                     
                 #     # Create BnB parameter
@@ -162,7 +162,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                     root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
                     
                     # Create callbacks
-                    lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=oracle)
+                    lazy_callback = LazyCallback(oracle=oracle)
                     user_callback = UserCallback(params=UserCallbackParam(frequency=250), oracle=oracle)
                     
                     # Create BnB parameter
@@ -203,7 +203,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                 #     root_preprocessing = NoRootNodePreprocessing()
                     
                 #     # Create callbacks
-                #     lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=oracle)
+                #     lazy_callback = LazyCallback(oracle=oracle)
                 #     user_callback = NoUserCallback()
                     
                 #     # Create BnB parameter
@@ -241,7 +241,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                 #     root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
                     
                 #     # Create callbacks
-                #     lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=oracle)
+                #     lazy_callback = LazyCallback(oracle=oracle)
                 #     user_callback = UserCallback(params=UserCallbackParam(frequency=250), oracle=oracle)
                     
                 #     # Create BnB parameter
@@ -282,7 +282,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                 #     root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
                     
                 #     # Create callbacks
-                #     lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=oracle)
+                #     lazy_callback = LazyCallback(oracle=oracle)
                 #     user_callback = UserCallback(params=UserCallbackParam(frequency=250), oracle=oracle)
                     
                 #     # Create BnB parameter
@@ -344,7 +344,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
             #             root_preprocessing = RootNodePreprocessing(lazy_oracle, root_seq_type, root_param)
                         
             #             # Create callbacks
-            #             lazy_callback = LazyCallback(params=EmptyCallbackParam(), oracle=lazy_oracle)
+            #             lazy_callback = LazyCallback(oracle=lazy_oracle)
             #             user_callback = UserCallback(params=UserCallbackParam(frequency=1250), oracle=disjunctive_oracle)
             #             callback_param = BendersBnBParam(;
             #                 time_limit = 200.0,
