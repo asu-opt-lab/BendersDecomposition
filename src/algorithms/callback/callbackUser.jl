@@ -1,4 +1,4 @@
-export UserCallbackParam, UserCallback, NoUserCallback, user_callback
+export UserCallbackParam, UserCallback
 
 """
     UserCallbackParam <: AbstractCallbackParam
@@ -15,14 +15,6 @@ Base.@kwdef struct UserCallbackParam <: AbstractCallbackParam
     node_count::Int = -1
     depth::Int = -1
 end
-
-
-"""
-    NoUserCallback <: AbstractUserCallback
-
-Indicates that no user callbacks should be used.
-"""
-struct NoUserCallback <: AbstractUserCallback end
 
 
 """
