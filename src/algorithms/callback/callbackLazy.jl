@@ -1,4 +1,4 @@
-export LazyCallback, lazy_callback
+export LazyCallback
 
 """
     LazyCallback <: AbstractLazyCallback
@@ -7,20 +7,19 @@ Configuration for lazy constraint callbacks in the branch-and-bound process.
 Used to dynamically add Benders cuts when integer solutions are found.
 
 # Fields
-- `params::AbstractCallbackParam`: Parameters for the callback
-- `oracle::AbstractOracle`: Oracle used to generate Benders cuts
+- `params::EmptyCallbackParam`: Empty parameters for the callback (not used)
+- `oracle::AbstractTypicalOracle`: Oracle used to generate Benders cuts (better to be AbstractTypicalOracle as disjunctive oracle at integral node may yield incorrect results.)
 """
 struct LazyCallback <: AbstractLazyCallback
-    params::AbstractCallbackParam
-    oracle::AbstractOracle
+    params::EmptyCallbackParam
+    oracle::AbstractTypicalOracle
     
-
-    function LazyCallback(; params=EmptyCallbackParam(), oracle)
-        new(params, oracle)
+    function LazyCallback(; oracle)
+        new(EmptyCallbackParam(), oracle)
     end
     
-    function LazyCallback(data; params=EmptyCallbackParam())
-        new(params, ClassicalOracle(data))
+    function LazyCallback(data)
+        new(EmptyCallbackParam(), ClassicalOracle(data))
     end
 end
 
