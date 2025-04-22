@@ -127,5 +127,5 @@ mutable struct SpecializedBendersSeqParam <: AbstractBendersSeqParam
 end
 
 function is_terminated(state::BendersSeqState, log::BendersSeqLog, param::SpecializedBendersSeqParam)
-    return all(x -> isapprox(0, x, atol=param.integrality_tolerance) || isapprox(1, x, atol=param.integrality_tolerance), JuMP.value.(state.values[:x])) || get_sec_remaining(log, param) <= 0.0
+    return all(x -> isapprox(0.5, abs(x-0.5), atol = param.integrality_tolerance), state.values[:x]) || get_sec_remaining(log, param) <= 0.0
 end
