@@ -63,3 +63,4 @@ end
 include("oracleTypicalClassical.jl")
 include("oracleTypicalSeparable.jl")
 include("oracleDisjunctive.jl")
+# include("oracleDisjunctive_lift.jl")
