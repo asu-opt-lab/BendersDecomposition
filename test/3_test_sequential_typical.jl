@@ -18,8 +18,8 @@ include("$(dirname(@__DIR__))/example/uflp/oracle.jl")
 include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
 @testset verbose = true "UFLP Sequential Benders Tests" begin
-    # instances = setdiff(1:71, [67])
-    instances = 30:35
+    instances = setdiff(1:71, [67])
+    # instances = 30:35
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary

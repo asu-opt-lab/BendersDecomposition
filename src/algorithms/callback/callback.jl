@@ -1,4 +1,4 @@
-export EmptyCallbackParam, lazy_callback, UserCallback, NoUserCallback
+export EmptyCallbackParam, lazy_callback, NoUserCallback, user_callback
 
 """
     AbstractCallbackParam

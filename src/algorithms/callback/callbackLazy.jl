@@ -14,7 +14,7 @@ struct LazyCallback <: AbstractLazyCallback
     params::EmptyCallbackParam
     oracle::AbstractTypicalOracle
     
-    function LazyCallback(; oracle)
+    function LazyCallback(oracle::AbstractTypicalOracle)
         new(EmptyCallbackParam(), oracle)
     end
     
