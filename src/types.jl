@@ -11,7 +11,7 @@ export AbstractNorm, StandardNorm, LpNorm
 export DisjunctiveCutsAppendRule, NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
 export SplitIndexSelectionRule, RandomFractional, MostFractional, LargestFractional
 export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
-export TimeLimitException, UnexpectedModelStatusException, UndefError
+export TimeLimitException, UnexpectedModelStatusException, UndefError, AlgorithmException
 export Hyperplane, aggregate
 
 
