@@ -3,7 +3,7 @@ export SpecializedBendersSeq
 mutable struct SpecializedBendersSeq <: AbstractBendersSeq
     data::Data
     master::AbstractMaster
-    oracle::AbstractDisjunctiveOracle
+    oracle::DisjunctiveOracle
 
     param::SpecializedBendersSeqParam # initially default and add an interface function?
 
@@ -14,8 +14,8 @@ mutable struct SpecializedBendersSeq <: AbstractBendersSeq
     function SpecializedBendersSeq(data, master::AbstractMaster, oracle::DisjunctiveOracle; param::SpecializedBendersSeqParam = SpecializedBendersSeqParam()) 
         relax_integrality(master.model)
 
-        oracle.oracle_param.split_index_selection_rule != LargestFractional() && throw(UndefError("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.split_index_selection_rule). Use LargestFractional() instead."))
-        oracle.oracle_param.disjunctive_cut_append_rule != DisjunctiveCutsSmallerIndices() && throw(UndefError("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.disjunctive_cut_append_rule). Use DisjunctiveCutsSmallerIndices() instead."))         
+        oracle.oracle_param.split_index_selection_rule != LargestFractional() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.split_index_selection_rule). Use LargestFractional() instead."))
+        oracle.oracle_param.disjunctive_cut_append_rule != DisjunctiveCutsSmallerIndices() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.disjunctive_cut_append_rule). Use DisjunctiveCutsSmallerIndices() instead."))         
 
         # case where master and oracle has their own attributes and default loop_param and solver_param
         new(data, master, oracle, param, Inf, NotSolved())
