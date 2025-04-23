@@ -24,7 +24,7 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
     end
 end
 
-function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600)
+function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600.0)
     tic = time()
     N = oracle.N
     is_in_L = Vector{Bool}(undef,N)

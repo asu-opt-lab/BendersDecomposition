@@ -38,7 +38,7 @@ mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
     UFLKnapsackOracle() = new()
 end
 
-function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-8, time_limit = 3600)
+function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-8, time_limit = 3600.0)
     tic = time()
     critical_facility = Vector{Int}(undef, oracle.J)
     for j in 1:oracle.J
@@ -69,7 +69,6 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
     is_in_L = sum(oracle.obj_values) >= sum(t_value) + tol ? false : true
 
     hyperplanes = Vector{Hyperplane}()
-    
     for j in customers
         k = critical_facility[j] 
         sorted_indices = oracle.sorted_indices[j]

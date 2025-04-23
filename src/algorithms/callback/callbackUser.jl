@@ -31,11 +31,11 @@ struct UserCallback <: AbstractUserCallback
     params::UserCallbackParam
     oracle::AbstractOracle
     
-    function UserCallback(; params=UserCallbackParam(), oracle)
+    function UserCallback(oracle::AbstractOracle; params=UserCallbackParam())
         new(params, oracle)
     end
     
-    function UserCallback(data; params=UserCallbackParam())
+    function UserCallback(data::Data; params=UserCallbackParam())
         new(params, ClassicalOracle(data))
     end
 end
