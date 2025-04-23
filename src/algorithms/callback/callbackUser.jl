@@ -50,9 +50,10 @@ Generates and adds Benders cuts at fractional nodes based on the specified frequ
 - `cb_data`: Callback data from the solver
 - `master_model::Model`: The JuMP master problem model
 - `log::BendersBnBLog`: Log object to record statistics
+- `param::BendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::UserCallback`: Configuration for the user callback with parameters controlling when cuts are generated
 """
-function user_callback(cb_data, master_model::Model, log::BendersBnBLog, callback::UserCallback)
+function user_callback(cb_data, master_model::Model, log::BendersBnBLog, param::BendersBnBParam, callback::UserCallback)
     status = JuMP.callback_node_status(cb_data, master_model)
     
     if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL
@@ -87,7 +88,7 @@ function user_callback(cb_data, master_model::Model, log::BendersBnBLog, callbac
                 
                 # Generate cuts
                 state.oracle_time = @elapsed begin
-                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t])
+                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
                     cuts = !state.is_in_L ? hyperplanes_to_expression(master_model, hyperplanes, master_model[:x], master_model[:t]) : []
                 end
                 

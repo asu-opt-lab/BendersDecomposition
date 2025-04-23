@@ -105,3 +105,7 @@ function record_node!(log::BendersBnBLog, state::BendersBnBState, is_lazy_cut::B
     log.n_lazy_cuts += is_lazy_cut ? state.num_cuts : 0
     log.n_user_cuts += !is_lazy_cut ? state.num_cuts : 0
 end
+
+function get_sec_remaining(log::BendersBnBLog, param::BendersBnBParam)
+    return get_sec_remaining(log.start_time, param.time_limit)
+end

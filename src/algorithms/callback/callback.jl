@@ -27,17 +27,18 @@ during the branch-and-bound process.
 abstract type AbstractLazyCallback end
 
 """
-    lazy_callback(cb_data, master_model::Model, log::BendersBnBLog, callback::AbstractLazyCallback)
+    lazy_callback(cb_data, master_model::Model, log::AbstractBendersBnBLog, param::AbstractBendersBnBParam, callback::AbstractLazyCallback)
 
 Generic function for implementing lazy callbacks. This should be overridden by specific implementations of `AbstractLazyCallback`.
 
 # Arguments
 - `cb_data`: Callback data from the solver
 - `master_model::Model`: The JuMP master problem model
-- `log::BendersBnBLog`: Log object to record statistics
+- `log::AbstractBendersBnBLog`: Log object to record statistics
+- `param::AbstractBendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::AbstractLazyCallback`: Configuration for the lazy callback
 """
-function lazy_callback(cb_data, master_model::Model, log::BendersBnBLog, callback::AbstractLazyCallback)
+function lazy_callback(cb_data, master_model::Model, log::AbstractBendersBnBLog, param::AbstractBendersBnBParam, callback::AbstractLazyCallback)
     throw(UndefError("Lazy callback not implemented for $(typeof(callback))"))
 end
 
@@ -59,17 +60,18 @@ Use this when you don't want to add any user cuts during the branch-and-bound pr
 struct NoUserCallback <: AbstractUserCallback end
 
 """
-    user_callback(cb_data, master_model::Model, log::BendersBnBLog, callback::AbstractUserCallback)
+    user_callback(cb_data, master_model::Model, log::AbstractBendersBnBLog, param::AbstractBendersBnBParam, callback::AbstractUserCallback)
 
 Generic function for implementing user callbacks. This should be overridden by specific implementations of `AbstractUserCallback`.
 
 # Arguments
 - `cb_data`: Callback data from the solver
 - `master_model::Model`: The JuMP master problem model
-- `log::BendersBnBLog`: Log object to record statistics
+- `log::AbstractBendersBnBLog`: Log object to record statistics
+- `param::AbstractBendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::AbstractUserCallback`: Configuration for the user callback
 """
-function user_callback(cb_data, master_model::Model, log::BendersBnBLog, callback::AbstractUserCallback)
+function user_callback(cb_data, master_model::Model, log::AbstractBendersBnBLog, param::AbstractBendersBnBParam, callback::AbstractUserCallback)
     # Default implementation for the abstract type
     # Concrete subtypes should override this method except for NoUserCallback
     if callback isa NoUserCallback
