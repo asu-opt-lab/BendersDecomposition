@@ -41,3 +41,9 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data)
     append!(other_constraints, vec(model[:facility_open]))
     append!(other_constraints, model[:capacity])
 end
+
+function update_model!(oracle::DisjunctiveOracle, data::Data)
+    dcglp = oracle.dcglp 
+
+    @constraint(dcglp, [i=1:2], sum(data.problem.capacities[j] * dcglp[:omega_x][i,j] for j in 1:data.problem.n_customers) >= sum(data.problem.demands) * dcglp[:omega_0][i])
+end

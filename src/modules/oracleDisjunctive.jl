@@ -75,7 +75,7 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
     end
 end
 
-function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600)
+function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600.0)
 
     tic = time()
     
