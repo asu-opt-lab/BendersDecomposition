@@ -1,4 +1,4 @@
-export BendersSeqParam 
+export BendersSeqParam, SpecializedBendersSeqParam 
 
 abstract type AbstractBendersSeqState <: AbstractLoopState end
 abstract type AbstractBendersSeqLog <: AbstractLoopLog end
@@ -101,4 +101,31 @@ Returns a `Bool`.
 """
 function is_terminated(state::BendersSeqState, log::BendersSeqLog, param::BendersSeqParam)
     return state.is_in_L || state.gap <= param.gap_tolerance || get_sec_remaining(log, param) <= 0.0
+end
+
+""" Specialized """
+mutable struct SpecializedBendersSeqParam <: AbstractBendersSeqParam
+
+    time_limit::Float64
+    gap_tolerance::Float64
+    integrality_tolerance::Float64
+    halt_limit::Int
+    iter_limit::Int
+    verbose::Bool
+
+    function SpecializedBendersSeqParam(; 
+                        time_limit::Float64 = 7200.0, 
+                        gap_tolerance::Float64 = 1e-4, 
+                        integrality_tolerance::Float64 = 1e-4,
+                        halt_limit::Int = 10000, 
+                        iter_limit::Int = 1000000, 
+                        verbose::Bool = true
+                        ) 
+        
+        new(time_limit, gap_tolerance, integrality_tolerance, halt_limit, iter_limit, verbose)
+    end
+end
+
+function is_terminated(state::BendersSeqState, log::BendersSeqLog, param::SpecializedBendersSeqParam)
+    return all(x -> isapprox(0.5, abs(x-0.5), atol = param.integrality_tolerance), state.values[:x]) || get_sec_remaining(log, param) <= 0.0
 end
