@@ -87,14 +87,14 @@ function solve!(env::BendersBnB)
     
     # Set up lazy callback
     function lazy_callback_wrapper(cb_data)
-        lazy_callback(cb_data, env.master.model, log, env.lazy_callback)
+        lazy_callback(cb_data, env.master.model, log, env.param, env.lazy_callback)
     end
     set_attribute(env.master.model, MOI.LazyConstraintCallback(), lazy_callback_wrapper)
     
     # Set up user callback if specified
     if !isa(env.user_callback, NoUserCallback)
         function user_callback_wrapper(cb_data)
-            user_callback(cb_data, env.master.model, log, env.user_callback)
+            user_callback(cb_data, env.master.model, log, env.param, env.user_callback)
         end
         set_attribute(env.master.model, MOI.UserCutCallback(), user_callback_wrapper)
     end
