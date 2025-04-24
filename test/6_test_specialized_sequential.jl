@@ -11,7 +11,7 @@ include("$(dirname(@__DIR__))/example/uflp/data_reader.jl")
 include("$(dirname(@__DIR__))/example/uflp/oracle.jl")
 include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
-@testset verbose = true "UFLP Sequential Benders Tests -- MIP master" begin
+@testset verbose = true "UFLP Specialized Sequential Benders Tests" begin
     # instances = setdiff(1:71, [67])
     instances = [49] # only instance that uses SpecializedBendersSeq
     for i in instances
@@ -145,7 +145,6 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     end
                 end
             end
-
         end
     end
 end
