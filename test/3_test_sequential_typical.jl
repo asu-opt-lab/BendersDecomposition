@@ -1,6 +1,3 @@
-# To-Do: 
-# 1. need to be able to change the setting for SeqInOut: e.g., stabilizing point
-# 2. assign attributes to the structure, not to JuMP Model: e.g., one may want to setting for CFLKnapsackOracle (e.g., slim, add_only_violated_cuts)
 # Done:
 # slim cut should be averaged, instead of summation, for numerical stability
 using Test
@@ -97,7 +94,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     #     @test false
                     # end
                 end
-            end 
+            end
 
             # initialize dim_x, dim_t, c_x, c_t
             dim_x = problem.n_facilities
