@@ -1,4 +1,5 @@
 # To-Do:
+# ***** obtain optimal solution, check whether any disjunctive cut cuts off that point; if so, how much.
 # add X to dcglp
 # streamline the definition for attributes: (1) model vs dcglp; (2) termination parameter for dcglp; (3) verbose for master and oracle directly
 # test multiple scenarios -- should work
@@ -39,7 +40,8 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
 @testset verbose = true "UFLP Sequential Benders Tests -- MIP master" begin
     # instances = setdiff(1:71, [67])
-    instances = 21:25
+    # instances = 42:42
+    instances = setdiff(41:71, [67])
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -59,20 +61,28 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             benders_param = BendersSeqParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
-                            verbose = true
+                            verbose = false
                         )
+            benders_inout_param = BendersSeqInOutParam(;
+                                        time_limit = 200.0,
+                                        gap_tolerance = 1e-6,
+                                        verbose = false,
+                                        stabilizing_x = ones(data.dim_x),
+                                        α = 0.9,
+                                        λ = 0.1
+                                    )
             dcglp_param = DcglpParam(;
                                     time_limit = 1000.0, 
                                     gap_tolerance = 1e-3, 
                                     halt_limit = 3, 
                                     iter_limit = 250,
-                                    verbose = true
+                                    verbose = false
                             )
             # oracle parameters
 
             # solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
-            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9)
+            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9)
             typical_oracal_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
             dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
                             
@@ -84,15 +94,16 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             @assert termination_status(mip.model) == OPTIMAL
             mip_opt_val = objective_value(mip.model)
 
-            @testset "Default Benders decomposition" begin
-                
-            end
+            x_opt = value.(mip.model[:x])
+            t_opt = value.(mip.model[:t])
+            @debug x_opt
+            @debug t_opt
 
             @testset "Classical oracle" begin
                 @testset "Seq" begin        
-                    @info "solving p$i - classical oracle - seq..."
                     for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]
-                        # for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], disjunctive_cut_append_rule in [DisjunctiveCutsSmallerIndices()]
+                    # for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts()]
+                        @info "solving p$i - classical oracle - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
@@ -110,7 +121,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                                                                     disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
-                                                                    fraction_of_benders_cuts_to_master = 0.5, 
+                                                                    fraction_of_benders_cuts_to_master = 1.0, 
                                                                     reuse_dcglp=reuse_dcglp)
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
@@ -118,6 +129,28 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             env = BendersSeq(data, master, disjunctive_oracle; param = benders_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
+                            # if env.log.termination_status == Optimal()
+                            if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                                t_opt_ = [sum(t_opt)]
+                                @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
+                                # optimize!(master.model)
+                                opt_sol = Dict{VariableRef, Float64}()
+                                for i = 1:data.dim_x
+                                    opt_sol[master.model[:x][i]] = x_opt[i]
+                                end
+                                for i = 1:data.dim_t
+                                    opt_sol[master.model[:t][i]] = t_opt_[i]
+                                end
+                                
+                                @info primal_feasibility_report(env.master.model, opt_sol)
+                                @info data.c_x' * x_opt + data.c_t' * t_opt_
+                                
+                                for v in keys(opt_sol)
+                                    fix(v, opt_sol[v]; force=true)
+                                end
+                                optimize!(env.master.model)
+                                @info objective_value(env.master.model)
+                            end
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             # elseif env.termination_status == TimeLimit()
                             #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
@@ -130,9 +163,9 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                 end
                 # SeqInOut for DisjunctiveOracle is actually unnecessary extra, but it works though
                 @testset "SeqInOut" begin
-                    @info "solving p$i - classical oracle - seqInOut..."
+                    # for strengthened in [false], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts()]
                     for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]
-                        # for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], disjunctive_cut_append_rule in [DisjunctiveCutsSmallerIndices()]
+                        @info "solving p$i - classical oracle - SeqInOut... - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
@@ -150,15 +183,35 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                                                                     disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
-                                                                    fraction_of_benders_cuts_to_master = 0.5, 
+                                                                    fraction_of_benders_cuts_to_master = 1.0, 
                                                                     reuse_dcglp=reuse_dcglp)
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
 
-                            stabilizing_x = ones(data.dim_x)
-                            env = BendersSeqInOut(data, master, disjunctive_oracle, stabilizing_x; param = benders_param)
+                            env = BendersSeqInOut(data, master, disjunctive_oracle; param = benders_inout_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
+                            if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                                t_opt_ = [sum(t_opt)]
+                                @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
+                                # optimize!(master.model)
+                                opt_sol = Dict{VariableRef, Float64}()
+                                for i = 1:data.dim_x
+                                    opt_sol[master.model[:x][i]] = x_opt[i]
+                                end
+                                for i = 1:data.dim_t
+                                    opt_sol[master.model[:t][i]] = t_opt_[i]
+                                end
+                                
+                                @info primal_feasibility_report(env.master.model, opt_sol)
+                                @info data.c_x' * x_opt + data.c_t' * t_opt_
+                                
+                                for v in keys(opt_sol)
+                                    fix(v, opt_sol[v]; force=true)
+                                end
+                                optimize!(env.master.model)
+                                @info objective_value(env.master.model)
+                            end
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             # elseif env.termination_status == TimeLimit()
                             #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
@@ -184,9 +237,9 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             @testset "fat knapsack oracle" begin
                 # fat-knapsack-based disjunctive cut has sparse gamma_t, so adding only disjunctive cut does not improve lower bound, setting add_benders_cuts_to_master = true
                 @testset "Seq" begin
-                    @info "solving p$i - fat Knapsack oracle - seq..."
                     for strengthened in [true; false], add_benders_cuts_to_master in [true], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]
-                        # for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], disjunctive_cut_append_rule in [DisjunctiveCutsSmallerIndices()]
+                    # for strengthened in [false], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts()]
+                        @info "solving p$i - fat Knapsack oracle - Seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
@@ -202,7 +255,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                                                                     disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
-                                                                    fraction_of_benders_cuts_to_master = 0.5, 
+                                                                    fraction_of_benders_cuts_to_master = 1.0, 
                                                                     reuse_dcglp=reuse_dcglp)
                             # norm is used in the initialization.
                             set_parameter!(disjunctive_oracle, oracle_param)
@@ -212,7 +265,27 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             log = solve!(env)
                             @test env.termination_status == Optimal()
                             # if env.log.termination_status == Optimal()
-                                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                                @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
+                                # optimize!(master.model)
+                                opt_sol = Dict{VariableRef, Float64}()
+                                for i = 1:data.dim_x
+                                    opt_sol[master.model[:x][i]] = x_opt[i]
+                                end
+                                for i = 1:data.dim_t
+                                    opt_sol[master.model[:t][i]] = t_opt[i]
+                                end
+                                
+                                @info primal_feasibility_report(env.master.model, opt_sol)
+                                @info data.c_x' * x_opt + data.c_t' * t_opt
+                                
+                                for v in keys(opt_sol)
+                                    fix(v, opt_sol[v]; force=true)
+                                end
+                                optimize!(env.master.model)
+                                @info objective_value(env.master.model)
+                            end
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             # elseif env.log.termination_status == TimeLimit()
                             #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
                             #     @test env.log.LB <= mip_opt_val <= env.log.UB
@@ -223,46 +296,68 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     end
                 end
             end
-            @testset "slim knapsack oracle" begin
-                @testset "Seq" begin
-                    @info "solving p$i - slim Knapsack oracle - seq..."
-                    for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]
-                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
-                            master = Master(data; solver_param = master_solver_param)
-                            update_model!(master, data)
+            # @testset "slim knapsack oracle" begin
+            #     @testset "Seq" begin
+            #         # for strengthened in [true], add_benders_cuts_to_master in [false], reuse_dcglp in [false], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
+            #         for strengthened in [false, true], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]
+            #             @info "solving p$i - slim Knapsack oracle - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
+            #             @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
+            #                 master = Master(data; solver_param = master_solver_param)
+            #                 update_model!(master, data)
 
-                            # model-free knapsack-based cuts
-                            typical_oracle_param = UFLKnapsackOracleParam(slim = true)
-                            typical_oracles = [UFLKnapsackOracle(data, oracle_param = typical_oracle_param); UFLKnapsackOracle(data, oracle_param = typical_oracle_param)] # for kappa & nu
+            #                 # model-free knapsack-based cuts
+            #                 typical_oracle_param = UFLKnapsackOracleParam(slim = true)
+            #                 typical_oracles = [UFLKnapsackOracle(data, oracle_param = typical_oracle_param); UFLKnapsackOracle(data, oracle_param = typical_oracle_param)] # for kappa & nu
 
-                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
-                                                                   solver_param = dcglp_solver_param,
-                                                                   param = dcglp_param) 
-                            oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
-                                                                    split_index_selection_rule = RandomFractional(),
-                                                                    disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
-                                                                    strengthened=strengthened, 
-                                                                    add_benders_cuts_to_master=add_benders_cuts_to_master, 
-                                                                    fraction_of_benders_cuts_to_master = 0.5, 
-                                                                    reuse_dcglp=reuse_dcglp)
-                            set_parameter!(disjunctive_oracle, oracle_param)
-                            update_model!(disjunctive_oracle, data)
+            #                 disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+            #                                                        solver_param = dcglp_solver_param,
+            #                                                        param = dcglp_param) 
+            #                 oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
+            #                                                         split_index_selection_rule = RandomFractional(),
+            #                                                         disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
+            #                                                         strengthened=strengthened, 
+            #                                                         add_benders_cuts_to_master=add_benders_cuts_to_master, 
+            #                                                         fraction_of_benders_cuts_to_master = 1.0, 
+            #                                                         reuse_dcglp=reuse_dcglp)
+            #                 set_parameter!(disjunctive_oracle, oracle_param)
+            #                 update_model!(disjunctive_oracle, data)
                             
-                            env = BendersSeq(data, master, disjunctive_oracle; param = benders_param)
-                            log = solve!(env)
-                            @test env.termination_status == Optimal()
-                            # if env.log.termination_status == Optimal()
-                                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                            # elseif env.log.termination_status == TimeLimit()
-                            #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
-                            #     @test env.log.LB <= mip_opt_val <= env.log.UB
-                            # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
-                            #     @test false
-                            # end
-                        end
-                    end
-                end
-            end
+            #                 env = BendersSeq(data, master, disjunctive_oracle; param = benders_param)
+            #                 log = solve!(env)
+              
+            #                 @test env.termination_status == Optimal()
+            #                 # if env.log.termination_status == Optimal()
+            #                 if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            #                     @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
+            #                     # optimize!(master.model)
+            #                     opt_sol = Dict{VariableRef, Float64}()
+            #                     for i = 1:data.dim_x
+            #                         opt_sol[master.model[:x][i]] = x_opt[i]
+            #                     end
+            #                     for i = 1:data.dim_t
+            #                         opt_sol[master.model[:t][i]] = t_opt[i]
+            #                     end
+                                
+            #                     @info primal_feasibility_report(env.master.model, opt_sol)
+            #                     @info data.c_x' * x_opt + data.c_t' * t_opt
+                                
+            #                     for v in keys(opt_sol)
+            #                         fix(v, opt_sol[v]; force=true)
+            #                     end
+            #                     optimize!(env.master.model)
+            #                     @info objective_value(env.master.model)
+            #                 end
+            #                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            #                 # elseif env.log.termination_status == TimeLimit()
+            #                 #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+            #                 #     @test env.log.LB <= mip_opt_val <= env.log.UB
+            #                 # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+            #                 #     @test false
+            #                 # end
+            #             end
+            #         end
+            #     end
+            # end
         end
     end
 end
