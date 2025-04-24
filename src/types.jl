@@ -11,7 +11,8 @@ export AbstractNorm, StandardNorm, LpNorm
 export DisjunctiveCutsAppendRule, NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
 export SplitIndexSelectionRule, RandomFractional, MostFractional, LargestFractional
 export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
-export TimeLimitException, UnexpectedModelStatusException, UndefError
+export TimeLimitException, UnexpectedModelStatusException, UndefError, AlgorithmException
+
 
 abstract type AbstractBendersDecomposition end
 abstract type AbstractMip end
@@ -76,7 +77,9 @@ abstract type TerminationStatus end
 struct NotSolved <: TerminationStatus end
 struct TimeLimit <: TerminationStatus end
 struct Optimal <: TerminationStatus end
-struct InfeasibleOrNumericalIssue <: TerminationStatus end
+struct InfeasibleOrNumericalIssue <: TerminationStatus
+    msg::String 
+end
 
 # ============================================================================
 # Error Exceptions
