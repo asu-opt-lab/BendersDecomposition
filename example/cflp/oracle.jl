@@ -48,26 +48,26 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
     if status == FEASIBLE_POINT
         sub_obj_val = objective_value(oracle.model)
 
+        μ = dual.(oracle.model[:demand])
+        a_t = [-1.0] 
+        
+        # Get facility knapsack info
+        costs = oracle.facility_knapsack_info.costs
+        demands = oracle.facility_knapsack_info.demands
+        capacity = oracle.facility_knapsack_info.capacity
+
+        # Calculate KP values for each facility
+        KP_values = Vector{Float64}(undef, length(capacity))
+        for i in 1:length(capacity)
+            KP_values[i] = calculate_KP_value(costs[i,:], demands, capacity[i], μ)
+        end
+
+        a_x = KP_values # Vector{Float64}
+        a_0 = sum(μ) 
         if sub_obj_val >= t_value[1] + tol
-            μ = dual.(oracle.model[:demand])
-            a_t = [-1.0] 
-            
-            # Get facility knapsack info
-            costs = oracle.facility_knapsack_info.costs
-            demands = oracle.facility_knapsack_info.demands
-            capacity = oracle.facility_knapsack_info.capacity
-
-            # Calculate KP values for each facility
-            KP_values = Vector{Float64}(undef, length(capacity))
-            for i in 1:length(capacity)
-                KP_values[i] = calculate_KP_value(costs[i,:], demands, capacity[i], μ)
-            end
-
-            a_x = KP_values # Vector{Float64}
-            a_0 = sum(μ) 
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
-            return true, [Hyperplane(length(x_value),length(t_value))], t_value
+            return true, [Hyperplane(a_x, a_t, a_0)], t_value
         end
         
     elseif status == INFEASIBILITY_CERTIFICATE

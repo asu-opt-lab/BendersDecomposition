@@ -28,6 +28,10 @@ aggregate a set of hyperplanes into a single hyperplane via averaging
 function aggregate(hyperplanes::Vector{Hyperplane})
     h = Hyperplane()
     K = length(hyperplanes)
+    if K == 0
+        # Return an empty hyperplane if the input is empty
+        return hyperplanes
+    end
     h.a_x = sum(hyperplanes[j].a_x for j=1:K) * 1/K # averaged for numerical stability
     h.a_t = sum(hyperplanes[j].a_t for j=1:K) * 1/K
     h.a_0 = sum(hyperplanes[j].a_0 for j=1:K) * 1/K
