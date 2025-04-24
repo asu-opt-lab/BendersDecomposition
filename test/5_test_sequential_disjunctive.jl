@@ -63,6 +63,14 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             gap_tolerance = 1e-6,
                             verbose = false
                         )
+            benders_inout_param = BendersSeqInOutParam(;
+                                        time_limit = 200.0,
+                                        gap_tolerance = 1e-6,
+                                        verbose = false,
+                                        stabilizing_x = ones(data.dim_x),
+                                        α = 0.9,
+                                        λ = 0.1
+                                    )
             dcglp_param = DcglpParam(;
                                     time_limit = 1000.0, 
                                     gap_tolerance = 1e-3, 
@@ -180,8 +188,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
 
-                            stabilizing_x = ones(data.dim_x)
-                            env = BendersSeqInOut(data, master, disjunctive_oracle, stabilizing_x; param = benders_param)
+                            env = BendersSeqInOut(data, master, disjunctive_oracle; param = benders_inout_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
                             if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
