@@ -38,7 +38,7 @@ mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
     UFLKnapsackOracle() = new()
 end
 
-function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-8, time_limit = 3600)
+function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-8, time_limit = 3600.0)
     tic = time()
     critical_facility = Vector{Int}(undef, oracle.J)
     for j in 1:oracle.J
@@ -67,12 +67,8 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
 
     # is_in_L should be determined by the sum of t's, must not individually
     is_in_L = sum(oracle.obj_values) >= sum(t_value) + tol ? false : true
-    if is_in_L
-        return true, [Hyperplane(length(x_value), oracle.J)], t_value
-    end
 
     hyperplanes = Vector{Hyperplane}()
-    
     for j in customers
         k = critical_facility[j] 
         sorted_indices = oracle.sorted_indices[j]
@@ -85,6 +81,10 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
             h.a_x[sorted_indices[i]] = -(c_sorted[k] - c_sorted[i])
         end
         push!(hyperplanes, h)
+    end
+
+    if is_in_L
+        return !(oracle.oracle_param.slim) ? (true, hyperplanes, t_value) : (true, [aggregate(hyperplanes)], t_value)
     end
     return !(oracle.oracle_param.slim) ? (false, hyperplanes, oracle.obj_values) : (false, [aggregate(hyperplanes)], oracle.obj_values)
 end
