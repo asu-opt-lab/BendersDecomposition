@@ -83,9 +83,9 @@ function update_upper_bound_and_gap!(state::BendersSeqState, log::BendersSeqLog,
     state.gap = (state.UB - state.LB) / abs(state.UB) * 100
 end
 
-function print_iteration_info(state::BendersSeqState, log::BendersSeqLog)
-    @printf("Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.3f%% | Time: (M: %6.2f, S: %6.2f, Total: %6.2f) \n",
-           log.n_iter, state.LB, state.UB, state.gap, 
+function print_iteration_info(state::BendersSeqState, log::BendersSeqLog; prefix="")
+    @printf("%s Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.3f%% | Time: (M: %6.2f, S: %6.2f, Total: %6.2f) \n",
+           prefix, log.n_iter, state.LB, state.UB, state.gap, 
            state.master_time, state.oracle_time, state.total_time)
 end
 

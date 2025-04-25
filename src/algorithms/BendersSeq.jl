@@ -25,7 +25,7 @@ end
 """
 Run BendersSeq
 """
-function solve!(env::BendersSeq) 
+function solve!(env::BendersSeq; iter_prefix = "") 
     log = BendersSeqLog()
     param = env.param
     try    
@@ -43,7 +43,7 @@ function solve!(env::BendersSeq)
                     elseif termination_status(env.master.model) == TIME_LIMIT
                         throw(TimeLimitException("Time limit reached during master solving"))
                     else 
-                        throw(UnexpectedModelStatusException("Master: $(termination_status(env.master.model))"))
+                        throw(UnexpectedModelStatusException("BendersSeq: master $(termination_status(env.master.model))"))
                         # if infeasible, then the milp is infeasible
                     end
                 end
@@ -60,7 +60,7 @@ function solve!(env::BendersSeq)
                 end
 
                 record_iteration!(log, state)
-                param.verbose && print_iteration_info(state, log)
+                param.verbose && print_iteration_info(state, log; prefix=iter_prefix)
             end
 
             # Check termination criteria
@@ -79,8 +79,12 @@ function solve!(env::BendersSeq)
             env.obj_value = log.iterations[end].LB
         elseif typeof(e) <: UnexpectedModelStatusException
             env.termination_status = InfeasibleOrNumericalIssue()
+            @warn e.msg
         else
             rethrow()  
+        end
+        if env.param.verbose
+            println("Terminated with $(env.termination_status)")
         end
         return to_dataframe(log)
     end

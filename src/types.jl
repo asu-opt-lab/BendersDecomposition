@@ -77,9 +77,7 @@ abstract type TerminationStatus end
 struct NotSolved <: TerminationStatus end
 struct TimeLimit <: TerminationStatus end
 struct Optimal <: TerminationStatus end
-struct InfeasibleOrNumericalIssue <: TerminationStatus
-    msg::String 
-end
+struct InfeasibleOrNumericalIssue <: TerminationStatus end
 
 # ============================================================================
 # Error Exceptions
