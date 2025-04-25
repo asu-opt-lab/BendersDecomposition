@@ -67,7 +67,7 @@ function solve!(env::BendersSeq)
             is_terminated(state, log, param) && break
 
             # Add generated cuts to master
-            @constraint(env.master.model, 0 .>= cuts)
+            @constraint(env.master.model, 0.0 .>= cuts)
         end
         env.termination_status = Optimal()
         env.obj_value = log.iterations[end].LB
