@@ -6,7 +6,6 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
 
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
-    other_constraints::Vector{ConstraintRef}
 
     function ClassicalOracle(data::Data; 
                              scen_idx::Int=-1, 
@@ -19,17 +18,15 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
         @variable(model, x[1:data.dim_x])
         @constraint(model, fix_x, x .== 0)
 
-        other_constr = Vector{ConstraintRef}()
-
         assign_attributes!(model, solver_param)
         
-        new(oracle_param, model, fix_x, other_constr)
+        new(oracle_param, model, fix_x)
     end
 
     ClassicalOracle() = new()
 end
 
-function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-8, time_limit = 3600)
+function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-9, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     optimize!(oracle.model)
@@ -41,29 +38,32 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
     if status == FEASIBLE_POINT
         sub_obj_val = objective_value(oracle.model)
 
-        
         a_x = dual.(oracle.fixed_x_constraints) 
         a_t = [-1.0] 
         a_0 = sub_obj_val - a_x'*x_value 
-        if sub_obj_val >= t_value[1] + tol
+        if sub_obj_val >= t_value[1] * (1 + tol)
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
-            return true, [Hyperplane(a_x, a_t, a_0)], t_value
+            return true, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         end
 
     elseif status == INFEASIBILITY_CERTIFICATE
         if has_duals(oracle.model)
+            dual_sub_obj_val = dual_objective_value(oracle.model)
+            @info "dual_sub_obj_val = $dual_sub_obj_val"
             a_x = dual.(oracle.fixed_x_constraints)
             a_t = [0.0]
-            a_0 = dual.(oracle.other_constraints)' * normalized_rhs.(oracle.other_constraints)
-            return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
+            a_0 = dual_sub_obj_val - a_x'*x_value 
+            if dual_sub_obj_val >= tol
+                return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
+            else
+                return true, [Hyperplane(a_x, a_t, a_0)], [Inf]
+            end
         end
     else
         throw(UnexpectedModelStatusException("ClassicalOracle: $(status)"))
     end
 end
-
-
 
 
 
