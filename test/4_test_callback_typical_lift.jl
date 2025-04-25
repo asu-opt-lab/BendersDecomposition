@@ -14,8 +14,7 @@ using BendersDecomposition
 import BendersDecomposition: generate_cuts
 import Random
 global_logger(ConsoleLogger(stderr, Logging.Debug))
-
-Random.seed!(1218)
+# Random.seed!(1218)
 
 # -----------------------------------------------------------------------------
 # Common test utilities and parameter settings
