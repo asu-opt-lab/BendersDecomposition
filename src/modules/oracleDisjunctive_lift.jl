@@ -208,11 +208,15 @@ end
 
 function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_indices::Vector{Int}) # lifting
     # remove previously added lifting constraints
-    haskey(dcglp, :con_zeta) && !isempty(dcglp[:con_zeta]) && (delete(dcglp, vcat(dcglp[:con_zeta]...)); unregister(dcglp, :con_zeta))
-    haskey(dcglp, :con_xi) && !isempty(dcglp[:con_xi]) && (delete(dcglp, vcat(dcglp[:con_xi]...)); unregister(dcglp, :con_xi))
+    haskey(dcglp, :con_zeta) && (delete.(dcglp, vcat(dcglp[:con_zeta]...)); unregister(dcglp, :con_zeta))
+    haskey(dcglp, :con_xi) && (delete.(dcglp, vcat(dcglp[:con_xi]...)); unregister(dcglp, :con_xi))
 
     # add lifting constraints
-    # dcglp[:con_zeta], dcglp[:con_xi] = Vector{ConstraintRef}(), Vector{ConstraintRef}()
+
+    # dcglp[:con_zeta] = Vector{ConstraintRef}[ConstraintRef[] for _ in 1:2]
+    # dcglp[:con_xi] = Vector{ConstraintRef}[ConstraintRef[] for _ in 1:2]
+    # println("dual of empty", dual.(dcglp[:con_zeta][1,:]))
+
     !isempty(zero_indices) && @constraint(dcglp, con_zeta[i in 1:2, j=1:length(zero_indices)], 0>= dcglp[:omega_x][i, zero_indices[j]])
     !isempty(one_indices) && @constraint(dcglp, con_xi[i in 1:2, j=1:length(one_indices)], 0>= dcglp[:omega_0][i] - dcglp[:omega_x][i, one_indices[j]])
 end
