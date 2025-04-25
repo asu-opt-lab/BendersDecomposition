@@ -106,7 +106,9 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 
     # for approximate oracle, add fixing constraints here :con_xi_1, :con_xi_2 and :con_zeta_1, :con_zeta_2
-    # add to solve_dcglp! an optional argument lift::Bool
+    # when length(zero_indices) == 0, dcglp[:con_xi_1] = Vector{ConstraintRef}(), dcglp[:con_xi_2] = Vector{ConstraintRef}()
+    # same for the case of lenth(one_indices) == 0
+    # add to solve_dcglp! an optional argument lift::Bool; 
 
     return solve_dcglp!(oracle, x_value, t_value; time_limit = time_limit)
 end

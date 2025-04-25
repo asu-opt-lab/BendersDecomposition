@@ -16,7 +16,12 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
         state.total_time = @elapsed begin
             state.master_time = @elapsed begin
                 set_time_limit_sec(dcglp, get_sec_remaining(log.start_time, time_limit))
-                optimize!(dcglp)
+                try 
+                    optimize!(dcglp)
+                catch e
+                    @warn "Returning typical Benders cuts due to unexpected error encountered when optimizing dcglp master: $e"
+                    return generate_cuts(typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
+                end
                 if is_solved_and_feasible(dcglp; allow_local = false, dual = true)
                     for i=1:2
                         state.values[:ω_x][i] = value.(dcglp[:omega_x][i,:])
@@ -82,6 +87,16 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
 
     if log.iterations[end].LB >= zero_tol
         gamma_x, gamma_t, gamma_0 = oracle.oracle_param.strengthened ? generate_strengthened_disjunctive_cuts(oracle.dcglp) : generate_disjunctive_cut(oracle.dcglp)
+        
+        # if gamma_0 + gamma_x' * x_opt + gamma_t' * t_opt > 0.0
+        #     @warn gamma_0 + gamma_x' * x_opt + gamma_t' * t_opt
+        # end
+
+        # for h in hyperplanes
+        #     if h.a_0 + h.a_x' * x_opt + h.a_t' * t_opt > 0.0
+        #         @info h.a_0 + h.a_x' * x_opt + h.a_t' * t_opt
+        #     end
+        # end
 
         h = Hyperplane(gamma_x, gamma_t, gamma_0)
         push!(hyperplanes, h)
@@ -122,11 +137,14 @@ function generate_strengthened_disjunctive_cuts(dcglp::Model; zero_tol = 1e-5)
     gamma_x = dual.(dcglp[:conx])
     gamma_t = dual.(dcglp[:cont])
     gamma_0 = dual(dcglp[:con0])
+    delta_kappa = dual.(dcglp[:condelta][1,:])
+    delta_nu = dual.(dcglp[:condelta][2,:])
 
-    # println("DCGLP Sigma Values: [σ₁: $σ₁, σ₂: $σ₂]")
-
-    a₁ = -gamma_x .- dual.(dcglp[:condelta][1])
-    a₂ = -gamma_x .- dual.(dcglp[:condelta][2])
+    @debug "dcglp strengthening - sigma values: [σ₁: $σ₁, σ₂: $σ₂]"
+    @debug "dcglp strengthening - delta values: [delta₁: $delta_kappa, delta₂: $delta_nu]"
+    
+    a₁ = -gamma_x .- delta_kappa
+    a₂ = -gamma_x .- delta_nu
     σ_sum = σ₂ + σ₁
     if σ_sum >= zero_tol
         m = (a₁ .- a₂) / σ_sum

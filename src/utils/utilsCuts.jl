@@ -1,3 +1,4 @@
+export Hyperplane, aggregate
 """
 hyperplane related structure and functions
 """
