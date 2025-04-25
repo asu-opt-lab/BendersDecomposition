@@ -83,8 +83,8 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
 
     if log.iterations[end].LB >= zero_tol
         # lifting: we can shorten it by merging the functions and receive argument (lift), but the merged function will become longer
-        if oracle.oracle_param.lift == true
-            gamma_x, gamma_t, gamma_0 = oracle.oracle_param.strengthened ? generate_strengthened_lifted_disjunctive_cuts(oracle.dcglp, zero_indices, one_indices) : generate_lifted_disjunctive_cut(oracle.dcglp, zero_indices, one_indices)
+        if oracle.oracle_param.lift == true && (!isempty(zero_indices) && !isempty(one_indices))
+            gamma_x, gamma_t, gamma_0 = oracle.oracle_param.strengthened ? generate_strengthened_lifted_disjunctive_cuts(oracle.dcglp, oracle.oracle_param.norm, zero_indices, one_indices) : generate_lifted_disjunctive_cut(oracle.dcglp, oracle.oracle_param.norm, zero_indices, one_indices)
         else
             gamma_x, gamma_t, gamma_0 = oracle.oracle_param.strengthened ? generate_strengthened_disjunctive_cuts(oracle.dcglp) : generate_disjunctive_cut(oracle.dcglp)
         end
@@ -128,11 +128,15 @@ function generate_strengthened_disjunctive_cuts(dcglp::Model; zero_tol = 1e-5)
     gamma_x = dual.(dcglp[:conx])
     gamma_t = dual.(dcglp[:cont])
     gamma_0 = dual(dcglp[:con0])
+    delta_kappa = dual.(dcglp[:condelta][1,:])
+    delta_nu = dual.(dcglp[:condelta][2,:])
 
-    # println("DCGLP Sigma Values: [σ₁: $σ₁, σ₂: $σ₂]")
+    @debug "dcglp strengthening - sigma values: [σ₁: $σ₁, σ₂: $σ₂]"
+    # @debug "dcglp strengthening - delta values: [delta₁: $delta_kappa, delta₂: $delta_nu]"
+    gamma_preve = deepcopy(gamma_x)
 
-    a₁ = -gamma_x .- dual.(dcglp[:condelta][1])
-    a₂ = -gamma_x .- dual.(dcglp[:condelta][2])
+    a₁ = -gamma_x .- delta_kappa
+    a₂ = -gamma_x .- delta_nu
     σ_sum = σ₂ + σ₁
     if σ_sum >= zero_tol
         m = (a₁ .- a₂) / σ_sum
@@ -140,41 +144,175 @@ function generate_strengthened_disjunctive_cuts(dcglp::Model; zero_tol = 1e-5)
         m_ub = ceil.(m)
         gamma_x = -min.(a₁-σ₁*m_lb, a₂+σ₂*m_ub)
     end
-    
+    println(isapprox(gamma_x, gamma_preve, atol=1e-5))
     return gamma_x, gamma_t, gamma_0
 end
 
-function generate_lifted_disjunctive_cut(oracle::DisjunctiveOracle, zero_indices::Vector{Float64}, one_indices::Vector{Float64})
+# function generate_lifted_disjunctive_cut(dcglp::Model, norm::AbstractNorm, zero_indices::Vector{Int64}, one_indices::Vector{Int64}) # lifting
+#     # we can remove gamma_x,t,0 if we use generate_disjunctive_cut default outside this function.
+#     gamma_x, gamma_t, gamma_0 = generate_disjunctive_cut(dcglp)
+#     gamma_x = -gamma_x
+#     @debug "gamma_x: $gamma_x"  
+#     @debug "gamma_t: $gamma_t"
+#     @debug "gamma_0: $gamma_0"
+
+#     # if we want to handle the case when set is empty, then maybe we have to generate arbitrary zero vectors
+#     zeta_k = dual.(dcglp[:con_zeta][1,:]) # zero indices
+#     zeta_v = dual.(dcglp[:con_zeta][2,:]) # zero indices
+#     xi_k = dual.(dcglp[:con_xi][1,:]) # one indices
+#     xi_v = dual.(dcglp[:con_xi][2,:]) # one indices
+
+#     @debug "zeta_k: $zeta_k"
+#     @debug "zeta_v: $zeta_v"
+#     @debug "xi_k: $xi_k"
+#     @debug "xi_v: $xi_v"
+
+#     # coefficients for lifted cut
+#     lifted_gamma_0 = gamma_0 - sum(max.(xi_k, xi_v))
+#     lifted_gamma_x = copy(gamma_x)
+
+#     for (i, idx) in enumerate(zero_indices)
+#         lifted_gamma_x[idx] = gamma_x[idx] + max(zeta_k[i], zeta_v[i])
+#     end
+#     for (i, idx) in enumerate(one_indices)
+#         lifted_gamma_x[idx] = gamma_x[idx] - max(xi_k[i],xi_v[i])
+#     end
+
+#     # lifted_gamma_x[zero_indices] = -gamma_x[zero_indices] .+ max.(zeta_k, zeta_v)
+#     # lifted_gamma_x[one_indices] = -gamma_x[one_indices] .- max.(xi_k, xi_v)
+
+#     # compute normalization value
+#     if norm.p == 1.0
+#         norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), Inf)
+#     elseif norm.p == 2.0
+#         norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), 2)
+#     elseif norm.p == Inf
+#         norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), 1.0)
+#     else
+#         throw(AlgorithmException("Unsupported norm type: $(typeof(norm))"))
+#     end
+#     norm_value = max(1.0, norm_value)
+
+#     # normalize the coefficients
+#     lifted_gamma_x = lifted_gamma_x ./ norm_value
+#     gamma_t = gamma_t ./ norm_value
+#     lifted_gamma_0 = lifted_gamma_0 ./ norm_value
+
+#     @debug "lifted_gamma_x $lifted_gamma_x"
+#     @debug "gamma_t $gamma_t"
+#     @debug "lifted_gamma_0 $lifted_gamma_0"
+    
+#     return -lifted_gamma_x, gamma_t, lifted_gamma_0
+# end
+
+# function generate_strengthened_lifted_disjunctive_cuts(dcglp::Model, norm::AbstractNorm, zero_indices::Vector{Int64}, one_indices::Vector{Int64}; zero_tol = 1e-5)
+#     # we can remove gamma_x,t,0 if we use generate_disjunctive_cut default outside this function.
+#     gamma_x = -dual.(dcglp[:conx])
+#     gamma_t = -dual.(dcglp[:cont])
+#     gamma_0 = dual(dcglp[:con0])
+
+#     # if we want to handle the case when set is empty, then maybe we have to generate arbitrary zero vectors
+#     zeta_k = dual.(dcglp[:con_zeta][1,:]) # zero indices
+#     zeta_v = dual.(dcglp[:con_zeta][2,:]) # zero indices
+#     xi_k = dual.(dcglp[:con_xi][1,:]) # one indices
+#     xi_v = dual.(dcglp[:con_xi][2,:]) # one indices
+
+#     # coefficients for lifted cut
+#     lifted_gamma_0 = gamma_0 - sum(max.(xi_k, xi_v))
+#     lifted_gamma_x = copy(gamma_x)
+
+#     for (i, idx) in enumerate(zero_indices)
+#         lifted_gamma_x[idx] = gamma_x[idx] + max(zeta_k[i], zeta_v[i])
+#     end
+#     for (i, idx) in enumerate(one_indices)
+#         lifted_gamma_x[idx] = gamma_x[idx] - max(xi_k[i],xi_v[i])
+#     end
+
+#     # compute normalization value
+#     if norm.p == 1.0
+#         _norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), Inf)
+#     elseif norm.p == 2.0
+#         _norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), 2)
+#     elseif norm.p == Inf
+#         _norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), 1.0)
+#     else
+#         throw(AlgorithmException("Unsupported norm type: $(typeof(norm))"))
+#     end
+#     norm_value = max(1.0, _norm_value)
+
+#     # normalize the coefficients
+#     lifted_gamma_x = lifted_gamma_x ./ norm_value #here we did not multiply by -1 (different from w/o strengthened)
+#     gamma_t = gamma_t ./ norm_value
+#     lifted_gamma_0 = lifted_gamma_0 ./ norm_value
+
+#     gamma_preve = deepcopy(lifted_gamma_x)
+    
+#     σ₁ = dual(dcglp[:con_split_kappa])./norm_value
+#     σ₂ = dual(dcglp[:con_split_nu])./norm_value
+
+#     if abs(σ₁) <= zero_tol && abs(σ₂) <= zero_tol
+#         return -lifted_gamma_x, -gamma_t, lifted_gamma_0
+#     end
+
+#     @debug "dcglp strengthening - sigma values: [σ₁: $σ₁, σ₂: $σ₂]"
+
+#     a₁ = lifted_gamma_x .- dual.(dcglp[:condelta][1,:]) ./ norm_value
+#     a₂ = lifted_gamma_x .- dual.(dcglp[:condelta][2,:]) ./ norm_value
+#     for (i, idx) in enumerate(zero_indices)
+#         a₁[idx] += (zeta_k[i] - max(zeta_k[i],zeta_v[i]))./norm_value
+#         a₂[idx] += (zeta_k[i] - max(zeta_k[i],zeta_v[i]))./norm_value
+#     end
+
+#     σ_sum = σ₂ + σ₁
+#     if σ_sum >= zero_tol
+#         m = (a₁ .- a₂) / σ_sum
+#         m_lb = floor.(m)
+#         m_ub = ceil.(m)
+#         lifted_gamma_x = min.(a₁-σ₁*m_lb, a₂+σ₂*m_ub)
+#     end
+
+#     println(isapprox(lifted_gamma_x, gamma_preve, atol=1e-5))
+#     return -lifted_gamma_x, -gamma_t, lifted_gamma_0
+# end
+
+
+function generate_lifted_disjunctive_cut(dcglp::Model, norm::AbstractNorm, zero_indices::Vector{Int64}, one_indices::Vector{Int64})
     # we can remove gamma_x,t,0 if we use generate_disjunctive_cut default outside this function.
-    gamma_x, gamma_t, gamma_0 = generate_disjunctive_cut(oracle.dcglp)
-    @debug gamma_x
-    @debug gamma_t
-    @debug gamma_0
-    error("bp")
-    zeta_k = dual.(dcglp.model[:con_zeta][1]) # zero indices
-    zeta_v = dual.(dcglp.model[:con_zeta][2]) # zero indices
-    xi_k = dual.(dcglp.model[:con_xi][1]) # one indices
-    xi_v = dual.(dcglp.model[:con_xi][2]) # one indices
+    gamma_x, gamma_t, gamma_0 = generate_disjunctive_cut(dcglp)
+    @debug "gamma_x: $gamma_x"  
+    @debug "gamma_t: $gamma_t"
+    @debug "gamma_0: $gamma_0"
+
+    # if we want to handle the case when set is empty, then maybe we have to generate arbitrary zero vectors
+    zeta_k = dual.(dcglp[:con_zeta][1,:]) # zero indices
+    zeta_v = dual.(dcglp[:con_zeta][2,:]) # zero indices
+    xi_k = dual.(dcglp[:con_xi][1,:]) # one indices
+    xi_v = dual.(dcglp[:con_xi][2,:]) # one indices
+
+    @debug "zeta_k: $zeta_k"
+    @debug "zeta_v: $zeta_v"
+    @debug "xi_k: $xi_k"
+    @debug "xi_v: $xi_v"
 
     lifted_gamma_0 = gamma_0 - sum(max.(xi_k, xi_v))
     lifted_gamma_x = zeros(Float64, length(gamma_x))
     lifted_gamma_x .= -gamma_x
 
-    for (i, idx) in enumerate(zeros_indices)
+    for (i, idx) in enumerate(zero_indices)
         lifted_gamma_x[idx] = -gamma_x[idx] + max(zeta_k[i], zeta_v[i])
     end
-    for (i, idx) in enumerate(ones_indices)
+    for (i, idx) in enumerate(one_indices)
         lifted_gamma_x[idx] = -gamma_x[idx] - max(xi_k[i],xi_v[i])
     end
-    # lift_gamma_x[zeros_indices] = -gamma_x[zeros_indices] .+ max.(zeta_k, zeta_v)
-    # lifted_gamma_x[ones_indices] = -gamma_x[ones_indices] .- max.(xi_k, xi_v)
+    # lifted_gamma_x[zero_indices] = -gamma_x[zero_indices] .+ max.(zeta_k, zeta_v)
+    # lifted_gamma_x[one_indices] = -gamma_x[one_indices] .- max.(xi_k, xi_v)
 
-    if norm_type == L1Norm()
-        _norm_value = norm(vcat(lifted_gamma_x, gamma_t), 1)
-    elseif norm_type == L2Norm()
-        _norm_value = norm(vcat(lifted_gamma_x, gamma_t), 2)
+    if norm.p == 1.0
+        _norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), Inf)
+    elseif norm.p == 2.0
+        _norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), 2.0)
     else
-        _norm_value = norm(vcat(lifted_gamma_x, gamma_t), Inf)
+        _norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), 1.0)
     end
     # norm_value = norm(vcat(lifted_gamma_x, gamma_t), norm_type == L1Norm() ? 1 : norm_type == L2Norm() ? 2 : norm_type == LInfNorm() ? Inf : error("Unsupported norm_type: $norm_type"))
     norm_value = max(1.0, _norm_value)
@@ -183,8 +321,78 @@ function generate_lifted_disjunctive_cut(oracle::DisjunctiveOracle, zero_indices
     gamma_t = gamma_t ./ norm_value
     lifted_gamma_0 = lifted_gamma_0 ./ norm_value
 
+    @debug "lifted_gamma_x $lifted_gamma_x"
+    @debug "gamma_t $gamma_t"
+    @debug "lifted_gamma_0 $lifted_gamma_0"
 
     return lifted_gamma_x, gamma_t, lifted_gamma_0
 end
 
+function generate_strengthened_lifted_disjunctive_cuts(dcglp::Model, norm::AbstractNorm, zero_indices::Vector{Int64}, one_indices::Vector{Int64}; zero_tol = 1e-9)
+    # we can remove gamma_x,t,0 if we use generate_disjunctive_cut default outside this function.
+    gamma_x, gamma_t, gamma_0 = generate_disjunctive_cut(dcglp)
 
+    # if we want to handle the case when set is empty, then maybe we have to generate arbitrary zero vectors
+    zeta_k = dual.(dcglp[:con_zeta][1,:]) # zero indices
+    zeta_v = dual.(dcglp[:con_zeta][2,:]) # zero indices
+    xi_k = dual.(dcglp[:con_xi][1,:]) # one indices
+    xi_v = dual.(dcglp[:con_xi][2,:]) # one indices
+
+    # coefficients for lifted cut
+    lifted_gamma_0 = gamma_0 - sum(max.(xi_k, xi_v))
+    lifted_gamma_x = zeros(Float64, length(gamma_x))
+    lifted_gamma_x .= -gamma_x
+    
+    for (i, idx) in enumerate(zero_indices)
+        lifted_gamma_x[idx] = -gamma_x[idx] + max(zeta_k[i], zeta_v[i])
+    end
+    for (i, idx) in enumerate(one_indices)
+        lifted_gamma_x[idx] = -gamma_x[idx] - max(xi_k[i],xi_v[i])
+    end
+
+    # compute normalization value
+    if norm.p == 1.0
+        _norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), Inf)
+    elseif norm.p == 2.0
+        _norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), 2.0)
+    elseif norm.p == Inf
+        _norm_value = LinearAlgebra.norm(vcat(lifted_gamma_x, gamma_t), 1.0)
+    else
+        throw(AlgorithmException("Unsupported norm type: $(typeof(norm))"))
+    end
+    norm_value = max(1.0, _norm_value)
+
+    # normalize the coefficients
+    gamma_t = gamma_t ./ norm_value
+    lifted_gamma_0 = lifted_gamma_0 ./ norm_value
+
+    gamma_preve = deepcopy(lifted_gamma_x)
+    
+    σ₁ = dual(dcglp[:con_split_kappa])
+    σ₂ = dual(dcglp[:con_split_nu])
+
+    @debug "dcglp strengthening - sigma values: [σ₁: $σ₁, σ₂: $σ₂]"
+
+    delta_kappa = dual.(dcglp[:condelta][1,:])
+    delta_nu = dual.(dcglp[:condelta][2,:])
+
+    a₁ = lifted_gamma_x .- delta_kappa
+    a₂ = lifted_gamma_x .- delta_nu 
+    for (i, idx) in enumerate(zero_indices)
+        a₁[idx] += (zeta_k[i] - max(zeta_k[i],zeta_v[i]))
+        a₂[idx] += (zeta_k[i] - max(zeta_k[i],zeta_v[i]))
+    end
+
+    σ_sum = σ₂ + σ₁
+    if σ_sum >= zero_tol
+        m = (a₁ .- a₂) / σ_sum
+        m_lb = floor.(m)
+        m_ub = ceil.(m)
+        lifted_gamma_x = -(min.(a₁-σ₁*m_lb, a₂+σ₂*m_ub))./ norm_value
+    else
+        lifted_gamma_x = -lifted_gamma_x ./ norm_value
+    end
+
+    println(isapprox(lifted_gamma_x, gamma_preve, atol=1e-5))
+    return lifted_gamma_x, gamma_t, lifted_gamma_0
+end
