@@ -58,13 +58,13 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
             critical_facility[j] = oracle.oracle_param.add_only_violated_cuts ? -1 : k
         end
     end
-
+    
     if get_sec_remaining(tic, time_limit) <= 0.0
         throw(TimeLimitException("Time limit reached during cut generation"))
     end
 
     customers = findall(x -> x != -1, critical_facility)
-    
+
     # is_in_L should be determined by the sum of t's, must not individually
     is_in_L = sum(oracle.obj_values) >= sum(t_value) + tol ? false : true
 
@@ -73,7 +73,7 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
         k = critical_facility[j] 
         sorted_indices = oracle.sorted_indices[j]
         c_sorted = oracle.sorted_cost_demands[j]
-
+        
         h = Hyperplane(length(x_value), oracle.J)
         h.a_t[j] = -1.0
         h.a_0 = c_sorted[k]
@@ -90,10 +90,13 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
 end
 
 function find_critical_item(c::Vector{Float64}, x::Vector{Float64})
-    cumsum_x = cumsum(x)
-    k = findfirst(>=(1.0), cumsum_x)
-    if k == nothing 
-        throw(AlgorithmException("`k` cannot be `nothing` as sum(x) >= 2 is enforced. Check the models."))
+    
+    sum_x::Float64 = 0.0
+    for (idx, val) in enumerate(x)
+        sum_x += val
+        if sum_x >= 1.0
+            return idx
+        end
     end
-    return k
+    throw(AlgorithmException("`k` cannot be `nothing` as sum(x) >= 2 is enforced. Check the models."))
 end

@@ -12,10 +12,8 @@ export DisjunctiveCutsAppendRule, NoDisjunctiveCuts, AllDisjunctiveCuts, Disjunc
 export SplitIndexSelectionRule, RandomFractional, MostFractional, LargestFractional
 export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
 export TimeLimitException, UnexpectedModelStatusException, UndefError, AlgorithmException
-export Hyperplane, aggregate
 
 
-abstract type AbstractData end
 abstract type AbstractBendersDecomposition end
 abstract type AbstractMip end
 abstract type AbstractMaster end
@@ -32,7 +30,9 @@ abstract type AbstractOracleParam end
 
 # ============================================================================
 # Global data type; Problem Data is optional; user can define their own structure for problem-specific data
+# To-Do: think about the type for `problem`. Should we remove `AbstractData`?
 # ============================================================================
+abstract type AbstractData end
 struct Data
     dim_x::Int
     dim_t::Int
@@ -42,7 +42,7 @@ struct Data
 end
 
 # ============================================================================
-# Normalization
+# Normalization type for CGLP
 # ============================================================================
 abstract type AbstractNorm end
 struct StandardNorm <: AbstractNorm end
@@ -54,7 +54,7 @@ mutable struct LpNorm <: AbstractNorm
 end
 
 # ============================================================================
-# Norm Types
+# Rules for constructing a split set # To-Do: change SplitIndexSelectionRule to SplitSelectionRule
 # ============================================================================
 abstract type SplitIndexSelectionRule end
 abstract type SimpleSplit <: SplitIndexSelectionRule end
@@ -62,10 +62,17 @@ struct RandomFractional <: SimpleSplit end
 struct MostFractional <: SimpleSplit end
 struct LargestFractional <: SimpleSplit end
 
-# # ============================================================================
-# # Disjunction System
-# # ============================================================================
+# ============================================================================
+# Rules for appending pre-found disjunctive cuts to dcglp
+# ============================================================================
+abstract type DisjunctiveCutsAppendRule end
+struct NoDisjunctiveCuts <: DisjunctiveCutsAppendRule end
+struct AllDisjunctiveCuts <: DisjunctiveCutsAppendRule end
+struct DisjunctiveCutsSmallerIndices <: DisjunctiveCutsAppendRule end
 
+# ============================================================================
+# Termination Status of Benders Decomposition
+# ============================================================================
 abstract type TerminationStatus end
 struct NotSolved <: TerminationStatus end
 struct TimeLimit <: TerminationStatus end
@@ -74,26 +81,21 @@ struct InfeasibleOrNumericalIssue <: TerminationStatus
     msg::String 
 end
 
+# ============================================================================
+# Error Exceptions
+# ============================================================================
 struct TimeLimitException <: Exception 
     msg::String
 end
-
 struct UnexpectedModelStatusException <: Exception 
     msg::String
 end
-
 struct AlgorithmException <: Exception 
     msg::String
 end
-
 struct UndefError <: Exception 
     msg::String
 end
-
-abstract type DisjunctiveCutsAppendRule end
-struct NoDisjunctiveCuts <: DisjunctiveCutsAppendRule end
-struct AllDisjunctiveCuts <: DisjunctiveCutsAppendRule end
-struct DisjunctiveCutsSmallerIndices <: DisjunctiveCutsAppendRule end
 
 
 
