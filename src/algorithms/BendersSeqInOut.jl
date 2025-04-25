@@ -105,8 +105,12 @@ function solve!(env::BendersSeqInOut)
             env.obj_value = log.iterations[end].LB
         elseif typeof(e) <: UnexpectedModelStatusException
             env.termination_status = InfeasibleOrNumericalIssue()
+            @warn e.msg
         else
             rethrow()  
+        end
+        if env.param.verbose
+            println("Terminated with $(env.termination_status)")
         end
         return to_dataframe(log)
     end

@@ -36,12 +36,12 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
             benders_param = BendersSeqParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
-                            verbose = true
+                            verbose = false
                         )
             benders_inout_param = BendersSeqInOutParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
-                            verbose = true,
+                            verbose = false,
                             stabilizing_x = ones(data.dim_x),
                             α = 0.9,
                             λ = 0.1
@@ -61,7 +61,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
             @testset "Classic oracle" begin
                 @testset "SeqInOut" begin
-                    @info "solving p$i - classical oracle - seqInOut..."
+                    @info "solving UFLP p$i - classical oracle - seqInOut..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -82,7 +82,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                 end
                 
                 @testset "Seq" begin        
-                    @info "solving p$i - classical oracle - seq..."
+                    @info "solving UFLP p$i - classical oracle - seq..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -115,7 +115,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
             @testset "fat knapsack oracle" begin
                 @testset "Seq" begin
-                    @info "solving p$i - fat Knapsack oracle - seq..."
+                    @info "solving UFLP p$i - fat Knapsack oracle - seq..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -136,7 +136,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     # end
                 end
                 @testset "SeqInOut" begin
-                    @info "solving p$i - fat Knapsack oracle - seqInOut..."
+                    @info "solving UFLP p$i - fat Knapsack oracle - seqInOut..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -160,7 +160,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
             @testset "slim knapsack oracle" begin
                 @testset "Seq" begin
-                    @info "solving p$i - slim Knapsack oracle - seq..."
+                    @info "solving UFLP p$i - slim Knapsack oracle - seq..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -182,7 +182,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     # end
                 end
                 @testset "SeqInOut" begin
-                    @info "solving p$i - slim Knapsack oracle - seqInOut..."
+                    @info "solving UFLP p$i - slim Knapsack oracle - seqInOut..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -214,8 +214,8 @@ include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
 include("$(dirname(@__DIR__))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Sequential Benders Tests" begin
-    # instances = setdiff(1:71, [67])
-    instances = 30:35
+    instances = setdiff(1:71, [67])
+    # instances = 30:35
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -235,12 +235,12 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
             benders_param = BendersSeqParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
-                            verbose = true
+                            verbose = false
                         )
             benders_inout_param = BendersSeqInOutParam(;
             time_limit = 200.0,
             gap_tolerance = 1e-6,
-            verbose = true,
+            verbose = false,
             stabilizing_x = ones(data.dim_x),
             α = 0.9,
             λ = 0.1
@@ -260,7 +260,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
 
             @testset "Classic oracle" begin
                 @testset "SeqInOut" begin
-                    @info "solving p$i - classical oracle - seqInOut..."
+                    @info "solving CFLP p$i - classical oracle - seqInOut..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -288,7 +288,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                     # end
                 end
                 @testset "Seq" begin        
-                    @info "solving p$i - classical oracle - seq..."
+                    @info "solving CFLP p$i - classical oracle - seq..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -310,7 +310,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
             end 
             @testset "Knapsack oracle" begin
                 @testset "Seq" begin
-                    @info "solving p$i - knapsack oracle - seq..."
+                    @info "solving CFLP p$i - knapsack oracle - seq..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -329,7 +329,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                     # end
                 end
                 @testset "SeqInOut" begin
-                    @info "solving p$i - knapsack oracle - seqInOut..."
+                    @info "solving CFLP p$i - knapsack oracle - seqInOut..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -379,13 +379,13 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
             benders_param = BendersSeqParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
-                            verbose = true
+                            verbose = false
                         )
 
             benders_inout_param = BendersSeqInOutParam(;
                 time_limit = 200.0,
                 gap_tolerance = 1e-6,
-                verbose = true,
+                verbose = false,
                 stabilizing_x = ones(data.dim_x),
                 α = 0.9,
                 λ = 0.1
@@ -405,7 +405,7 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
 
             @testset "Classic oracle" begin
                 @testset "SeqInOut" begin
-                    @info "solving f25-c50-s64-r10-$i - classical oracle - seqInOut..."
+                    @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle - seqInOut..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -428,7 +428,7 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
                 end
                 
                 @testset "Seq" begin        
-                    @info "solving f25-c50-s64-r10-$i - classical oracle - seq..."
+                    @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle - seq..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -452,7 +452,7 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
             end 
             @testset "Knapsack oracle" begin
                 @testset "SeqInOut" begin
-                    @info "solving f25-c50-s64-r10-$i - knapsack oracle - seqInOut..."
+                    @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - seqInOut..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
@@ -475,7 +475,7 @@ include("$(dirname(@__DIR__))/example/scflp/model.jl")
                 end
                 
                 @testset "Seq" begin        
-                    @info "solving f25-c50-s64-r10-$i - knapsack oracle - seq..."
+                    @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - seq..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
 
