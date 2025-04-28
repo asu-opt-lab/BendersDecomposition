@@ -16,6 +16,7 @@ global_logger(ConsoleLogger(stderr, Logging.Debug))
 # loop parameters
 specialized_benders_param = SpecializedBendersSeqParam(;
                                                         time_limit = 1000.0,
+                                                        lp_gap_tolerance = 1e-9,
                                                         integrality_tolerance = 1e-9,
                                                         verbose = true
                                                         )
@@ -165,9 +166,9 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Specialized Sequential Benders Tests" begin
     # instances = setdiff(1:71, [67])
-    instances = [30]
-    # numerical issue: 25 29 30 35
-    # success: 31 32 34 36 49 51
+    instances = [25 32 34 36 49 51]
+    # numerical issue: 29 30 31 35
+    # success: 25 32 34 36 49 51
     # lp: 1:24, 26:28, 33, 37-48, 50, 52-66, 68-71
     for i in instances
         @testset "Instance: p$i" begin
