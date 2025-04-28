@@ -73,9 +73,9 @@ function solve!(env::BendersSeqInOut)
             
                 # Update state and record information
                 record_iteration!(log, state)
-
-                param.verbose && print_iteration_info(state, log)
             end
+
+            param.verbose && print_iteration_info(state, log)
 
             # Check termination criteria
             is_terminated(state, log, param) && break
