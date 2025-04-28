@@ -27,7 +27,7 @@ Run BendersSeq
 """
 function solve!(env::SpecializedBendersSeq) 
     log = BendersSeqLog()
-    L_param = BendersSeqParam(; time_limit = env.param.time_limit, gap_tolerance = env.param.gap_tolerance, verbose = env.param.verbose)
+    L_param = BendersSeqParam(; time_limit = env.param.time_limit, gap_tolerance = env.param.lp_gap_tolerance, verbose = env.param.verbose)
     L_env = BendersSeq(env.data, env.master, env.oracle.typical_oracles[1]; param = L_param)
 
     try

@@ -78,7 +78,7 @@ mutable struct BendersSeqParam <: AbstractBendersSeqParam
     end
 end
 function update_upper_bound_and_gap!(state::BendersSeqState, log::BendersSeqLog, f::Function)
-    evaluation = f(state.f_x, state.values[:x])
+    evaluation = f(max.(state.values[:t], state.f_x), state.values[:x])
     state.UB = log.n_iter >= 1 ? min(log.iterations[end].UB, evaluation) : evaluation
     state.gap = (state.UB - state.LB) / abs(state.UB) * 100
 end
