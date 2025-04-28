@@ -95,7 +95,7 @@ function generate_optimal_vertex!(env::SpecializedBendersSeq, L_env::AbstractBen
     frac_idx = -1
     for idx in reverse(1:dim_x)
         val = state.values[:x][idx]
-        if !isapprox(abs(val - 0.5), 0.5, atol = 1e-9) 
+        if !isapprox(abs(val - 0.5), 0.5, atol = env.param.integrality_tolerance) 
             frac_idx = idx
             break
         end
@@ -104,6 +104,7 @@ function generate_optimal_vertex!(env::SpecializedBendersSeq, L_env::AbstractBen
 
     ## modify master problem
     env.master.model[:fix_x] = @constraint(env.master.model, [i in frac_idx+1:dim_x], env.master.model[:x][i] == round(state.values[:x][i]))
+    # env.master.model[:fix_x] = @constraint(env.master.model, [i in frac_idx+1:dim_x], env.master.model[:x][i] == state.values[:x][i])
     ## remove and add all disjunctive cuts up to idx
     if haskey(env.master.model, :con_disjunctive)
         delete.(env.master.model, env.master.model[:con_disjunctive]) 
@@ -114,12 +115,15 @@ function generate_optimal_vertex!(env::SpecializedBendersSeq, L_env::AbstractBen
 
     ## solve master again
     solve!(L_env; iter_prefix = " LP aux")
+    if termination_status(L_env.master.model) == ALMOST_INFEASIBLE || termination_status(L_env.master.model) == INFEASIBLE
+
+    end
 
     ## compare the solutions; the optimal obj. val. should match
     LB, x_val, t_val = JuMP.objective_value(env.master.model), value.(env.master.model[:x]), value.(env.master.model[:t])
     @debug "state.LB = $(state.LB) vs LB = $LB"
     @debug "state.values[:x] = $(state.values[:x]) vs x_val = $x_val"
-    # !isapprox(state.LB, LB, rtol = 1e-5) && throw(UnexpectedModelStatusException("SpecializedBendersSeq: fail to generate vertex for P^{k,j}, possibily numerical issue"))
+    !isapprox(state.LB, LB, rtol = 1e-4) && throw(UnexpectedModelStatusException("SpecializedBendersSeq: fail to generate vertex for P^{k,j}, possibily numerical issue"))
     state.LB = LB
     state.values[:x] = x_val
     state.values[:t] = t_val
