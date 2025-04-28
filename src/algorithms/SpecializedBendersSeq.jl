@@ -34,7 +34,6 @@ function solve!(env::SpecializedBendersSeq)
         while true
             state = BendersSeqState()
             state.total_time = @elapsed begin
-
                 ## add all found disjunctive cuts to master
                 all_disj_cuts = hyperplanes_to_expression(env.master.model, env.oracle.disjunctiveCuts, env.master.model[:x], env.master.model[:t])    
                 @constraint(env.master.model, con_disjunctive, 0.0 .>= all_disj_cuts)
@@ -60,6 +59,7 @@ function solve!(env::SpecializedBendersSeq)
                 state.is_in_L && throw(UnexpectedModelStatusException("SpecializedBendersSeq: τ=0 at fractional point, possibily numerical issue"))
                 
                 record_iteration!(log, state)
+
                 env.param.verbose && print_iteration_info(state, log)
 
                 # Add generated cuts to master

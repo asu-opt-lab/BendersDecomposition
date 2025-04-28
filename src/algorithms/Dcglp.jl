@@ -84,8 +84,9 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
             end
 
             record_iteration!(log, state)
-            oracle.param.verbose && print_iteration_info(state, log)
         end
+        
+        oracle.param.verbose && print_iteration_info(state, log)
 
         check_lb_improvement!(state, log; zero_tol = zero_tol)
 

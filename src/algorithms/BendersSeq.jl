@@ -60,8 +60,8 @@ function solve!(env::BendersSeq; iter_prefix = "")
                 end
 
                 record_iteration!(log, state)
-                param.verbose && print_iteration_info(state, log; prefix=iter_prefix)
             end
+            param.verbose && print_iteration_info(state, log; prefix=iter_prefix)
 
             # Check termination criteria
             is_terminated(state, log, param) && break
