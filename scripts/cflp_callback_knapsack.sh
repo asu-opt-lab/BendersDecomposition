@@ -3,25 +3,17 @@
 
 # Define variables to make the script more readable and maintainable
 
-# config_path="scripts/config/config_cflp_benchmark.toml"
-# OUTPUT_DIR="experiments_appro_again/cflp_benchmark_classical_gap1"
-
-JOBSCRIPT_DIR="scripts"
-# OUTPUT_DIR="experiments_new/cflp_callback_benchmark_yesrootnode"
-# OUTPUT_DIR="experiments_all/cflp_frequency"
-
-config_path="scripts/config/config_cflp_disjunctive_1.toml"
-OUTPUT_DIR="experiments_appro_app_test/cflp_disjunctive_4500node_knapsack_gap50_TTF_perturbed_2"
-# OUTPUT_DIR="experiments_appro_new_new/cflp_disjunctive_classical_700"
+# OUTPUT_DIR="experiments_appro_app_test/cflp_disjunctive_4500node_knapsack_gap50_TTF_perturbed_2"
+OUTPUT_DIR="experiments/round1/cflp_callback_knapsack_700_3600s"
+# Define job script directory
+JOBSCRIPT_DIR="./job_scripts"
 
 # Create necessary directories
 mkdir -p "${OUTPUT_DIR}"
+mkdir -p "${JOBSCRIPT_DIR}"
 
 # Copy src directory to output directory
-cp -r src "${OUTPUT_DIR}/src"
-
-# Copy config file to output directory
-cp "${config_path}" "${OUTPUT_DIR}/config.toml"
+cp -r scripts/cflp_callback_knapsack.jl "${OUTPUT_DIR}/cflp_callback_knapsack.jl"
 
 # Define an array of instance names
 instances=(
@@ -86,9 +78,9 @@ instances=(
     # "f600-c1500-r10-1" "f600-c1500-r10-2" "f600-c1500-r10-3" "f600-c1500-r10-4" "f600-c1500-r10-5"
 
     # 700 facilities, 700 customers
-    "f700-c700-r3-1" "f700-c700-r3-2" "f700-c700-r3-3" "f700-c700-r3-4" #"f700-c700-r3-5"
-    # "f700-c700-r5-1" "f700-c700-r5-2" "f700-c700-r5-3" "f700-c700-r5-4" "f700-c700-r5-5"
-    # "f700-c700-r10-1" "f700-c700-r10-2" "f700-c700-r10-3" "f700-c700-r10-4" "f700-c700-r10-5"
+    "f700-c700-r3-1" "f700-c700-r3-2" "f700-c700-r3-3" "f700-c700-r3-4" "f700-c700-r3-5"
+    "f700-c700-r5-1" "f700-c700-r5-2" "f700-c700-r5-3" "f700-c700-r5-4" "f700-c700-r5-5"
+    "f700-c700-r10-1" "f700-c700-r10-2" "f700-c700-r10-3" "f700-c700-r10-4" "f700-c700-r10-5"
 
     # # 1000 facilities, 1000 customers
     # "f1000-c1000-r3-1" "f1000-c1000-r3-2" "f1000-c1000-r3-3" "f1000-c1000-r3-4" "f1000-c1000-r3-5"
@@ -122,7 +114,7 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=. scripts/cflp_callback.jl --instance ${instance} --output_dir ${OUTPUT_DIR} --config ${config_path}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=. scripts/cflp_callback_knapsack.jl --instance ${instance} --output_dir ${OUTPUT_DIR}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"
