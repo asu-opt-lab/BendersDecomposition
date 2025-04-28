@@ -8,6 +8,7 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
     add_benders_cuts_to_master::Bool
     fraction_of_benders_cuts_to_master::Float64
     reuse_dcglp::Bool
+    lift::Bool # lifting
 
     function DisjunctiveOracleParam(; 
                                     norm::AbstractNorm = LpNorm(Inf), 
@@ -15,10 +16,11 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
                                     strengthened::Bool=true, 
                                     add_benders_cuts_to_master::Bool=true, 
                                     fraction_of_benders_cuts_to_master::Float64 = 1.0, 
-                                    reuse_dcglp::Bool=true)
-        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_benders_cuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp)
+                                    reuse_dcglp::Bool=true,
+                                    lift::Bool=true) # lifting
+        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_benders_cuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift) # lifting
     end
-end
+end 
 
 mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
     
@@ -73,11 +75,13 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
 
         new(oracle_param, dcglp, typical_oracles, param, disjunctiveCutsByIndex, Vector{Hyperplane}(), splits)
     end
-end
+end 
 
-function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600.0)
-
+function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600)
     tic = time()
+
+    # Retrieve zero and one indices if lifting is enabled
+    zero_indices, one_indices = oracle.oracle_param.lift ? retrieve_zero_one(x_value) : (Int[], Int[]) # lifting
     
     push!(oracle.splits, select_disjunctive_inequality(x_value, oracle.oracle_param.split_index_selection_rule))
     
@@ -105,12 +109,12 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 
-    # for approximate oracle, add fixing constraints here :con_xi_1, :con_xi_2 and :con_zeta_1, :con_zeta_2
-    # when length(zero_indices) == 0, dcglp[:con_xi_1] = Vector{ConstraintRef}(), dcglp[:con_xi_2] = Vector{ConstraintRef}()
-    # same for the case of lenth(one_indices) == 0
-    # add to solve_dcglp! an optional argument lift::Bool; 
+    @debug "zero_indices", zero_indices
+    @debug "one_indices", one_indices
 
-    return solve_dcglp!(oracle, x_value, t_value; time_limit = time_limit)
+    add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices) # lifting
+
+    return solve_dcglp!(oracle, x_value, t_value, zero_indices, one_indices; time_limit = time_limit)
 end
 """
 Updates parameters of the DisjunctiveOracle. Changing the normalization updates the dcglp model, which is initially set during declaration.
@@ -192,4 +196,21 @@ end
 
 function solve_dcglp!(oracle::AbstractDisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; time_limit = time_limit)
     throw(UndefError("update solve_dcglp! for $(typeof(oracle))"))
+end
+
+function retrieve_zero_one(x_value::Vector{Float64}) # lifting
+    # atol can be assigend from oracle_param
+    zeros_indices = findall(x -> isapprox(x, 0.0; atol=1e-6), x_value)
+    ones_indices = findall(x -> isapprox(x, 1.0; atol=1e-6), x_value)
+    return zeros_indices, ones_indices
+end
+
+function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_indices::Vector{Int}) # lifting
+    # remove previously added lifting constraints
+    haskey(dcglp, :con_zeta) && (delete.(dcglp, vcat(dcglp[:con_zeta]...)); unregister(dcglp, :con_zeta))
+    haskey(dcglp, :con_xi) && (delete.(dcglp, vcat(dcglp[:con_xi]...)); unregister(dcglp, :con_xi))
+
+    # add lifting constraints
+    !isempty(zero_indices) && @constraint(dcglp, con_zeta[i in 1:2, j=1:length(zero_indices)], 0>= dcglp[:omega_x][i, zero_indices[j]])
+    !isempty(one_indices) && @constraint(dcglp, con_xi[i in 1:2, j=1:length(one_indices)], 0>= dcglp[:omega_0][i] - dcglp[:omega_x][i, one_indices[j]])
 end
