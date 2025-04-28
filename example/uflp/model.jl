@@ -25,7 +25,6 @@ end
 function update_model!(oracle::AbstractTypicalOracle, data::Data)
     model = oracle.model
     x = oracle.model[:x]
-    other_constraints = oracle.other_constraints
 
     # Extract problem dimensions
     I, J = data.problem.n_facilities, data.problem.n_customers
@@ -39,11 +38,7 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data)
 
     # Add constraints
     @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
-    @constraint(model, facility_open, y .<= x)
-
-    # Store other constraints
-    append!(other_constraints, model[:demand])
-    append!(other_constraints, vec(model[:facility_open]))
+    @constraint(model, facility_open[j in 1:J], y[:, j] .<= x)
 end
 
 function update_model!(oracle::DisjunctiveOracle, data::Data)

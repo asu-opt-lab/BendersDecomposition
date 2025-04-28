@@ -30,7 +30,6 @@ end
 function update_model!(oracle::AbstractTypicalOracle, data::Data, scen_idx::Int)
     model = oracle.model
     x = oracle.model[:x]
-    other_constraints = oracle.other_constraints
 
     I, J = data.problem.n_facilities, data.problem.n_customers
     @variable(model, y[1:I, 1:J] >= 0)
@@ -41,9 +40,12 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data, scen_idx::Int)
     @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
     @constraint(model, facility_open, y .<= x)
     @constraint(model, capacity[i in 1:I], sum(data.problem.demands[scen_idx][:] .* y[i,:]) <= data.problem.capacities[i] * x[i])
+end
 
-    # Store other constraints
-    append!(other_constraints, model[:demand])
-    append!(other_constraints, vec(model[:facility_open]))
-    append!(other_constraints, model[:capacity])
+function update_model!(oracle::DisjunctiveOracle, data::Data)
+    dcglp = oracle.dcglp 
+
+    I = data.problem.n_facilities
+    max_demand = maximum(sum(demands) for demands in data.problem.demands)
+    @constraint(dcglp, [i=1:2], sum(data.problem.capacities[j] * dcglp[:omega_x][i,j] for j in 1:I) >= max_demand * dcglp[:omega_0][i])
 end

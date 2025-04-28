@@ -15,7 +15,7 @@ function add_normalization_constraint(dcglp::Model, norm::LpNorm)
     end
 end
 
-function select_disjunctive_inequality(x_value::Vector{Float64}, ::LargestFractional; zero_tol = 1e-2)
+function select_disjunctive_inequality(x_value::Vector{Float64}, ::LargestFractional; zero_tol = 1e-9)
     
     frac_indices = filter(i -> zero_tol <= x_value[i] <= 1.0 - zero_tol, eachindex(x_value))
     index = isempty(frac_indices) ? rand(collect(1:length(x_value))) : maximum(frac_indices)
@@ -24,12 +24,12 @@ function select_disjunctive_inequality(x_value::Vector{Float64}, ::LargestFracti
     phi[index] = 1.0
     phi_0 = 0.0
 
-    @debug "Largest fractional simple split index: $index"
+    @debug "Largest fractional simple split index: $index, phi: $phi, phi_0: $phi_0"
     
     return phi, phi_0
 end
 
-function select_disjunctive_inequality(x_value::Vector{Float64}, ::MostFractional; zero_tol = 1e-2)
+function select_disjunctive_inequality(x_value::Vector{Float64}, ::MostFractional; zero_tol = 1e-9)
 
     gap_x = @. abs(x_value - 0.5)
 
@@ -40,11 +40,11 @@ function select_disjunctive_inequality(x_value::Vector{Float64}, ::MostFractiona
     phi[index] = 1.0
     phi_0 = 0.0
 
-    @debug "Most fractional simple split index: $index"
+    @debug "Most fractional simple split index: $index, phi: $phi, phi_0: $phi_0"
 
     return phi, phi_0
 end
-function select_disjunctive_inequality(x_value::Vector{Float64}, ::RandomFractional; zero_tol = 1e-2)
+function select_disjunctive_inequality(x_value::Vector{Float64}, ::RandomFractional; zero_tol = 1e-9)
     
     frac_indices = filter(i -> zero_tol <= x_value[i] <= 1.0 - zero_tol, eachindex(x_value))
     index = isempty(frac_indices) ? rand(collect(1:length(x_value))) : rand(frac_indices)
@@ -53,7 +53,7 @@ function select_disjunctive_inequality(x_value::Vector{Float64}, ::RandomFractio
     phi[index] = 1.0
     phi_0 = 0.0
 
-    @debug "Random simple split index: $index"
+    @debug "Random simple split index: $index, phi: $phi, phi_0: $phi_0"
     
     return phi, phi_0
 end
@@ -71,7 +71,7 @@ function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::DisjunctiveCutsSmall
     dcglp = oracle.dcglp
     # remove all disjunctive cuts from DCGLP
     if haskey(dcglp, :con_disjunctive)
-        delete(dcglp, dcglp[:con_disjunctive]) 
+        delete.(dcglp, dcglp[:con_disjunctive]) 
         unregister(dcglp, :con_disjunctive)
     end
     
