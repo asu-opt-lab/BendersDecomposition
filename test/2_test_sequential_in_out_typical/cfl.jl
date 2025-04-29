@@ -24,7 +24,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             benders_inout_param = BendersSeqInOutParam(;
             time_limit = 200.0,
             gap_tolerance = 1e-6,
-            verbose = true,
+            verbose = false,
             stabilizing_x = ones(data.dim_x),
             α = 0.9,
             λ = 0.1

@@ -2,11 +2,9 @@ using BendersDecomposition
 using Test
 
 @testset "BendersDecomposition.jl" begin
-    # Write your tests here.
-    data = UFLPData(
-        5, 10, 
-        rand(10) .* 50,     # Random demands
-        rand(5) .* 100,     # Random fixed_costs
-        rand(5, 10) .* 10,  # Random costs
-    )
+    include("1_test_sequential_typical/runtest.jl")
+    include("2_test_sequential_in_out_typical/runtest.jl")
+    include("3_test_sequential_disjunctive/runtest.jl")
+    include("4_test_callback_typical/runtest.jl")
+    include("5_test_callback_disjunctive/runtest.jl")
 end
