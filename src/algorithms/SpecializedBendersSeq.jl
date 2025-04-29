@@ -123,7 +123,7 @@ function generate_optimal_vertex!(env::SpecializedBendersSeq, L_env::AbstractBen
     LB, x_val, t_val = JuMP.objective_value(env.master.model), value.(env.master.model[:x]), value.(env.master.model[:t])
     @debug "state.LB = $(state.LB) vs LB = $LB"
     @debug "state.values[:x] = $(state.values[:x]) vs x_val = $x_val"
-    !isapprox(state.LB, LB, rtol = 1e-4) && throw(UnexpectedModelStatusException("SpecializedBendersSeq: fail to generate vertex for P^{k,j}, possibily numerical issue"))
+    !isapprox(state.LB, LB, rtol = 1e-4) && throw(UnexpectedModelStatusException("SpecializedBendersSeq: fail to generate vertex for P^{k,j} cap H, possibily numerical issue"))
     state.LB = LB
     state.values[:x] = x_val
     state.values[:t] = t_val

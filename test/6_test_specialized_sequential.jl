@@ -1,7 +1,7 @@
-# tight tolerance for dcglp; adjust tol for generate_cut with omega_0
-# dcglp is not solved -> cannot proceed the algorithm, and should be terminated. Added an optimal argument to dcglp `throw_typical_cuts_for_errors=false`
-# remove other_constraints from classical oracle.
-# add a method for generating optimal vertex for SpecializedBendersSeq
+## Issues: 
+# 1. cut-tolerance is incorrect for dcglp -> adjusted tol for `generate_cut` with omega_0
+# 2. If dcglp encounters numerical issues, the algorithm cannot proceed and should terminate --> added an optimal argument to dcglp `throw_typical_cuts_for_errors=false`
+# 3. tau becomes zero for a fractional point -> added a method for generating optimal vertex of P_{j,k} \cap H for SpecializedBendersSeq
 
 using Test
 using JuMP
@@ -134,9 +134,6 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             # model-free knapsack-based cuts
                             typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
 
-                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
-                                                                   solver_param = dcglp_solver_param,
-                                                                   param = dcglp_param) 
                             oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
                                                                     split_index_selection_rule = LargestFractional(),
                                                                     disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(), 
@@ -144,8 +141,12 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 0.5, 
                                                                     reuse_dcglp=reuse_dcglp)
+                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+                                                                    solver_param = dcglp_solver_param,
+                                                                    param = dcglp_param,
+                                                                    oracle_param = oracle_param) 
                             # norm is used in the initialization.
-                            set_parameter!(disjunctive_oracle, oracle_param)
+                            # set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
                             
                             env = SpecializedBendersSeq(data, master, disjunctive_oracle; param = specialized_benders_param)

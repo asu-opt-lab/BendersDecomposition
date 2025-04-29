@@ -84,12 +84,12 @@ end
 Append constraints to a JuMP model using a symbolic name.
 If constraints with the name `constr_symbol` exist, append to them. Otherwise, create a new constraint group named `constr_symbol`, enforcing `0 .>= exprs`.
 """
-function add_constraints(model::Model, constr_symbol::Symbol, exprs::Vector{AffExpr})
+function add_constraints(model::Model, constr_symbol::Symbol, exprs::Vector{AffExpr}; lhs::Union{VariableRef,Float64}=0.0)
     # add constraints in the form of 0 .>= expr
     if haskey(model, constr_symbol)
-        append!(model[constr_symbol], @constraint(model, 0 .>= exprs))
+        append!(model[constr_symbol], @constraint(model, lhs .>= exprs))
     else
-        model[constr_symbol] = @constraint(model, 0 .>= exprs)
+        model[constr_symbol] = @constraint(model, lhs .>= exprs)
     end
 end
 

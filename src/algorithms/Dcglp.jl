@@ -33,7 +33,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                         state.values[:ω_0][i] = value(dcglp[:omega_0][i])
                     end
                     state.values[:tau] = value(dcglp[:tau])
-                    state.values[:sx] = value.(dcglp[:sx])
                     state.LB = state.values[:tau]
                 elseif termination_status(dcglp) == ALMOST_INFEASIBLE
                     if throw_typical_cuts_for_errors
@@ -80,19 +79,24 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
             end
         
             if state.f_x[1] !== NaN && state.f_x[2] !== NaN
-                update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], oracle.oracle_param.norm.p))
+                if typeof(oracle.oracle_param.norm) <: LpNorm
+                    state.values[:sx] = value.(dcglp[:sx])
+                    update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], oracle.oracle_param.norm.p))
+                elseif typeof(oracle.oracle_param.norm) <: StandardNorm
+                    # update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], oracle.oracle_param.norm.p))
+                end
             end
 
             record_iteration!(log, state)
         end
         
-        oracle.param.verbose && print_iteration_info(state, log)
+        oracle.param.verbose && print_iteration_info(state, log, oracle.oracle_param.norm)
 
         check_lb_improvement!(state, log; zero_tol = zero_tol)
 
         is_terminated(state, log, oracle.param, time_limit) && break
 
-        add_constraints(dcglp, :con_benders, [benders_cuts[1]; benders_cuts[2]]) 
+        typeof(oracle.oracle_param.norm) <: LpNorm ? add_constraints(dcglp, :con_benders, [benders_cuts[1]; benders_cuts[2]]) : add_constraints(dcglp, :con_benders, [benders_cuts[1]; benders_cuts[2]]; lhs = dcglp[:tau]) 
     end
 
     if log.iterations[end].LB >= zero_tol
@@ -115,6 +119,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                 append!(d_cuts, hyperplanes_to_expression(dcglp, [h], dcglp[:omega_x][k,:], dcglp[:omega_t][k,:], dcglp[:omega_0][k]))
             end
             add_constraints(dcglp, :con_disjunctive, d_cuts) 
+            typeof(oracle.oracle_param.norm) <: LpNorm ? add_constraints(dcglp, :con_disjunctive, d_cuts)  : add_constraints(dcglp, :con_disjunctive, d_cuts; lhs = dcglp[:tau]) 
         end
         
         return false, hyperplanes, fill(Inf, length(t_value))

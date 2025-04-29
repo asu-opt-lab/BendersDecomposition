@@ -1,28 +1,8 @@
 export Master
 
-# abstract type Master <: AbstractMasterProblem end
-
-"""
-    CFLPMasterProblem <: AbstractCFLPMasterProblem
-
-A mutable struct representing the master problem for the Capacitated Facility Location Problem (CFLP).
-
-# Fields
-- `model::Model`: The underlying JuMP optimization model
-- `var::Dict`: Dictionary storing the problem variables (x, t)
-- `obj_value::Float64`: Current objective value of the master problem
-- `x_value::Vector{Float64}`: Current values of the integer variables x
-- `t_value::Float64`: Current value of the variable t
-
-# Related Functions
-    create_master_problem(data::CFLPData, cut_strategy::Union{ClassicalCut, KnapsackCut})
-"""
 mutable struct Master <: AbstractMaster
     model::Model
-    # obj_value::Float64
-    # x_value::Vector{Float64}
-    # t_value::Vector{Float64}
-
+    
     function Master(data::Data; solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9))
 
         @debug "Building Master Problem for CFLP"
@@ -35,7 +15,7 @@ mutable struct Master <: AbstractMaster
         @objective(model, Min, data.c_x'* x + data.c_t'* t)
 
         assign_attributes!(model, solver_param)
-        # new(model, 0.0, zeros(data.dim_x), zeros(data.dim_t))
-        new(model)#, 0.0, zeros(data.dim_x), zeros(data.dim_t))
+        
+        new(model)
     end
 end

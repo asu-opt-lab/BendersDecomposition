@@ -1,9 +1,3 @@
-# To-Do: 
-# 1. Need to be able to change the setting for SeqInOut (e.g., stabilizing point)
-# 2. Assign attributes to the structure, not to JuMP Model (e.g., settings for CFLKnapsackOracle like slim, add_only_violated_cuts)
-# Done:
-# - Slim cut should be averaged, instead of summation, for numerical stability
-
 using Test
 using JuMP
 using CPLEX

@@ -84,6 +84,12 @@ function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::DisjunctiveCutsSmall
         append!(cuts, hyperplanes_to_expression(dcglp, disjunctiveCuts, dcglp[:omega_x][k,:], dcglp[:omega_t][k,:], dcglp[:omega_0][k]))
     end
 
-    @constraint(dcglp, con_disjunctive, 0 .>= cuts)
+    if typeof(oracle.oracle_param.norm) <: LpNorm
+        @constraint(dcglp, con_disjunctive, 0 .>= cuts)
+    elseif typeof(oracle.oracle_param.norm) <: StandardNorm 
+        @constraint(dcglp, con_disjunctive, dcglp[:tau] .>= cuts)
+    else
+        throw(UndefError(""))
+    end
 end
 

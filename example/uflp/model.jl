@@ -44,5 +44,9 @@ end
 function update_model!(oracle::DisjunctiveOracle, data::Data)
     dcglp = oracle.dcglp 
 
-    @constraint(dcglp, [i=1:2], sum(dcglp[:omega_x][i,:]) >= 2 * dcglp[:omega_0][i])
+    if typeof(oracle.oracle_param.norm) <: LpNorm
+        @constraint(dcglp, [i=1:2], sum(dcglp[:omega_x][i,:]) >= 2 * dcglp[:omega_0][i])
+    else
+        @constraint(dcglp, [i=1:2], sum(dcglp[:omega_x][i,:]) .+ dcglp[:tau] >= 2 * dcglp[:omega_0][i])
+    end
 end

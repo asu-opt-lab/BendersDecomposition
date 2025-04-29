@@ -91,6 +91,14 @@ function print_iteration_info(state::DcglpState, log::DcglpLog)
 end
 
 """
+Print iteration information if verbose mode is on
+"""
+function print_iteration_info(state::DcglpState, log::DcglpLog, ::StandardNorm)
+    @printf("   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
+           log.n_iter, state.LB, state.UB, state.gap, state.master_time, state.oracle_times[1], state.oracle_times[2])
+end
+
+"""
 Check termination criteria
 """
 function is_terminated(state::DcglpState, log::DcglpLog, param::DcglpParam, time_limit::Float64)
