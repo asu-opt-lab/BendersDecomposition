@@ -47,6 +47,11 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             @assert termination_status(mip.model) == OPTIMAL
             mip_opt_val = objective_value(mip.model)
 
+            x_opt = value.(mip.model[:x])
+            t_opt = value.(mip.model[:t])
+            @debug x_opt
+            @debug t_opt
+            
             @testset "Classic oracle" begin
                 @testset "Seq" begin     
                     for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]   
