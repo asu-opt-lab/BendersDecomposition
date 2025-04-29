@@ -17,7 +17,7 @@ function get_standard_params()
     benders_param = BendersBnBParam(;
         time_limit = 200.0,
         gap_tolerance = 1e-6,
-        verbose = true
+        verbose = false
     )
     
     dcglp_param = DcglpParam(;
@@ -25,7 +25,7 @@ function get_standard_params()
         gap_tolerance = 1e-3, 
         halt_limit = 3, 
         iter_limit = 250,
-        verbose = true
+        verbose = false
     )
     
     # Common solver parameters
@@ -87,7 +87,7 @@ function run_disjunctive_test(data, lazy_oracle, disjunctive_oracle, root_prepro
             root_param = BendersSeqParam(;
                 time_limit = 200.0,
                 gap_tolerance = 1e-6,
-                verbose = true
+                verbose = false
             )
         elseif root_preproc_type == :seqinout
             root_seq_type = BendersSeqInOut
@@ -97,13 +97,13 @@ function run_disjunctive_test(data, lazy_oracle, disjunctive_oracle, root_prepro
                 stabilizing_x = ones(data.dim_x),
                 α = 0.9,
                 λ = 0.1,
-                verbose = true
+                verbose = false
             )
         end
         
         # Create root node preprocessing with oracle
         root_preprocessing = RootNodePreprocessing(lazy_oracle, root_seq_type, root_param)
-        user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=250))
+        user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
     end
     
     lazy_callback = LazyCallback(lazy_oracle)
@@ -111,14 +111,14 @@ function run_disjunctive_test(data, lazy_oracle, disjunctive_oracle, root_prepro
     callback_param = BendersBnBParam(;
         time_limit = 200.0,
         gap_tolerance = 1e-6,
-        verbose = true
+        verbose = false
     )
     
     # Create BendersBnB environment
     env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param=callback_param)
     
     # Solve
-    log = solve!(env)
+    obj_value, elapsed_time = solve!(env)
     
     # Test results
     @test env.termination_status == Optimal()
