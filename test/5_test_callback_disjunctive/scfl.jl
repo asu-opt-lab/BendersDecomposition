@@ -53,6 +53,7 @@ end
                     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
                     
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; dcut_append $disjunctive_cut_append_rule" begin
+                        @info "solving SCFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
 
                         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                             solver_param = dcglp_solver_param,
@@ -72,7 +73,48 @@ end
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
 
-                        run_disjunctive_oracle_tests(data, mip_opt_val, lazy_oracle, disjunctive_oracle, [:none, :seq, :seqinout], "SCFLP")
+                        run_disjunctive_oracle_tests(data, mip_opt_val, lazy_oracle, disjunctive_oracle, [:none, :seq, :seqinout], "SCFLP Classical oracle")
+                    end
+                end
+            end
+
+            @testset "Knapsack oracle" begin
+                # Create separable oracle
+                typical_oracle_kappa = create_scflp_oracle(data, CFLKnapsackOracle, typical_oracle_solver_param)
+                typical_oracle_nu = create_scflp_oracle(data, CFLKnapsackOracle, typical_oracle_solver_param)
+                typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
+                
+                # Create lazy oracle
+                lazy_oracle = create_scflp_oracle(data, CFLKnapsackOracle, typical_oracle_solver_param)
+
+                for strengthened in [true, false], 
+                    add_benders_cuts_to_master in [true, false], 
+                    reuse_dcglp in [true, false], 
+                    p in [1.0, Inf], 
+                    disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
+                    
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; dcut_append $disjunctive_cut_append_rule" begin
+                        @info "solving SCFLP p$i - disjunctive oracle/knapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
+
+                        disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+                            solver_param = dcglp_solver_param,
+                            param = dcglp_param
+                        ) 
+
+                        # Set oracle parameters
+                        oracle_param = DisjunctiveOracleParam(
+                            norm = LpNorm(p), 
+                            split_index_selection_rule = RandomFractional(),
+                            disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
+                            strengthened = strengthened, 
+                            add_benders_cuts_to_master = add_benders_cuts_to_master, 
+                            fraction_of_benders_cuts_to_master = 1.0, 
+                            reuse_dcglp = reuse_dcglp
+                        )
+                        set_parameter!(disjunctive_oracle, oracle_param)
+                        update_model!(disjunctive_oracle, data)
+
+                        run_disjunctive_oracle_tests(data, mip_opt_val, lazy_oracle, disjunctive_oracle, [:none, :seq, :seqinout], "SCFLP Knapsack oracle")
                     end
                 end
             end
