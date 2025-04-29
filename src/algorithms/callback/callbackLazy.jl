@@ -50,11 +50,12 @@ function lazy_callback(cb_data, master_model::Model, log::BendersBnBLog, param::
         state.values[:x] = JuMP.callback_value.(cb_data, master_model[:x])
         state.values[:t] = JuMP.callback_value.(cb_data, master_model[:t])
 
+
         state.oracle_time = @elapsed begin
-            state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
+            state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t]; time_limit = max(get_sec_remaining(log, param), 15))
             cuts = !state.is_in_L ? hyperplanes_to_expression(master_model, hyperplanes, master_model[:x], master_model[:t]) : []
         end
-
+        
         if !isempty(cuts)
             for cut in cuts
                 cut_constraint = @build_constraint(0 >= cut)
@@ -63,5 +64,6 @@ function lazy_callback(cb_data, master_model::Model, log::BendersBnBLog, param::
             end
         end
         record_node!(log, state, true)
+
     end
 end

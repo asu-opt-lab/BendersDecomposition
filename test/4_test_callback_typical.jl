@@ -109,7 +109,7 @@ function run_standard_test(data, oracle, root_preproc_type, test_info)
         
         # Create root node preprocessing with oracle
         root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
-        user_callback = UserCallback(oracle; params=UserCallbackParam(frequency=250))
+        user_callback = UserCallback(oracle; params=UserCallbackParam(frequency=10))
     end
     
     # Create callbacks
