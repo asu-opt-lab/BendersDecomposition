@@ -66,7 +66,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
                         
-                        run_disjunctive_oracle_tests(data, mip_opt_val, lazy_oracle, disjunctive_oracle, [:none, :seq, :seqinout], "UFLP")
+                        run_disjunctive_oracle_tests(data, mip_opt_val, lazy_oracle, disjunctive_oracle, [:none, :seq, :seqinout], "CFLP Classical oracle")
                     end
                 end
             end
@@ -177,7 +177,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
                         
-                        run_disjunctive_oracle_tests(data, mip_opt_val, lazy_oracle, disjunctive_oracle, [:none, :seq, :seqinout], "UFLP")
+                        run_disjunctive_oracle_tests(data, mip_opt_val, lazy_oracle, disjunctive_oracle, [:none, :seq, :seqinout], "CFL Classical oracle")
                     end
                 end
             end

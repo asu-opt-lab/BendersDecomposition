@@ -24,14 +24,14 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
             benders_param = BendersSeqParam(;
                                             time_limit = 2000.0,
                                             gap_tolerance = 1e-6,
-                                            verbose = true
+                                            verbose = false
                                             )
             dcglp_param = DcglpParam(;
                                     time_limit = 1000.0, 
                                     gap_tolerance = 1e-3, 
                                     halt_limit = 3, 
                                     iter_limit = 250,
-                                    verbose = true
+                                    verbose = false
                                     )
             # solver parameters
             mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
@@ -46,7 +46,10 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
             optimize!(mip.model)
             @assert termination_status(mip.model) == OPTIMAL
             mip_opt_val = objective_value(mip.model)
-
+            x_opt = value.(mip.model[:x])
+            t_opt = value.(mip.model[:t])
+            @debug x_opt
+            @debug t_opt
             @testset "Classic oracle" begin
                 @testset "Seq" begin        
                     for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]   
