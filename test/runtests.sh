@@ -3,7 +3,7 @@
 
 # Define variables to make the script more readable and maintainable
 
-OUTPUT_DIR="test/results/round2"
+OUTPUT_DIR="test/results/round3"
 # Define job script directory
 JOBSCRIPT_DIR="./job_scripts"
 
@@ -14,9 +14,9 @@ mkdir -p "${JOBSCRIPT_DIR}"
 instances=(
     # "1_test_sequential_typical"
     # "2_test_sequential_in_out_typical"
-    # "3_test_sequential_disjunctive"
+    "3_test_sequential_disjunctive"
     # "4_test_callback_typical"
-    "5_test_callback_disjunctive"
+    # "5_test_callback_disjunctive"
 )
 
 # Loop through the instances and create a job script for each

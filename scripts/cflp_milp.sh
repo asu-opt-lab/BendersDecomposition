@@ -4,7 +4,7 @@
 # Define variables to make the script more readable and maintainable
 
 # OUTPUT_DIR="experiments_appro_app_test/cflp_disjunctive_4500node_knapsack_gap50_TTF_perturbed_2"
-OUTPUT_DIR="experiments/round1/cflp_milp_3600s"
+OUTPUT_DIR="experiments/round1/cflp_milp_3600s_again_again"
 # Define job script directory
 JOBSCRIPT_DIR="./job_scripts"
 
@@ -101,7 +101,7 @@ for instance in "${instances[@]}"; do
     echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -c 14" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH --nodelist=pcc036" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH --nodelist=pcc037" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH --mem=100G" >> "${JOBSCRIPT_FILE}"
 
     echo "#SBATCH -t 0-04:00:00" >> "${JOBSCRIPT_FILE}"
