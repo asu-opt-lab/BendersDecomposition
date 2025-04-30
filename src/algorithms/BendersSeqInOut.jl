@@ -73,9 +73,9 @@ function solve!(env::BendersSeqInOut)
             
                 # Update state and record information
                 record_iteration!(log, state)
-
-                param.verbose && print_iteration_info(state, log)
             end
+
+            param.verbose && print_iteration_info(state, log)
 
             # Check termination criteria
             is_terminated(state, log, param) && break
@@ -105,8 +105,12 @@ function solve!(env::BendersSeqInOut)
             env.obj_value = log.iterations[end].LB
         elseif typeof(e) <: UnexpectedModelStatusException
             env.termination_status = InfeasibleOrNumericalIssue()
+            @warn e.msg
         else
             rethrow()  
+        end
+        if env.param.verbose
+            println("Terminated with $(env.termination_status)")
         end
         return to_dataframe(log)
     end
