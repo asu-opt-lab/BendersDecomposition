@@ -2,7 +2,7 @@
 """
 Run DCGLP cutting-plane
 """
-# lifting
+
 function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}, zero_indices::Vector{Int64}, one_indices::Vector{Int64}; zero_tol = 1e-9, time_limit = time_limit, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
     log = DcglpLog()
     
@@ -102,16 +102,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
         else
             gamma_x, gamma_t, gamma_0 = generate_disjunctive_cut(oracle.dcglp)
         end
-        
-        # if gamma_0 + gamma_x' * x_opt + gamma_t' * t_opt > 0.0
-        #     @warn gamma_0 + gamma_x' * x_opt + gamma_t' * t_opt
-        # end
-
-        # for h in hyperplanes
-        #     if h.a_0 + h.a_x' * x_opt + h.a_t' * t_opt > 0.0
-        #         @info h.a_0 + h.a_x' * x_opt + h.a_t' * t_opt
-        #     end
-        # end
 
         h = Hyperplane(gamma_x, gamma_t, gamma_0)
         if include_disjuctive_cuts_to_hyperplanes
@@ -196,7 +186,7 @@ function strengthening!(gamma_x, sigma, delta; zero_tol = 1e-5)
     
     a₁ = gamma_x .- delta[1]
     a₂ = gamma_x .- delta[2]
-    sigma_sum = sigma[2] + sigma[1]
+    sigma_sum = sigma[1] + sigma[2]
     if sigma_sum >= zero_tol
         m = (a₁ .- a₂) / sigma_sum
         m_lb = floor.(m)
