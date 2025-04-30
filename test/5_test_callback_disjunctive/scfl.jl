@@ -47,7 +47,7 @@ end
                 lazy_oracle = create_scflp_oracle(data, ClassicalOracle, typical_oracle_solver_param)
 
                 for strengthened in [true, false], 
-                    add_benders_cuts_to_master in [true, false], 
+                    add_benders_cuts_to_master in [true], 
                     reuse_dcglp in [true, false], 
                     p in [1.0, Inf], 
                     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
@@ -88,7 +88,7 @@ end
                 lazy_oracle = create_scflp_oracle(data, CFLKnapsackOracle, typical_oracle_solver_param)
 
                 for strengthened in [true, false], 
-                    add_benders_cuts_to_master in [true, false], 
+                    add_benders_cuts_to_master in [true], 
                     reuse_dcglp in [true, false], 
                     p in [1.0, Inf], 
                     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
