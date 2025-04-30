@@ -87,22 +87,27 @@ function user_callback(cb_data, master_model::Model, log::BendersBnBLog, param::
                 state.values[:t] = JuMP.callback_value.(cb_data, master_model[:t])
                 
                 # Generate cuts
-                state.oracle_time = @elapsed begin
-                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
-                    cuts = !state.is_in_L ? hyperplanes_to_expression(master_model, hyperplanes, master_model[:x], master_model[:t]) : []
-                end
-                
-                # Add cuts if any were generated
-                if !isempty(cuts)
-                    for cut in cuts
-                        cut_constraint = @build_constraint(0 >= cut)
-                        MOI.submit(master_model, MOI.UserCut(cb_data), cut_constraint)
-                        state.num_cuts += 1
+                try 
+                    state.oracle_time = @elapsed begin
+                        state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
+                        cuts = !state.is_in_L ? hyperplanes_to_expression(master_model, hyperplanes, master_model[:x], master_model[:t]) : []
+                    end
+                    # Add cuts if any were generated
+                    if !isempty(cuts)
+                        for cut in cuts
+                            cut_constraint = @build_constraint(0 >= cut)
+                            MOI.submit(master_model, MOI.UserCut(cb_data), cut_constraint)
+                            state.num_cuts += 1
+                        end
+                    end
+                    
+                    # Record node information
+                    record_node!(log, state, false)
+                catch e
+                    if typeof(e) <: TimeLimitException
+                        return
                     end
                 end
-                
-                # Record node information
-                record_node!(log, state, false)
             end
         end
     end
