@@ -17,7 +17,7 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
                                     add_benders_cuts_to_master::Bool=true, 
                                     fraction_of_benders_cuts_to_master::Float64 = 1.0, 
                                     reuse_dcglp::Bool=true,
-                                    lift::Bool=true) # lifting
+                                    lift::Bool=false) # lifting
         new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_benders_cuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift) # lifting
     end
 end 
@@ -75,9 +75,13 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
 
         new(oracle_param, dcglp, typical_oracles, param, disjunctiveCutsByIndex, Vector{Hyperplane}(), splits)
     end
-end 
+end
+"""
+`throw_typical_cuts_for_errors` determines whether to return a typical Benders cut, when DCGLP encounters some issue. It must be `false` for SpecializedBendersSeq
+`include_disjuctive_cuts_to_hyperplanes` determines whether to add a disjunctive cut found to `hyperplanes` to be returned; if it is `false`, the disjuctive cut should be added at a desired place via `oracle.disjunctiveCuts` or `oracle.disjunctiveCutsByIndex`
+"""
+function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
 
-function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600)
     tic = time()
 
     # Retrieve zero and one indices if lifting is enabled
@@ -94,7 +98,7 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
     # delete benders cuts previously added when not reusing dcglp
     if !oracle.oracle_param.reuse_dcglp
         if haskey(oracle.dcglp, :con_benders)
-            delete(oracle.dcglp, oracle.dcglp[:con_benders]) 
+            delete.(oracle.dcglp, oracle.dcglp[:con_benders]) 
             unregister(oracle.dcglp, :con_benders)
         end
     end
@@ -109,12 +113,9 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 
-    @debug "zero_indices", zero_indices
-    @debug "one_indices", one_indices
-
     add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices) # lifting
 
-    return solve_dcglp!(oracle, x_value, t_value, zero_indices, one_indices; time_limit = time_limit)
+    return solve_dcglp!(oracle, x_value, t_value, zero_indices, one_indices; time_limit = time_limit, throw_typical_cuts_for_errors = throw_typical_cuts_for_errors, include_disjuctive_cuts_to_hyperplanes = include_disjuctive_cuts_to_hyperplanes)
 end
 """
 Updates parameters of the DisjunctiveOracle. Changing the normalization updates the dcglp model, which is initially set during declaration.
@@ -122,7 +123,7 @@ Updates parameters of the DisjunctiveOracle. Changing the normalization updates 
 function set_parameter!(oracle::DisjunctiveOracle, param::DisjunctiveOracleParam)
     oracle.oracle_param = param
     if haskey(oracle.dcglp, :concone)
-        delete(oracle.dcglp, oracle.dcglp[:concone]) 
+        delete.(oracle.dcglp, oracle.dcglp[:concone]) 
         unregister(oracle.dcglp, :concone)
     end
     add_normalization_constraint(oracle.dcglp, oracle.oracle_param.norm)
@@ -138,7 +139,7 @@ function set_parameter!(oracle::DisjunctiveOracle, param::String, value::Any)
 
     if sym_param == :norm
         if haskey(oracle.dcglp, :concone)
-            delete(oracle.dcglp, oracle.dcglp[:concone]) 
+            delete.(oracle.dcglp, oracle.dcglp[:concone]) 
             unregister(oracle.dcglp, :concone)
         end
         add_normalization_constraint(oracle.dcglp, oracle.oracle_param.norm)
