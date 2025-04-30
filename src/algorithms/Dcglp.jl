@@ -2,7 +2,8 @@
 """
 Run DCGLP cutting-plane
 """
-function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; zero_tol = 1e-9, time_limit = time_limit, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
+
+function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}, zero_indices::Vector{Int64}, one_indices::Vector{Int64}; zero_tol = 1e-9, time_limit = time_limit, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
     log = DcglpLog()
     
     dcglp = oracle.dcglp
@@ -100,8 +101,12 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
     end
 
     if log.iterations[end].LB >= zero_tol
-        gamma_x, gamma_t, gamma_0 = oracle.oracle_param.strengthened ? generate_strengthened_disjunctive_cuts(oracle.dcglp) : generate_disjunctive_cut(oracle.dcglp)
-        
+        if oracle.oracle_param.lift 
+            gamma_x, gamma_t, gamma_0 = generate_lifted_disjunctive_cut(oracle.dcglp, oracle.oracle_param.norm, zero_indices, one_indices; strengthen = oracle.oracle_param.strengthened)
+        else
+            gamma_x, gamma_t, gamma_0 = generate_disjunctive_cut(oracle.dcglp; strengthen = oracle.oracle_param.strengthened)
+        end
+
         h = Hyperplane(gamma_x, gamma_t, gamma_0)
         if include_disjuctive_cuts_to_hyperplanes
             push!(hyperplanes, h)
@@ -129,38 +134,80 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
     # statistics_of_disjunctive_cuts(env)
 end
 
-function generate_disjunctive_cut(dcglp::Model)
+function generate_disjunctive_cut(dcglp::Model; strengthen = false, zero_tol = 1e-7)
     gamma_x = dual.(dcglp[:conx])
     gamma_t = dual.(dcglp[:cont])
     gamma_0 = dual(dcglp[:con0])
-    
-    return gamma_x, gamma_t, gamma_0
-end
 
-function generate_strengthened_disjunctive_cuts(dcglp::Model; zero_tol = 1e-5)
-    
-    σ₁ = dual(dcglp[:con_split_kappa])
-    σ₂ = dual(dcglp[:con_split_nu])
-    gamma_x = dual.(dcglp[:conx])
-    gamma_t = dual.(dcglp[:cont])
-    gamma_0 = dual(dcglp[:con0])
-    delta_kappa = dual.(dcglp[:condelta][1,:])
-    delta_nu = dual.(dcglp[:condelta][2,:])
-
-    # @debug "dcglp strengthening - sigma values: [σ₁: $σ₁, σ₂: $σ₂]"
-    # @debug "dcglp strengthening - delta values: [delta₁: $delta_kappa, delta₂: $delta_nu]"
-    
-    a₁ = -gamma_x .- delta_kappa
-    a₂ = -gamma_x .- delta_nu
-    σ_sum = σ₂ + σ₁
-    if σ_sum >= zero_tol
-        m = (a₁ .- a₂) / σ_sum
-        m_lb = floor.(m)
-        m_ub = ceil.(m)
-        gamma_x = -min.(a₁-σ₁*m_lb, a₂+σ₂*m_ub)
+    if strengthen 
+        sigma = Dict(1 => dual(dcglp[:con_split_kappa]), 2 => dual(dcglp[:con_split_nu]))
+        delta = Dict(1 => dual.(dcglp[:condelta][1,:]), 2 => dual.(dcglp[:condelta][2,:]))
+        gamma_x = -strengthening!(-gamma_x, sigma, delta; zero_tol = zero_tol)
     end
     
     return gamma_x, gamma_t, gamma_0
 end
 
+function generate_lifted_disjunctive_cut(dcglp::Model, norm::LpNorm, zero_indices::Vector{Int64}, one_indices::Vector{Int64}; strengthen = false, zero_tol = 1e-7)
+    gamma_x = dual.(dcglp[:conx])
+    gamma_t = dual.(dcglp[:cont])
+    gamma_0 = dual(dcglp[:con0])
 
+    zeta_k = !isempty(zero_indices) ? dual.(dcglp[:con_zeta][1,:]) : Float64[]
+    zeta_v = !isempty(zero_indices) ? dual.(dcglp[:con_zeta][2,:]) : Float64[] 
+    xi_k = !isempty(one_indices) ? dual.(dcglp[:con_xi][1,:]) : Float64[] 
+    xi_v = !isempty(one_indices) ? dual.(dcglp[:con_xi][2,:]) : Float64[] 
+
+    # coefficients for lifted cut
+    lifted_gamma_0 = gamma_0 - sum(max.(xi_k, xi_v))
+    lifted_gamma_x = zeros(Float64, length(gamma_x))
+    lifted_gamma_x .= -gamma_x
+
+    lifted_gamma_x[zero_indices] = -gamma_x[zero_indices] .+ max.(zeta_k, zeta_v)
+    lifted_gamma_x[one_indices] = -gamma_x[one_indices] .- max.(xi_k, xi_v)
+
+    if strengthen
+        sigma = Dict(1 => dual(dcglp[:con_split_kappa]), 2 => dual(dcglp[:con_split_nu]))
+        delta_1 = dual.(dcglp[:condelta][1,:])
+        delta_2 = dual.(dcglp[:condelta][2,:])
+        delta_1[zero_indices] += (-zeta_k + max.(zeta_k, zeta_v))
+        delta_2[zero_indices] += (-zeta_v + max.(zeta_k, zeta_v)) 
+        delta = Dict(1 => delta_1, 2 => delta_2)
+        lifted_gamma_x = strengthening!(lifted_gamma_x, sigma, delta; zero_tol = zero_tol)
+    end
+
+    # compute normalization value
+    norm_value = compute_norm_value(lifted_gamma_x, gamma_t, norm)
+
+    return (-lifted_gamma_x, gamma_t, lifted_gamma_0) ./ norm_value
+end
+
+function strengthening!(gamma_x, sigma, delta; zero_tol = 1e-7)
+    @debug "dcglp strengthening - sigma values: [σ₁: $(sigma[1]), σ₂: $(sigma[2])]"
+    @debug "dcglp strengthening - delta values: [δ₁: $(delta[1]), δ₂: $(delta[2])]"
+    
+    a₁ = gamma_x .- delta[1]
+    a₂ = gamma_x .- delta[2]
+    sigma_sum = sigma[1] + sigma[2]
+    if sigma_sum >= zero_tol
+        m = (a₁ .- a₂) / sigma_sum
+        m_lb = floor.(m)
+        m_ub = ceil.(m)
+        gamma_x = min.(a₁-sigma[1]*m_lb, a₂+sigma[2]*m_ub)
+    end
+    return gamma_x
+end
+
+function compute_norm_value(gamma_x, gamma_t, norm::AbstractNorm)
+    # compute normalization value
+    if norm.p == 1.0
+        norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), Inf)
+    elseif norm.p == 2.0
+        norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), 2.0)
+    elseif norm.p == Inf
+        norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), 1.0)
+    else
+        throw(UndefError("Unsupported norm type: $(typeof(norm))"))
+    end
+    return max(1.0, norm_value)
+end
