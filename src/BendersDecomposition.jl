@@ -1,7 +1,7 @@
 module BendersDecomposition
 
 using Printf, StatsBase, Random, Distributions, LinearAlgebra, ArgParse, DataFrames, CSV, JSON, SparseArrays
-using JuMP, CPLEX #, Gurobi
+using JuMP, CPLEX, Gurobi
 
 # Include supporting files
 include("types.jl")
