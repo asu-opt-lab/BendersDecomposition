@@ -180,7 +180,8 @@ function retrieve_zero_one(x_value::Vector{Float64}; atol = 1e-9)
     ones_indices = findall(x -> isapprox(x, 1.0; atol=atol), x_value)
     return zeros_indices, ones_indices
 end
-
+# better to have oracle::AbstractDisjunctiveOracle, x_value; atol as inputs
+# outputs zeros_indices, once_indices
 function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_indices::Vector{Int})
     # remove previously added lifting constraints
     haskey(dcglp, :con_zeta) && (delete.(dcglp, vcat(dcglp[:con_zeta]...)); unregister(dcglp, :con_zeta))
