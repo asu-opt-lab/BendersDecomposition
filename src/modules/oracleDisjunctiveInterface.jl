@@ -1,19 +1,4 @@
-function add_normalization_constraint(dcglp::Model, norm::LpNorm)
-    # CPLEX only accepts p=1,2,Inf
-    # if conic solver, we can use the following line
-    # @constraint(dcglp, concone, var_vec in MOI.NormCone(norm.p, data.dim_x + data.dim_t + 1))
-    var_vec = [dcglp[:tau]; dcglp[:sx]; dcglp[:st]]
-    
-    if norm.p == 1.0
-        @constraint(dcglp, concone, var_vec in MOI.NormOneCone(length(var_vec)))
-    elseif norm.p == 2.0
-        @constraint(dcglp, concone, var_vec in MOI.SecondOrderCone(length(var_vec)))
-    elseif norm.p == Inf
-        @constraint(dcglp, concone, var_vec in MOI.NormInfinityCone(length(var_vec)))
-    else
-        throw(UndefError("Unsupported LpNorm: p=$(norm.p)"))
-    end
-end
+
 
 function select_disjunctive_inequality(x_value::Vector{Float64}, ::LargestFractional; zero_tol = 1e-9)
     
@@ -58,13 +43,13 @@ function select_disjunctive_inequality(x_value::Vector{Float64}, ::RandomFractio
     return phi, phi_0
 end
 
-function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::NoDisjunctiveCuts)
+function add_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, ::NoDisjunctiveCuts)
     # do nothing
 end
-function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::AllDisjunctiveCuts)
+function add_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, ::AllDisjunctiveCuts)
     # do nothing; added at the time of generation
 end
-function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::DisjunctiveCutsSmallerIndices)
+function add_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, ::DisjunctiveCutsSmallerIndices)
     
     @assert typeof(oracle.oracle_param.split_index_selection_rule) <: SimpleSplit
 
@@ -89,7 +74,7 @@ function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::DisjunctiveCutsSmall
     elseif typeof(oracle.oracle_param.norm) <: StandardNorm 
         @constraint(dcglp, con_disjunctive, dcglp[:tau] .>= cuts)
     else
-        throw(UndefError(""))
+        throw(UndefError("update `add_disjunctive_cuts!` for $(typeof(oracle.oracle_param.norm))"))
     end
 end
 

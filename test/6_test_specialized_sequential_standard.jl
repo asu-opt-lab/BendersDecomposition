@@ -69,7 +69,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                     # for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf]
                     # for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf] # too slow
 
-                    for strengthened in [false], add_benders_cuts_to_master in [false], reuse_dcglp in [false]
+                    for strengthened in [true], add_benders_cuts_to_master in [false], reuse_dcglp in [false]
                     # for strengthened in [false], add_benders_cuts_to_master in [true], reuse_dcglp in [false], p in [1.0]
                     # for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0]
                     # for strengthened in [false], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0]

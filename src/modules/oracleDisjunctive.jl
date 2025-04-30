@@ -13,130 +13,35 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
     function DisjunctiveOracleParam(; 
                                     norm::AbstractNorm = LpNorm(Inf), 
                                     split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(), disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
-                                    strengthened::Bool=true, 
-                                    add_benders_cuts_to_master::Bool=true, 
+                                    strengthened::Bool = true, 
+                                    add_benders_cuts_to_master::Bool = true, 
                                     fraction_of_benders_cuts_to_master::Float64 = 1.0, 
-                                    reuse_dcglp::Bool=true,
-                                    lift::Bool=false) 
+                                    reuse_dcglp::Bool = true,
+                                    lift::Bool = false) 
         new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_benders_cuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift)
     end
 end 
 
-mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
-    
-    oracle_param::DisjunctiveOracleParam
-
-    dcglp::Model
-    typical_oracles::Vector{AbstractTypicalOracle}
-
-    # Dcglp loop parameters
-    param::DcglpParam
-
-    # log for splits and disjunctive cuts
-    disjunctiveCutsByIndex::Vector{Vector{Hyperplane}}
-    disjunctiveCuts::Vector{Hyperplane}
-    splits::Vector{Tuple{SparseVector{Float64, Int}, Float64}}
-
-    function DisjunctiveOracle(data, 
-                               typical_oracles::Vector{T}; 
-                               param::DcglpParam = DcglpParam(),
-                               solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                               oracle_param::DisjunctiveOracleParam = DisjunctiveOracleParam()) where {T<:AbstractTypicalOracle}
-        @debug "Building disjunctive oracle"
-        dcglp = build_dcglp(data.dim_x, data.dim_t, oracle_param.norm)
-        # dcglp = Model()
-        # # Define variables
-        # @variable(dcglp, tau)
-        # @variable(dcglp, omega_0[1:2]) # 1 for kappa; 2 for nu
-        # @variable(dcglp, omega_x[1:2,1:data.dim_x])
-        # @variable(dcglp, omega_t[1:2,1:data.dim_t])
-        # @variable(dcglp, sx[1:data.dim_x])
-        # @variable(dcglp, st[1:data.dim_t])
-        
-        # # Set objective
-        # @objective(dcglp, Min, tau)
-
-        # # Add constraints
-        # @constraint(dcglp, [i=1:2], omega_t[i,:] .>= -1e6 * omega_0[i])
-        # @constraint(dcglp, coneta[i in 1:2, j in 1:data.dim_x], 0 >= -omega_0[i] + omega_x[i,j]) 
-        # @constraint(dcglp, condelta[i in 1:2, j in 1:data.dim_x], 0 >= -omega_x[i,j])
-        # @constraint(dcglp, conineq[i in 1:2], omega_0[i] >= 0)
-
-        # # Add gamma constraints
-        # @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
-        # @constraint(dcglp, conx, omega_x[1,:] + omega_x[2,:] - sx .== 0)
-        # @constraint(dcglp, cont[j=1:data.dim_t], omega_t[1,j] + omega_t[2,j] - st[j] == 0) # must be in this form to recognize it as a vector
-
-        assign_attributes!(dcglp, solver_param)
-        
-        # add_normalization_constraint(dcglp, oracle_param.norm)
-        
-        disjunctiveCutsByIndex = [Vector{Hyperplane}() for i=1:data.dim_x]
-        splits = Vector{Tuple{SparseVector{Float64, Int}, Float64}}()
-
-        new(oracle_param, dcglp, typical_oracles, param, disjunctiveCutsByIndex, Vector{Hyperplane}(), splits)
+function DisjunctiveOracle(data, 
+                           typical_oracles::Vector{T}; 
+                           param::DcglpParam = DcglpParam(),
+                           solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
+                           oracle_param::DisjunctiveOracleParam = DisjunctiveOracleParam()) where {T<:AbstractTypicalOracle}
+    if typeof(oracle_param.norm) <: LpNorm
+        return DisjunctiveOracleGammaNorm(data, typical_oracles, param, solver_param = solver_param, oracle_param = oracle_param)
+    elseif typeof(oracle_param.norm) <: StandardNorm
+        return DisjunctiveOracleStdNorm(data, typical_oracles, param, solver_param = solver_param, oracle_param = oracle_param)
+    else
+        throw(UndefError("DisjunctiveOracle: $(typeof(oracle_param.norm)) is not implemented."))
     end
 end
-function build_dcglp(dim_x::Int, dim_t::Int, norm::StandardNorm)
-    @debug "Building disjunctive oracle"
-    dcglp = Model()
-    # Define variables
-    @variable(dcglp, tau)
-    @variable(dcglp, omega_0[1:2]) # 1 for kappa; 2 for nu
-    @variable(dcglp, omega_x[1:2,1:dim_x])
-    @variable(dcglp, omega_t[1:2,1:dim_t])
-    
-    # Set objective
-    @objective(dcglp, Min, tau)
 
-    # Add constraints
-    @constraint(dcglp, [i=1:2], omega_t[i,:] .+ tau .>= -1e6 * omega_0[i])
-    @constraint(dcglp, coneta[i in 1:2, j in 1:dim_x], tau >= -omega_0[i] + omega_x[i,j]) 
-    @constraint(dcglp, condelta[i in 1:2, j in 1:dim_x], tau >= -omega_x[i,j])
-    @constraint(dcglp, conineq[i in 1:2], omega_0[i] >= 0)
-
-    # Add gamma constraints
-    @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
-    @constraint(dcglp, conx, omega_x[1,:] + omega_x[2,:] .== 0)
-    @constraint(dcglp, cont[j=1:dim_t], omega_t[1,j] + omega_t[2,j] == 0) # must be in this form to recognize it as a vector
-
-    return dcglp
-end
-function build_dcglp(dim_x::Int, dim_t::Int, norm::LpNorm)
-    @debug "Building disjunctive oracle"
-    dcglp = Model()
-    # Define variables
-    @variable(dcglp, tau)
-    @variable(dcglp, omega_0[1:2]) # 1 for kappa; 2 for nu
-    @variable(dcglp, omega_x[1:2,1:dim_x])
-    @variable(dcglp, omega_t[1:2,1:dim_t])
-    @variable(dcglp, sx[1:dim_x])
-    @variable(dcglp, st[1:dim_t])
-    
-    # Set objective
-    @objective(dcglp, Min, tau)
-
-    # Add constraints
-    @constraint(dcglp, [i=1:2], omega_t[i,:] .>= -1e6 * omega_0[i])
-    @constraint(dcglp, coneta[i in 1:2, j in 1:dim_x], 0 >= -omega_0[i] + omega_x[i,j]) 
-    @constraint(dcglp, condelta[i in 1:2, j in 1:dim_x], 0 >= -omega_x[i,j])
-    @constraint(dcglp, conineq[i in 1:2], omega_0[i] >= 0)
-
-    # Add gamma constraints
-    @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
-    @constraint(dcglp, conx, omega_x[1,:] + omega_x[2,:] - sx .== 0)
-    @constraint(dcglp, cont[j=1:dim_t], omega_t[1,j] + omega_t[2,j] - st[j] == 0) # must be in this form to recognize it as a vector
-    
-    add_normalization_constraint(dcglp, norm)
-
-    return dcglp
-end
 """
 The following optional arguments are needed for `SpecializedBendersSeq`
 - `throw_typical_cuts_for_errors` determines whether to return a typical Benders cut, when DCGLP encounters some issue. It must be `false` for SpecializedBendersSeq.
 - `include_disjuctive_cuts_to_hyperplanes` determines whether to add a disjunctive cut found to `hyperplanes` to be returned; if it is `false`, the disjuctive cut should be added at a desired place via `oracle.disjunctiveCuts` or `oracle.disjunctiveCutsByIndex`. It must be `false` for SpecializedBendersSeq.
 """
-function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, atol = 1e-9, time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
+function generate_cuts(oracle::AbstractDisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; rtol = 1e-6, atol = 1e-9, time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
 
     tic = time()
     
@@ -171,22 +76,28 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
 
     add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices) 
 
-    return solve_dcglp!(oracle, x_value, t_value, zero_indices, one_indices; time_limit = time_limit, throw_typical_cuts_for_errors = throw_typical_cuts_for_errors, include_disjuctive_cuts_to_hyperplanes = include_disjuctive_cuts_to_hyperplanes)
+    return solve_dcglp!(oracle, x_value, t_value, zero_indices, one_indices; rtol = rtol, atol = atol, time_limit = time_limit, throw_typical_cuts_for_errors = throw_typical_cuts_for_errors, include_disjuctive_cuts_to_hyperplanes = include_disjuctive_cuts_to_hyperplanes)
 end
 
 """
 Updates parameters of the DisjunctiveOracle. Changing the normalization updates the dcglp model, which is initially set during declaration.
 """
-function set_parameter!(oracle::DisjunctiveOracle, param::DisjunctiveOracleParam)
+function set_parameter!(oracle::AbstractDisjunctiveOracle, param::DisjunctiveOracleParam)
     oracle.oracle_param = param
-    if haskey(oracle.dcglp, :concone)
-        delete.(oracle.dcglp, oracle.dcglp[:concone]) 
-        unregister(oracle.dcglp, :concone)
+    if typeof(oracle) <: DisjunctiveOracleGammaNorm
+        if haskey(oracle.dcglp, :concone)
+            delete.(oracle.dcglp, oracle.dcglp[:concone]) 
+            unregister(oracle.dcglp, :concone)
+        end
+        add_normalization_constraint(oracle.dcglp, oracle.oracle_param.norm)
+    elseif typeof(oracle) <: DisjunctiveOracleStdNorm
+        if typeof(param.norm) != StandardNorm
+            @warn "set_parameter!: `StandardNorm` cannot be changed to `LpNorm`. If you intend to change it, please set it at the declaration of the oracle. Proceeding using `StandardNorm`..."
+        end
     end
-    add_normalization_constraint(oracle.dcglp, oracle.oracle_param.norm)
 end
-  
-function set_parameter!(oracle::DisjunctiveOracle, param::String, value::Any)
+
+function set_parameter!(oracle::AbstractDisjunctiveOracle, param::String, value::Any)
     sym_param = Symbol(param)
     if sym_param ∈ fieldnames(typeof(oracle.oracle_param))
         setfield!(oracle.oracle_param, sym_param, value)
@@ -195,29 +106,29 @@ function set_parameter!(oracle::DisjunctiveOracle, param::String, value::Any)
     end
 
     if sym_param == :norm
-        thow(UndefErrorError(""))
-        # if haskey(oracle.dcglp, :concone)
-        #     delete.(oracle.dcglp, oracle.dcglp[:concone]) 
-        #     unregister(oracle.dcglp, :concone)
-        # end
-        # add_normalization_constraint(oracle.dcglp, oracle.oracle_param.norm)
+        if typeof(oracle) <: DisjunctiveOracleGammaNorm
+            if haskey(oracle.dcglp, :concone)
+                delete.(oracle.dcglp, oracle.dcglp[:concone]) 
+                unregister(oracle.dcglp, :concone)
+            end
+            add_normalization_constraint(oracle.dcglp, oracle.oracle_param.norm)
+        elseif typeof(oracle) <: DisjunctiveOracleStdNorm
+            if typeof(param.norm) != StandardNorm
+                @warn "set_parameter!: `StandardNorm` cannot be changed to `LpNorm`. If you intend to change it, please set it at the declaration of the oracle. Proceeding using `StandardNorm`..."
+            end
+        end
     end
 end
 
 """
 prototypes for user-customizable functions for DisjunctiveOracle
 """
-function add_normalization_constraint(dcglp::Model, norm::AbstractNorm)
-    throw(UndefError("update add_normalization_constraint for $(typeof(norm))"))
-    # should add a normalization constraint to dcglp. 
-end
-
 function select_disjunctive_inequality(x_value::Vector{Float64}, split_selection_rule::SplitIndexSelectionRule; zero_tol = 1e-2)    
     throw(UndefError("update select_disjunctive_inequality for $(typeof(split_selection_rule))"))
     # should return a split: phi, phi_0
 end
 
-function add_disjunctive_cuts!(oracle::DisjunctiveOracle, rule::DisjunctiveCutsAppendRule)
+function add_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, rule::DisjunctiveCutsAppendRule)
     throw(UndefError("update add_disjunctive_cuts! for $(typeof(rule))"))
     # should add to dcglp
 end
@@ -227,14 +138,14 @@ include("oracleDisjunctiveInterface.jl")
 """
 utility functions for DisjunctiveOracle
 """
-function get_split_index(oracle::DisjunctiveOracle)
+function get_split_index(oracle::AbstractDisjunctiveOracle)
     if !(typeof(oracle.oracle_param.split_index_selection_rule) <: SimpleSplit)
         throw(AlgorithmException("get_split_index is only valid for SimpleSplit"))
     end
     return findfirst(x -> x > 0.5, oracle.splits[end][1])
 end
 
-function replace_disjunctive_inequality!(oracle::DisjunctiveOracle)
+function replace_disjunctive_inequality!(oracle::AbstractDisjunctiveOracle)
     dcglp = oracle.dcglp
     phi = oracle.splits[end][1]
     phi_0 = oracle.splits[end][2]
@@ -249,8 +160,15 @@ function replace_disjunctive_inequality!(oracle::DisjunctiveOracle)
     end
         
     # Add new constraints
-    @constraint(dcglp, con_split_kappa, 0 >= dcglp[:omega_0][1]*(phi_0+1) - phi' * dcglp[:omega_x][1,:])
-    @constraint(dcglp, con_split_nu, 0 >= -dcglp[:omega_0][2]*phi_0 + phi' * dcglp[:omega_x][2,:])
+    if typeof(oracle.oracle_param.norm) <: LpNorm
+        @constraint(dcglp, con_split_kappa, 0 >= dcglp[:omega_0][1]*(phi_0+1) - phi' * dcglp[:omega_x][1,:])
+        @constraint(dcglp, con_split_nu, 0 >= -dcglp[:omega_0][2]*phi_0 + phi' * dcglp[:omega_x][2,:])
+    elseif typeof(oracle.oracle_param.norm) <: StandardNorm
+        @constraint(dcglp, con_split_kappa, dcglp[:tau] >= dcglp[:omega_0][1]*(phi_0+1) - phi' * dcglp[:omega_x][1,:])
+        @constraint(dcglp, con_split_nu, dcglp[:tau] >= -dcglp[:omega_0][2]*phi_0 + phi' * dcglp[:omega_x][2,:])
+    else
+        throw(UndefError("update replace_disjunctive_inequality! for $(typeof(oracle.oracle_param.norm))"))
+    end
 end
 
 function solve_dcglp!(oracle::AbstractDisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; time_limit = time_limit)
@@ -269,6 +187,6 @@ function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_i
     haskey(dcglp, :con_xi) && (delete.(dcglp, vcat(dcglp[:con_xi]...)); unregister(dcglp, :con_xi))
 
     # add lifting constraints
-    !isempty(zero_indices) && @constraint(dcglp, con_zeta[i in 1:2, j=1:length(zero_indices)], 0>= dcglp[:omega_x][i, zero_indices[j]])
-    !isempty(one_indices) && @constraint(dcglp, con_xi[i in 1:2, j=1:length(one_indices)], 0>= dcglp[:omega_0][i] - dcglp[:omega_x][i, one_indices[j]])
+    !isempty(zero_indices) && @constraint(dcglp, con_zeta[i in 1:2, j=1:length(zero_indices)], 0 >= dcglp[:omega_x][i, zero_indices[j]])
+    !isempty(one_indices) && @constraint(dcglp, con_xi[i in 1:2, j=1:length(one_indices)], 0 >= dcglp[:omega_0][i] - dcglp[:omega_x][i, one_indices[j]])
 end
