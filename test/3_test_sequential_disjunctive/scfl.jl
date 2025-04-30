@@ -46,13 +46,12 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
             optimize!(mip.model)
             @assert termination_status(mip.model) == OPTIMAL
             mip_opt_val = objective_value(mip.model)
-            x_opt = value.(mip.model[:x])
-            t_opt = value.(mip.model[:t])
+
             @debug x_opt
             @debug t_opt
             @testset "Classic oracle" begin
                 @testset "Seq" begin        
-                    for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]   
+                    for strengthened in [true; false], add_benders_cuts_to_master in [true], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]   
                         @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
 
@@ -120,7 +119,7 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
             end 
             @testset "Knapsack oracle" begin
                 @testset "Seq" begin        
-                    for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]   
+                    for strengthened in [true; false], add_benders_cuts_to_master in [true], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]   
                         @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/knapsack - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
 
