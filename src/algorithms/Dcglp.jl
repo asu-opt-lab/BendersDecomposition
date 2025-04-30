@@ -158,10 +158,10 @@ function generate_lifted_disjunctive_cut(dcglp::Model, norm::AbstractNorm, zero_
     gamma_t = dual.(dcglp[:cont])
     gamma_0 = dual(dcglp[:con0])
 
-    zeta_k = !isempty(zero_indices) ? dual.(dcglp[:con_zeta][1,:]) : Float64[] # zero indices
-    zeta_v = !isempty(zero_indices) ? dual.(dcglp[:con_zeta][2,:]) : Float64[] # zero indices
-    xi_k = !isempty(one_indices) ? dual.(dcglp[:con_xi][1,:]) : Float64[] # one indices
-    xi_v = !isempty(one_indices) ? dual.(dcglp[:con_xi][2,:]) : Float64[] # one indices
+    zeta_k = !isempty(zero_indices) ? dual.(dcglp[:con_zeta][1,:]) : Float64[]
+    zeta_v = !isempty(zero_indices) ? dual.(dcglp[:con_zeta][2,:]) : Float64[] 
+    xi_k = !isempty(one_indices) ? dual.(dcglp[:con_xi][1,:]) : Float64[] 
+    xi_v = !isempty(one_indices) ? dual.(dcglp[:con_xi][2,:]) : Float64[] 
 
     # coefficients for lifted cut
     lifted_gamma_0 = gamma_0 - sum(max.(xi_k, xi_v))
@@ -192,7 +192,7 @@ end
 
 function strengthening!(gamma_x, sigma, delta; zero_tol = 1e-5)
     @debug "dcglp strengthening - sigma values: [σ₁: $(sigma[1]), σ₂: $(sigma[2])]"
-    # @debug "dcglp strengthening - delta values: [δ₁: $(delta[1]), δ₂: $(delta[2])]"
+    @debug "dcglp strengthening - delta values: [δ₁: $(delta[1]), δ₂: $(delta[2])]"
     
     a₁ = gamma_x .- delta[1]
     a₂ = gamma_x .- delta[2]
@@ -215,7 +215,7 @@ function compute_norm_value(gamma_x, gamma_t, norm::AbstractNorm)
     elseif norm.p == Inf
         norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), 1.0)
     else
-        throw(AlgorithmException("Unsupported norm type: $(typeof(norm))"))
+        throw(UndefError("Unsupported norm type: $(typeof(norm))"))
     end
     return max(1.0, norm_value)
 end

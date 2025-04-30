@@ -8,7 +8,7 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
     add_benders_cuts_to_master::Bool
     fraction_of_benders_cuts_to_master::Float64
     reuse_dcglp::Bool
-    lift::Bool # lifting
+    lift::Bool 
 
     function DisjunctiveOracleParam(; 
                                     norm::AbstractNorm = LpNorm(Inf), 
@@ -17,8 +17,8 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
                                     add_benders_cuts_to_master::Bool=true, 
                                     fraction_of_benders_cuts_to_master::Float64 = 1.0, 
                                     reuse_dcglp::Bool=true,
-                                    lift::Bool=false) # lifting
-        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_benders_cuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift) # lifting
+                                    lift::Bool=false) 
+        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_benders_cuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift)
     end
 end 
 
@@ -80,12 +80,9 @@ end
 `throw_typical_cuts_for_errors` determines whether to return a typical Benders cut, when DCGLP encounters some issue. It must be `false` for SpecializedBendersSeq
 `include_disjuctive_cuts_to_hyperplanes` determines whether to add a disjunctive cut found to `hyperplanes` to be returned; if it is `false`, the disjuctive cut should be added at a desired place via `oracle.disjunctiveCuts` or `oracle.disjunctiveCutsByIndex`
 """
-function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
+function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, atol = 1e-9, time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
 
     tic = time()
-
-    # Retrieve zero and one indices if lifting is enabled
-    zero_indices, one_indices = oracle.oracle_param.lift ? retrieve_zero_one(x_value) : (Int[], Int[]) # lifting
     
     push!(oracle.splits, select_disjunctive_inequality(x_value, oracle.oracle_param.split_index_selection_rule))
     
@@ -113,7 +110,10 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 
-    add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices) # lifting
+    # Retrieve zero and one indices if lifting is enabled
+    zero_indices, one_indices = oracle.oracle_param.lift ? retrieve_zero_one(x_value, atol=atol) : (Int[], Int[]) 
+
+    add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices) 
 
     return solve_dcglp!(oracle, x_value, t_value, zero_indices, one_indices; time_limit = time_limit, throw_typical_cuts_for_errors = throw_typical_cuts_for_errors, include_disjuctive_cuts_to_hyperplanes = include_disjuctive_cuts_to_hyperplanes)
 end
@@ -199,14 +199,13 @@ function solve_dcglp!(oracle::AbstractDisjunctiveOracle, x_value::Vector{Float64
     throw(UndefError("update solve_dcglp! for $(typeof(oracle))"))
 end
 
-function retrieve_zero_one(x_value::Vector{Float64}) # lifting
-    # atol can be assigend from oracle_param
-    zeros_indices = findall(x -> isapprox(x, 0.0; atol=1e-6), x_value)
-    ones_indices = findall(x -> isapprox(x, 1.0; atol=1e-6), x_value)
+function retrieve_zero_one(x_value::Vector{Float64}; atol = 1e-9)
+    zeros_indices = findall(x -> isapprox(x, 0.0; atol=atol), x_value)
+    ones_indices = findall(x -> isapprox(x, 1.0; atol=atol), x_value)
     return zeros_indices, ones_indices
 end
 
-function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_indices::Vector{Int}) # lifting
+function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_indices::Vector{Int})
     # remove previously added lifting constraints
     haskey(dcglp, :con_zeta) && (delete.(dcglp, vcat(dcglp[:con_zeta]...)); unregister(dcglp, :con_zeta))
     haskey(dcglp, :con_xi) && (delete.(dcglp, vcat(dcglp[:con_xi]...)); unregister(dcglp, :con_xi))
