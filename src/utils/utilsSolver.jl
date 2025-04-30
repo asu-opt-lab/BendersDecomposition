@@ -1,9 +1,9 @@
 export assign_attributes!
-# const GRB_ENV = Ref{Gurobi.Env}()
-# function __init__()
-#     GRB_ENV[] = Gurobi.Env()
-#     return
-# end
+const GRB_ENV = Ref{Gurobi.Env}()
+function __init__()
+    GRB_ENV[] = Gurobi.Env()
+    return
+end
 
 function assign_attributes!(model::Model, config::Dict{String,Any})
     # Set solver based on config

@@ -14,16 +14,17 @@ function parse_commandline()
             help = "Output directory"
             default = "experiments"
             arg_type = String
-        "--snip_no"
-            help = "SNIP number"
-            default = 1
-            arg_type = Int
-            required = false
-        "--budget"
-            help = "Budget"
-            default = 30.0
-            arg_type = Float64
-            required = false
+        # To-Do: for future use
+        # "--snip_no"
+        #     help = "SNIP number"
+        #     default = 1
+        #     arg_type = Int
+        #     required = false
+        # "--budget"
+        #     help = "Budget"
+        #     default = 30.0
+        #     arg_type = Float64
+        #     required = false
     end
 
     return parse_args(s)
