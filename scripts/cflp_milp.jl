@@ -26,7 +26,7 @@ data = Data(dim_x, dim_t, problem, c_x, c_t)
 # -----------------------------------------------------------------------------
 # load parameters
 # -----------------------------------------------------------------------------
-mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9)
+mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 32)
 
 # -----------------------------------------------------------------------------
 # MIP model
@@ -35,6 +35,7 @@ mip = Mip(data)
 assign_attributes!(mip.model, mip_solver_param)
 set_time_limit_sec(mip.model, 3600.0)
 update_model!(mip, data)
+set_optimizer_attribute(mip.model, MOI.Silent(), false)
 optimize!(mip.model)
 
 @info termination_status(mip.model)
