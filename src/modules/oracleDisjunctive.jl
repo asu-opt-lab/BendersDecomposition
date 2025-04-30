@@ -8,6 +8,7 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
     add_benders_cuts_to_master::Bool
     fraction_of_benders_cuts_to_master::Float64
     reuse_dcglp::Bool
+    lift::Bool 
 
     function DisjunctiveOracleParam(; 
                                     norm::AbstractNorm = LpNorm(Inf), 
@@ -15,10 +16,11 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
                                     strengthened::Bool=true, 
                                     add_benders_cuts_to_master::Bool=true, 
                                     fraction_of_benders_cuts_to_master::Float64 = 1.0, 
-                                    reuse_dcglp::Bool=true)
-        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_benders_cuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp)
+                                    reuse_dcglp::Bool=true,
+                                    lift::Bool=false) 
+        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_benders_cuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift)
     end
-end
+end 
 
 mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
     
@@ -78,7 +80,7 @@ end
 `throw_typical_cuts_for_errors` determines whether to return a typical Benders cut, when DCGLP encounters some issue. It must be `false` for SpecializedBendersSeq
 `include_disjuctive_cuts_to_hyperplanes` determines whether to add a disjunctive cut found to `hyperplanes` to be returned; if it is `false`, the disjuctive cut should be added at a desired place via `oracle.disjunctiveCuts` or `oracle.disjunctiveCutsByIndex`
 """
-function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
+function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, atol = 1e-9, time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
 
     tic = time()
     
@@ -108,12 +110,12 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 
-    # for approximate oracle, add fixing constraints here :con_xi_1, :con_xi_2 and :con_zeta_1, :con_zeta_2
-    # when length(zero_indices) == 0, dcglp[:con_xi_1] = Vector{ConstraintRef}(), dcglp[:con_xi_2] = Vector{ConstraintRef}()
-    # same for the case of lenth(one_indices) == 0
-    # add to solve_dcglp! an optional argument lift::Bool; 
+    # Retrieve zero and one indices if lifting is enabled
+    zero_indices, one_indices = oracle.oracle_param.lift ? retrieve_zero_one(x_value, atol=atol) : (Int[], Int[]) 
 
-    return solve_dcglp!(oracle, x_value, t_value; time_limit = time_limit, throw_typical_cuts_for_errors = throw_typical_cuts_for_errors, include_disjuctive_cuts_to_hyperplanes = include_disjuctive_cuts_to_hyperplanes)
+    add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices) 
+
+    return solve_dcglp!(oracle, x_value, t_value, zero_indices, one_indices; time_limit = time_limit, throw_typical_cuts_for_errors = throw_typical_cuts_for_errors, include_disjuctive_cuts_to_hyperplanes = include_disjuctive_cuts_to_hyperplanes)
 end
 """
 Updates parameters of the DisjunctiveOracle. Changing the normalization updates the dcglp model, which is initially set during declaration.
@@ -195,4 +197,20 @@ end
 
 function solve_dcglp!(oracle::AbstractDisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; time_limit = time_limit)
     throw(UndefError("update solve_dcglp! for $(typeof(oracle))"))
+end
+
+function retrieve_zero_one(x_value::Vector{Float64}; atol = 1e-9)
+    zeros_indices = findall(x -> isapprox(x, 0.0; atol=atol), x_value)
+    ones_indices = findall(x -> isapprox(x, 1.0; atol=atol), x_value)
+    return zeros_indices, ones_indices
+end
+
+function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_indices::Vector{Int})
+    # remove previously added lifting constraints
+    haskey(dcglp, :con_zeta) && (delete.(dcglp, vcat(dcglp[:con_zeta]...)); unregister(dcglp, :con_zeta))
+    haskey(dcglp, :con_xi) && (delete.(dcglp, vcat(dcglp[:con_xi]...)); unregister(dcglp, :con_xi))
+
+    # add lifting constraints
+    !isempty(zero_indices) && @constraint(dcglp, con_zeta[i in 1:2, j=1:length(zero_indices)], 0>= dcglp[:omega_x][i, zero_indices[j]])
+    !isempty(one_indices) && @constraint(dcglp, con_xi[i in 1:2, j=1:length(one_indices)], 0>= dcglp[:omega_0][i] - dcglp[:omega_x][i, one_indices[j]])
 end
