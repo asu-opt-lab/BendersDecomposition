@@ -1,17 +1,36 @@
 #!/bin/sh
 #SBATCH -t 0-01:00:00
 
-# Define variables to make the script more readable and maintainable
+ROUND_VERSION="round3"
+ROUND_DESCRIPTION="For a new set of instances"
+EXPERIMENT_VERSION="cflp_callback_disjunctive_01"
+EXPERIMENT_DESCRIPTION="For seqinout 300s and default LPmethod"
 
-OUTPUT_DIR="experiments_appro_app_test/cflp_disjunctive_4500node_knapsack_gap50_TTF_perturbed_2"
-# OUTPUT_DIR="experiments_appro_new_new/cflp_disjunctive_classical_700"
+# Define variables to make the script more readable and maintainable
+OUTPUT_DIR="experiments/${ROUND_VERSION}/${EXPERIMENT_VERSION}"
+ERR_OUT_DIR="${OUTPUT_DIR}/results"
 
 # Create necessary directories
 mkdir -p "${OUTPUT_DIR}"
+mkdir -p "${ERR_OUT_DIR}"
+
+# Define job script directory
+JOBSCRIPT_DIR="./job_scripts"
+# mkdir -p "${JOBSCRIPT_DIR}"
 
 # Copy src directory to output directory
-cp -r src "${OUTPUT_DIR}/src"
-cp -r cflp_callback_disjunctive.jl "${OUTPUT_DIR}/cflp_callback_disjunctive.jl"
+cp -r scripts/cflp_callback_disjunctive.jl "${OUTPUT_DIR}/cflp_callback_disjunctive.jl"
+
+# Create experiment metadata markdown file
+cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
+# Experiment Metadata
+
+- **Round Version**: ${ROUND_VERSION}
+- **Round Description**: ${ROUND_DESCRIPTION}
+- **Experiment Version**: ${EXPERIMENT_VERSION}
+- **Experiment Description**: ${EXPERIMENT_DESCRIPTION}
+- **Date**: $(date "+%Y-%m-%d %H:%M:%S")
+EOF
 
 # Define an array of instance names
 instances=(
@@ -76,9 +95,9 @@ instances=(
     # "f600-c1500-r10-1" "f600-c1500-r10-2" "f600-c1500-r10-3" "f600-c1500-r10-4" "f600-c1500-r10-5"
 
     # 700 facilities, 700 customers
-    "f700-c700-r3-1" "f700-c700-r3-2" "f700-c700-r3-3" "f700-c700-r3-4" #"f700-c700-r3-5"
-    # "f700-c700-r5-1" "f700-c700-r5-2" "f700-c700-r5-3" "f700-c700-r5-4" "f700-c700-r5-5"
-    # "f700-c700-r10-1" "f700-c700-r10-2" "f700-c700-r10-3" "f700-c700-r10-4" "f700-c700-r10-5"
+    "f700-c700-r3-1" "f700-c700-r3-2" "f700-c700-r3-3" "f700-c700-r3-4" "f700-c700-r3-5"
+    "f700-c700-r5-1" "f700-c700-r5-2" "f700-c700-r5-3" "f700-c700-r5-4" "f700-c700-r5-5"
+    "f700-c700-r10-1" "f700-c700-r10-2" "f700-c700-r10-3" "f700-c700-r10-4" "f700-c700-r10-5"
 
     # # 1000 facilities, 1000 customers
     # "f1000-c1000-r3-1" "f1000-c1000-r3-2" "f1000-c1000-r3-3" "f1000-c1000-r3-4" "f1000-c1000-r3-5"
@@ -98,12 +117,13 @@ for instance in "${instances[@]}"; do
     echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -c 14" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -c 7" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH --nodelist=pcc036" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH --mem=60G" >> "${JOBSCRIPT_FILE}"
 
     echo "#SBATCH -t 0-04:00:00" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -o ${OUTPUT_DIR}/${instance}.out%j" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -e ${OUTPUT_DIR}/${instance}.err%j" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -o ${ERR_OUT_DIR}/${instance}.out%j" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -e ${ERR_OUT_DIR}/${instance}.err%j" >> "${JOBSCRIPT_FILE}"
 
     # Load necessary modules
     echo "module purge" >> "${JOBSCRIPT_FILE}"
@@ -112,9 +132,10 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=. scripts/cflp_callback_disjunctive.jl --instance ${instance} --output_dir ${OUTPUT_DIR}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=. scripts/cflp_callback_disjunctive.jl --instance ${instance} --output_dir ${ERR_OUT_DIR}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"
     rm "${JOBSCRIPT_FILE}"
 done
+

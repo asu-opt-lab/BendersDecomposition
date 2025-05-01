@@ -3,9 +3,9 @@ using BendersDecomposition
 using Printf  
 using Statistics  
 import BendersDecomposition: generate_cuts
-include("$(dirname(@__DIR__))/example/cflp/data_reader.jl")
-include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
-include("$(dirname(@__DIR__))/example/cflp/model.jl")
+include("$(dirname(@__DIR__))/example/uflp/data_reader.jl")
+include("$(dirname(@__DIR__))/example/uflp/oracle.jl")
+include("$(dirname(@__DIR__))/example/uflp/model.jl")
 
 # load settings
 args = parse_commandline()
@@ -16,7 +16,7 @@ output_dir = args["output_dir"]
 # -----------------------------------------------------------------------------
 # load problem data
 # -----------------------------------------------------------------------------
-problem = read_GK_data(instance)
+problem = read_Simple_data(instance)
 dim_x = problem.n_facilities
 dim_t = 1
 c_x = problem.fixed_costs

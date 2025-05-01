@@ -84,14 +84,20 @@ function solve!(env::BendersSeqInOut)
             @constraint(env.master.model, 0 .>= cuts)
             
             # whether to switch kelley mode
-            if !kelley_mode && log.n_iter != 0
+            if log.n_iter != 0
                 check_lb_improvement!(state, log; zero_tol = 1e-8, tol_imprv = 0.05)
 
                 if log.consecutive_no_improvement >= 5
-                    # Reset λ to 1 (switch to Kelley's cutting plane)
-                    λ = 1.0
-                    kelley_mode = true
-                    param.verbose && println("Switching to Kelley's cutting plane method (λ = 1.0)")
+                    if !kelley_mode
+                        # Reset λ to 1 (switch to Kelley's cutting plane)
+                        λ = 1.0
+                        kelley_mode = true
+                        log.consecutive_no_improvement = 0
+                        param.verbose && println("Switching to Kelley's cutting plane method (λ = 1.0)")
+                    else
+                        param.verbose && println("Aborting after 5 consecutive iterations without improvement in Kelley mode")
+                        break
+                    end
                 end
             end
         end

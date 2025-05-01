@@ -38,7 +38,8 @@ benders_param = BendersBnBParam(
 master_solver_param = Dict(
     "solver" => "CPLEX", 
     "CPX_PARAM_EPINT" => 1e-9, 
-    "CPX_PARAM_EPRHS" => 1e-9
+    "CPX_PARAM_EPRHS" => 1e-9,
+    "CPX_PARAM_EPGAP" => 1e-9
 )
 
 typical_oracle_solver_param = Dict(
