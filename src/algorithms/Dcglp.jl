@@ -169,11 +169,6 @@ function generate_lifted_disjunctive_cut(dcglp::Model, norm::LpNorm, zero_indice
         delta_2[zero_indices] += (-zeta_v + max.(zeta_k, zeta_v)) 
         delta = Dict(1 => delta_1, 2 => delta_2)
 
-        @debug "dcglp strengthening - sigma values: [σ₁: $(sigma[1]), σ₂: $(sigma[2])]"
-        @debug "dcglp strengthening - delta values: [δ₁: $(delta[1]), δ₂: $(delta[2])]"
-
-        println("dcglp strengthening - sigma values: [σ₁: $(sigma[1]), σ₂: $(sigma[2])]")
-
         lifted_gamma_x = strengthening!(lifted_gamma_x, sigma, delta; zero_tol = zero_tol)
     end
 
@@ -184,6 +179,9 @@ function generate_lifted_disjunctive_cut(dcglp::Model, norm::LpNorm, zero_indice
 end
 
 function strengthening!(gamma_x, sigma, delta; zero_tol = 1e-9)
+    @debug "dcglp strengthening - sigma values: [σ₁: $(sigma[1]), σ₂: $(sigma[2])]"
+    @debug "dcglp strengthening - delta values: [δ₁: $(delta[1]), δ₂: $(delta[2])]"
+
     a₁ = gamma_x .- delta[1]
     a₂ = gamma_x .- delta[2]
     sigma_sum = sigma[1] + sigma[2]
