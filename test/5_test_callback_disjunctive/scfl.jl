@@ -1,5 +1,6 @@
 include("$(dirname(dirname(@__DIR__)))/example/scflp/data_reader.jl")
 include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
+include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
 
 function create_scflp_oracle(data, oracle_type, oracle_solver_param)
     oracle = SeparableOracle(data, oracle_type(), data.problem.n_scenarios; solver_param = oracle_solver_param)
@@ -49,11 +50,12 @@ end
                 for strengthened in [true, false], 
                     add_benders_cuts_to_master in [true], 
                     reuse_dcglp in [true, false], 
+                    lift = [true, false],
                     p in [1.0, Inf], 
                     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
                     
-                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; dcut_append $disjunctive_cut_append_rule" begin
-                        @info "solving SCFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule" begin
+                        @info "solving SCFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
 
                         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                             solver_param = dcglp_solver_param,
@@ -90,11 +92,12 @@ end
                 for strengthened in [true, false], 
                     add_benders_cuts_to_master in [true], 
                     reuse_dcglp in [true, false], 
+                    lift = [true, false],
                     p in [1.0, Inf], 
                     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
                     
-                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; dcut_append $disjunctive_cut_append_rule" begin
-                        @info "solving SCFLP p$i - disjunctive oracle/knapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule" begin
+                        @info "solving SCFLP p$i - disjunctive oracle/knapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
 
                         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                             solver_param = dcglp_solver_param,
