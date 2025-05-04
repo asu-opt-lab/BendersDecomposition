@@ -1,13 +1,12 @@
 using JuMP, DataFrames, Logging, CSV
 using BendersDecomposition
-using Random
 using Printf  
 using Statistics  
 import BendersDecomposition: generate_cuts
 include("$(dirname(@__DIR__))/example/cflp/data_reader.jl")
 include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
 include("$(dirname(@__DIR__))/example/cflp/model.jl")
-Random.seed!(1234)
+
 
 # load settings
 args = parse_commandline()
@@ -35,14 +34,6 @@ benders_param = BendersBnBParam(
     verbose = true
 )
 
-dcglp_param = DcglpParam(
-    time_limit = 200.0,
-    gap_tolerance = 1e-3,
-    halt_limit = 3,
-    iter_limit = 15,
-    verbose = true
-)
-
 # Solver parameters
 master_solver_param = Dict(
     "solver" => "CPLEX", 
@@ -58,13 +49,6 @@ typical_oracle_solver_param = Dict(
     "CPX_PARAM_EPOPT" => 1e-9
 )
 
-dcglp_solver_param = Dict(
-    "solver" => "CPLEX", 
-    "CPX_PARAM_EPRHS" => 1e-9, 
-    "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
-    "CPX_PARAM_EPOPT" => 1e-9
-) #LPMETHOD default 0, network simplex 3
-
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
@@ -75,38 +59,8 @@ update_model!(master, data)
 # typical oracles
 # -----------------------------------------------------------------------------
 # Create two oracles for kappa & nu
-typical_oracles = [
-    CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param),
-    CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
-]
-
-for k = 1:2
-    update_model!(typical_oracles[k], data)
-end
-
-# -----------------------------------------------------------------------------
-# disjunctive oracle
-# -----------------------------------------------------------------------------
-disjunctive_oracle = DisjunctiveOracle(
-    data, 
-    typical_oracles; 
-    solver_param = dcglp_solver_param, 
-    param = dcglp_param
-) 
-
-oracle_param = DisjunctiveOracleParam(
-    norm = LpNorm(1.0), 
-    split_index_selection_rule = RandomFractional(),
-    disjunctive_cut_append_rule = AllDisjunctiveCuts(), 
-    strengthened = true, 
-    add_benders_cuts_to_master = true, 
-    fraction_of_benders_cuts_to_master = 1.0, 
-    reuse_dcglp = true,
-    lift = true
-)
-
-set_parameter!(disjunctive_oracle, oracle_param)
-update_model!(disjunctive_oracle, data)
+typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
+update_model!(typical_oracle, data)
 
 # -----------------------------------------------------------------------------
 # root node preprocessing
@@ -121,21 +75,18 @@ root_param = BendersSeqInOutParam(
     verbose = true
 )
 
-lazy_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
-update_model!(lazy_oracle, data)
-
 # Create root node preprocessing with oracle
-root_preprocessing = RootNodePreprocessing(lazy_oracle, root_seq_type, root_param)
+root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
 
 # -----------------------------------------------------------------------------
 # lazy callback
 # -----------------------------------------------------------------------------
-lazy_callback = LazyCallback(lazy_oracle)
+lazy_callback = LazyCallback(typical_oracle)
 
 # -----------------------------------------------------------------------------
 # user callback
 # -----------------------------------------------------------------------------
-user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=3000))
+user_callback = NoUserCallback()
 
 # -----------------------------------------------------------------------------
 # BendersBnB

@@ -3,14 +3,19 @@
 
 # Define variables to make the script more readable and maintainable
 
-ROUND_VERSION="round3"
+ROUND_VERSION="round6"
 ROUND_DESCRIPTION="For a new set of instances"
-EXPERIMENT_VERSION="uflp_callback_disjunctive_01"
-EXPERIMENT_DESCRIPTION="default LPmethod"
+EXPERIMENT_VERSION="uflp_disjunctive_fatknapsack_01"
+EXPERIMENT_DESCRIPTION="default setting, freq500"
 
 # Define variables to make the script more readable and maintainable
 OUTPUT_DIR="experiments/${ROUND_VERSION}/${EXPERIMENT_VERSION}"
 ERR_OUT_DIR="${OUTPUT_DIR}/results"
+
+if [ -d "${OUTPUT_DIR}" ]; then
+    echo "Error: Experiment directory ${OUTPUT_DIR} already exists. Please use a different EXPERIMENT_VERSION or remove the existing directory."
+    exit 1
+fi
 
 # Create necessary directories
 mkdir -p "${OUTPUT_DIR}"
@@ -21,7 +26,7 @@ JOBSCRIPT_DIR="./job_scripts"
 # mkdir -p "${JOBSCRIPT_DIR}"
 
 # Copy src directory to output directory
-cp -r scripts/uflp_callback_disjunctive.jl "${OUTPUT_DIR}/uflp_callback_disjunctive.jl"
+cp -r scripts/uflp_disjunctive_fatknapsack.jl "${OUTPUT_DIR}/uflp_disjunctive_fatknapsack.jl"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -37,9 +42,9 @@ EOF
 # Define an array of instance names
 instances=(
 
-    # "ga250a-1" "ga250a-2" "ga250a-3" "ga250a-4" "ga250a-5"
-    # "ga250b-1" "ga250b-2" "ga250b-3" "ga250b-4" "ga250b-5"
-    # "ga250c-1" "ga250c-2" "ga250c-3" "ga250c-4" "ga250c-5"
+    "ga250a-1" "ga250a-2" "ga250a-3" "ga250a-4" "ga250a-5"
+    "ga250b-1" "ga250b-2" "ga250b-3" "ga250b-4" "ga250b-5"
+    "ga250c-1" "ga250c-2" "ga250c-3" "ga250c-4" "ga250c-5"
 
     "ga500a-1" "ga500a-2" "ga500a-3" "ga500a-4" "ga500a-5"
     "ga500b-1" "ga500b-2" "ga500b-3" "ga500b-4" "ga500b-5"
@@ -49,16 +54,17 @@ instances=(
     "ga750b-1" "ga750b-2" "ga750b-3" "ga750b-4" "ga750b-5"
     "ga750c-1" "ga750c-2" "ga750c-3" "ga750c-4" "ga750c-5"
 
-    # "gs250a-1" "gs250a-2" "gs250a-3" "gs250a-4" "gs250a-5"
-    # "gs250b-1" "gs250b-2" "gs250b-3" "gs250b-4" "gs250b-5"
-    # "gs250c-1" "gs250c-2" "gs250c-3" "gs250c-4" "gs250c-5"
+    "gs250a-1" "gs250a-2" "gs250a-3" "gs250a-4" "gs250a-5"
+    "gs250b-1" "gs250b-2" "gs250b-3" "gs250b-4" "gs250b-5"
+    "gs250c-1" "gs250c-2" "gs250c-3" "gs250c-4" "gs250c-5"
 
-    # "gs500a-1" "gs500a-2" "gs500a-3" "gs500a-4" "gs500a-5"
-    # "gs500b-1" "gs500b-2" "gs500b-3" "gs500b-4" "gs500b-5"
-    # "gs500c-1" "gs500c-2" "gs500c-3" "gs500c-4" "gs500c-5"
+    "gs500a-1" "gs500a-2" "gs500a-3" "gs500a-4" "gs500a-5"
+    "gs500b-1" "gs500b-2" "gs500b-3" "gs500b-4" "gs500b-5"
+    "gs500c-1" "gs500c-2" "gs500c-3" "gs500c-4" "gs500c-5"
 
-    # "gs750a-1" "gs750a-2" "gs750a-3" "gs750a-4" "gs750a-5"
-    # "gs750b-1" "gs750b-2" "gs750b-3" "gs750b-4" "gs750b-5"
+    "gs750a-1" "gs750a-2" "gs750a-3" "gs750a-4" "gs750a-5"
+    "gs750b-1" "gs750b-2" "gs750b-3" "gs750b-4" "gs750b-5"
+    "gs750c-1" "gs750c-2" "gs750c-3" "gs750c-4" "gs750c-5"
 )
 
 # Loop through the instances and create a job script for each
@@ -87,7 +93,7 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=. scripts/uflp_callback_disjunctive.jl --instance ${instance} --output_dir ${OUTPUT_DIR}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=. scripts/uflp_disjunctive_fatknapsack.jl --instance ${instance} --output_dir ${OUTPUT_DIR}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

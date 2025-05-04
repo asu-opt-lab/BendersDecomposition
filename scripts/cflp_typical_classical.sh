@@ -1,10 +1,10 @@
 #!/bin/sh
 #SBATCH -t 0-01:00:00
 
-ROUND_VERSION="round3"
-ROUND_DESCRIPTION="For a new set of instances"
-EXPERIMENT_VERSION="cflp_callback_disjunctive_01"
-EXPERIMENT_DESCRIPTION="For seqinout 300s and default LPmethod"
+ROUND_VERSION="round5"
+ROUND_DESCRIPTION="For instances 700 and 1000"
+EXPERIMENT_VERSION="cflp_typical_classical"
+EXPERIMENT_DESCRIPTION="benchmark"
 
 # Define variables to make the script more readable and maintainable
 OUTPUT_DIR="experiments/${ROUND_VERSION}/${EXPERIMENT_VERSION}"
@@ -19,7 +19,7 @@ JOBSCRIPT_DIR="./job_scripts"
 # mkdir -p "${JOBSCRIPT_DIR}"
 
 # Copy src directory to output directory
-cp -r scripts/cflp_callback_disjunctive.jl "${OUTPUT_DIR}/cflp_callback_disjunctive.jl"
+cp -r scripts/cflp_typical_classical.jl "${OUTPUT_DIR}/cflp_typical_classical.jl"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -62,7 +62,7 @@ instances=(
 # # #     # 100 facilities, 500 customers
 #     "f100-c500-r3-1" "f100-c500-r3-2" "f100-c500-r3-3" "f100-c500-r3-4" "f100-c500-r3-5"
 #     "f100-c500-r5-1" "f100-c500-r5-2" "f100-c500-r5-3" "f100-c500-r5-4" "f100-c500-r5-5"
-#     "f100-c500-r10-1" "f100-c500-r10-2" "f100-c500-r10-3" "f100-c500-r10-4" "f100-c500-r10-5"
+    # "f100-c500-r10-1" "f100-c500-r10-2" "f100-c500-r10-3" "f100-c500-r10-4" "f100-c500-r10-5"
 
 # # # #     # 200 facilities, 200 customers
 #     "f200-c200-r3-1" "f200-c200-r3-2" "f200-c200-r3-3" "f200-c200-r3-4" "f200-c200-r3-5"
@@ -100,10 +100,9 @@ instances=(
     "f700-c700-r10-1" "f700-c700-r10-2" "f700-c700-r10-3" "f700-c700-r10-4" "f700-c700-r10-5"
 
     # # 1000 facilities, 1000 customers
-    # "f1000-c1000-r3-1" "f1000-c1000-r3-2" "f1000-c1000-r3-3" "f1000-c1000-r3-4" "f1000-c1000-r3-5"
-    # "f1000-c1000-r5-1" "f1000-c1000-r5-2" "f1000-c1000-r5-3" "f1000-c1000-r5-4" "f1000-c1000-r5-5"
-    # "f1000-c1000-r10-1" "f1000-c1000-r10-2" "f1000-c1000-r10-3" "f1000-c1000-r10-4" "f1000-c1000-r10-5"
-
+    "f1000-c1000-r3-1" "f1000-c1000-r3-2" "f1000-c1000-r3-3" "f1000-c1000-r3-4" "f1000-c1000-r3-5"
+    "f1000-c1000-r5-1" "f1000-c1000-r5-2" "f1000-c1000-r5-3" "f1000-c1000-r5-4" "f1000-c1000-r5-5"
+    "f1000-c1000-r10-1" "f1000-c1000-r10-2" "f1000-c1000-r10-3" "f1000-c1000-r10-4" "f1000-c1000-r10-5"
 )
 
 # Loop through the instances and create a job script for each
@@ -132,10 +131,9 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=. scripts/cflp_callback_disjunctive.jl --instance ${instance} --output_dir ${ERR_OUT_DIR}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=. scripts/cflp_typical_classical.jl --instance ${instance} --output_dir ${OUTPUT_DIR}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"
     rm "${JOBSCRIPT_FILE}"
 done
-

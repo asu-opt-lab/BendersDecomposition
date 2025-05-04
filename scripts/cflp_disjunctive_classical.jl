@@ -4,9 +4,9 @@ using Random
 using Printf  
 using Statistics  
 import BendersDecomposition: generate_cuts
-include("$(dirname(@__DIR__))/example/uflp/data_reader.jl")
-include("$(dirname(@__DIR__))/example/uflp/oracle.jl")
-include("$(dirname(@__DIR__))/example/uflp/model.jl")
+include("$(dirname(@__DIR__))/example/cflp/data_reader.jl")
+include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
+include("$(dirname(@__DIR__))/example/cflp/model.jl")
 Random.seed!(1234)
 
 # load settings
@@ -18,11 +18,11 @@ output_dir = args["output_dir"]
 # -----------------------------------------------------------------------------
 # load problem data
 # -----------------------------------------------------------------------------
-problem = read_Simple_data(instance)
+problem = read_GK_data(instance)
 dim_x = problem.n_facilities
-dim_t = problem.n_customers
+dim_t = 1
 c_x = problem.fixed_costs
-c_t = ones(dim_t)
+c_t = [1]
 data = Data(dim_x, dim_t, problem, c_x, c_t)
 
 # -----------------------------------------------------------------------------
@@ -36,10 +36,10 @@ benders_param = BendersBnBParam(
 )
 
 dcglp_param = DcglpParam(
-    time_limit = 1000.0,
+    time_limit = 200.0,
     gap_tolerance = 1e-3,
     halt_limit = 3,
-    iter_limit = 250,
+    iter_limit = 15,
     verbose = true
 )
 
@@ -49,6 +49,13 @@ master_solver_param = Dict(
     "CPX_PARAM_EPINT" => 1e-9, 
     "CPX_PARAM_EPRHS" => 1e-9,
     "CPX_PARAM_EPGAP" => 1e-9
+)
+
+typical_oracle_solver_param = Dict(
+    "solver" => "CPLEX", 
+    "CPX_PARAM_EPRHS" => 1e-9, 
+    "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
+    "CPX_PARAM_EPOPT" => 1e-9
 )
 
 dcglp_solver_param = Dict(
@@ -69,12 +76,12 @@ update_model!(master, data)
 # -----------------------------------------------------------------------------
 # Create two oracles for kappa & nu
 typical_oracles = [
-    UFLKnapsackOracle(data),
-    UFLKnapsackOracle(data)
+    ClassicalOracle(data; solver_param = typical_oracle_solver_param),
+    ClassicalOracle(data; solver_param = typical_oracle_solver_param)
 ]
 
-for k=1:2
-    set_parameter!(typical_oracles[k], "add_only_violated_cuts", true)
+for k = 1:2
+    update_model!(typical_oracles[k], data)
 end
 
 # -----------------------------------------------------------------------------
@@ -88,13 +95,13 @@ disjunctive_oracle = DisjunctiveOracle(
 ) 
 
 oracle_param = DisjunctiveOracleParam(
-    norm = LpNorm(Inf), 
+    norm = LpNorm(1.0), 
     split_index_selection_rule = RandomFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(), 
     strengthened = true, 
     add_benders_cuts_to_master = true, 
-    fraction_of_benders_cuts_to_master = 0.05, 
-    reuse_dcglp = false,
+    fraction_of_benders_cuts_to_master = 1.0, 
+    reuse_dcglp = true,
     lift = true
 )
 
@@ -104,15 +111,18 @@ update_model!(disjunctive_oracle, data)
 # -----------------------------------------------------------------------------
 # root node preprocessing
 # -----------------------------------------------------------------------------
-root_seq_type = BendersSeq
-root_param = BendersSeqParam(
-    time_limit = 100.0,
+root_seq_type = BendersSeqInOut
+root_param = BendersSeqInOutParam(
+    time_limit = 300.0,
     gap_tolerance = 1e-6,
+    stabilizing_x = ones(data.dim_x),
+    α = 0.9,
+    λ = 0.1,
     verbose = true
 )
 
-lazy_oracle = UFLKnapsackOracle(data)
-set_parameter!(lazy_oracle, "add_only_violated_cuts", true)
+lazy_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
+update_model!(lazy_oracle, data)
 
 # Create root node preprocessing with oracle
 root_preprocessing = RootNodePreprocessing(lazy_oracle, root_seq_type, root_param)
@@ -125,7 +135,7 @@ lazy_callback = LazyCallback(lazy_oracle)
 # -----------------------------------------------------------------------------
 # user callback
 # -----------------------------------------------------------------------------
-user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=500))
+user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=1500))
 
 # -----------------------------------------------------------------------------
 # BendersBnB

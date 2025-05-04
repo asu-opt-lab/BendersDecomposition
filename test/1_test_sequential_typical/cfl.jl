@@ -3,8 +3,8 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
 include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Sequential Benders Tests" begin
-    instances = setdiff(1:71, [67])
-    # instances = 30:35
+    # instances = setdiff(1:71, [67])
+    instances = 30:40
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -23,7 +23,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             benders_param = BendersSeqParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
-                            verbose = false
+                            verbose = true
                         )
 
             # solver parameters

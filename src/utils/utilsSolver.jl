@@ -5,7 +5,7 @@ function __init__()
     return
 end
 
-function assign_attributes!(model::Model, config::Dict{String,Any})
+function assign_attributes!(model::Model, config::Dict{String,<:Any})
     # Set solver based on config
     # @info config 
     if config["solver"] == "Gurobi"

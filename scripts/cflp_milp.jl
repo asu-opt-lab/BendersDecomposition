@@ -27,7 +27,7 @@ data = Data(dim_x, dim_t, problem, c_x, c_t)
 # load parameters
 # -----------------------------------------------------------------------------
 mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9)
-
+# mip_solver_param = Dict("solver" => "Gurobi")
 # -----------------------------------------------------------------------------
 # MIP model
 # -----------------------------------------------------------------------------

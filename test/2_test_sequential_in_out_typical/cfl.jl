@@ -4,7 +4,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Sequential In/Out Benders Tests" begin
     # instances = setdiff(1:71, [67])
-    instances = 29:29
+    instances = 1:10
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -24,7 +24,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             benders_inout_param = BendersSeqInOutParam(;
             time_limit = 200.0,
             gap_tolerance = 1e-6,
-            verbose = false,
+            verbose = true,
             stabilizing_x = ones(data.dim_x),
             α = 0.9,
             λ = 0.1
