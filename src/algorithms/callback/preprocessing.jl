@@ -24,7 +24,7 @@ Used to generate initial cuts before the branch-and-bound procedure begins.
 - `seq_type::Type{<:AbstractBendersSeq}`: Type of Benders sequence to use
 - `params::AbstractBendersSeqParam`: Parameters for the Benders sequence
 """
-struct RootNodePreprocessing <: AbstractRootNodePreprocessing
+mutable struct RootNodePreprocessing <: AbstractRootNodePreprocessing
     oracle::AbstractOracle
     seq_type::Type{<:AbstractBendersSeq}
     params::AbstractBendersSeqParam
