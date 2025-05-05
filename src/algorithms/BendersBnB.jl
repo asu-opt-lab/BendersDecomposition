@@ -85,6 +85,16 @@ function solve!(env::BendersBnB)
         root_node_time = root_node_processing!(env.data, env.master, env.root_preprocessing)
     end
     
+    # Apply disjunctive root node preprocessing if specified
+    if param.disjunctive_root_process
+        # Update root_prepreocessing params
+        env.root_preprocessing.params.time_limit -= root_node_time
+        env.root_preprocessing.oracle = env.user_callback.oracle
+
+        disjunctive_root_node_time = root_node_processing!(env.data, env.master, env.root_preprocessing)
+        root_node_time += disjunctive_root_node_time
+    end
+    
     # Set up lazy callback
     function lazy_callback_wrapper(cb_data)
         lazy_callback(cb_data, env.master.model, log, env.param, env.lazy_callback)
@@ -126,14 +136,18 @@ function solve!(env::BendersBnB)
     elapsed_time = time() - log.start_time
     
     # Print summary if verbose mode is enabled
-    if param.verbose
+    if param.verbose 
         @info "Node count: $(JuMP.node_count(env.master.model))"
+        @info "Root processing time: $(root_node_time) "
         @info "Elapsed time: $(elapsed_time)"
         @info "Objective bound: $(JuMP.objective_bound(env.master.model))"
         @info "Objective value: $(env.obj_value)"
         @info "Relative gap: $(JuMP.relative_gap(env.master.model))"
         @info "Lazy cuts added: $(log.n_lazy_cuts)"
-        @info "User cuts added: $(log.n_user_cuts)"
+        if typeof(env.user_callback.oracle) == DisjunctiveOracle
+            @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
+            env.user_callback.oracle.oracle_param.add_benders_cuts_to_master && @info "Byproduct Benders cuts added: $(log.n_user_cuts - length(env.user_callback.oracle.disjunctiveCuts))"
+        end
     end
     
     return env.obj_value, elapsed_time

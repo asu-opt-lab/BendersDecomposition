@@ -54,14 +54,13 @@ function lazy_callback(cb_data, master_model::Model, log::BendersBnBLog, param::
         state.oracle_time = @elapsed begin
             state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t]; time_limit = param.time_limit)
             cuts = !state.is_in_L ? hyperplanes_to_expression(master_model, hyperplanes, master_model[:x], master_model[:t]) : []
+            state.num_cuts += length(hyperplanes)
         end
         
-        if !isempty(cuts)
-            for cut in cuts
-                cut_constraint = @build_constraint(0 >= cut)
-                MOI.submit(master_model, MOI.LazyConstraint(cb_data), cut_constraint)
-                state.num_cuts += 1
-            end
+        # Add cuts 
+        for cut in cuts
+            cut_constraint = @build_constraint(0 >= cut)
+            MOI.submit(master_model, MOI.LazyConstraint(cb_data), cut_constraint)
         end
         record_node!(log, state, true)
 

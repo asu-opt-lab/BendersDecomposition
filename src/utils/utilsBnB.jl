@@ -78,14 +78,16 @@ These parameters allow fine-tuning of the Benders algorithm performance.
 mutable struct BendersBnBParam <: AbstractBendersBnBParam
     time_limit::Float64
     gap_tolerance::Float64
+    disjunctive_root_process:: Bool
     verbose::Bool
 
     function BendersBnBParam(; 
                         time_limit::Float64 = 7200.0, 
                         gap_tolerance::Float64 = 1e-6, 
+                        disjunctive_root_process = false,
                         verbose::Bool = true
                         ) 
-        new(time_limit, gap_tolerance, verbose)
+        new(time_limit, gap_tolerance, disjunctive_root_process, verbose)
     end
 end 
 
