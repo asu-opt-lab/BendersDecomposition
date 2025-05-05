@@ -1,3 +1,6 @@
+# Drawbacks of StandardNorm: 
+# 1. omega_x/omega_0 does not need to lie within [0,1]. tau introduces slacks to all constraints, and it could be large. As a result, the oracle can be unstable; e.g., for ClassicalOracle, presolve should be turned off to get the solution.
+# 2. Due to the above issue, Knapsack-based oracle may not be utilized, since they cannot handle infeasible `x`.
 using Test
 using JuMP
 using Gurobi, CPLEX
