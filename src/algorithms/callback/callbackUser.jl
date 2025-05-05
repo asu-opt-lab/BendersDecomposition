@@ -94,16 +94,15 @@ function user_callback(cb_data, master_model::Model, log::BendersBnBLog, param::
                         state.num_cuts += length(hyperplanes)
                     end
 
-                    # Add cuts if any were generated
-                    if !isempty(cuts)
-                        for cut in cuts
-                            cut_constraint = @build_constraint(0 >= cut)
-                            MOI.submit(master_model, MOI.UserCut(cb_data), cut_constraint)
-                        end
+                    # Add cuts 
+                    for cut in cuts
+                        cut_constraint = @build_constraint(0 >= cut)
+                        MOI.submit(master_model, MOI.UserCut(cb_data), cut_constraint)
                     end
                     
                     # Record node information
                     record_node!(log, state, false)
+                    
                 catch e
                     if typeof(e) <: TimeLimitException
                         return

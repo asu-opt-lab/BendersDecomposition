@@ -136,7 +136,7 @@ function solve!(env::BendersBnB)
     elapsed_time = time() - log.start_time
     
     # Print summary if verbose mode is enabled
-    if param.verbose
+    if param.verbose 
         @info "Node count: $(JuMP.node_count(env.master.model))"
         @info "Root processing time: $(root_node_time) "
         @info "Elapsed time: $(elapsed_time)"
@@ -144,8 +144,10 @@ function solve!(env::BendersBnB)
         @info "Objective value: $(env.obj_value)"
         @info "Relative gap: $(JuMP.relative_gap(env.master.model))"
         @info "Lazy cuts added: $(log.n_lazy_cuts)"
-        @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
-        @info "All found cuts added: $(log.n_user_cuts - length(env.user_callback.oracle.disjunctiveCuts))"
+        if typeof(env.user_callback.oracle) == DisjunctiveOracle
+            @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
+            env.user_callback.oracle.oracle_param.add_benders_cuts_to_master && @info "Byproduct Benders cuts added: $(log.n_user_cuts - length(env.user_callback.oracle.disjunctiveCuts))"
+        end
     end
     
     return env.obj_value, elapsed_time

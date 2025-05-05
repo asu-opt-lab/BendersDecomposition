@@ -57,11 +57,10 @@ function lazy_callback(cb_data, master_model::Model, log::BendersBnBLog, param::
             state.num_cuts += length(hyperplanes)
         end
         
-        if !isempty(cuts)
-            for cut in cuts
-                cut_constraint = @build_constraint(0 >= cut)
-                MOI.submit(master_model, MOI.LazyConstraint(cb_data), cut_constraint)
-            end
+        # Add cuts 
+        for cut in cuts
+            cut_constraint = @build_constraint(0 >= cut)
+            MOI.submit(master_model, MOI.LazyConstraint(cb_data), cut_constraint)
         end
         record_node!(log, state, true)
 
