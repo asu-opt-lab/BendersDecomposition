@@ -17,7 +17,7 @@ output_dir = args["output_dir"]
 # -----------------------------------------------------------------------------
 # load problem data
 # -----------------------------------------------------------------------------
-problem = read_GK_data(instance)
+problem = read_cfl_file(instance)
 dim_x = problem.n_facilities
 dim_t = 1
 c_x = problem.fixed_costs

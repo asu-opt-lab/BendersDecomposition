@@ -39,7 +39,7 @@ master_solver_param = Dict(
     "solver" => "CPLEX", 
     "CPX_PARAM_EPINT" => 1e-9, 
     "CPX_PARAM_EPRHS" => 1e-9,
-    "CPX_PARAM_EPGAP" => 1e-6
+    "CPX_PARAM_EPGAP" => 1e-9
 )
 
 typical_oracle_solver_param = Dict(
@@ -59,7 +59,7 @@ update_model!(master, data)
 # typical oracles
 # -----------------------------------------------------------------------------
 # Create two oracles for kappa & nu
-typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
+typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
 update_model!(typical_oracle, data)
 
 # -----------------------------------------------------------------------------

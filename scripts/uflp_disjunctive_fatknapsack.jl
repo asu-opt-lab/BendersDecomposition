@@ -32,6 +32,7 @@ data = Data(dim_x, dim_t, problem, c_x, c_t)
 benders_param = BendersBnBParam(
     time_limit = 3600.0,
     gap_tolerance = 1e-6,
+    #disjunctive_root_process = true,
     verbose = true
 )
 
@@ -39,7 +40,7 @@ dcglp_param = DcglpParam(
     time_limit = 1000.0,
     gap_tolerance = 1e-3,
     halt_limit = 3,
-    iter_limit = 250,
+    iter_limit = 3,
     verbose = true
 )
 
@@ -48,7 +49,7 @@ master_solver_param = Dict(
     "solver" => "CPLEX", 
     "CPX_PARAM_EPINT" => 1e-9, 
     "CPX_PARAM_EPRHS" => 1e-9,
-    "CPX_PARAM_EPGAP" => 1e-9
+    "CPX_PARAM_EPGAP" => 1e-6
 )
 
 dcglp_solver_param = Dict(
@@ -96,7 +97,7 @@ oracle_param = DisjunctiveOracleParam(
     fraction_of_benders_cuts_to_master = 0.05, 
     reuse_dcglp = false, 
     lift = true
-) #ff,tt, previous, freq(500,1500)
+) 
 
 set_parameter!(disjunctive_oracle, oracle_param)
 update_model!(disjunctive_oracle, data)

@@ -1,10 +1,11 @@
 #!/bin/sh
 #SBATCH -t 0-01:00:00
 
-ROUND_VERSION="round7"
-ROUND_DESCRIPTION="For new instances"
-EXPERIMENT_VERSION="cflp_disjunctive_knapsack_01"
-EXPERIMENT_DESCRIPTION="try freq 1500"
+ROUND_VERSION="test"
+ROUND_DESCRIPTION="For all instances"
+EXPERIMENT_VERSION="cflp_lp_benders"
+EXPERIMENT_DESCRIPTION="check cplex"
+
 # Define variables to make the script more readable and maintainable
 OUTPUT_DIR="experiments/${ROUND_VERSION}/${EXPERIMENT_VERSION}"
 ERR_OUT_DIR="${OUTPUT_DIR}/results"
@@ -24,7 +25,7 @@ JOBSCRIPT_DIR="./job_scripts"
 # mkdir -p "${JOBSCRIPT_DIR}"
 
 # Copy src directory to output directory
-cp -r scripts/cflp_disjunctive_knapsack.jl "${OUTPUT_DIR}/cflp_disjunctive_knapsack.jl"
+cp -r scripts/cflp_milp.jl "${OUTPUT_DIR}/cflp_milp.jl"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -103,15 +104,11 @@ instances=(
     # "f700-c700-r3-1" "f700-c700-r3-2" "f700-c700-r3-3" "f700-c700-r3-4" "f700-c700-r3-5"
     # "f700-c700-r5-1" "f700-c700-r5-2" "f700-c700-r5-3" "f700-c700-r5-4" "f700-c700-r5-5"
     # "f700-c700-r10-1" "f700-c700-r10-2" "f700-c700-r10-3" "f700-c700-r10-4" "f700-c700-r10-5"
-    "f700-c700-r15-1" "f700-c700-r15-2" "f700-c700-r15-3" "f700-c700-r15-4" "f700-c700-r15-5"
-    "f700-c700-r20-1" "f700-c700-r20-2" "f700-c700-r20-3" "f700-c700-r20-4" "f700-c700-r20-5"
 
     # # 1000 facilities, 1000 customers
-    # "f1000-c1000-r3-1" "f1000-c1000-r3-2" "f1000-c1000-r3-3" "f1000-c1000-r3-4" "f1000-c1000-r3-5"
-    # "f1000-c1000-r5-1" "f1000-c1000-r5-2" "f1000-c1000-r5-3" "f1000-c1000-r5-4" "f1000-c1000-r5-5"
-    # "f1000-c1000-r10-1" "f1000-c1000-r10-2" "f1000-c1000-r10-3" "f1000-c1000-r10-4" "f1000-c1000-r10-5"
-    "f1000-c1000-r15-1" "f1000-c1000-r15-2" "f1000-c1000-r15-3" "f1000-c1000-r15-4" "f1000-c1000-r15-5"
-    "f1000-c1000-r20-1" "f1000-c1000-r20-2" "f1000-c1000-r20-3" "f1000-c1000-r20-4" "f1000-c1000-r20-5"
+    "f1000-c1000-r3-1" "f1000-c1000-r3-2" "f1000-c1000-r3-3" "f1000-c1000-r3-4" "f1000-c1000-r3-5"
+    "f1000-c1000-r5-1" "f1000-c1000-r5-2" "f1000-c1000-r5-3" "f1000-c1000-r5-4" "f1000-c1000-r5-5"
+    "f1000-c1000-r10-1" "f1000-c1000-r10-2" "f1000-c1000-r10-3" "f1000-c1000-r10-4" "f1000-c1000-r10-5"
 
 )
 
@@ -131,8 +128,8 @@ for instance in "${instances[@]}"; do
     echo "#SBATCH --mem=60G" >> "${JOBSCRIPT_FILE}"
 
     echo "#SBATCH -t 0-04:00:00" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -o ${ERR_OUT_DIR}/${instance}.out%j" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -e ${ERR_OUT_DIR}/${instance}.err%j" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -o ${OUTPUT_DIR}/${instance}.out%j" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -e ${OUTPUT_DIR}/${instance}.err%j" >> "${JOBSCRIPT_FILE}"
 
     # Load necessary modules
     echo "module purge" >> "${JOBSCRIPT_FILE}"
@@ -141,10 +138,9 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=. scripts/cflp_disjunctive_knapsack.jl --instance ${instance} --output_dir ${ERR_OUT_DIR}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=. scripts/cflp_milp.jl --instance ${instance} --output_dir ${OUTPUT_DIR}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"
     rm "${JOBSCRIPT_FILE}"
 done
-

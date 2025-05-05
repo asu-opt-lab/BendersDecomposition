@@ -1,19 +1,42 @@
 #!/bin/sh
 #SBATCH -t 0-01:00:00
 
+ROUND_VERSION="round7"
+ROUND_DESCRIPTION="For new instances"
+EXPERIMENT_VERSION="uflp_typical_fatknapsack_01"
+EXPERIMENT_DESCRIPTION="benchmark"
+
 # Define variables to make the script more readable and maintainable
+OUTPUT_DIR="experiments/${ROUND_VERSION}/${EXPERIMENT_VERSION}"
+ERR_OUT_DIR="${OUTPUT_DIR}/results"
 
-OUTPUT_DIR="experiments/round2/uflp_callback_fatknapsack_3600s"
-
-# Define job script directory
-JOBSCRIPT_DIR="./job_scripts"
+# Check if experiment directory already exists
+if [ -d "${OUTPUT_DIR}" ]; then
+    echo "Error: Experiment directory ${OUTPUT_DIR} already exists. Please use a different EXPERIMENT_VERSION or remove the existing directory."
+    exit 1
+fi
 
 # Create necessary directories
 mkdir -p "${OUTPUT_DIR}"
-mkdir -p "${JOBSCRIPT_DIR}"
+mkdir -p "${ERR_OUT_DIR}"
+
+# Define job script directory
+JOBSCRIPT_DIR="./job_scripts"
+# mkdir -p "${JOBSCRIPT_DIR}"
 
 # Copy src directory to output directory
-cp -r scripts/uflp_callback_fatknapsack.jl "${OUTPUT_DIR}/uflp_callback_fatknapsack.jl"
+cp -r scripts/uflp_typical_fatknapsack.jl "${OUTPUT_DIR}/uflp_typical_fatknapsack.jl"
+
+# Create experiment metadata markdown file
+cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
+# Experiment Metadata
+
+- **Round Version**: ${ROUND_VERSION}
+- **Round Description**: ${ROUND_DESCRIPTION}
+- **Experiment Version**: ${EXPERIMENT_VERSION}
+- **Experiment Description**: ${EXPERIMENT_DESCRIPTION}
+- **Date**: $(date "+%Y-%m-%d %H:%M:%S")
+EOF
 
 # Define an array of instance names
 instances=(

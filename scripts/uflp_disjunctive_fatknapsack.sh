@@ -3,10 +3,10 @@
 
 # Define variables to make the script more readable and maintainable
 
-ROUND_VERSION="round6"
+ROUND_VERSION="test"
 ROUND_DESCRIPTION="For a new set of instances"
-EXPERIMENT_VERSION="uflp_disjunctive_fatknapsack_01"
-EXPERIMENT_DESCRIPTION="default setting, freq500"
+EXPERIMENT_VERSION="uflp_disjunctive_fatknapsack_07"
+EXPERIMENT_DESCRIPTION="iter3, freq500, addbenders=true, reusedcglp=false"
 
 # Define variables to make the script more readable and maintainable
 OUTPUT_DIR="experiments/${ROUND_VERSION}/${EXPERIMENT_VERSION}"
@@ -83,8 +83,8 @@ for instance in "${instances[@]}"; do
     echo "#SBATCH --mem=60G" >> "${JOBSCRIPT_FILE}"
 
     echo "#SBATCH -t 0-04:00:00" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -o ${OUTPUT_DIR}/${instance}.out%j" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -e ${OUTPUT_DIR}/${instance}.err%j" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -o ${ERR_OUT_DIR}/${instance}.out%j" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -e ${ERR_OUT_DIR}/${instance}.err%j" >> "${JOBSCRIPT_FILE}"
 
     # Load necessary modules
     echo "module purge" >> "${JOBSCRIPT_FILE}"

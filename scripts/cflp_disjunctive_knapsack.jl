@@ -7,7 +7,7 @@ import BendersDecomposition: generate_cuts
 include("$(dirname(@__DIR__))/example/cflp/data_reader.jl")
 include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
 include("$(dirname(@__DIR__))/example/cflp/model.jl")
-# Random.seed!(1234)
+Random.seed!(1234)
 
 # load settings
 args = parse_commandline()
@@ -135,7 +135,7 @@ lazy_callback = LazyCallback(lazy_oracle)
 # -----------------------------------------------------------------------------
 # user callback
 # -----------------------------------------------------------------------------
-user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=4500))
+user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=1500))
 
 # -----------------------------------------------------------------------------
 # BendersBnB

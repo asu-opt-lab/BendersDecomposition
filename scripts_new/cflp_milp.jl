@@ -16,8 +16,7 @@ output_dir = args["output_dir"]
 # -----------------------------------------------------------------------------
 # load problem data
 # -----------------------------------------------------------------------------
-problem = read_GK_data(instance)
-# problem = read_cfl_file(instance)
+problem = read_cfl_file(instance)
 
 dim_x = problem.n_facilities
 dim_t = 1
@@ -28,7 +27,8 @@ data = Data(dim_x, dim_t, problem, c_x, c_t)
 # -----------------------------------------------------------------------------
 # load parameters
 # -----------------------------------------------------------------------------
-mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9)
+# mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6)
+mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPGAP" => 1e-6, "CPXPARAM_Threads" => 7)
 # mip_solver_param = Dict("solver" => "Gurobi")
 # -----------------------------------------------------------------------------
 # MIP model
