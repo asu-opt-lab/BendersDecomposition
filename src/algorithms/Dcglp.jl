@@ -129,7 +129,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
     # statistics_of_disjunctive_cuts(env)
 end
 
-function generate_disjunctive_cut(dcglp::Model; strengthen = false, zero_tol = 1e-7)
+function generate_disjunctive_cut(dcglp::Model; strengthen = false, zero_tol = 1e-9)
     gamma_x = dual.(dcglp[:conx])
     gamma_t = dual.(dcglp[:cont])
     gamma_0 = dual(dcglp[:con0])
@@ -143,7 +143,7 @@ function generate_disjunctive_cut(dcglp::Model; strengthen = false, zero_tol = 1
     return gamma_x, gamma_t, gamma_0
 end
 
-function generate_lifted_disjunctive_cut(dcglp::Model, norm::LpNorm, zero_indices::Vector{Int64}, one_indices::Vector{Int64}; strengthen = false, zero_tol = 1e-7)
+function generate_lifted_disjunctive_cut(dcglp::Model, norm::LpNorm, zero_indices::Vector{Int64}, one_indices::Vector{Int64}; strengthen = false, zero_tol = 1e-9)
     gamma_x = dual.(dcglp[:conx])
     gamma_t = dual.(dcglp[:cont])
     gamma_0 = dual(dcglp[:con0])
@@ -168,6 +168,7 @@ function generate_lifted_disjunctive_cut(dcglp::Model, norm::LpNorm, zero_indice
         delta_1[zero_indices] += (-zeta_k + max.(zeta_k, zeta_v))
         delta_2[zero_indices] += (-zeta_v + max.(zeta_k, zeta_v)) 
         delta = Dict(1 => delta_1, 2 => delta_2)
+
         lifted_gamma_x = strengthening!(lifted_gamma_x, sigma, delta; zero_tol = zero_tol)
     end
 
@@ -177,10 +178,10 @@ function generate_lifted_disjunctive_cut(dcglp::Model, norm::LpNorm, zero_indice
     return (-lifted_gamma_x, gamma_t, lifted_gamma_0) ./ norm_value
 end
 
-function strengthening!(gamma_x, sigma, delta; zero_tol = 1e-7)
+function strengthening!(gamma_x, sigma, delta; zero_tol = 1e-9)
     @debug "dcglp strengthening - sigma values: [σ₁: $(sigma[1]), σ₂: $(sigma[2])]"
     @debug "dcglp strengthening - delta values: [δ₁: $(delta[1]), δ₂: $(delta[2])]"
-    
+
     a₁ = gamma_x .- delta[1]
     a₂ = gamma_x .- delta[2]
     sigma_sum = sigma[1] + sigma[2]
