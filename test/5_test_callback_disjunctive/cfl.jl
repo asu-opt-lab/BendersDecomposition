@@ -43,11 +43,12 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                 for strengthened in [true, false], 
                     add_benders_cuts_to_master in [true, false], 
                     reuse_dcglp in [true, false], 
+                    lift in [true, false],
                     p in [1.0, Inf], 
                     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
                     
-                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; dcut_append $disjunctive_cut_append_rule" begin
-                        @info "solving CFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule" begin
+                        @info "solving CFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                             solver_param = dcglp_solver_param,
                             param = dcglp_param
@@ -61,7 +62,8 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                             strengthened = strengthened, 
                             add_benders_cuts_to_master = add_benders_cuts_to_master, 
                             fraction_of_benders_cuts_to_master = 0.5, 
-                            reuse_dcglp = reuse_dcglp
+                            reuse_dcglp = reuse_dcglp,
+                            lift = lift
                         )
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
@@ -87,11 +89,12 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                 for strengthened in [true, false], 
                     add_benders_cuts_to_master in [true, false],
                     reuse_dcglp in [true, false],
+                    lift in [true, false],
                     p in [1.0, Inf],
                     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
                     
-                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; dcut_append $disjunctive_cut_append_rule" begin
-                        @info "solving CFLP p$i - disjunctive oracle/knapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule" begin
+                        @info "solving CFLP p$i - disjunctive oracle/knapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                             solver_param = dcglp_solver_param,
                             param = dcglp_param
@@ -105,7 +108,8 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                             strengthened = strengthened,
                             add_benders_cuts_to_master = add_benders_cuts_to_master,
                             fraction_of_benders_cuts_to_master = 0.5,
-                            reuse_dcglp = reuse_dcglp
+                            reuse_dcglp = reuse_dcglp,
+                            lift = lift
                         )
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
@@ -155,10 +159,11 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                 for strengthened in [true, false], 
                     add_benders_cuts_to_master in [true, false], 
                     reuse_dcglp in [true, false], 
+                    lift in [true, false],
                     p in [1.0, Inf], 
                     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
                     
-                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; dcut_append $disjunctive_cut_append_rule" begin
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift p $p; dcut_append $disjunctive_cut_append_rule" begin
                         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                             solver_param = dcglp_solver_param,
                             param = dcglp_param
@@ -198,10 +203,11 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                 for strengthened in [true, false], 
                     add_benders_cuts_to_master in [true, false],
                     reuse_dcglp in [true, false],
+                    lift in [true, false],
                     p in [1.0, Inf],
                     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
                     
-                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; dcut_append $disjunctive_cut_append_rule" begin
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift p $p; dcut_append $disjunctive_cut_append_rule" begin
                         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                             solver_param = dcglp_solver_param,
                             param = dcglp_param
@@ -215,7 +221,8 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                             strengthened = strengthened,
                             add_benders_cuts_to_master = add_benders_cuts_to_master,
                             fraction_of_benders_cuts_to_master = 0.5,
-                            reuse_dcglp = reuse_dcglp
+                            reuse_dcglp = reuse_dcglp,
+                            lift = lift
                         )
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
