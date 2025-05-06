@@ -68,8 +68,9 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                             for k = 1:2 # add to both kappa and nu systems
                                 append!(benders_cuts[i], hyperplanes_to_expression(dcglp, hyperplanes_a, dcglp[:omega_x][k,:], dcglp[:omega_t][k,:], dcglp[:omega_0][k]))
                             end
-                            if oracle.oracle_param.add_benders_cuts_to_master
-                                append!(hyperplanes, select_top_fraction(hyperplanes_a, h -> evaluate_violation(h, x_value, t_value), oracle.oracle_param.fraction_of_benders_cuts_to_master))
+                            if oracle.oracle_param.add_benders_cuts_to_master != 0
+                                add_violated = oracle.oracle_param.add_benders_cuts_to_master == 2
+                                append!(hyperplanes, select_top_fraction(hyperplanes_a, h -> evaluate_violation(h, x_value, t_value), oracle.oracle_param.fraction_of_benders_cuts_to_master; add_only_violated_cuts = add_violated)) 
                             end
                         end
                     else
