@@ -4,8 +4,8 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
 
 @testset verbose = true "UFLP Callback Benders Tests" begin
     # Specify instances to test
-    instances = setdiff(1:71, [67])  # For quick testing
-    # instances = 25:25
+    # instances = setdiff(1:71, [67])  # For quick testing
+    instances = 1:1
 
     for i in instances
         @testset "Instance: p$i" begin
@@ -15,17 +15,44 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
             problem = read_uflp_benchmark_data("p$i")
             
             # Get standard parameters
-            benders_param, dcglp_param, mip_solver_param, master_solver_param, 
-            typical_oracle_solver_param, dcglp_solver_param = get_standard_params()
+            # Get standard parameters
+            benders_param = BendersBnBParam(;
+                time_limit = 200.0,
+                gap_tolerance = 1e-6,
+                verbose = false
+            )
+
+            dcglp_param = DcglpParam(
+                time_limit = 200.0,
+                gap_tolerance = 1e-3,
+                halt_limit = 3,
+                iter_limit = 15,
+                verbose = false
+            )
+            
+            # Common solver parameters
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4)
+            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
+            dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
+            "CPX_PARAM_EPOPT" => 1e-9) 
             
             # Create data object for regular cuts
-            data = create_data(problem)
+            dim_x = problem.n_facilities
+            dim_t = 1
+            c_x = problem.fixed_costs
+            c_t = [1]
+            data = Data(dim_x, dim_t, problem, c_x, c_t)
+            @assert dim_x == length(data.c_x)
+            @assert dim_t == length(data.c_t)
             
             # Solve MIP for reference
-            mip_opt_val = solve_reference_mip(data, mip_solver_param)
-            
-            # Standard test info
-            test_info = (mip_opt_val, master_solver_param, typical_oracle_solver_param)
+            mip = Mip(data)
+            assign_attributes!(mip.model, mip_solver_param)
+            update_model!(mip, data)
+            optimize!(mip.model)
+            @assert termination_status(mip.model) == OPTIMAL
+            mip_opt_val = objective_value(mip.model)
             
             # Test classical oracle
             @testset "Classic oracle" begin
@@ -67,13 +94,55 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
                         
-                        run_disjunctive_oracle_tests(data, mip_opt_val, lazy_oracle, disjunctive_oracle, [:none, :seq, :seqinout], "UFLP")
+                        @testset "NoSeq" begin
+                            @info "solving UFLP p$i - disjunctive oracle/classical/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            master = Master(data; solver_param = master_solver_param)
+                            update_model!(master, data)
+                            root_preprocessing = NoRootNodePreprocessing()
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                            env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
+                        @testset "Seq" begin
+                            @info "solving UFLP p$i - disjunctive oracle/classical/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            master = Master(data; solver_param = master_solver_param)
+                            update_model!(master, data)
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-6, verbose=false))
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                            env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
+                        @testset "SeqInOut" begin
+                            @info "solving UFLP p$i - disjunctive oracle/classical/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            master = Master(data; solver_param = master_solver_param)
+                            update_model!(master, data)
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = false))
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                            env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
                     end
                 end
             end
             
             # Create data object for knapsack cuts
-            data = create_data(problem, problem.n_customers, ones(problem.n_customers))
+            dim_x = problem.n_facilities
+            c_x = problem.fixed_costs
+            dim_t = problem.n_customers # knapsack cut
+            c_t = ones(dim_t)
+            
+            data = Data(dim_x, dim_t, problem, c_x, c_t)
+            @assert dim_x == length(data.c_x)
+            @assert dim_t == length(data.c_t)
             
             # Test fat knapsack oracle
             @testset "Fat knapsack oracle" begin
@@ -113,7 +182,42 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
                         
-                        run_disjunctive_oracle_tests(data, mip_opt_val, lazy_oracle, disjunctive_oracle, [:none, :seq, :seqinout], "UFLP")
+                        @testset "NoSeq" begin
+                            @info "solving UFLP p$i - disjunctive oracle/fatKnapsack/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            master = Master(data; solver_param = master_solver_param)
+                            update_model!(master, data)
+                            root_preprocessing = NoRootNodePreprocessing()
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                            env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
+                        @testset "Seq" begin
+                            @info "solving UFLP p$i - disjunctive oracle/fatKnapsack/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            master = Master(data; solver_param = master_solver_param)
+                            update_model!(master, data)
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-6, verbose=false))
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                            env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
+                        @testset "SeqInOut" begin
+                            @info "solving UFLP p$i - disjunctive oracle/fatKnapsack/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            master = Master(data; solver_param = master_solver_param)
+                            update_model!(master, data)
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = false))
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                            env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
                     end
                 end
             end
