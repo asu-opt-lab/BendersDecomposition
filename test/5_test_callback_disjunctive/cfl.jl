@@ -41,7 +41,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                 
                 # Test various parameter combinations
                 for strengthened in [true, false], 
-                    add_benders_cuts_to_master in [true, false], 
+                    add_benders_cuts_to_master in [true, false, 2], 
                     reuse_dcglp in [true, false], 
                     lift in [true, false],
                     p in [1.0, Inf], 
@@ -87,7 +87,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                 
                 # Test various parameter combinations
                 for strengthened in [true, false], 
-                    add_benders_cuts_to_master in [true, false],
+                    add_benders_cuts_to_master in [true, false, 2],
                     reuse_dcglp in [true, false],
                     lift in [true, false],
                     p in [1.0, Inf],
@@ -157,7 +157,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                 
                 # Test various parameter combinations
                 for strengthened in [true, false], 
-                    add_benders_cuts_to_master in [true, false], 
+                    add_benders_cuts_to_master in [true, false, 2], 
                     reuse_dcglp in [true, false], 
                     lift in [true, false],
                     p in [1.0, Inf], 
@@ -201,7 +201,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                 
                 # Test various parameter combinations
                 for strengthened in [true, false], 
-                    add_benders_cuts_to_master in [true, false],
+                    add_benders_cuts_to_master in [true, false, 2],
                     reuse_dcglp in [true, false],
                     lift in [true, false],
                     p in [1.0, Inf],
