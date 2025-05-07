@@ -6,7 +6,7 @@ function update_model!(mip::AbstractMip, data::Data)
     @variable(model, y[1:I, 1:J] >= 0)
     @variable(model, t)
     
-    cost_demands = data.problem.costs #.* data.problem.demands'
+    cost_demands = data.problem.costs .* data.problem.demands'
     @objective(model, Min, data.c_x'* x + t)
 
     # Add constraints
@@ -14,6 +14,7 @@ function update_model!(mip::AbstractMip, data::Data)
     @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
     @constraint(model, facility_open, y .<= x)
     @constraint(model, capacity[i in 1:I], sum(data.problem.demands .* y[i,:]) <= data.problem.capacities[i] * x[i])
+    @constraint(model, capacity_total, sum(data.problem.capacities[i] * x[i] for i in 1:I) >= sum(data.problem.demands))
 end
 
 

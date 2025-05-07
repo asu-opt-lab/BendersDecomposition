@@ -28,9 +28,12 @@ data = Data(dim_x, dim_t, problem, c_x, c_t)
 # load parameters
 # -----------------------------------------------------------------------------
 # Algorithm parameters
-benders_param = BendersBnBParam(
-    time_limit = 3600.0,
+benders_param = BendersSeqInOutParam(
+    time_limit = 300.0,
     gap_tolerance = 1e-6,
+    stabilizing_x = ones(data.dim_x),
+    α = 0.9,
+    λ = 0.1,
     verbose = true
 )
 
@@ -56,6 +59,7 @@ typical_oracle_solver_param = Dict(
 # -----------------------------------------------------------------------------
 master = Master(data; solver_param = master_solver_param)
 update_model!(master, data)
+relax_integrality(master.model)
 
 # -----------------------------------------------------------------------------
 # typical oracles
@@ -63,44 +67,12 @@ update_model!(master, data)
 # Create two oracles for kappa & nu
 typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
 update_model!(typical_oracle, data)
-
-# -----------------------------------------------------------------------------
-# root node preprocessing
-# -----------------------------------------------------------------------------
-root_seq_type = BendersSeqInOut
-root_param = BendersSeqInOutParam(
-    time_limit = 300.0,
-    gap_tolerance = 1e-6,
-    stabilizing_x = ones(data.dim_x),
-    α = 0.9,
-    λ = 0.1,
-    verbose = true
-)
-
-# Create root node preprocessing with oracle
-root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
-
-# -----------------------------------------------------------------------------
-# lazy callback
-# -----------------------------------------------------------------------------
-lazy_callback = LazyCallback(typical_oracle)
-
-# -----------------------------------------------------------------------------
-# user callback
-# -----------------------------------------------------------------------------
-user_callback = NoUserCallback()
+set_optimizer_attribute(typical_oracle.model, MOI.Silent(), false)
 
 # -----------------------------------------------------------------------------
 # BendersBnB
 # -----------------------------------------------------------------------------
-env = BendersBnB(
-    data, 
-    master, 
-    root_preprocessing, 
-    lazy_callback, 
-    user_callback; 
-    param = benders_param
-)
+env = BendersSeqInOut(data, master, typical_oracle; param = benders_param)
 
 # -----------------------------------------------------------------------------
 # solve

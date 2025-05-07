@@ -1,10 +1,10 @@
 #!/bin/sh
 #SBATCH -t 0-01:00:00
 
-ROUND_VERSION="round9"
-ROUND_DESCRIPTION="For new datasets"
-EXPERIMENT_VERSION="cflp_milp_03"
-EXPERIMENT_DESCRIPTION="new dataset"
+ROUND_VERSION="test1"
+ROUND_DESCRIPTION="For new instances"
+EXPERIMENT_VERSION="cflp_typical_knapsack_09"
+EXPERIMENT_DESCRIPTION="benchmark inout1e-4 LP20.9 0.1 NEW PARAM 0<=x<=1"
 
 # Define variables to make the script more readable and maintainable
 OUTPUT_DIR="experiments/${ROUND_VERSION}/${EXPERIMENT_VERSION}"
@@ -25,7 +25,7 @@ JOBSCRIPT_DIR="./job_scripts"
 # mkdir -p "${JOBSCRIPT_DIR}"
 
 # Copy src directory to output directory
-cp -r scripts_new/cflp_milp.jl "${OUTPUT_DIR}/cflp_milp.jl"
+cp -r scripts_new/cflp_typical_knapsack_test.jl "${OUTPUT_DIR}/cflp_typical_knapsack_test.jl"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -80,15 +80,15 @@ instances=(
     "T1500x600_15_1" "T1500x600_15_2" "T1500x600_15_3" "T1500x600_15_4" "T1500x600_15_5"
     "T1500x600_20_1" "T1500x600_20_2" "T1500x600_20_3" "T1500x600_20_4" "T1500x600_20_5"
 
-    # "T700x700_5_1" "T700x700_5_2" "T700x700_5_3" "T700x700_5_4" "T700x700_5_5"
-    # "T700x700_10_1" "T700x700_10_2" "T700x700_10_3" "T700x700_10_4" "T700x700_10_5"
-    # "T700x700_15_1" "T700x700_15_2" "T700x700_15_3" "T700x700_15_4" "T700x700_15_5"
-    # "T700x700_20_1" "T700x700_20_2" "T700x700_20_3" "T700x700_20_4" "T700x700_20_5"
+    "T700x700_5_1" "T700x700_5_2" "T700x700_5_3" "T700x700_5_4" "T700x700_5_5"
+    "T700x700_10_1" "T700x700_10_2" "T700x700_10_3" "T700x700_10_4" "T700x700_10_5"
+    "T700x700_15_1" "T700x700_15_2" "T700x700_15_3" "T700x700_15_4" "T700x700_15_5"
+    "T700x700_20_1" "T700x700_20_2" "T700x700_20_3" "T700x700_20_4" "T700x700_20_5"
 
-    # "T1000x1000_5_1" "T1000x1000_5_2" "T1000x1000_5_3" "T1000x1000_5_4" "T1000x1000_5_5"
-    # "T1000x1000_10_1" "T1000x1000_10_2" "T1000x1000_10_3" "T1000x1000_10_4" "T1000x1000_10_5"
-    # "T1000x1000_15_1" "T1000x1000_15_2" "T1000x1000_15_3" "T1000x1000_15_4" "T1000x1000_15_5"
-    # "T1000x1000_20_1" "T1000x1000_20_2" "T1000x1000_20_3" "T1000x1000_20_4" "T1000x1000_20_5"
+    "T1000x1000_5_1" "T1000x1000_5_2" "T1000x1000_5_3" "T1000x1000_5_4" "T1000x1000_5_5"
+    "T1000x1000_10_1" "T1000x1000_10_2" "T1000x1000_10_3" "T1000x1000_10_4" "T1000x1000_10_5"
+    "T1000x1000_15_1" "T1000x1000_15_2" "T1000x1000_15_3" "T1000x1000_15_4" "T1000x1000_15_5"
+    "T1000x1000_20_1" "T1000x1000_20_2" "T1000x1000_20_3" "T1000x1000_20_4" "T1000x1000_20_5"
 )
 
 # Loop through the instances and create a job script for each
@@ -99,12 +99,12 @@ for instance in "${instances[@]}"; do
     echo "#!/bin/bash" > "${JOBSCRIPT_FILE}"
 
     echo "#SBATCH -p htc" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
+    # echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -c 7" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH --nodelist=pcc036" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH --mem=60G" >> "${JOBSCRIPT_FILE}"
+    # echo "#SBATCH --nodelist=pcc036" >> "${JOBSCRIPT_FILE}"
+    # echo "#SBATCH --mem=60G" >> "${JOBSCRIPT_FILE}"
 
     echo "#SBATCH -t 0-04:00:00" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -o ${ERR_OUT_DIR}/${instance}.out%j" >> "${JOBSCRIPT_FILE}"
@@ -117,7 +117,7 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=. scripts_new/cflp_milp.jl --instance ${instance} --output_dir ${OUTPUT_DIR}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=. scripts_new/cflp_typical_knapsack_test.jl --instance ${instance} --output_dir ${OUTPUT_DIR}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

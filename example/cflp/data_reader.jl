@@ -192,7 +192,7 @@ function read_cfl_file(filename::AbstractString; filepath="example/cflp/data/out
         vals = split(line)
         @assert length(vals) == n_customers
         for j in 1:n_customers
-            costs[i, j] = parse(Float64, vals[j]) #/ demands[j]
+            costs[i, j] = parse(Float64, vals[j]) / demands[j]
         end
     end
     

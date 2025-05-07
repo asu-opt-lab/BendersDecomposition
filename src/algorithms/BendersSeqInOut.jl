@@ -85,7 +85,7 @@ function solve!(env::BendersSeqInOut)
             
             # whether to switch kelley mode
             if log.n_iter != 0
-                check_lb_improvement!(state, log; zero_tol = 1e-8, tol_imprv = 0.01)
+                check_lb_improvement!(state, log; zero_tol = 1e-8, tol_imprv = 1e-4)
 
                 if log.consecutive_no_improvement >= 5
                     if !kelley_mode

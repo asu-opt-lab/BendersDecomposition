@@ -54,7 +54,8 @@ master_solver_param = Dict(
 typical_oracle_solver_param = Dict(
     "solver" => "CPLEX", 
     "CPX_PARAM_EPRHS" => 1e-9, 
-    "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
+    "CPX_PARAM_NUMERICALEMPHASIS" => 1,
+    "CPX_PARAM_LPMETHOD" => 2,
     "CPX_PARAM_EPOPT" => 1e-9
 )
 
@@ -135,7 +136,7 @@ lazy_callback = LazyCallback(lazy_oracle)
 # -----------------------------------------------------------------------------
 # user callback
 # -----------------------------------------------------------------------------
-user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=1500))
+user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=4500))
 
 # -----------------------------------------------------------------------------
 # BendersBnB
