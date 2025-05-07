@@ -41,7 +41,7 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                 
                 # Test various parameter combinations
                 for strengthened in [true, false], 
-                    add_benders_cuts_to_master in [true, false], 
+                    add_benders_cuts_to_master in [true, false, 2], 
                     reuse_dcglp in [true, false], 
                     lift = [true, false],
                     p in [1.0, Inf], 
@@ -88,7 +88,7 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                 end
 
                 for strengthened in [true, false], 
-                    add_benders_cuts_to_master in [true, false], 
+                    add_benders_cuts_to_master in [true, false, 2], 
                     reuse_dcglp in [true, false], 
                     lift = [true, false],
                     p in [1.0, Inf], 
