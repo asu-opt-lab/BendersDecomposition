@@ -47,7 +47,7 @@ end
 """
 select a top fraction of a set of hyperplanes based on a score measured by a function f
 """
-function select_top_fraction(a::Vector{Hyperplane}, f::Function, p::Float64)
+function select_top_fraction(a::Vector{Hyperplane}, f::Function, p::Float64; add_only_violated_cuts = false)
     @assert 0 < p ≤ 1 "Fraction p must be in (0, 1]"
     
     # Apply function f to each element of a
@@ -56,8 +56,12 @@ function select_top_fraction(a::Vector{Hyperplane}, f::Function, p::Float64)
     # Get the indices that would sort scores in descending order
     sorted_indices = sortperm(scores, rev=true)
     
+    l = (!add_only_violated_cuts || scores[sorted_indices[end]] > 0.0) ? length(a) + 1 : findfirst(x -> scores[x] <= 0.0, sorted_indices)
+
     # How many elements to select
-    k = ceil(Int, p * length(a))
+    # k = ceil(Int, p * length(a))
+    # k = min(ceil(Int, p * length(a)), l-1)
+    k = ceil(Int, p * (l-1))
     
     # Get the top-k indices and return corresponding elements from a
     top_indices = sorted_indices[1:k]
