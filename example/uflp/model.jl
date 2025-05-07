@@ -8,8 +8,8 @@ function update_model!(mip::AbstractMip, data::Data)
     @variable(model, t[1:J] >= 0)
     
     cost_demands = data.problem.costs .* data.problem.demands'
-    # @objective(model, Min, data.c_x'* x + sum(cost_demands .* y))
-    @objective(model, Min, data.c_x'* x + sum(t))
+    # @objective(model, Min, data.problem.fixed_costs'* x + sum(cost_demands .* y))
+    @objective(model, Min, data.problem.fixed_costs'* x + sum(t))
     # Add constraints
     @constraint(model, obj[j in 1:J], t[j] >= sum(cost_demands[:,j] .* y[:,j]))
     @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
@@ -34,7 +34,7 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data)
 
     # Set objective
     cost_demands = data.problem.costs .* data.problem.demands'
-    @objective(model, Min, sum(cost_demands .* y))
+    @objective(model, Min, data.problem.fixed_costs' * x + sum(cost_demands .* y))
 
     # Add constraints
     @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)

@@ -12,6 +12,7 @@ mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
     
     sorted_cost_demands::Vector{Vector{Float64}}
     sorted_indices::Vector{Vector{Int}}
+    fixed_costs::Vector{Float64}
 
     J::Int
     obj_values::Vector{Float64}
@@ -29,10 +30,11 @@ mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
         cost_demands = [data.problem.costs[:,j] .* data.problem.demands[j] for j in 1:J]
         sorted_indices = [sortperm(cost_demands[j]) for j in 1:J]
         sorted_cost_demands = [cost_demands[j][sorted_indices[j]] for j in 1:J]
+        fixed_costs = data.problem.fixed_costs
         
         obj_values = Vector{Float64}(undef, J)
 
-        new(oracle_param, sorted_cost_demands, sorted_indices, J, obj_values)
+        new(oracle_param, sorted_cost_demands, sorted_indices, fixed_costs, J, obj_values)
     end
 
     UFLKnapsackOracle() = new()
@@ -51,6 +53,7 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
 
         # Calculate objective value contribution
         oracle.obj_values[j] = c_sorted[k] - (k > 1 ? sum((c_sorted[k] - c_sorted[i]) * x_sorted[i] for i in 1:k-1) : 0)
+        oracle.obj_values[j] += (1 / oracle.J) * oracle.fixed_costs' * x_value 
 
         if oracle.obj_values[j] >= t_value[j] * (1 + tol)
             critical_facility[j] = k
@@ -80,6 +83,7 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
         for i=1:k-1
             h.a_x[sorted_indices[i]] = -(c_sorted[k] - c_sorted[i])
         end
+        h.a_x += (1 / oracle.J) * oracle.fixed_costs
         push!(hyperplanes, h)
     end
 

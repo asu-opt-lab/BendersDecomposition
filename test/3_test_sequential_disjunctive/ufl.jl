@@ -13,7 +13,8 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
             
             # initialize dim_x, dim_t, c_x, c_t
             dim_x = problem.n_facilities
-            c_x = problem.fixed_costs
+            # c_x = problem.fixed_costs
+            c_x = zeros(dim_x)
             dim_t = 1 # classical cut
             c_t = [1]
             
@@ -189,7 +190,8 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
 
             # initialize dim_x, dim_t, c_x, c_t
             dim_x = problem.n_facilities
-            c_x = problem.fixed_costs
+            # c_x = problem.fixed_costs
+            c_x = zeros(dim_x)
             dim_t = problem.n_customers # knapsack cut
             c_t = ones(dim_t)
             
