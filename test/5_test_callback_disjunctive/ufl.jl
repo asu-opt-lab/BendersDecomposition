@@ -4,8 +4,8 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
 
 @testset verbose = true "UFLP Callback Benders Tests" begin
     # Specify instances to test
-    # instances = setdiff(1:71, [67])  # For quick testing
-    instances = 1:1
+    instances = setdiff(1:71, [67])  # For quick testing
+    # instances = 1:1
 
     for i in instances
         @testset "Instance: p$i" begin

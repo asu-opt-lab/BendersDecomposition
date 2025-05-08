@@ -12,11 +12,11 @@ mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${JOBSCRIPT_DIR}"
 
 instances=(
-    # "1_test_sequential_typical"
-    # "2_test_sequential_in_out_typical"
+    "1_test_sequential_typical"
+    "2_test_sequential_in_out_typical"
     "3_test_sequential_disjunctive"
-    # "4_test_callback_typical"
-    # "5_test_callback_disjunctive"
+    "4_test_callback_typical"
+    "5_test_callback_disjunctive"
 )
 
 # Loop through the instances and create a job script for each
@@ -27,12 +27,12 @@ for instance in "${instances[@]}"; do
     echo "#!/bin/bash" > "${JOBSCRIPT_FILE}"
 
     echo "#SBATCH -p htc" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
+    # echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -c 14" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH --nodelist=pcc036" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH --mem=100G" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -c 28" >> "${JOBSCRIPT_FILE}"
+    # echo "#SBATCH --nodelist=pcc036" >> "${JOBSCRIPT_FILE}"
+    # echo "#SBATCH --mem=100G" >> "${JOBSCRIPT_FILE}"
 
     echo "#SBATCH -t 0-04:00:00" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -o ${OUTPUT_DIR}/${instance}.out%j" >> "${JOBSCRIPT_FILE}"
