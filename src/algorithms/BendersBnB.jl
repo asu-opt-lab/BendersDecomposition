@@ -150,7 +150,7 @@ function solve!(env::BendersBnB)
         end
     end
     
-    return env.obj_value, elapsed_time
+    return deepcopy(env.obj_value), elapsed_time
 end
 
 

@@ -9,6 +9,21 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
     dcglp = oracle.dcglp
     typical_oracles = oracle.typical_oracles # 1 for k; 2 for nu
 
+    f_x = t_value
+    if oracle.oracle_param.adjust_t_to_fx
+        if haskey(dcglp, :initial_L)
+            delete.(dcglp, dcglp[:initial_L]) 
+            unregister(dcglp, :initial_L)
+        end
+        _, hpp, f_x = generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
+        initial_benders_cuts = Vector{AffExpr}()
+        for k = 1:2 # add to both kappa and nu systems
+            append!(initial_benders_cuts, hyperplanes_to_expression(dcglp, hpp, dcglp[:omega_x][k,:], dcglp[:omega_t][k,:], dcglp[:omega_0][k]))
+        end
+        dcglp[:initial_L] = @constraint(dcglp, 0 .>= initial_benders_cuts)
+        set_normalized_rhs.(oracle.dcglp[:cont], f_x)
+    end
+
     # cuts for master
     hyperplanes = Vector{Hyperplane}()
 
@@ -62,7 +77,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                 state.oracle_times[i] = @elapsed begin
                     if ω_0[i] >= zero_tol
                         state.is_in_L[i], hyperplanes_a, state.f_x[i] = generate_cuts(typical_oracles[i], clamp.(ω_x[i] / ω_0[i], 0.0, 1.0), ω_t[i] / ω_0[i], tol = zero_tol / ω_0[i], time_limit = get_sec_remaining(log.start_time, time_limit))
-                        
+
                         # adjust the tolerance with respect to dcglp: (sum(state.sub_obj_vals[i]) - sum(t_value)) * omega_value[:z][i] < zero_tol
                         if !state.is_in_L[i]
                             for k = 1:2 # add to both kappa and nu systems
@@ -82,7 +97,8 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
             end
         
             if state.f_x[1] !== NaN && state.f_x[2] !== NaN
-                update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], oracle.oracle_param.norm.p))
+                # update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], oracle.oracle_param.norm.p))
+                update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- f_x], oracle.oracle_param.norm.p))
             end
 
             record_iteration!(log, state)
@@ -181,7 +197,7 @@ end
 
 function strengthening!(gamma_x, sigma, delta; zero_tol = 1e-9)
     @debug "dcglp strengthening - sigma values: [σ₁: $(sigma[1]), σ₂: $(sigma[2])]"
-    @debug "dcglp strengthening - delta values: [δ₁: $(delta[1]), δ₂: $(delta[2])]"
+    # @debug "dcglp strengthening - delta values: [δ₁: $(delta[1]), δ₂: $(delta[2])]"
 
     a₁ = gamma_x .- delta[1]
     a₂ = gamma_x .- delta[2]
@@ -192,7 +208,7 @@ function strengthening!(gamma_x, sigma, delta; zero_tol = 1e-9)
         m_ub = ceil.(m)
         gamma_x = min.(a₁-sigma[1]*m_lb, a₂+sigma[2]*m_ub)
     end
-    return gamma_x
+    return deepcopy(gamma_x)
 end
 
 function compute_norm_value(gamma_x, gamma_t, norm::AbstractNorm)
