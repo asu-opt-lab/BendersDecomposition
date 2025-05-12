@@ -34,6 +34,8 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                 iter_limit = 15,
                 verbose = false
             )
+
+            user_cb_param = UserCallbackParam(frequency=1)
             
             # Common solver parameters
             mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4)
@@ -104,7 +106,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                                 update_model!(master, data)
                                 root_preprocessing = NoRootNodePreprocessing()
                                 lazy_callback = LazyCallback(lazy_oracle)
-                                user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                                user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
                                 env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                                 log = solve!(env)
                                 @test env.termination_status == Optimal()
@@ -116,7 +118,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                                 update_model!(master, data)
                                 root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-6, verbose=false))
                                 lazy_callback = LazyCallback(lazy_oracle)
-                                user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                                user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
                                 env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                                 log = solve!(env)
                                 @test env.termination_status == Optimal()
@@ -128,7 +130,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                                 update_model!(master, data)
                                 root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = false))
                                 lazy_callback = LazyCallback(lazy_oracle)
-                                user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                                user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
                                 env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                                 log = solve!(env)
                                 @test env.termination_status == Optimal()
@@ -157,13 +159,13 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                 
                 # Test various parameter combinations
                 for strengthened in [true, false], 
-                    add_benders_cuts_to_master in [true],
+                    add_benders_cuts_to_master in [true], 
                     reuse_dcglp in [true, false],
                     lift in [true, false],
                     p in [1.0, Inf],
                     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()],
                     adjust_t_to_fx in [true; false]
-                    
+
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
                         
                         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
@@ -192,7 +194,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                             update_model!(master, data)
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
-                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                            user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
                             env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
@@ -204,7 +206,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                             update_model!(master, data)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-6, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
-                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                            user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
                             env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
@@ -216,7 +218,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                             update_model!(master, data)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
-                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                            user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
                             env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
