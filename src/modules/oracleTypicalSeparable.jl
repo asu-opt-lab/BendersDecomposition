@@ -46,7 +46,7 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
     if any(.!is_in_L)
         return false, reduce(vcat, hyperplanes), reduce(vcat, sub_obj_val)
     else
-        return true, [Hyperplane(length(x_value), length(t_value))], t_value
+        return true, [Hyperplane(length(x_value), length(t_value))], deepcopy(t_value)
     end
 end
 

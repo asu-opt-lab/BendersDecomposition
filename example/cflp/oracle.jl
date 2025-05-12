@@ -64,7 +64,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
         if sub_obj_val >= t_value[1] * (1 + tol)
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
-            return true, [Hyperplane(a_x, a_t, a_0)], t_value
+            return true, [Hyperplane(a_x, a_t, a_0)], deepcopy(t_value)
         end
         
     elseif status == INFEASIBILITY_CERTIFICATE
