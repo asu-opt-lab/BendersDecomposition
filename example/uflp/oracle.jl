@@ -84,9 +84,9 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
     end
 
     if is_in_L
-        return !(oracle.oracle_param.slim) ? (true, hyperplanes, t_value) : (true, [aggregate(hyperplanes)], t_value)
+        return !(oracle.oracle_param.slim) ? (true, hyperplanes, deepcopy(t_value)) : (true, [aggregate(hyperplanes)], deepcopy(t_value))
     end
-    return !(oracle.oracle_param.slim) ? (false, hyperplanes, oracle.obj_values) : (false, [aggregate(hyperplanes)], oracle.obj_values)
+    return !(oracle.oracle_param.slim) ? (false, hyperplanes, deepcopy(oracle.obj_values)) : (false, [aggregate(hyperplanes)], deepcopy(oracle.obj_values))
 end
 
 function find_critical_item(c::Vector{Float64}, x::Vector{Float64})

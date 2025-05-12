@@ -65,7 +65,7 @@ function select_top_fraction(a::Vector{Hyperplane}, f::Function, p::Float64; add
     
     # Get the top-k indices and return corresponding elements from a
     top_indices = sorted_indices[1:k]
-    return a[top_indices]
+    return deepcopy(a[top_indices])
 end
 """
 parse a hyperplane to a JuMP expression
