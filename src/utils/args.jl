@@ -14,6 +14,10 @@ function parse_commandline()
             help = "Output directory"
             default = "experiments"
             arg_type = String
+        "--seed"
+            help = "Random seed"
+            default = 1234
+            arg_type = Int
         # To-Do: for future use
         # "--snip_no"
         #     help = "SNIP number"

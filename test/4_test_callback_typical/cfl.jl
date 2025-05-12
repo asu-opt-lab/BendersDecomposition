@@ -92,6 +92,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                         α = 0.9,
                         λ = 0.1,
                         verbose = true
+                        verbose = false
                     )
                     root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
                     lazy_callback = LazyCallback(typical_oracle)

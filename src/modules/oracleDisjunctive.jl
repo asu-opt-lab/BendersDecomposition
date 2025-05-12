@@ -5,20 +5,24 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
     split_index_selection_rule::SplitIndexSelectionRule
     disjunctive_cut_append_rule::DisjunctiveCutsAppendRule
     strengthened::Bool
-    add_benders_cuts_to_master::Bool
+    add_benders_cuts_to_master::Int # 0: do not add; 1: add regardless of violation at (x,t); 2: only violated ones
     fraction_of_benders_cuts_to_master::Float64
     reuse_dcglp::Bool
     lift::Bool 
+    adjust_t_to_fx::Bool
 
     function DisjunctiveOracleParam(; 
                                     norm::AbstractNorm = LpNorm(Inf), 
                                     split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(), disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
                                     strengthened::Bool=true, 
-                                    add_benders_cuts_to_master::Bool=true, 
+                                    add_benders_cuts_to_master::Union{Bool,Int} = 1, 
                                     fraction_of_benders_cuts_to_master::Float64 = 1.0, 
                                     reuse_dcglp::Bool=true,
-                                    lift::Bool=false) 
-        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_benders_cuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift)
+                                    lift::Bool=false,
+                                    adjust_t_to_fx::Bool=false) 
+        add_bcuts_to_master = add_benders_cuts_to_master === true ? 1 : add_benders_cuts_to_master === false ? 0 : add_benders_cuts_to_master in (0, 1, 2) ? add_benders_cuts_to_master : throw(ArgumentError("`add_benders_cuts_to_master` must be true, false, or an integer in {0, 1, 2}"))
+        
+        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_bcuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift, adjust_t_to_fx)
     end
 end 
 

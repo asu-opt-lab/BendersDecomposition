@@ -144,13 +144,13 @@ function solve!(env::BendersBnB)
         @info "Objective value: $(env.obj_value)"
         @info "Relative gap: $(JuMP.relative_gap(env.master.model))"
         @info "Lazy cuts added: $(log.n_lazy_cuts)"
-        if typeof(env.user_callback.oracle) == DisjunctiveOracle
+        if typeof(env.user_callback.oracle) <: AbstractDisjunctiveOracle
             @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
-            env.user_callback.oracle.oracle_param.add_benders_cuts_to_master && @info "Byproduct Benders cuts added: $(log.n_user_cuts - length(env.user_callback.oracle.disjunctiveCuts))"
+            env.user_callback.oracle.oracle_param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts - length(env.user_callback.oracle.disjunctiveCuts))"
         end
     end
     
-    return env.obj_value, elapsed_time
+    return deepcopy(env.obj_value), elapsed_time
 end
 
 

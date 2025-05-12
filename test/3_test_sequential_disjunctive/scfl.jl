@@ -1,6 +1,6 @@
 # to be overwritten, they should be included outside testset
 include("$(dirname(dirname(@__DIR__)))/example/scflp/data_reader.jl")
-# include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
+include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
 include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
 
 @testset verbose = true "Stochastic CFLP Sequential Benders Tests" begin
@@ -51,9 +51,9 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
             @debug t_opt
             @testset "Classic oracle" begin
                 @testset "Seq" begin        
-                    for strengthened in [true; false], add_benders_cuts_to_master in [true], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]   
-                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
-                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
+                    for strengthened in [true; false], add_benders_cuts_to_master in [true; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]   
+                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
 
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
@@ -77,7 +77,8 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 1.0, 
-                                                                    reuse_dcglp=reuse_dcglp)
+                                                                    reuse_dcglp=reuse_dcglp,
+                                                                    adjust_t_to_fx = adjust_t_to_fx)
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
 
@@ -119,9 +120,9 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
             end 
             @testset "Knapsack oracle" begin
                 @testset "Seq" begin        
-                    for strengthened in [true; false], add_benders_cuts_to_master in [true], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]   
-                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/knapsack - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
-                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
+                    for strengthened in [true; false], add_benders_cuts_to_master in [true; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
+                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/knapsack - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
 
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
@@ -145,7 +146,8 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 1.0, 
-                                                                    reuse_dcglp=reuse_dcglp)
+                                                                    reuse_dcglp=reuse_dcglp,
+                                                                    adjust_t_to_fx = adjust_t_to_fx)
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
 

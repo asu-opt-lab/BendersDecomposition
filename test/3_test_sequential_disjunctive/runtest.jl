@@ -26,7 +26,7 @@
 # 4. DisjunctiveOracle: the fat-knapsack-based disjunctive cut may have a sparse gamma_t, so adding only disjunctive cut does not improve lower bound, add_benders_cuts_to_master should be set at true
 using Test
 using JuMP
-using Gurobi, CPLEX
+using CPLEX
 using Printf
 using DataFrames
 using Logging

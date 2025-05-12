@@ -2,7 +2,7 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/data_reader.jl")
 include("$(dirname(dirname(@__DIR__)))/example/uflp/oracle.jl")
 include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
 
-@testset verbose = true "UFLP Callback Benders Tests" begin
+@testset verbose = true "UFLP Callback Disjunctive Benders Tests" begin
     # Specify instances to test
     instances = setdiff(1:71, [67])  # For quick testing
     # instances = 1:1
@@ -72,10 +72,11 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                     reuse_dcglp in [true, false], 
                     lift = [true, false],
                     p in [1.0, Inf], 
-                    disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
+                    disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()],
+                    adjust_t_to_fx in [true; false]
                     
-                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule" begin
-                        @info "solving UFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"   
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule; adjust_t_to_fx $adjust_t_to_fx" begin
+                        @info "solving UFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"   
                         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                             solver_param = dcglp_solver_param,
                             param = dcglp_param
@@ -89,13 +90,15 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                             strengthened = strengthened, 
                             add_benders_cuts_to_master = add_benders_cuts_to_master, 
                             fraction_of_benders_cuts_to_master = 0.5, 
-                            reuse_dcglp = reuse_dcglp
+                            reuse_dcglp = reuse_dcglp,
+                            lift = lift,
+                            adjust_t_to_fx = adjust_t_to_fx
                         )
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
                         
                         @testset "NoSeq" begin
-                            @info "solving UFLP p$i - disjunctive oracle/classical/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            @info "solving UFLP p$i - disjunctive oracle/classical/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = NoRootNodePreprocessing()
@@ -107,7 +110,7 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                         end
                         @testset "Seq" begin
-                            @info "solving UFLP p$i - disjunctive oracle/classical/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            @info "solving UFLP p$i - disjunctive oracle/classical/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-6, verbose=false))
@@ -119,7 +122,7 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                         end
                         @testset "SeqInOut" begin
-                            @info "solving UFLP p$i - disjunctive oracle/classical/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            @info "solving UFLP p$i - disjunctive oracle/classical/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = false))
@@ -161,9 +164,10 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                     reuse_dcglp in [true, false], 
                     lift = [true, false],
                     p in [1.0, Inf], 
-                    disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()]
-                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule" begin
-                        @info "solving UFLP p$i - disjunctive oracle/fatKnapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                    disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()],
+                    adjust_t_to_fx in [true; false]
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule; adjust_t_to_fx $adjust_t_to_fx" begin
+                        @info "solving UFLP p$i - disjunctive oracle/fatKnapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                             solver_param = dcglp_solver_param,
                             param = dcglp_param
@@ -177,13 +181,15 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                             strengthened = strengthened, 
                             add_benders_cuts_to_master = add_benders_cuts_to_master, 
                             fraction_of_benders_cuts_to_master = 0.5, 
-                            reuse_dcglp = reuse_dcglp
+                            reuse_dcglp = reuse_dcglp,
+                            lift = lift,
+                            adjust_t_to_fx = adjust_t_to_fx
                         )
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
                         
                         @testset "NoSeq" begin
-                            @info "solving UFLP p$i - disjunctive oracle/fatKnapsack/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            @info "solving UFLP p$i - disjunctive oracle/fatKnapsack/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = NoRootNodePreprocessing()
@@ -195,7 +201,7 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                         end
                         @testset "Seq" begin
-                            @info "solving UFLP p$i - disjunctive oracle/fatKnapsack/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            @info "solving UFLP p$i - disjunctive oracle/fatKnapsack/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-6, verbose=false))
@@ -207,7 +213,7 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                         end
                         @testset "SeqInOut" begin
-                            @info "solving UFLP p$i - disjunctive oracle/fatKnapsack/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            @info "solving UFLP p$i - disjunctive oracle/fatKnapsack/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = false))
