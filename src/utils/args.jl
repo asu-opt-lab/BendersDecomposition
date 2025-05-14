@@ -18,17 +18,21 @@ function parse_commandline()
             help = "Random seed"
             default = 1234
             arg_type = Int
-        # To-Do: for future use
-        # "--snip_no"
-        #     help = "SNIP number"
-        #     default = 1
-        #     arg_type = Int
-        #     required = false
-        # "--budget"
-        #     help = "Budget"
-        #     default = 30.0
-        #     arg_type = Float64
-        #     required = false
+        "--snip_instance"
+            help = "SNIP instance number"
+            default = 0
+            arg_type = Int
+            required = false
+        "--snip_no"
+            help = "SNIP number"
+            default = 1
+            arg_type = Int
+            required = false
+        "--snip_budget"
+            help = "SNIP budget"
+            default = 30.0
+            arg_type = Float64
+            required = false
     end
 
     return parse_args(s)
