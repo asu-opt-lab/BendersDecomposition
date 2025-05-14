@@ -12,5 +12,6 @@ import BendersDecomposition: generate_cuts
     include("ufl.jl")
     include("cfl.jl")
     include("scfl.jl")
+    include("snip.jl")
     @info "Callback Typical Tests completed"
 end
