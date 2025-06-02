@@ -9,19 +9,23 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
     dcglp = oracle.dcglp
     typical_oracles = oracle.typical_oracles # 1 for k; 2 for nu
 
-    f_x = t_value
+    f_x = deepcopy(t_value)
     if oracle.oracle_param.adjust_t_to_fx
         if haskey(dcglp, :initial_L)
             delete.(dcglp, dcglp[:initial_L]) 
             unregister(dcglp, :initial_L)
         end
         _, hpp, f_x = generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
-        initial_benders_cuts = Vector{AffExpr}()
-        for k = 1:2 # add to both kappa and nu systems
-            append!(initial_benders_cuts, hyperplanes_to_expression(dcglp, hpp, dcglp[:omega_x][k,:], dcglp[:omega_t][k,:], dcglp[:omega_0][k]))
+        if f_x != NaN
+            initial_benders_cuts = Vector{AffExpr}()
+            for k = 1:2 # add to both kappa and nu systems
+                append!(initial_benders_cuts, hyperplanes_to_expression(dcglp, hpp, dcglp[:omega_x][k,:], dcglp[:omega_t][k,:], dcglp[:omega_0][k]))
+            end
+            dcglp[:initial_L] = @constraint(dcglp, 0 .>= initial_benders_cuts)
+            set_normalized_rhs.(oracle.dcglp[:cont], f_x)
+        else
+            throw(AlgorithmException("solve_dcglp!: `t_value` cannot be adjusted to `f(x)` since $(typeof(oracle.typical_oracles[1])) does not compute `f(x)."))
         end
-        dcglp[:initial_L] = @constraint(dcglp, 0 .>= initial_benders_cuts)
-        set_normalized_rhs.(oracle.dcglp[:cont], f_x)
     end
 
     # cuts for master
