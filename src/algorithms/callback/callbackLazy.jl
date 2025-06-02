@@ -52,7 +52,7 @@ function lazy_callback(cb_data, master_model::Model, log::BendersBnBLog, param::
 
 
         state.oracle_time = @elapsed begin
-            state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t]; time_limit = param.time_limit)
+            state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t]; time_limit = param.time_limit, no_good_cut = param.no_good_cut)
             cuts = !state.is_in_L ? hyperplanes_to_expression(master_model, hyperplanes, master_model[:x], master_model[:t]) : []
             state.num_cuts += length(hyperplanes)
         end

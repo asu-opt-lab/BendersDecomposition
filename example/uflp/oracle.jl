@@ -38,8 +38,13 @@ mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
     UFLKnapsackOracle() = new()
 end
 
-function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-9, time_limit = 3600.0)
+function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-9, time_limit = 3600.0, no_good_cut = false)
     tic = time()
+
+    if no_good_cut && !all(x -> isapprox(0.5, abs(x-0.5), atol = tol), x_value)
+        throw(AlgorithmException("generate_cuts: attempted to generate a no-good cut for a fractional solution"))
+    end
+
     critical_facility = Vector{Int}(undef, oracle.J)
     for j in 1:oracle.J
         sorted_indices = oracle.sorted_indices[j]
@@ -69,16 +74,28 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
     is_in_L = sum(oracle.obj_values) >= sum(t_value) * (1 + tol) ? false : true
 
     hyperplanes = Vector{Hyperplane}()
-    for j in customers
-        k = critical_facility[j] 
-        sorted_indices = oracle.sorted_indices[j]
-        c_sorted = oracle.sorted_cost_demands[j]
-        
+    if !no_good_cut
+        for j in customers
+            k = critical_facility[j] 
+            sorted_indices = oracle.sorted_indices[j]
+            c_sorted = oracle.sorted_cost_demands[j]
+            
+            h = Hyperplane(length(x_value), oracle.J)
+            h.a_t[j] = -1.0
+            h.a_0 = c_sorted[k]
+            for i=1:k-1
+                h.a_x[sorted_indices[i]] = -(c_sorted[k] - c_sorted[i])
+            end
+            push!(hyperplanes, h)
+        end
+    else
         h = Hyperplane(length(x_value), oracle.J)
-        h.a_t[j] = -1.0
-        h.a_0 = c_sorted[k]
-        for i=1:k-1
-            h.a_x[sorted_indices[i]] = -(c_sorted[k] - c_sorted[i])
+        h.a_t = -ones(oracle.J)
+        h.a_0 = sum(oracle.obj_values)
+        for i=1:length(x_value)
+            if x_value[i] > 0.5
+                h.a_x[i] = -sum(oracle.obj_values) 
+            end
         end
         push!(hyperplanes, h)
     end

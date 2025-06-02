@@ -109,6 +109,35 @@ function user_callback(cb_data, master_model::Model, log::BendersBnBLog, param::
                     end
                 end
             end
+        else
+            # Create state and get current variable values
+            node_idx = Ref{CPXINT}()
+            ret = CPXcallbackgetinfoint(cb_data, CPXCALLBACKINFO_NODEUID, node_idx)
+            @info "node_idx: $node_idx"
+
+            state = BendersBnBState()
+            state.values[:x] = JuMP.callback_value.(cb_data, master_model[:x])
+            state.values[:t] = JuMP.callback_value.(cb_data, master_model[:t])
+            
+            # Generate cuts
+            try 
+                state.oracle_time = @elapsed begin
+                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle[1], state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
+                    cuts = !state.is_in_L ? hyperplanes_to_expression(master_model, hyperplanes, master_model[:x], master_model[:t]) : []
+                    state.num_cuts += length(hyperplanes)
+                end
+
+                # Add cuts 
+                for cut in cuts
+                    cut_constraint = @build_constraint(0 >= cut)
+                    MOI.submit(master_model, MOI.UserCut(cb_data), cut_constraint)
+                end
+                
+            catch e
+                if typeof(e) <: TimeLimitException
+                    return
+                end
+            end
         end
     end
 end
