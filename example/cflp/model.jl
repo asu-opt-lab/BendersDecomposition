@@ -13,7 +13,8 @@ function update_model!(mip::AbstractMip, data::Data)
     @constraint(model, t >= sum(cost_demands .* y))
     @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
     @constraint(model, facility_open, y .<= x)
-    @constraint(model, capacity[i in 1:I], sum(data.problem.demands[:] .* y[i,:]) <= data.problem.capacities[i] * x[i])
+    @constraint(model, capacity[i in 1:I], sum(data.problem.demands .* y[i,:]) <= data.problem.capacities[i] * x[i])
+    @constraint(model, capacity_total, sum(data.problem.capacities[i] * x[i] for i in 1:I) >= sum(data.problem.demands))
 end
 
 
