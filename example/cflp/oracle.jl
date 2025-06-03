@@ -19,7 +19,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         model = Model()
 
         # Define coupling variables and constraints
-        @variable(model, x[1:data.dim_x])
+        @variable(model, 0 <= x[1:data.dim_x] <= 1)
         @constraint(model, fix_x, x .== 0)
 
         facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.problem.costs, data.problem.demands, data.problem.capacities) : FacilityKnapsackInfo(data.problem.costs, data.problem.demands[scen_idx], data.problem.capacities)

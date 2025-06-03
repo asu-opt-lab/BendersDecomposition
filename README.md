@@ -1,137 +1,110 @@
-# Main Function
+# Disjunctive Benders Decomposition
 
-This package implements Benders decomposition.
+[![Julia](https://img.shields.io/badge/julia-v1.10.4-blue.svg)](https://julialang.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-# TODO
+A Julia implementation of disjunctive Benders decomposition algorithms for solving mixed-integer programming problems, developed as part of research on "Disjunctive Benders Decomposition".
 
-## Loop Strategy
+## Overview
 
+This repository contains the source code and computational experiments for disjunctive Benders decomposition methods. The implementation extends classical Benders decomposition by incorporating disjunctive cuts to improve convergence and solution quality for mixed-integer programming problems.
+
+## Key Features
+
+- **Multiple Algorithm Variants**: Implementation of sequential and callback-based Benders decomposition algorithms
+- **Disjunctive Cuts**: Integration of disjunctive programming techniques for enhanced cut generation
+- **Flexible Oracle System**: Modular oracle design supporting different subproblem types (typical, disjunctive, separable)
+- **Comprehensive Testing**: Extensive test suite with multiple problem instances
+- **Multiple Problem Types**: Support for facility location problems (UFLP, CFLP, SCFLP), network design (MCNDP), and other optimization problems
+
+## Algorithm Implementations
+
+### Core Algorithms
+- `BendersSeq`: Sequential Benders decomposition
+- `BendersSeqInOut`: Sequential variant with in-out technique
+- `BendersBnB`: Branch-and-bound Benders decomposition  
+- `Dcglp`: Disjunctive Cut Generating Linear Program
+- `SpecializedBendersSeq`: Specialized sequential implementation
+
+### Oracle Types
+- `ClassicalOracle`: Traditional Benders subproblem oracle
+- `KnapsackOracle`: Knapsack technique based oracle
+- `DisjunctiveOracle`: Disjunctive programming-based oracle
+- `SeparableOracle`: Oracle for separable subproblems
+
+## Problem Examples
+
+The `example/` directory contains implementations for several classic optimization problems:
+
+- **UFLP**: Uncapacitated Facility Location Problem
+- **CFLP**: Capacitated Facility Location Problem  
+- **SCFLP**: Stochastic Facility Location Problem
+- **MCNDP**: Multi-Commodity Network Design Problem
+- **SNIP**: Stochastic Network Interdiction Problem
+
+## Installation
+
+To set up the project:
 ```julia
-function solve!(env::BendersEnv, loop::SolutionProcedure, cut_strategy::CutStrategy, params::BendersParams)
-    error("solve! not implemented for $(typeof(loop)) with $(typeof(cut_strategy))")
-end
+using Pkg
+Pkg.activate(".")
+Pkg.instantiate()
 ```
 
-For different loop strategy, the `solve!` function is different. We have three loop strategies:
+## Usage
 
-1. Sequential
-2. Callback
-3. StochasticSequential
+We provide several scripts to run the algorithms on different problem instances. Please refer to the `scripts/` directory for more details.
 
-The `solve!` function for each loop strategy is implemented in the corresponding file and only related to the loop strategy. 
+## Testing
 
-## Cut Strategy
-
-```julia
-function generate_cuts(env::BendersEnv, cut_strategy::CutStrategy)
-    error("generate_cuts not implemented for strategy type $(typeof(cut_strategy))")
-end
+Run the test suite:
+```bash
+julia test/runtests.jl
 ```
 
-Because in dcglp, we need some information on dual variables, we have the following function:
-
-```julia
-function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Float64}, cut_strategy::CutStrategy)
-    error("generate_cut_coefficients not implemented for subproblem type $(typeof(sub)) and strategy $(typeof(cut_strategy))")
-end
-```
-For disjunctive cut, it's little different. 
-
-```julia
-function generate_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
-
-    sub_obj_val = get_subproblem_value(env) 
-
-    disjunctive_inequality = select_disjunctive_inequality(env.master.x_value)
-
-    update_dcglp!(env.dcglp, disjunctive_inequality, cut_strategy)
-    
-    solve_dcglp!(env, cut_strategy)
-    
-    cuts = merge_cuts(env, cut_strategy)
-
-    return cuts, sub_obj_val
-end
+Or run specific tests:
+```bash
+./test/runtests.sh
 ```
 
-and
+The test suite includes:
+1. Sequential typical Benders decomposition
+2. Sequential in-out typical Benders decomposition  
+3. Sequential disjunctive Benders decomposition
+4. Callback typical Benders decomposition
+5. Callback disjunctive Benders decomposition
+6. Specialized sequential Benders decomposition
 
-```julia
-function update_dcglp!(dcglp::DCGLP, disjunctive_inequality::Tuple{Vector{Int}, Int}, disjunction_system::DisjunctiveCut)
-    replace_disjunctive_inequality!(dcglp, disjunctive_inequality, disjunction_system.norm_type)
-    update_added_benders_constraints!(dcglp, disjunction_system)
-    add_disjunctive_cut!(dcglp)
-end 
+## Project Structure
+
+```
+├── src/
+│   ├── algorithms/          # Core decomposition algorithms
+│   ├── modules/            # Oracle implementations and components
+│   ├── utils/              # Utility functions and helpers
+│   └── types.jl            # Type definitions and exports
+├── test/                   # Comprehensive test suite
+├── example/                # Problem-specific implementations
+│   ├── uflp/              # Uncapacitated facility location
+│   ├── cflp/              # Capacitated facility location
+│   ├── scflp/             # Single-commodity flow location
+│   ├── mcndp/             # Multi-commodity network design
+│   └── snip/              # Stochastic network interdiction
+└── Project.toml           # Julia project configuration
 ```
 
-## Solution Process
+## Contributing
 
-The solution process consists of two main components: the loop strategy and the cut generation strategy.
+This repository is actively under development and we welcome contributions! Feel free to submit issues for bugs or feature requests, and pull requests for code changes. For major modifications, please open an issue first to discuss your proposal. We appreciate all contributions, from bug fixes to documentation improvements.
 
-### Loop Strategies
+## License
 
-The `solve!` function implements different solution procedures based on the chosen loop strategy:
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-```julia
-function solve!(env::BendersEnv, loop::SolutionProcedure, cut_strategy::CutStrategy, params::BendersParams)
-    error("solve! not implemented for $(typeof(loop)) with $(typeof(cut_strategy))")
-end
-```
 
-Three main loop strategies are available:
-1. **Sequential**: Traditional iterative approach
-2. **Callback**: Solver-based lazy constraint generation
-3. **StochasticSequential**: Specialized for stochastic problems
 
-Each strategy is implemented in its corresponding file with strategy-specific logic.
 
-### Cut Generation
 
-Cut generation is handled through two main interfaces:
 
-1. **Cut Generation**:
-```julia
-function generate_cuts(env::BendersEnv, cut_strategy::CutStrategy)
-    error("generate_cuts not implemented for strategy type $(typeof(cut_strategy))")
-end
-```
 
-2. **Cut Coefficients** (for dual information):
-```julia
-function generate_cut_coefficients(sub::AbstractSubProblem, x_value::Vector{Float64}, cut_strategy::CutStrategy)
-    error("generate_cut_coefficients not implemented for subproblem type $(typeof(sub)) and strategy $(typeof(cut_strategy))")
-end
-```
-
-#### Disjunctive Cuts
-
-For disjunctive cuts, the generation process involves the DCGLP:
-
-```julia
-function generate_cuts(env::BendersEnv, cut_strategy::DisjunctiveCut)
-    # Get subproblem objective value
-    sub_obj_val = get_subproblem_value(env) 
-
-    # Select appropriate disjunctive inequality
-    disjunctive_inequality = select_disjunctive_inequality(env.master.x_value)
-
-    # Update and solve DCGLP
-    update_dcglp!(env.dcglp, disjunctive_inequality, cut_strategy)
-    solve_dcglp!(env, cut_strategy)
-    
-    # Combine results into final cuts
-    cuts = merge_cuts(env, cut_strategy)
-
-    return cuts, sub_obj_val
-end
-```
-
-The DCGLP update process:
-```julia
-function update_dcglp!(dcglp::DCGLP, disjunctive_inequality::Tuple{Vector{Int}, Int}, disjunction_system::DisjunctiveCut)
-    replace_disjunctive_inequality!(dcglp, disjunctive_inequality, disjunction_system.norm_type)
-    update_added_benders_constraints!(dcglp, disjunction_system)
-    add_disjunctive_cut!(dcglp)
-end 
-```
 
