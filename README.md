@@ -95,7 +95,7 @@ The test suite includes:
 
 ## Contributing
 
-We welcome contributions! Please feel free to submit issues and pull requests. For major changes, please open an issue first to discuss what you would like to change.
+This repository is actively under development and we welcome contributions! Feel free to submit issues for bugs or feature requests, and pull requests for code changes. For major modifications, please open an issue first to discuss your proposal. We appreciate all contributions, from bug fixes to documentation improvements.
 
 ## License
 
