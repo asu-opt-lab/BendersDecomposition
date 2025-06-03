@@ -1,45 +1,53 @@
 using JuMP, DataFrames, Logging, CSV
 using BendersDecomposition
+using Random
 using Printf  
 using Statistics  
 import BendersDecomposition: generate_cuts
-include("$(dirname(@__DIR__))/example/snip/data_reader.jl")
-include("$(dirname(@__DIR__))/example/snip/model.jl")
+include("$(dirname(@__DIR__))/example/uflp/data_reader.jl")
+include("$(dirname(@__DIR__))/example/uflp/oracle.jl")
+include("$(dirname(@__DIR__))/example/uflp/model.jl")
+global_logger(ConsoleLogger(stderr, Logging.Debug))
+
+threads = 7
+time_limit = 14400.0
 
 # load settings
 args = parse_commandline()
 
-instance = args["snip_instance"]
-snipno = args["snip_no"]
-budget = args["snip_budget"]
-println("instance: $instance, snipno: $snipno, budget: $budget")
+Random.seed!(args["seed"])
+instance = args["instance"]
+output_dir = args["output_dir"]
 
 # -----------------------------------------------------------------------------
 # load problem data
 # -----------------------------------------------------------------------------
-problem = read_snip_data(instance, snipno, budget)
-dim_x = length(problem.D)
-dim_t = problem.num_scenarios
-c_x = zeros(dim_x)
-c_t = map(p -> p[3], problem.scenarios)
+problem = read_Simple_data(instance)
+dim_x = problem.n_facilities
+dim_t = problem.n_customers
+c_x = problem.fixed_costs
+c_t = ones(dim_t)
 data = Data(dim_x, dim_t, problem, c_x, c_t)
 
 # -----------------------------------------------------------------------------
 # load parameters
 # -----------------------------------------------------------------------------
-mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, "CPXPARAM_Threads" => 7)
+mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, 
+"CPXPARAM_Threads" => threads,  "CPX_PARAM_BRDIR" => 1)
 
 # -----------------------------------------------------------------------------
 # MIP model
 # -----------------------------------------------------------------------------
 mip = Mip(data)
 assign_attributes!(mip.model, mip_solver_param)
-set_time_limit_sec(mip.model, 14400.0)
+set_time_limit_sec(mip.model, time_limit)
 update_model!(mip, data)
 set_optimizer_attribute(mip.model, MOI.Silent(), false)
 optimize!(mip.model)
 
 @info termination_status(mip.model)
-@info "Solve time: $(solve_time(mip.model))"
+@info "Node count: $(node_count(mip.model))"
+@info "Elapsed time: $(solve_time(mip.model))"
 @info "Objective value: $(objective_value(mip.model))"
-@info "objective bound: $(objective_bound(mip.model))"
+@info "Objective bound: $(objective_bound(mip.model))"
+@info "Relative gap: $(relative_gap(mip.model))"

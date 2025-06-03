@@ -9,7 +9,7 @@ function parse_commandline()
             help = "Instance name (overrides config file)"
             default = "f10-c10-r3-1"
             arg_type = String
-            required = true
+            required = false
         "--output_dir"
             help = "Output directory"
             default = "experiments"
