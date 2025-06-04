@@ -34,13 +34,14 @@ This repository contains the source code and computational experiments for disju
 
 ## Problem Examples
 
-The `example/` directory contains implementations for several classic optimization problems:
-
+The `example/` directory contains implementations for several classic optimization problems featured in the paper:
 - **UFLP**: Uncapacitated Facility Location Problem
-- **CFLP**: Capacitated Facility Location Problem  
-- **SCFLP**: Stochastic Facility Location Problem
-- **MCNDP**: Multi-Commodity Network Design Problem
 - **SNIP**: Stochastic Network Interdiction Problem
+
+We are actively developing this repository into a professional package. The following implementations are currently in progress:
+- **CFLP**: Capacitated Facility Location Problem  
+- **SCFLP**: Stochastic Capacitated Facility Location Problem
+- **MCNDP**: Multi-Commodity Network Design Problem
 
 ## Installation
 
@@ -87,7 +88,7 @@ The test suite includes:
 ├── example/                # Problem-specific implementations
 │   ├── uflp/              # Uncapacitated facility location
 │   ├── cflp/              # Capacitated facility location
-│   ├── scflp/             # Single-commodity flow location
+│   ├── scflp/             # Stochastic capacitated facility location
 │   ├── mcndp/             # Multi-commodity network design
 │   └── snip/              # Stochastic network interdiction
 └── Project.toml           # Julia project configuration
