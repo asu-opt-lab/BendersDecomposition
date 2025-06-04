@@ -33,7 +33,7 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
 
     # do threads?
     for j=1:N
-        is_in_L[j], hyperplanes[j], sub_obj_val[j] = generate_cuts(oracle.oracles[j], x_value, [t_value[j]]; tol=tol, time_limit=get_sec_remaining(tic, time_limit))
+        is_in_L[j], hyperplanes[j], sub_obj_val[j] = generate_cuts(oracle.oracles[j], x_value, [t_value[j]]; tol=tol, atol=1e-9, time_limit=get_sec_remaining(tic, time_limit))
 
         # correct dimension for t_j's
         for h in hyperplanes[j]
@@ -44,7 +44,7 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
     end
 
     if any(.!is_in_L)
-        return false, reduce(vcat, hyperplanes), reduce(vcat, sub_obj_val)
+        return false, reduce(vcat, hyperplanes[.!is_in_L]), reduce(vcat, sub_obj_val)
     else
         return true, [Hyperplane(length(x_value), length(t_value))], deepcopy(t_value)
     end
