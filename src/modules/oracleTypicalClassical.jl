@@ -26,7 +26,7 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
     ClassicalOracle() = new()
 end
 
-function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-9, time_limit = 3600)
+function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-9, atol = 0, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     optimize!(oracle.model)
@@ -41,7 +41,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
         a_x = dual.(oracle.fixed_x_constraints) 
         a_t = [-1.0] 
         a_0 = sub_obj_val - a_x'*x_value 
-        if sub_obj_val >= t_value[1] * (1 + tol)
+        if sub_obj_val >= t_value[1] * (1 + tol) + atol
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
             return true, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
@@ -54,7 +54,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
             a_x = dual.(oracle.fixed_x_constraints)
             a_t = [0.0]
             a_0 = dual_sub_obj_val - a_x'*x_value 
-            if dual_sub_obj_val >= tol
+            if dual_sub_obj_val >= atol
                 return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
             else
                 return true, [Hyperplane(a_x, a_t, a_0)], [Inf]
