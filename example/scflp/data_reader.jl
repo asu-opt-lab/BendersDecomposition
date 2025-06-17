@@ -1,6 +1,6 @@
 using JSON
 
-struct SCFLPData <: AbstractData
+struct SCFLPData
     n_facilities::Int
     n_customers::Int
     n_scenarios::Int

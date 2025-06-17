@@ -2,7 +2,7 @@
 
 using JSON
 using LinearAlgebra
-struct CFLPData <: AbstractData
+struct CFLPData
     n_facilities::Int
     n_customers::Int
     capacities::Vector{Float64}

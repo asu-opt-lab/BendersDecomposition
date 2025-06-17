@@ -1,6 +1,6 @@
 using JSON
 
-struct SNIPData <: AbstractData
+struct SNIPData
     num_nodes::Int
     num_scenarios::Int
     scenarios::Vector{Tuple{Int,Int,Float64}} # (from_node, to_node, probability)

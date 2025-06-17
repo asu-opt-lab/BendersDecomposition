@@ -3,7 +3,9 @@
 # ============================================================================
 
 export AbstractBendersDecomposition
-export Data, AbstractData
+export Data
+# export Data, AbstractData
+# export Data
 export AbstractMaster, AbstractMip
 export AbstractOracle, AbstractOracleParam
 export Seq, SeqInOut
@@ -32,14 +34,22 @@ abstract type AbstractOracleParam end
 # Global data type; Problem Data is optional; user can define their own structure for problem-specific data
 # To-Do: think about the type for `problem`. Should we remove `AbstractData`?
 # ============================================================================
-abstract type AbstractData end
-struct Data
+struct Data{T, S<:Union{Float64, Int64}, U<:Union{Float64, Int64}}
     dim_x::Int
     dim_t::Int
-    problem::AbstractData
-    c_x::Vector{Float64}
-    c_t::Vector{Float64}
+    problem::T
+    c_x::Vector{S}
+    c_t::Vector{U}
 end
+
+# abstract type AbstractData end
+# struct Data
+#     dim_x::Int
+#     dim_t::Int
+#     problem::AbstractData
+#     c_x::Vector{Float64}
+#     c_t::Vector{Float64}
+# end
 
 # ============================================================================
 # Normalization type for CGLP

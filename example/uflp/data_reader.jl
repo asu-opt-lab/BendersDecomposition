@@ -1,6 +1,6 @@
 # export UFLPData, read_uflp_benchmark_data, read_Simple_data
 
-struct UFLPData <: AbstractData
+struct UFLPData 
     n_facilities::Int
     n_customers::Int
     demands::Vector{Float64}
