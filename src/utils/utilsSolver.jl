@@ -23,7 +23,5 @@ function assign_attributes!(model::Model, config::Dict{String,Any})
             set_optimizer_attribute(model, param, value)
         end
     end
-
-    set_optimizer_attribute(model, MOI.Silent(), true)
 end
 
