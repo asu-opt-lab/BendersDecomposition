@@ -4,8 +4,17 @@ struct FacilityKnapsackInfo
     capacity::Vector{Float64}
 end
 
+mutable struct CFLKnapsackOracleParam <: AbstractOracleParam
+    atol::Float64
+    rtol::Float64
+
+    function CFLKnapsackOracleParam(; atol = 1e-9, rtol = 1e-9)
+        new(atol, rtol)
+    end
+end
+
 mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
-    oracle_param::EmptyOracleParam
+    oracle_param::CFLKnapsackOracleParam
 
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
@@ -14,7 +23,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     function CFLKnapsackOracle(data::Data; 
                                scen_idx=-1, 
                                solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                               oracle_param::EmptyOracleParam = EmptyOracleParam())
+                               oracle_param::CFLKnapsackOracleParam = CFLKnapsackOracleParam())
         @debug "Building classical oracle"
         model = Model()
 
@@ -32,7 +41,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     CFLKnapsackOracle() = new()
 end
 
-function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-9, time_limit = 3600)
+function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     optimize!(oracle.model)
@@ -61,7 +70,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
 
         a_x = KP_values # Vector{Float64}
         a_0 = sum(μ) 
-        if sub_obj_val >= t_value[1] * (1 + tol)
+        if sub_obj_val >= t_value[1] * (1 + oracle.oracle_param.rtol / tol_normalize)
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
             return true, [Hyperplane(a_x, a_t, a_0)], deepcopy(t_value)
@@ -75,7 +84,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
             a_x = dual.(oracle.fixed_x_constraints)
             a_t = [0.0]
             a_0 = dual_sub_obj_val - a_x' * x_value 
-            if dual_sub_obj_val >= tol
+            if dual_sub_obj_val >= oracle.oracle_param.atol
                 return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
             else
                 return true, [Hyperplane(a_x, a_t, a_0)], [Inf]
