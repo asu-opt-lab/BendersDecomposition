@@ -24,7 +24,7 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
     end
 end
 
-function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; time_limit = 3600.0)
+function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600.0)
     tic = time()
     N = oracle.N
     is_in_L = Vector{Bool}(undef,N)
@@ -33,7 +33,7 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
 
     # do threads?
     for j=1:N
-        is_in_L[j], hyperplanes[j], sub_obj_val[j] = generate_cuts(oracle.oracles[j], x_value, [t_value[j]]; time_limit=get_sec_remaining(tic, time_limit))
+        is_in_L[j], hyperplanes[j], sub_obj_val[j] = generate_cuts(oracle.oracles[j], x_value, [t_value[j]], tol_normalize = tol_normalize; time_limit=get_sec_remaining(tic, time_limit))
 
         # correct dimension for t_j's
         for h in hyperplanes[j]
