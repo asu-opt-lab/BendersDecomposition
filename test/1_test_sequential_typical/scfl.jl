@@ -1,11 +1,11 @@
 # to be overwritten, they should be included outside testset
 include("$(dirname(dirname(@__DIR__)))/example/scflp/data_reader.jl")
-# include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
+include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
 include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
 
 @testset verbose = true "Stochastic CFLP Sequential Benders Tests" begin
-    # instances = setdiff(1:71, [67])
     instances = 1:5
+
     for i in instances
         @testset "Instance: f25-c50-s64-r10-$i" begin
             # Load problem data if necessary
@@ -28,9 +28,9 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
                         )
 
             # solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4)
-            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
-            typical_oracal_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
+            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
 
             # solve mip for reference
             mip = Mip(data)
@@ -44,8 +44,12 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
                 @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle - seq..."
                 master = Master(data; solver_param = master_solver_param)
                 update_model!(master, data)
-
-                oracle = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios; solver_param = typical_oracal_solver_param)
+                
+                # Construct oracle and set parameters
+                scenario_demands = [sum(data.problem.demands[k]) for k in 1:length(data.problem.demands)]
+                separable_parm = SeparableOracleParam(pareto = true, core_point = fill(maximum(scenario_demands)/sum(data.problem.capacities)+1e-3, dim_x))
+                classical_param = ClassicalOracleParam(rtol = 1e-9, atol = 1e-9)
+                oracle = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = classical_param, oracle_param = separable_parm)
                 for j=1:oracle.N
                     update_model!(oracle.oracles[j], data, j)
                 end
@@ -55,13 +59,32 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
             end 
+
+            @testset "Unified oracle" begin
+                @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - seq..."
+                master = Master(data; solver_param = master_solver_param)
+                update_model!(master, data)
+
+                oracle = SeparableOracle(data, UnifiedOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param)
+                for j=1:oracle.N
+                    update_model!(oracle.oracles[j], data, j)
+                    model_reformulation!(oracle.oracles[j])
+                end
+
+                env = BendersSeq(data, master, oracle; param = benders_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end
             
             @testset "Knapsack oracle" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - seq..."
                 master = Master(data; solver_param = master_solver_param)
                 update_model!(master, data)
 
-                oracle = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios; solver_param = typical_oracal_solver_param)
+                # Construct oracle and set parameters
+                cflp_param = CFLKnapsackOracleParam(rtol = 1e-9, atol = 1e-9)
+                oracle = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = cflp_param)
                 for j=1:oracle.N
                     update_model!(oracle.oracles[j], data, j)
                 end

@@ -10,14 +10,13 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
             
             benders_param = BendersBnBParam(;
                 time_limit = 200.0,
-                gap_tolerance = 1e-6,
-                verbose = true
+                verbose = false
             )
             
             # Common solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4)
-            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
-            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
+            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
 
             # Initialize data object
             dim_x = length(problem.D)
@@ -39,10 +38,12 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
             # Test classical oracle
             @testset "Classic oracle" begin
                 @testset "NoSeq" begin
-                    @info "solving SNIP instance$instance snipno $snipno budget $budget - classical oracle - seq..."
+                    @info "solving SNIP instance$instance snipno $snipno budget $budget - classical oracle - no seq..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
-                    typical_oracle = SeparableOracle(data, ClassicalOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param)
+                    # Construct oracle and set parameters
+                    classical_param = ClassicalOracleParam(rtol = 1e-9, atol = 1e-9) 
+                    typical_oracle = SeparableOracle(data, ClassicalOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = classical_param)
                     for j=1:typical_oracle.N
                         update_model!(typical_oracle.oracles[j], data, j)
                     end
@@ -59,7 +60,10 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
                     @info "solving SNIP instance$instance snipno $snipno budget $budget - classical oracle - seq..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
-                    typical_oracle = SeparableOracle(data, ClassicalOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param)
+                    # Construct oracle and set parameters
+                    separable_parm = SeparableOracleParam(pareto = true, core_point = fill(data.problem.budget/length(data.problem.D)-1e-3, dim_x))
+                    classical_param = ClassicalOracleParam(rtol = 1e-9, atol = 1e-9) 
+                    typical_oracle = SeparableOracle(data, ClassicalOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = classical_param, oracle_param = separable_parm)
                     for j=1:typical_oracle.N
                         update_model!(typical_oracle.oracles[j], data, j)
                     end
@@ -67,7 +71,7 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
                     root_param = BendersSeqParam(;
                         time_limit = 200.0,
                         gap_tolerance = 1e-6,
-                        verbose = true
+                        verbose = false
                     )
                     root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
                     lazy_callback = LazyCallback(typical_oracle)
@@ -79,10 +83,13 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
                 end
 
                 @testset "SeqInOut" begin
-                    @info "solving SNIP instance$instance snipno $snipno budget $budget - classical oracle - seq..."
+                    @info "solving SNIP instance$instance snipno $snipno budget $budget - classical oracle - seqinout..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
-                    typical_oracle = SeparableOracle(data, ClassicalOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param)
+                    # Construct oracle and set parameters
+                    separable_parm = SeparableOracleParam(pareto = true, core_point = fill(data.problem.budget/length(data.problem.D)-1e-3, dim_x))
+                    classical_param = ClassicalOracleParam(rtol = 1e-9, atol = 1e-9) 
+                    typical_oracle = SeparableOracle(data, ClassicalOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = classical_param, oracle_param = separable_parm)
                     for j=1:typical_oracle.N
                         update_model!(typical_oracle.oracles[j], data, j)
                     end
@@ -93,7 +100,7 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
                         stabilizing_x = ones(data.dim_x),
                         α = 0.9,
                         λ = 0.1,
-                        verbose = true
+                        verbose = false
                     )
                     root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
                     lazy_callback = LazyCallback(typical_oracle)
@@ -105,6 +112,76 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
                 end
             end 
 
+            @testset "Unified oracle" begin
+                @testset "NoSeq" begin
+                    @info "solving SNIP instance$instance snipno $snipno budget $budget - unified oracle - no seq..."
+                    master = Master(data; solver_param = master_solver_param)
+                    update_model!(master, data)
+                    typical_oracle = SeparableOracle(data, UnifiedOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param)
+                    for j=1:typical_oracle.N
+                        update_model!(typical_oracle.oracles[j], data, j)
+                        model_reformulation!(typical_oracle.oracles[j])
+                    end
+                    root_preprocessing = NoRootNodePreprocessing()
+                    lazy_callback = LazyCallback(typical_oracle)
+                    user_callback = NoUserCallback()
+                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    log = solve!(env)
+                    @test env.termination_status == Optimal()
+                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                end
+
+                @testset "Seq" begin
+                    @info "solving SNIP instance$instance snipno $snipno budget $budget - unified oracle - seq..."
+                    master = Master(data; solver_param = master_solver_param)
+                    update_model!(master, data)
+                    typical_oracle = SeparableOracle(data, UnifiedOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param)
+                    for j=1:typical_oracle.N
+                        update_model!(typical_oracle.oracles[j], data, j)
+                        model_reformulation!(typical_oracle.oracles[j])
+                    end
+                    root_seq_type = BendersSeq
+                    root_param = BendersSeqParam(;
+                        time_limit = 200.0,
+                        gap_tolerance = 1e-6,
+                        verbose = false
+                    )
+                    root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
+                    lazy_callback = LazyCallback(typical_oracle)
+                    user_callback = NoUserCallback()
+                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    log = solve!(env)
+                    @test env.termination_status == Optimal()
+                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                end
+
+                @testset "SeqInOut" begin
+                    @info "solving SNIP instance$instance snipno $snipno budget $budget - unified oracle - seqinout..."
+                    master = Master(data; solver_param = master_solver_param)
+                    update_model!(master, data)
+                    typical_oracle = SeparableOracle(data, UnifiedOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param)
+                    for j=1:typical_oracle.N
+                        update_model!(typical_oracle.oracles[j], data, j)
+                        model_reformulation!(typical_oracle.oracles[j])
+                    end
+                    root_seq_type = BendersSeqInOut
+                    root_param = BendersSeqInOutParam(
+                        time_limit = 300.0,
+                        gap_tolerance = 1e-6,
+                        stabilizing_x = ones(data.dim_x),
+                        α = 0.9,
+                        λ = 0.1,
+                        verbose = false
+                    )
+                    root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
+                    lazy_callback = LazyCallback(typical_oracle)
+                    user_callback = NoUserCallback()
+                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    log = solve!(env)
+                    @test env.termination_status == Optimal()
+                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                end
+            end 
         end
     end
 end

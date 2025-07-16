@@ -4,12 +4,12 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
 
 @testset verbose = true "UFLP Sequential Benders Tests" begin
     instances = setdiff(1:71, [67])
-    # instances = 30:35
+
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
             problem = read_uflp_benchmark_data("p$(i)")
-            
+
             # initialize dim_x, dim_t, c_x, c_t
             dim_x = problem.n_facilities
             c_x = problem.fixed_costs
@@ -26,10 +26,11 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                             gap_tolerance = 1e-6,
                             verbose = false
                         )
+
             # solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4)
-            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
-            typical_oracal_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
+            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
 
             # solve mip for reference
             mip = Mip(data)
@@ -44,11 +45,29 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                 master = Master(data; solver_param = master_solver_param)
                 update_model!(master, data)
 
-                oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
+                # Construct oracle and set parameters
+                classical_param = ClassicalOracleParam(rtol = 1e-9, atol = 1e-9, pareto = true, core_point = fill(0.5, dim_x)) 
+                oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
                 update_model!(oracle, data)
 
                 env = BendersSeq(data, master, oracle; param = benders_param)
                 log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end
+
+            @testset "Unified oracle" begin
+                @info "solving UFLP p$i - unified oracle - seq..."
+                master = Master(data; solver_param = master_solver_param)
+                update_model!(master, data)
+
+                oracle = UnifiedOracle(data; solver_param = typical_oracle_solver_param)
+                update_model!(oracle, data)
+                model_reformulation!(oracle)
+
+                env = BendersSeq(data, master, oracle; param = benders_param)
+                log = solve!(env)
+                println(log)
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
             end
@@ -63,13 +82,14 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
             @assert dim_x == length(data.c_x)
             @assert dim_t == length(data.c_t)
 
-            @testset "fat knapsack oracle" begin
-                @info "solving UFLP p$i - fat Knapsack oracle - seq..."
+            @testset "Fat knapsack oracle" begin
+                @info "solving UFLP p$i - fat knapsack oracle - seq..."
                 master = Master(data; solver_param = master_solver_param)
                 update_model!(master, data)
 
-                # model-free knapsack-based cuts
-                oracle = UFLKnapsackOracle(data) 
+                # Construct model-free oracle and set parameters
+                uflp_param = UFLKnapsackOracleParam(rtol = 1e-9) 
+                oracle = UFLKnapsackOracle(data; oracle_param = uflp_param) 
                 set_parameter!(oracle, "add_only_violated_cuts", true)
 
                 env = BendersSeq(data, master, oracle; param = benders_param)

@@ -31,7 +31,7 @@ dcglp_param = DcglpParam(;
 mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9)
 # master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_LPMETHOD" => 1, "CPX_PARAM_EPOPT" => 1e-9)
 master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_LPMETHOD" => 1, "CPX_PARAM_EPOPT" => 1e-9)
-typical_oracal_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
+typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
 dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_LPMETHOD" => 3)
 
 include("$(dirname(@__DIR__))/example/uflp/data_reader.jl")
@@ -83,7 +83,7 @@ include("$(dirname(@__DIR__))/example/uflp/model.jl")
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
 
-                            typical_oracles = [ClassicalOracle(data; solver_param = typical_oracal_solver_param); ClassicalOracle(data; solver_param = typical_oracal_solver_param)] # for kappa & nu
+                            typical_oracles = [ClassicalOracle(data; solver_param = typical_oracle_solver_param); ClassicalOracle(data; solver_param = typical_oracle_solver_param)] # for kappa & nu
                             for k=1:2
                                 update_model!(typical_oracles[k], data)
                             end
@@ -206,7 +206,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             
-                            typical_oracles = [ClassicalOracle(data; solver_param = typical_oracal_solver_param); ClassicalOracle(data; solver_param = typical_oracal_solver_param)] # for kappa & nu
+                            typical_oracles = [ClassicalOracle(data; solver_param = typical_oracle_solver_param); ClassicalOracle(data; solver_param = typical_oracle_solver_param)] # for kappa & nu
                             for k=1:2
                                 update_model!(typical_oracles[k], data)
                             end
@@ -266,7 +266,7 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
 
-                            typical_oracles = [CFLKnapsackOracle(data; solver_param = typical_oracal_solver_param); CFLKnapsackOracle(data; solver_param = typical_oracal_solver_param)]
+                            typical_oracles = [CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param); CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)]
                             for k=1:2
                                 update_model!(typical_oracles[k], data)
                             end

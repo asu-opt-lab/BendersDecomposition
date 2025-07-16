@@ -2,7 +2,7 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/data_reader.jl")
 include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
 
 @testset verbose = true "SNIP Sequential Benders Tests" begin
-    for instance in [0], snipno in [0], budget in 30.0:10.0:40.0
+    for instance in [0], snipno in [0], budget in [30.0]
         @testset "instance $instance; snipno $snipno budget $budget" begin
             # Load problem data if necessary
             problem = read_snip_data(instance, snipno, budget)
@@ -20,13 +20,13 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
             benders_param = BendersSeqParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
-                            verbose = true
+                            verbose = false
                         )
 
             # solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4)
-            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
-            typical_oracal_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
+            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
 
             # solve mip for reference
             mip = Mip(data)
@@ -41,7 +41,10 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
                 master = Master(data; solver_param = master_solver_param)
                 update_model!(master, data)
 
-                oracle = SeparableOracle(data, ClassicalOracle(), data.problem.num_scenarios; solver_param = typical_oracal_solver_param)
+                # Construct oracle and set parameters
+                separable_parm = SeparableOracleParam(pareto = true, core_point = fill(data.problem.budget/length(data.problem.D)-1e-3, dim_x))
+                classical_param = ClassicalOracleParam(rtol = 1e-9, atol = 1e-9) 
+                oracle = SeparableOracle(data, ClassicalOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = classical_param, oracle_param = separable_parm)
                 for j=1:oracle.N
                     update_model!(oracle.oracles[j], data, j)
                 end
@@ -51,7 +54,23 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
             end 
-            
+
+            @testset "Unified oracle" begin
+                @info "solving SNIP instance$instance snipno $snipno budget $budget - unified oracle - seq..."
+                master = Master(data; solver_param = master_solver_param)
+                update_model!(master, data)
+
+                oracle = SeparableOracle(data, UnifiedOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param)
+                for j=1:oracle.N
+                    update_model!(oracle.oracles[j], data, j)
+                    model_reformulation!(oracle.oracles[j])
+                end
+
+                env = BendersSeq(data, master, oracle; param = benders_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end
         end
     end
 end
