@@ -206,8 +206,8 @@ function solve_dcglp!(oracle::AbstractDisjunctiveOracle, x_value::Vector{Float64
 end
 
 function retrieve_zero_one(x_value::Vector{Float64}, zero_tol)
-    zeros_indices = findall(x -> isapprox(x, 0.0; zero_tol), x_value)
-    ones_indices = findall(x -> isapprox(x, 1.0; zero_tol), x_value)
+    zeros_indices = findall(x -> isapprox(x, 0.0; atol=zero_tol), x_value)
+    ones_indices = findall(x -> isapprox(x, 1.0; atol=zero_tol), x_value)
     return zeros_indices, ones_indices
 end
 
