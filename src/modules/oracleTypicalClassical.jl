@@ -3,9 +3,12 @@ export ClassicalOracle, ClassicalOracleParam
 mutable struct ClassicalOracleParam <: AbstractOracleParam
     rtol::Float64
     atol::Float64
+    pareto::Bool
+    core_point::Vector{Float64}
 
-    function ClassicalOracleParam(; rtol = 1e-9, atol = 1e-9)
-        new(rtol, atol)
+    function ClassicalOracleParam(; rtol = 1e-9, atol = 1e-9, pareto = false, core_point=Float64[])
+        pareto == true && isempty(core_point) && throw(AlgorithmException("Please provide core point"))
+        new(rtol, atol, pareto, core_point)
     end
 end
 
@@ -74,6 +77,24 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
     end
 end
 
+function generate_cuts(oracle::AbstractTypicalOracle, core_point::Vector{Float64}; time_limit = 3600)
+    set_time_limit_sec(oracle.model, time_limit)
+    set_normalized_rhs.(oracle.fixed_x_constraints, core_point)
+    optimize!(oracle.model)
+    if termination_status(oracle.model) == TIME_LIMIT
+        throw(TimeLimitException("Time limit reached during cut generation"))
+    end
 
+    if dual_status(oracle.model) == FEASIBLE_POINT
+        sub_obj_val = objective_value(oracle.model)
+
+        a_x = dual.(oracle.fixed_x_constraints) 
+        a_t = [-1.0] 
+        a_0 = sub_obj_val - a_x'*core_point
+        return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
+    else
+        throw(UnexpectedModelStatusException("Independent Magnanti-Wong problem: $(status)"))
+    end
+end
 
 

@@ -32,6 +32,25 @@ function solve!(env::BendersSeq; iter_prefix = "")
         while true
             state = BendersSeqState()
             state.total_time = @elapsed begin
+
+                # Generate Pareto-optimal cut
+                if typeof(env.oracle) == DisjunctiveOracle
+                    oracle = env.oracle.typical_oracles[1]
+                    pareto = env.oracle.typical_oracles[1].oracle_param.pareto
+                    x_value = log.n_iter != 0 ? log.iterations[end].values[:x] : env.oracle.typical_oracles[1].oracle_param.core_point
+                    core_point = env.oracle.typical_oracles[1].oracle_param.core_point = 0.5*env.oracle.typical_oracles[1].oracle_param.core_point+0.5*x_value
+                else
+                    oracle = env.oracle
+                    pareto = env.oracle.oracle_param.pareto
+                    x_value = log.n_iter != 0 ? log.iterations[end].values[:x] : env.oracle.oracle_param.core_point
+                    core_point = env.oracle.oracle_param.core_point = 0.5*env.oracle.oracle_param.core_point+0.5*x_value
+                end
+                
+                if pareto
+                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(oracle, core_point; time_limit = get_sec_remaining(log, param))
+                    @constraint(env.master.model, 0.0 .>= hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]))
+                end
+
                 # Solve master problem
                 state.master_time = @elapsed begin
                     set_time_limit_sec(env.master.model, get_sec_remaining(log, param))
