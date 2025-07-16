@@ -99,10 +99,13 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                 end
                 # end
             end
-        
-            if state.f_x[1] !== NaN && state.f_x[2] !== NaN
+
+            if !isnan(state.f_x[1][1]) && !isnan(state.f_x[2][1])
                 # update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], oracle.oracle_param.norm.p))
                 update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- f_x], oracle.oracle_param.norm.p))
+            else
+                # Exact UB is diffcult to be obtained for UnifiedOracle
+                state.omega_t_[1:2] .= Ref([NaN])
             end
 
             record_iteration!(log, state)
