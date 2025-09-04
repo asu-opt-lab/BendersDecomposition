@@ -3,12 +3,9 @@ export ClassicalOracle, ClassicalOracleParam
 mutable struct ClassicalOracleParam <: AbstractOracleParam
     rtol::Float64
     atol::Float64
-    pareto::Bool
-    core_point::Vector{Float64}
 
-    function ClassicalOracleParam(; rtol = 1e-9, atol = 1e-9, pareto = false, core_point=Float64[])
-        pareto == true && isempty(core_point) && throw(AlgorithmException("Please provide core point"))
-        new(rtol, atol, pareto, core_point)
+    function ClassicalOracleParam(; rtol = 1e-9, atol = 1e-9)
+        new(rtol, atol)
     end
 end
 

@@ -1,13 +1,7 @@
 export SeparableOracle, SeparableOracleParam
 
 mutable struct SeparableOracleParam <: AbstractOracleParam
-    pareto::Bool
-    core_point::Vector{Float64}
-
-    function SeparableOracleParam(; pareto = false, core_point=Float64[])
-        pareto == true && isempty(core_point) && throw(AlgorithmException("Please provide core point"))
-        new(pareto, core_point)
-    end
+    # may contain parameters for scenario handling.
 end
 
 mutable struct SeparableOracle <: AbstractTypicalOracle
