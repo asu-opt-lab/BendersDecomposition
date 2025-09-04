@@ -3,6 +3,7 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
 include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
 
 @testset verbose = true "SCFLP Callback Disjunctive Benders Tests" begin
+    # Specify instances to test
     instances = 1:5  # For quick testing
     
     for i in instances
@@ -22,6 +23,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
             # Get standard parameters
             benders_param = BendersBnBParam(;
                 time_limit = 200.0,
+                gap_tolerance = 1e-6,
                 verbose = false
             )
 
@@ -36,10 +38,11 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
             user_cb_param = UserCallbackParam(frequency=1)
             
             # Common solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
-            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
-            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
-            dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4)
+            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
+            dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
+            "CPX_PARAM_EPOPT" => 1e-9) 
             
             # Solve MIP for reference
             mip = Mip(data)
@@ -49,19 +52,16 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
             @assert termination_status(mip.model) == OPTIMAL
             mip_opt_val = objective_value(mip.model)
             
+            
             @testset "Classic oracle" begin
                 @testset "NoSeq" begin
                     
-                    # Construct oracle and set parameters
-                    scenario_demands = [sum(data.problem.demands[k]) for k in 1:length(data.problem.demands)]
-                    separable_parm = SeparableOracleParam(pareto = true, core_point = fill(maximum(scenario_demands)/sum(data.problem.capacities)+1e-3, dim_x))
-                    classical_param = ClassicalOracleParam(rtol = 1e-9, atol = 1e-9) 
-                    lazy_oracle = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = classical_param, oracle_param = separable_parm)
+                    lazy_oracle = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param)
                     for j=1:lazy_oracle.N
                         update_model!(lazy_oracle.oracles[j], data, j)
                     end
-                    typical_oracle_kappa = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = classical_param, oracle_param = separable_parm)
-                    typical_oracle_nu = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = classical_param, oracle_param = separable_parm)
+                    typical_oracle_kappa = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param)
+                    typical_oracle_nu = SeparableOracle(data, ClassicalOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param)
                     for j=1:typical_oracle_kappa.N
                         update_model!(typical_oracle_kappa.oracles[j], data, j)
                     end
@@ -74,7 +74,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                     for strengthened in [true, false], 
                         add_benders_cuts_to_master in [true], 
                         reuse_dcglp in [true, false], 
-                        lift in [false],
+                        lift in [true, false],
                         p in [1.0, Inf], 
                         disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()],
                         adjust_t_to_fx in [true; false]
@@ -95,8 +95,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                                 fraction_of_benders_cuts_to_master = 0.5, 
                                 reuse_dcglp = reuse_dcglp,
                                 lift = lift,
-                                adjust_t_to_fx = adjust_t_to_fx,
-                                zero_tol = 1e-9
+                                adjust_t_to_fx = adjust_t_to_fx
                             )
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
@@ -142,106 +141,14 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                 end
             end
 
-            @testset "Unified oracle" begin
-                @testset "NoSeq" begin
-                    lazy_oracle = SeparableOracle(data, UnifiedOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param)
-                    for j=1:lazy_oracle.N
-                        update_model!(lazy_oracle.oracles[j], data, j)
-                        model_reformulation!(lazy_oracle.oracles[j])
-                    end
-                    typical_oracle_kappa = SeparableOracle(data, UnifiedOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param)
-                    typical_oracle_nu = SeparableOracle(data, UnifiedOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param)
-                    for j=1:typical_oracle_kappa.N
-                        update_model!(typical_oracle_kappa.oracles[j], data, j)
-                        model_reformulation!(typical_oracle_kappa.oracles[j])
-                    end
-                    for j=1:typical_oracle_nu.N
-                        update_model!(typical_oracle_nu.oracles[j], data, j)
-                        model_reformulation!(typical_oracle_nu.oracles[j])
-                    end
-                    typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
-                
-                    # Test various parameter combinations
-                    for strengthened in [true, false], 
-                        add_benders_cuts_to_master in [true], 
-                        reuse_dcglp in [true, false], 
-                        lift in [true, false],
-                        p in [1.0, Inf], 
-                        disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()],
-                        adjust_t_to_fx in [false]
-                        
-                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule;  adjust_t_to_fx $adjust_t_to_fx" begin
-                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
-                                solver_param = dcglp_solver_param,
-                                param = dcglp_param
-                            ) 
-
-                            # Set oracle parameters
-                            oracle_param = DisjunctiveOracleParam(
-                                norm = LpNorm(p), 
-                                split_index_selection_rule = RandomFractional(),
-                                disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
-                                strengthened = strengthened, 
-                                add_benders_cuts_to_master = add_benders_cuts_to_master, 
-                                fraction_of_benders_cuts_to_master = 0.5, 
-                                reuse_dcglp = reuse_dcglp,
-                                lift = lift,
-                                adjust_t_to_fx = adjust_t_to_fx,
-                                zero_tol = 1e-9
-                            )
-                            set_parameter!(disjunctive_oracle, oracle_param)
-                            update_model!(disjunctive_oracle, data)
-                            
-                            @testset "NoSeq" begin
-                                @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/unified/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
-                                master = Master(data; solver_param = master_solver_param)
-                                update_model!(master, data)
-                                root_preprocessing = NoRootNodePreprocessing()
-                                lazy_callback = LazyCallback(lazy_oracle)
-                                user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-                                env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
-                                log = solve!(env)
-                                @test env.termination_status == Optimal()
-                                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                            end
-                            @testset "Seq" begin
-                                @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/unified/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
-                                master = Master(data; solver_param = master_solver_param)
-                                update_model!(master, data)
-                                root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-6, verbose=false))
-                                lazy_callback = LazyCallback(lazy_oracle)
-                                user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-                                env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
-                                log = solve!(env)
-                                @test env.termination_status == Optimal()
-                                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                            end
-                            @testset "SeqInOut" begin
-                                @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/unified/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
-                                master = Master(data; solver_param = master_solver_param)
-                                update_model!(master, data)
-                                root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = false))
-                                lazy_callback = LazyCallback(lazy_oracle)
-                                user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-                                env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
-                                log = solve!(env)
-                                @test env.termination_status == Optimal()
-                                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                            end
-                        end
-                    end
-                end
-            end
-
-            @testset "Knapsack oracle" begin
-                # Construct oracle and set parameters
-                cflp_param = CFLKnapsackOracleParam(rtol = 1e-9, atol = 1e-9) 
-                lazy_oracle = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = cflp_param)
+            # Test CFLKnapsack oracle
+            @testset "CFLKnapsack oracle" begin
+                lazy_oracle = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param)
                 for j=1:lazy_oracle.N
                     update_model!(lazy_oracle.oracles[j], data, j)
                 end
-                typical_oracle_kappa = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = cflp_param)
-                typical_oracle_nu = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = cflp_param)
+                typical_oracle_kappa = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param)
+                typical_oracle_nu = SeparableOracle(data, CFLKnapsackOracle(), data.problem.n_scenarios; solver_param = typical_oracle_solver_param)
                 for j=1:typical_oracle_kappa.N
                     update_model!(typical_oracle_kappa.oracles[j], data, j)
                 end
@@ -276,14 +183,13 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                             fraction_of_benders_cuts_to_master = 0.5,
                             reuse_dcglp = reuse_dcglp,
                             lift = lift,
-                            adjust_t_to_fx = adjust_t_to_fx,
-                            zero_tol = 1e-9
+                            adjust_t_to_fx = adjust_t_to_fx
                         )
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
 
                         @testset "NoSeq" begin
-                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/knapsack/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/CFLKnapsack/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = NoRootNodePreprocessing()
@@ -295,7 +201,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                         end
                         @testset "Seq" begin
-                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/knapsack/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/CFLKnapsack/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-6, verbose=false))
@@ -307,7 +213,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                         end
                         @testset "SeqInOut" begin
-                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/knapsack/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/CFLKnapsack/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = false))
@@ -321,6 +227,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                     end
                 end
             end
+
         end
     end
 end
@@ -331,6 +238,5 @@ end
             
             
             
-
 
 

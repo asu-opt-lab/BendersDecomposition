@@ -27,6 +27,11 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
             mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
             master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
             typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
+            basic_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_SCRIND" => 0)
+            
+            # oracle parameters & corepoint
+            rtol, atol = 1e-9, 1e-9
+            core_point = fill(data.problem.budget/length(data.problem.D)-1e-3, dim_x)
 
             # solve mip for reference
             mip = Mip(data)
@@ -42,11 +47,30 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
                 update_model!(master, data)
 
                 # Construct oracle and set parameters
-                separable_parm = SeparableOracleParam(pareto = true, core_point = fill(data.problem.budget/length(data.problem.D)-1e-3, dim_x))
-                classical_param = ClassicalOracleParam(rtol = 1e-9, atol = 1e-9) 
-                oracle = SeparableOracle(data, ClassicalOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = classical_param, oracle_param = separable_parm)
+                classical_param = ClassicalOracleParam(rtol = rtol, atol = atol) 
+                oracle = SeparableOracle(data, ClassicalOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = classical_param)
                 for j=1:oracle.N
                     update_model!(oracle.oracles[j], data, j)
+                end
+
+                env = BendersSeq(data, master, oracle; param = benders_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end 
+
+            @testset "Pareto oracle" begin     
+                @info "solving SNIP instance$instance snipno $snipno budget $budget - pareto oracle - seq..."
+                master = Master(data; solver_param = master_solver_param)
+                update_model!(master, data)
+                
+                # Construct oracle and set parameters
+                pareto_param = ParetoOracleParam(rtol = rtol, atol = atol, core_point = core_point)
+                oracle = SeparableOracle(data, ParetoOracle(), data.problem.num_scenarios; solver_param = basic_solver_param, sub_oracle_param = pareto_param)
+        
+                for j=1:oracle.N
+                    update_model!(oracle.oracles[j], data, j)
+                    model_reformulation!(oracle.oracles[j])
                 end
 
                 env = BendersSeq(data, master, oracle; param = benders_param)
@@ -60,7 +84,8 @@ include("$(dirname(dirname(@__DIR__)))/example/snip/model.jl")
                 master = Master(data; solver_param = master_solver_param)
                 update_model!(master, data)
 
-                oracle = SeparableOracle(data, UnifiedOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param)
+                unified_param = UnifiedOracleParam(rtol = rtol, atol = atol)
+                oracle = SeparableOracle(data, UnifiedOracle(), data.problem.num_scenarios; solver_param = typical_oracle_solver_param, sub_oracle_param = unified_param)
                 for j=1:oracle.N
                     update_model!(oracle.oracles[j], data, j)
                     model_reformulation!(oracle.oracles[j])
