@@ -38,8 +38,8 @@ function solve!(env::BendersSeq; iter_prefix = "")
                     optimize!(env.master.model)
                     if is_solved_and_feasible(env.master.model; allow_local = false, dual = false)
                         state.LB = JuMP.objective_value(env.master.model)
-                        state.values[:x] = value.(env.master.model[:x])
-                        state.values[:t] = value.(env.master.model[:t])
+                        state.values[:x] = value.(env.master.x)
+                        state.values[:t] = value.(env.master.t)
                     elseif termination_status(env.master.model) == TIME_LIMIT
                         throw(TimeLimitException("Time limit reached during master solving"))
                     else 
@@ -52,7 +52,7 @@ function solve!(env::BendersSeq; iter_prefix = "")
                 state.oracle_time = @elapsed begin
                     state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
                     
-                    cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
+                    cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.x, env.master.t) : []
                 
                     if state.f_x !== NaN
                         update_upper_bound_and_gap!(state, log, (f_x, x) -> env.data.c_t' * f_x + env.data.c_x' * x)

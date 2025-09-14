@@ -19,6 +19,8 @@ A mutable struct representing the master problem for the Capacitated Facility Lo
 """
 mutable struct Master <: AbstractMaster
     model::Model
+    x::Vector{VariableRef}
+    t::Vector{VariableRef}
     # obj_value::Float64
     # x_value::Vector{Float64}
     # t_value::Vector{Float64}
@@ -36,6 +38,6 @@ mutable struct Master <: AbstractMaster
 
         assign_attributes!(model, solver_param)
         # new(model, 0.0, zeros(data.dim_x), zeros(data.dim_t))
-        new(model)#, 0.0, zeros(data.dim_x), zeros(data.dim_t))
+        new(model, x, t)#, 0.0, zeros(data.dim_x), zeros(data.dim_t))
     end
 end
