@@ -5,9 +5,10 @@ using Statistics
 import BendersDecomposition: generate_cuts
 include("$(dirname(@__DIR__))/example/snip/data_reader.jl")
 include("$(dirname(@__DIR__))/example/snip/model.jl")
+include("$(dirname(@__DIR__))/example/snip/utils.jl")
 
 # load settings
-args = parse_commandline()
+args = parse_commandline(SNIP())
 
 instance = args["snip_instance"]
 snipno = args["snip_no"]

@@ -9,7 +9,7 @@ function parse_commandline()
             help = "Instance name (overrides config file)"
             default = "f10-c10-r3-1"
             arg_type = String
-            required = false
+            required = true
         "--output_dir"
             help = "Output directory"
             default = "experiments"
@@ -18,23 +18,7 @@ function parse_commandline()
             help = "Random seed"
             default = 1234
             arg_type = Int
-        "--snip_instance"
-            help = "SNIP instance number"
-            default = 0
-            arg_type = Int
-            required = false
-        "--snip_no"
-            help = "SNIP number"
-            default = 1
-            arg_type = Int
-            required = false
-        "--snip_budget"
-            help = "SNIP budget"
-            default = 30.0
-            arg_type = Float64
-            required = false
     end
 
     return parse_args(s)
 end
-

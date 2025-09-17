@@ -12,6 +12,7 @@ export DisjunctiveCutsAppendRule, NoDisjunctiveCuts, AllDisjunctiveCuts, Disjunc
 export SplitIndexSelectionRule, RandomFractional, MostFractional, LargestFractional
 export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
 export TimeLimitException, UnexpectedModelStatusException, UndefError, AlgorithmException
+export ProblemType, SNIP
 
 
 abstract type AbstractBendersDecomposition end
@@ -94,5 +95,10 @@ struct UndefError <: Exception
     msg::String
 end
 
+# ============================================================================
+# Problem types
+# ============================================================================
+abstract type ProblemType end
+struct SNIP <: ProblemType end
 
 

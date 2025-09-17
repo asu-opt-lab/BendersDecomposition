@@ -5,10 +5,10 @@ using Statistics
 import BendersDecomposition: generate_cuts
 include("$(dirname(@__DIR__))/example/snip/data_reader.jl")
 include("$(dirname(@__DIR__))/example/snip/model.jl")
-
+include("$(dirname(@__DIR__))/example/snip/utils.jl")
 
 # load settings
-args = parse_commandline()
+args = parse_commandline(SNIP())
 
 instance = args["snip_instance"]
 snipno = args["snip_no"]
@@ -31,7 +31,6 @@ data = Data(dim_x, dim_t, problem, c_x, c_t)
 # Algorithm parameters
 benders_param = BendersBnBParam(
     time_limit = 3600.0,
-    gap_tolerance = 1e-6,
     verbose = true
 )
 
