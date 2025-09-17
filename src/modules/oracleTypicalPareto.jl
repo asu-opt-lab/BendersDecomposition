@@ -56,8 +56,8 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
         sub_obj_val = objective_value(oracle.model)
 
         set_time_limit_sec(oracle.pareto_model, time_limit)
-        set_objective_coefficient(oracle.pareto_model, oracle.pareto_model[:z], sub_obj_val)
-        set_normalized_coefficient.(oracle.pareto_model[:fix_x], oracle.pareto_model[:z], x_value)
+        set_objective_coefficient(oracle.pareto_model, oracle.pareto_model[:z], -(sub_obj_val-oracle.oracle_param.atol)) 
+        set_normalized_coefficient.(oracle.pareto_model[:fix_x], oracle.pareto_model[:z], -x_value)
         set_normalized_rhs.(oracle.pareto_model[:fix_x], oracle.oracle_param.core_point)
         optimize!(oracle.pareto_model) 
 
@@ -100,26 +100,26 @@ function model_reformulation!(oracle::ParetoOracle)
     end
 
     x = oracle.pareto_model[:x]
-    @variable(oracle.pareto_model, z)
+    @variable(oracle.pareto_model, z >= 0)
 
-    # Modify constraints for Unified cut 
+    # Modify constraints for Pareto cut 
     expressions = Dict{Symbol, Vector{Any}}(:inequality => [], :equality => [])
     for (t1, t2) in list_of_constraint_types(oracle.pareto_model)
         t1 == VariableRef && continue
         if t2 == MOI.LessThan{Float64}
             for con in all_constraints(oracle.pareto_model, t1, t2)
                 lhs, rhs = JuMP.constraint_object(con).func, normalized_rhs(con)
-                push!(expressions[:inequality], @expression(oracle.pareto_model, - rhs * z + rhs - lhs))
+                push!(expressions[:inequality], @expression(oracle.pareto_model, rhs * z + rhs - lhs))
             end
         elseif t2 == MOI.GreaterThan{Float64}
             for con in all_constraints(oracle.pareto_model, t1, t2)
                 lhs, rhs = JuMP.constraint_object(con).func, normalized_rhs(con)
-                push!(expressions[:inequality], @expression(oracle.pareto_model, rhs * z + lhs - rhs))
+                push!(expressions[:inequality], @expression(oracle.pareto_model, - rhs * z + lhs - rhs))
             end
         else
             for con in all_constraints(oracle.pareto_model, t1, t2)
                 lhs, rhs = JuMP.constraint_object(con).func, normalized_rhs(con)
-                push!(expressions[:equality], @expression(oracle.pareto_model, rhs * z + lhs - rhs))
+                push!(expressions[:equality], @expression(oracle.pareto_model, - rhs * z + lhs - rhs))
             end
         end
         delete.(oracle.pareto_model, all_constraints(oracle.pareto_model, t1, t2))
