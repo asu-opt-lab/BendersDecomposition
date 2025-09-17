@@ -4,12 +4,11 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Sequential Benders Tests" begin
     instances = setdiff(1:71, [67])
-    instances = 49:49
+
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
             problem = read_cflp_benchmark_data("p$i")
-            problem = read_cfl_file("T100x100_3_1")
             
             # initialize dim_x, dim_t, c_x, c_t
             dim_x = problem.n_facilities
@@ -24,7 +23,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             benders_param = BendersSeqParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
-                            verbose = true
+                            verbose = false
                         )
 
             # solver parameters
@@ -35,8 +34,8 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
             # oracle parameters & corepoint
             rtol, atol = 1e-9, 1e-9
-            core_point = fill(sum(data.problem.demands)/sum(data.problem.capacities), dim_x)
-            core_point = core_point[1] < 0.2 ? core_point .+ 0.5 : core_point
+            core_point = fill(sum(data.problem.demands)/sum(data.problem.capacities) + 1e-3, dim_x)
+            core_point = core_point[1] < 0.2 ? core_point .+ 0.5 : core_point # faster convergence
 
             # solve mip for reference
             mip = Mip(data)
@@ -46,38 +45,38 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             @assert termination_status(mip.model) == OPTIMAL
             mip_opt_val = objective_value(mip.model)
 
-            # @testset "Classic oracle" begin
-            #     @info "solving CFLP p$i - classical oracle - seq..."
-            #     master = Master(data; solver_param = master_solver_param)
-            #     update_model!(master, data)
+            @testset "Classic oracle" begin
+                @info "solving CFLP p$i - classical oracle - seq..."
+                master = Master(data; solver_param = master_solver_param)
+                update_model!(master, data)
 
-            #     # Construct oracle and set parameters
-            #     classical_param = ClassicalOracleParam(rtol = rtol, atol = atol)
-            #     oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
-            #     update_model!(oracle, data)
+                # Construct oracle and set parameters
+                classical_param = ClassicalOracleParam(rtol = rtol, atol = atol)
+                oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
+                update_model!(oracle, data)
 
-            #     env = BendersSeq(data, master, oracle; param = benders_param)
-            #     log = solve!(env)
-            #     @test env.termination_status == Optimal()
-            #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-            # end 
+                env = BendersSeq(data, master, oracle; param = benders_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end 
 
-            # @testset "Pareto oracle" begin
-            #     @info "solving CFLP p$i - pareto oracle - seq..."
-            #     master = Master(data; solver_param = master_solver_param)
-            #     update_model!(master, data)
+            @testset "Pareto oracle" begin
+                @info "solving CFLP p$i - pareto oracle - seq..."
+                master = Master(data; solver_param = master_solver_param)
+                update_model!(master, data)
 
-            #     # Construct oracle and set parameters
-            #     pareto_param = ParetoOracleParam(rtol = rtol, atol = atol, core_point = core_point) 
-            #     oracle = ParetoOracle(data; solver_param = basic_solver_param, oracle_param = pareto_param)
-            #     update_model!(oracle, data)
-            #     model_reformulation!(oracle)
+                # Construct oracle and set parameters
+                pareto_param = ParetoOracleParam(rtol = rtol, atol = atol, core_point = core_point) 
+                oracle = ParetoOracle(data; solver_param = basic_solver_param, oracle_param = pareto_param)
+                update_model!(oracle, data)
+                model_reformulation!(oracle)
 
-            #     env = BendersSeq(data, master, oracle; param = benders_param)
-            #     log = solve!(env)
-            #     @test env.termination_status == Optimal()
-            #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-            # end
+                env = BendersSeq(data, master, oracle; param = benders_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end
 
             @testset "Unified oracle" begin
                 @info "solving CFLP p$i - unified oracle - seq..."
@@ -95,21 +94,21 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
             end
             
-            # @testset "Knapsack oracle" begin
-            #     @info "solving CFLP p$i - knapsack oracle - seq..."
-            #     master = Master(data; solver_param = master_solver_param)
-            #     update_model!(master, data)
+            @testset "Knapsack oracle" begin
+                @info "solving CFLP p$i - knapsack oracle - seq..."
+                master = Master(data; solver_param = master_solver_param)
+                update_model!(master, data)
 
-            #     # Construct oracle and set parameters
-            #     cflp_param = CFLKnapsackOracleParam(rtol = rtol, atol = atol) 
-            #     oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param, oracle_param = cflp_param)
-            #     update_model!(oracle, data)
+                # Construct oracle and set parameters
+                cflp_param = CFLKnapsackOracleParam(rtol = rtol, atol = atol) 
+                oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param, oracle_param = cflp_param)
+                update_model!(oracle, data)
 
-            #     env = BendersSeq(data, master, oracle; param = benders_param)
-            #     log = solve!(env)
-            #     @test env.termination_status == Optimal()
-            #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-            # end
+                env = BendersSeq(data, master, oracle; param = benders_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end
         end
     end
 end

@@ -4,7 +4,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Callback Benders Tests" begin
     instances = setdiff(1:71, [67])  # For quick testing
-    # instances = 27:27
+
     for i in instances
         @testset "Instance: p$i" begin
             @info "Testing CFLP easy instance $i"
@@ -35,9 +35,8 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
             # oracle parameters & corepoint
             rtol, atol = 1e-9, 1e-9
-            # core_point = fill(sum(data.problem.demands)/sum(data.problem.capacities) + 1e-3, dim_x)
-            core_point = fill(sum(data.problem.demands)/sum(data.problem.capacities) + 0.3, dim_x) 
-            # core_point = core_point[1] < 0.2 ? core_point .+ 0.5 : core_point
+            core_point = fill(sum(data.problem.demands)/sum(data.problem.capacities) + 1e-3, dim_x)
+            # core_point = fill(sum(data.problem.demands)/sum(data.problem.capacities) + 0.3, dim_x) # faster core point
             
             # Solve MIP for reference
             mip = Mip(data)

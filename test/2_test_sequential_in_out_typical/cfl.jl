@@ -36,8 +36,8 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
             # oracle parameters & corepoint
             rtol, atol = 1e-9, 1e-9
-            core_point = fill(sum(data.problem.demands)/sum(data.problem.capacities), dim_x)
-            core_point = core_point[1] < 0.2 ? core_point .+ 0.5 : core_point
+            core_point = fill(sum(data.problem.demands)/sum(data.problem.capacities) + 1e-3, dim_x)
+            core_point = core_point[1] < 0.2 ? core_point .+ 0.5 : core_point # faster convergence
 
             # solve mip for reference
             mip = Mip(data)
