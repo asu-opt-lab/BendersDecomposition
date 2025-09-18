@@ -50,28 +50,6 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
     end
 end
 
-function generate_cuts(oracle::SeparableOracle, core_point::Vector{Float64}; time_limit = 3600.0)
-    tic = time()
-    N = oracle.N
-    is_in_L = Vector{Bool}(undef,N)
-    sub_obj_val = Vector{Vector{Float64}}(undef,N)
-    hyperplanes = Vector{Vector{Hyperplane}}(undef,N)
-
-    # do threads?
-    for j=1:N
-        is_in_L[j], hyperplanes[j], sub_obj_val[j] = generate_cuts(oracle.oracles[j], core_point; time_limit=get_sec_remaining(tic, time_limit))
-
-        # correct dimension for t_j's
-        for h in hyperplanes[j]
-            coeff_t = h.a_t[1]
-            h.a_t = spzeros(N) 
-            h.a_t[j] = coeff_t
-        end
-    end
-
-    return false, reduce(vcat, hyperplanes[.!is_in_L]), reduce(vcat, sub_obj_val)
-end
-
 
 
 
