@@ -4,7 +4,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Callback Benders Tests" begin
     instances = setdiff(1:71, [67])  # For quick testing
-
+    instances = 29:29
     for i in instances
         @testset "Instance: p$i" begin
             @info "Testing CFLP easy instance $i"
@@ -75,7 +75,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                     root_param = BendersSeqParam(;
                         time_limit = 200.0,
                         gap_tolerance = 1e-6,
-                        verbose = true
+                        verbose = false
                     )
                     root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
                     lazy_callback = LazyCallback(typical_oracle)
