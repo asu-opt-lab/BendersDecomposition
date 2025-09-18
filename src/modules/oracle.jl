@@ -1,4 +1,4 @@
-export AbstractTypicalOracle, AbstractDisjunctiveOracle, generate_cuts, EmptyOracleParam, set_parameter!
+export AbstractTypicalOracle, AbstractDisjunctiveOracle, EmptyOracle, generate_cuts, EmptyOracleParam, set_parameter!
 """
 Abstract type for typical oracles used in Benders decomposition.
 """
@@ -8,6 +8,11 @@ abstract type AbstractTypicalOracle <: AbstractOracle end
 Abstract type for disjunctive oracles
 """
 abstract type AbstractDisjunctiveOracle <: AbstractOracle end
+
+"""
+Oracle struct for NoUsercallback
+"""
+struct EmptyOracle <: AbstractOracle end
 
 """
 Prototype for the `generate_cuts` function.
