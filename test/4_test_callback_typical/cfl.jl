@@ -4,7 +4,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Callback Benders Tests" begin
     instances = setdiff(1:71, [67])  # For quick testing
-    instances = 29:29
+
     for i in instances
         @testset "Instance: p$i" begin
             @info "Testing CFLP easy instance $i"
