@@ -57,7 +57,14 @@ abstract type AbstractUserCallback end
 Represents a no-operation user callback.
 Use this when you don't want to add any user cuts during the branch-and-bound process.
 """
-struct NoUserCallback <: AbstractUserCallback end
+struct NoUserCallback <: AbstractUserCallback
+    params::AbstractCallbackParam
+    oracle::AbstractOracle
+    
+    function NoUserCallback(;oracle = EmptyOracle(), params = EmptyCallbackParam())
+        new(params, oracle)
+    end
+end
 
 """
     user_callback(cb_data, master_model::Model, log::AbstractBendersBnBLog, param::AbstractBendersBnBParam, callback::AbstractUserCallback)
