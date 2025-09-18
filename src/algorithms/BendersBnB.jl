@@ -115,7 +115,6 @@ function solve!(env::BendersBnB)
     end
     set_time_limit_sec(env.master.model, param.time_limit - root_node_time)
     set_optimizer_attribute(env.master.model, MOI.Silent(), !param.verbose)
-    set_optimizer_attribute(env.master.model, MOI.RelativeGapTolerance(), param.gap_tolerance)
     
     # Solve the master problem
     JuMP.optimize!(env.master.model)
@@ -144,7 +143,7 @@ function solve!(env::BendersBnB)
         @info "Objective value: $(env.obj_value)"
         @info "Relative gap: $(JuMP.relative_gap(env.master.model))"
         @info "Lazy cuts added: $(log.n_lazy_cuts)"
-        if env.user_callback != NoUserCallback() && typeof(env.user_callback.oracle) <: AbstractDisjunctiveOracle
+        if typeof(env.user_callback.oracle) <: AbstractDisjunctiveOracle
             @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
             env.user_callback.oracle.oracle_param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts - length(env.user_callback.oracle.disjunctiveCuts))"
         end
