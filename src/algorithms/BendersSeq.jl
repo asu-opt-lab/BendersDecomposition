@@ -53,8 +53,8 @@ function solve!(env::BendersSeq; iter_prefix = "")
                     state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
                     
                     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
-                
-                    if state.f_x !== NaN
+
+                    if !isnan(state.f_x[1])
                         update_upper_bound_and_gap!(state, log, (f_x, x) -> env.data.c_t' * f_x + env.data.c_x' * x)
                     end
                 end

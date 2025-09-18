@@ -16,7 +16,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
             unregister(dcglp, :initial_L)
         end
         _, hpp, f_x = generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
-        if f_x != NaN
+        if !isnan(state.f_x[1])
             initial_benders_cuts = Vector{AffExpr}()
             for k = 1:2 # add to both kappa and nu systems
                 append!(initial_benders_cuts, hyperplanes_to_expression(dcglp, hpp, dcglp[:omega_x][k,:], dcglp[:omega_t][k,:], dcglp[:omega_0][k]))
