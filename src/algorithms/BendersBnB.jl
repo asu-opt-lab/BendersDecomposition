@@ -114,6 +114,8 @@ function solve!(env::BendersBnB)
         throw(TimeLimitException("Time limit reached before BnB starts, please increase the time limit."))
     end
     set_time_limit_sec(env.master.model, param.time_limit - root_node_time)
+    set_optimizer_attribute(env.master.model, MOI.Silent(), !param.verbose)
+    set_optimizer_attribute(env.master.model, MOI.RelativeGapTolerance(), param.gap_tolerance)
     
     # Solve the master problem
     JuMP.optimize!(env.master.model)
