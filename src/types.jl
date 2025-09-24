@@ -5,7 +5,7 @@
 export AbstractBendersDecomposition
 export Data
 export AbstractMaster, AbstractMip
-export AbstractOracle, AbstractOracleParam
+export AbstractOracle, AbstractOracleParam, AbstractOracleLog
 export Seq, SeqInOut
 export AbstractNorm, StandardNorm, LpNorm
 export DisjunctiveCutsAppendRule, NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
@@ -27,6 +27,7 @@ Subtypes should implement `generate_cuts` to return separating hyperplanes based
 """
 abstract type AbstractOracle end
 abstract type AbstractOracleParam end
+abstract type AbstractOracleLog end
 
 
 # ============================================================================
