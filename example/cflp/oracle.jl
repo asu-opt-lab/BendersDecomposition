@@ -1,3 +1,5 @@
+using Base.Threads: @threads
+
 struct FacilityKnapsackInfo
     costs::Matrix{Float64}
     demands::Vector{Float64}
@@ -156,36 +158,42 @@ function northwest_corner(data, facilities::Vector{Float64})
     return sum((data.problem.costs .* data.problem.demands') .* assignments)
 end
 
-# mine ver.1 (update full)
+function retrieve_mins(v) 
+    s1 = Inf; s2 = Inf
+    for x in v
+        if x < s1
+            s2 = s1; s1 = x
+        elseif x < s2
+            s2 = x
+        end
+    end
+    return s1, s2
+end
+
+# mine ver.1-1 (threads)
 function vogel(data, facilities::Vector{Float64})
     demands, capacities = copy(data.problem.demands), copy(data.problem.capacities)
     costs =  data.problem.costs .* demands'
     not_opened = findall(x -> x == 0.0, facilities)
     costs[not_opened,:] .= +Inf
 
-    assignments = zeros(Float64, data.dim_x, data.problem.n_customers)
-    row_diff = zeros(Float64, data.dim_x); col_diff = zeros(Float64, data.problem.n_customers)
-    fulfillment = zeros(length(demands))
+    m = data.dim_x; n = data.problem.n_customers
+    assignments = zeros(Float64, m, n); fulfillment = zeros(n)
+    row_diff = fill(-Inf, m); col_diff = fill(-Inf, n)
 
     while any(fulfillment .< 1 - 1e-6)
-        for idx in eachindex(capacities)
-            v = costs[idx,:]
-            if all(isinf, v)
-                row_diff[idx] = -Inf
-            else
-                small1, small2 = partialsort(v, 1:2)
-                row_diff[idx] = small2 - small1
-            end
+        @threads for i in 1:m
+            v = @view costs[i,:]
+            all(isinf, v) && (row_diff[i] = -Inf; continue)
+            s1, s2 = retrieve_mins(v)
+            row_diff[i] = s2 - s1
         end
 
-        for idx in eachindex(demands)
-            v = costs[:, idx]
-            if all(isinf, v)
-                col_diff[idx] = -Inf
-            else
-                small1, small2 = partialsort(v, 1:2)
-                col_diff[idx] = small2 - small1
-            end
+        @threads for j in 1:n
+            v = @view costs[:, j]
+            all(isinf, v) && (col_diff[j] = -Inf; continue)
+            s1, s2 = retrieve_mins(v)
+            col_diff[j] = s2 - s1
         end
 
         i = nothing; j = nothing
