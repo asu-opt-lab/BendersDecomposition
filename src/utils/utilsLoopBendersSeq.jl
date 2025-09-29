@@ -19,6 +19,7 @@ Stores:
 
 Used to store and track relevant data for each iteration of the algorithm.
 """
+# May be placed in utilsLoopDualDecomposition.jl
 mutable struct BendersSeqState <: AbstractBendersSeqState
     master_time::Float64
     oracle_time::Float64
@@ -29,10 +30,12 @@ mutable struct BendersSeqState <: AbstractBendersSeqState
     LB::Float64
     UB::Float64
     gap::Float64
+    cplex_iter::Int64
+    exceed_iter::Int64
    
     # Constructor with specified values
     function BendersSeqState()
-        new(0.0, 0.0, 0.0, Dict(:x => Vector{Float64}(), :t => Vector{Float64}()), Vector{Float64}(), false, -Inf, Inf, 100.0)
+        new(0.0, 0.0, 0.0, Dict(:x => Vector{Float64}(), :t => Vector{Float64}()), Vector{Float64}(), false, -Inf, Inf, 100.0, 0, 0)
     end
 end
 
