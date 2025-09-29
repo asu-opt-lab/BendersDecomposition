@@ -51,23 +51,6 @@ function solve!(env::DualDecompositionBendersSeq; iter_prefix = "")
                     end
                 end
                 
-                # Execute oracle
-                # state.oracle_time = @elapsed begin
-                #     state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.typical_oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
-                #     state.is_in_L = false
-                #     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
-
-                #     if !isnan(state.f_x[1])
-                #         update_upper_bound_and_gap!(state, log, (f_x, x) -> env.data.c_t' * f_x + env.data.c_x' * x)
-                #     end
-                # end
-                # @info "optimal f_x: $(state.f_x)"
-                # @info sum(value.(env.typical_oracle.model[:y]))
-                # @info "optimal λ: $(dual.(env.typical_oracle.model[:capacity]))"
-                # @info "optimal σ: $(dual.(env.typical_oracle.model[:demand]))"
-                # @info "optimal δ: $(dual.(env.typical_oracle.model[:facility_open]))"
-                # @info sum(state.values[:x])
-
                 # Execute dual decomposition
                 state.oracle_time = @elapsed begin
                     if length(log.iterations) > env.DD_oracle.oracle_param.LB_stag_consecutive_iter && isapprox(log.iterations[end].LB, log.iterations[end-3].LB)
@@ -84,10 +67,7 @@ function solve!(env::DualDecompositionBendersSeq; iter_prefix = "")
                     else
                         @info "Dual Decomposition"
                         t = @elapsed env.DD_oracle.oracle_param.obj_limit = vogel(env.data, state.values[:x]); @info (env.DD_oracle.oracle_param.obj_limit, t)
-                        # env.DD_oracle.oracle_param.obj_limit = state.f_x[1]
-                        # hyperplanes = generate_cuts(env.data, env.DD_oracle, state.values[:x], state.f_x[1], dual.(env.typical_oracle.model[:capacity]), log.n_iter)
                         hyperplanes = generate_cuts(env.data, env.DD_oracle, state.values[:x])
-                        # exit(1)
                         cuts = hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t])
                         env.DD_oracle.oracle_log.flag_exceed && (state.exceed_iter = log.n_iter + 1; env.DD_oracle.oracle_log.flag_exceed = false)
                     end
