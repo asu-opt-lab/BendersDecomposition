@@ -124,39 +124,39 @@ function calculate_KP_value(costs::Vector{Float64}, demands::Vector{Float64}, ca
     return kp_value
 end
 
-# function northwest_corner(data, facilities::Vector{Float64})
-#     assignments = zeros(Float64, data.dim_x, data.problem.n_customers)
-#     opened = findall(x -> x == 1.0, facilities)
-#     @assert !isempty(opened) "No facilities openend"
+function northwest_corner(data, facilities::Vector{Float64})
+    assignments = zeros(Float64, data.dim_x, data.problem.n_customers)
+    opened = findall(x -> x == 1.0, facilities)
+    @assert !isempty(opened) "No facilities openend"
 
-#     demands, capacities = copy(data.problem.demands), copy(data.problem.capacities)
-#     @assert capacities' * facilities >= sum(demands) "Feasibility condition is violated, capa: $(capacities' * facilities), demand: $(sum(demands))"
+    demands, capacities = copy(data.problem.demands), copy(data.problem.capacities)
+    @assert capacities' * facilities >= sum(demands) "Feasibility condition is violated, capa: $(capacities' * facilities), demand: $(sum(demands))"
 
-#     fulfillment = zeros(length(demands))
-#     i, j = 1, 1
+    fulfillment = zeros(length(demands))
+    i, j = 1, 1
 
-#     # Do Northwest corner method
-#     while i <= length(capacities) && j <= length(demands)
-#         # Check if i ∉ opened facilities.
-#         !in(i, opened) && (i +=1; continue)
+    # Do Northwest corner method
+    while i <= length(capacities) && j <= length(demands)
+        # Check if i ∉ opened facilities.
+        !in(i, opened) && (i +=1; continue)
 
-#         # Assign demands to facilities               
-#         rem = 1 - fulfillment[j]
-#         take = min(rem, capacities[i] / demands[j])
-#         assignments[i, j] = take
-#         fulfillment[j] += take     
-#         isapprox(fulfillment[j], 1.0, atol=1e-4) && (fulfillment[j] = 1.0)
-#         capacities[i] -= take * demands[j]
-#         isapprox(capacities[i], 0.0, atol=1e-4) && (capacities[i] = 0.0)
+        # Assign demands to facilities               
+        rem = 1 - fulfillment[j]
+        take = min(rem, capacities[i] / demands[j])
+        assignments[i, j] = take
+        fulfillment[j] += take     
+        isapprox(fulfillment[j], 1.0, atol=1e-4) && (fulfillment[j] = 1.0)
+        capacities[i] -= take * demands[j]
+        isapprox(capacities[i], 0.0, atol=1e-4) && (capacities[i] = 0.0)
 
-#         # Index update rule
-#         capacities[i] == 0.0 && (i += 1)
-#         fulfillment[j] == 1.0 && (j += 1)
-#     end
-#     return sum((data.problem.costs .* data.problem.demands') .* assignments)
-# end
+        # Index update rule
+        capacities[i] == 0.0 && (i += 1)
+        fulfillment[j] == 1.0 && (j += 1)
+    end
+    return sum((data.problem.costs .* data.problem.demands') .* assignments)
+end
 
-# mine original
+# mine ver.1 (update full)
 function vogel(data, facilities::Vector{Float64})
     demands, capacities = copy(data.problem.demands), copy(data.problem.capacities)
     costs =  data.problem.costs .* demands'
@@ -206,79 +206,212 @@ function vogel(data, facilities::Vector{Float64})
         isapprox(capacities[i], 0.0; atol=1e-6) && (costs[i,:] .= Inf)
         isapprox(fulfillment[j], 1.0; atol=1e-6) && (costs[:, j] .= Inf)
     end
+    @assert isapprox(sum(fulfillment), data.problem.n_customers; atol=1e-6) "demand not fulfilled: $(sum(fulfillment)), num customers: $(data.problem.n_customers))"
+    @assert all(capacities .>= -1e-6) "capacity exceeds: $(capacities)"
     return sum((data.problem.costs.* demands') .* assignments)
 end
 
-# mine refined, but takes much time than original.
+# mine ver.2 (lazy update) 
 # function vogel(data, facilities::Vector{Float64})
-#     demands, capacities = copy(data.problem.demands), copy(data.problem.capacities)
-#     costs =  data.problem.costs .* demands'
-#     not_opened = findall(x -> x == 0.0, facilities)
-#     costs_not_opened = @view costs[not_opened,:]; costs_not_opened .= +Inf
+#     demands = copy(data.problem.demands); capacities = copy(data.problem.capacities); costs =  data.problem.costs .* demands'
+#     closed = findall(x -> x == 0.0, facilities); costs[closed,:] .= Inf
+#     m,n = size(costs)
 
-#     assignments = zeros(Float64, data.dim_x, data.problem.n_customers)
-#     row_diff = zeros(Float64, data.dim_x); col_diff = zeros(Float64, data.problem.n_customers)
-#     fulfillment = zeros(length(demands))
+#     assignments = zeros(Float64, m, n); fulfillment = zeros(Float64, n) 
+    
+#     row_regret = fill(-Inf, m); col_regret = fill(-Inf, n) # cheapest - second cheapest
+#     map_best_rtc = [Int[] for _ in 1:n]; map_best_ctr = [Int[] for _ in 1:m] # rows/cols regard col/row as the cheapest 
+#     map_best2_rtc = [Int[] for _ in 1:n]; map_best2_ctr = [Int[] for _ in 1:m] # rows/cols regard col/row as the 2nd cheapest
 
-#     while any(fulfillment .< 1 - 1e-6)
-#         @info sum(fulfillment)
-#         for idx in eachindex(capacities)
-#             costs_idx = @view costs[idx,:]
-#             small = Inf; small2 = Inf; anyfinite = false
-#             for j in eachindex(demands)
-#                 cost = costs_idx[j]
-#                 if isfinite(cost)
-#                     anyfinite = true
-#                     if cost < small
-#                         small2 = small
-#                         small = cost
-#                     elseif cost < small2
-#                         small2 = cost
-#                     end
+#     curr_best_col_of_row = fill(0, m); curr_best_row_of_col = fill(0, n) # Cache current cheapest column/row of the row/column
+#     curr_best2_col_of_row = fill(0, m); curr_best2_row_of_col = fill(0, n) # Cache current 2nd cheapest column/row of the row/column
+
+#     costs_idx_sorted_rows = [sortperm(@view costs[i, :]) for i in 1:m]; costs_idx_sorted_cols = [sortperm(@view costs[:, j]) for j in 1:n]
+
+#     function recompute_rows!(i, flag)
+#         @inbounds begin
+#             if flag === true && !isempty(costs_idx_sorted_rows[i])
+#                 popfirst!(costs_idx_sorted_rows[i])
+#             elseif flag === false && length(costs_idx_sorted_rows[i]) >= 2
+#                 deleteat!(costs_idx_sorted_rows[i], 2)
+#             end
+
+#             while !isempty(costs_idx_sorted_rows[i]) && !isfinite(costs[i, costs_idx_sorted_rows[i][1]])
+#                 popfirst!(costs_idx_sorted_rows[i])
+#             end
+#             if length(costs_idx_sorted_rows[i]) >= 2 && !isfinite(costs[i, costs_idx_sorted_rows[i][2]])
+#                 k = 3
+#                 while k <= length(costs_idx_sorted_rows[i]) && !isfinite(costs[i, costs_idx_sorted_rows[i][k]])
+#                     k += 1
+#                 end
+#                 if k <= length(costs_idx_sorted_rows[i])
+#                     idx = costs_idx_sorted_rows[i][k]
+#                     deleteat!(costs_idx_sorted_rows[i], k)
+#                     insert!(costs_idx_sorted_rows[i], 2, idx)
+#                 else
+#                     costs_idx_sorted_rows[i] = costs_idx_sorted_rows[i][1:1]
 #                 end
 #             end
-#             # If all elements = +Inf, set row_diff = -Inf so that the row is not selected. Else, we compute the difference.
-#             row_diff[idx] = anyfinite ? (isfinite(small2) ? (small2 - small) : Inf) : -Inf
-#         end
 
-#         for idx in eachindex(demands)
-#             costs_idx = @view costs[:, idx]
-#             small = Inf; small2 = Inf; anyfinite = false
-#             for i in eachindex(capacities)
-#                 cost = costs_idx[i]
-#                 if isfinite(cost)
-#                     anyfinite = true
-#                     if cost < small
-#                         small2 = small
-#                         small = cost
-#                     elseif cost < small2
-#                         small2 = cost
-#                     end
-#                 end
+#             if curr_best_col_of_row[i] > 0
+#                 c = curr_best_col_of_row[i]
+#                 filter!(x -> x != i, map_best_rtc[c])
+#                 curr_best_col_of_row[i] = 0
 #             end
-#             # If all elements = +Inf, set col_diff = -Inf so that the row is not selected. Else, we compute the difference.
-#             col_diff[idx] = anyfinite ? (isfinite(small2) ? (small2 - small) : Inf) : -Inf
+#             if curr_best2_col_of_row[i] > 0
+#                 c2 = curr_best2_col_of_row[i]
+#                 filter!(x -> x != i, map_best2_rtc[c2])
+#                 curr_best2_col_of_row[i] = 0
+#             end
+
+#             if isempty(costs_idx_sorted_rows[i])
+#                 row_regret[i] = -Inf
+#                 return
+#             end
+
+#             best_j = costs_idx_sorted_rows[i][1]
+#             push!(map_best_rtc[best_j], i)
+#             curr_best_col_of_row[i] = best_j
+
+#             if length(costs_idx_sorted_rows[i]) > 1
+#                 best2_j = costs_idx_sorted_rows[i][2]
+#                 push!(map_best2_rtc[best2_j], i)
+#                 curr_best2_col_of_row[i] = best2_j
+#                 row_regret[i] = costs[i, best2_j] - costs[i, best_j]
+#             else
+#                 row_regret[i] = Inf
+#             end
 #         end
-
-#         i = nothing; j = nothing
-#         if maximum(row_diff) >= maximum(col_diff)
-#             i = argmax(row_diff); j = argmin(@view costs[i,:])
-#         else
-#             j = argmax(col_diff); i = argmin(@view costs[:,j])
-#         end
-
-#         rem = 1 - fulfillment[j]
-#         take = min(rem, capacities[i] / demands[j])
-#         assignments[i, j] = take; fulfillment[j] += take; capacities[i] -= take * demands[j]
-
-#         costs_i = @view costs[i,:]; costs_j = @view costs[:, j]
-#         isapprox(capacities[i], 0.0; atol=1e-6) && (costs_i .= Inf)
-#         isapprox(fulfillment[j], 1.0; atol=1e-6) && (costs_j .= Inf)
 #     end
+
+#     function recompute_cols!(j, flag)
+#         @inbounds begin
+#             if flag === true && !isempty(costs_idx_sorted_cols[j])
+#                 popfirst!(costs_idx_sorted_cols[j])
+#             elseif flag === false && length(costs_idx_sorted_cols[j]) >= 2
+#                 deleteat!(costs_idx_sorted_cols[j], 2)
+#             end
+
+#             while !isempty(costs_idx_sorted_cols[j]) && !isfinite(costs[costs_idx_sorted_cols[j][1], j])
+#                 popfirst!(costs_idx_sorted_cols[j])
+#             end
+#             if length(costs_idx_sorted_cols[j]) >= 2 && !isfinite(costs[costs_idx_sorted_cols[j][2], j])
+#                 k = 3
+#                 while k <= length(costs_idx_sorted_cols[j]) && !isfinite(costs[costs_idx_sorted_cols[j][k], j])
+#                     k += 1
+#                 end
+#                 if k <= length(costs_idx_sorted_cols[j])
+#                     idx = costs_idx_sorted_cols[j][k]
+#                     deleteat!(costs_idx_sorted_cols[j], k)
+#                     insert!(costs_idx_sorted_cols[j], 2, idx)
+#                 else
+#                     costs_idx_sorted_cols[j] = costs_idx_sorted_cols[j][1:1]
+#                 end
+#             end
+
+#             if curr_best_row_of_col[j] > 0
+#                 r = curr_best_row_of_col[j]
+#                 filter!(x -> x != j, map_best_ctr[r])
+#                 curr_best_row_of_col[j] = 0
+#             end
+#             if curr_best2_row_of_col[j] > 0
+#                 r2 = curr_best2_row_of_col[j]
+#                 filter!(x -> x != j, map_best2_ctr[r2])
+#                 curr_best2_row_of_col[j] = 0
+#             end
+
+#             if isempty(costs_idx_sorted_cols[j])
+#                 col_regret[j] = -Inf
+#                 return
+#             end
+
+#             best_i = costs_idx_sorted_cols[j][1]
+#             push!(map_best_ctr[best_i], j)
+#             curr_best_row_of_col[j] = best_i
+
+#             if length(costs_idx_sorted_cols[j]) > 1
+#                 best2_i = costs_idx_sorted_cols[j][2]
+#                 push!(map_best2_ctr[best2_i], j)
+#                 curr_best2_row_of_col[j] = best2_i
+#                 col_regret[j] = costs[best2_i, j] - costs[best_i, j]
+#             else
+#                 col_regret[j] = Inf
+#             end
+#         end
+#     end
+#     # Compute row_regret
+#     @inbounds for i in 1:m
+#         (i in closed) && continue
+#         recompute_rows!(i, nothing)
+#     end
+
+#     # Compute col_regret
+#     @inbounds for j in 1:n
+#         (demands[j] == 0) && continue
+#         recompute_cols!(j, nothing)
+#     end
+
+#     i = 0; j = 0
+#     while any(fulfillment .< 1 - 1e-6)
+#         @inbounds begin
+#             i = argmax(row_regret); r_pen = row_regret[i]
+#             j = argmax(col_regret); c_pen = col_regret[j]
+
+#             if r_pen > c_pen
+#                 if isempty(costs_idx_sorted_rows[i])
+#                     row_regret[i] = -Inf; continue
+#                 end
+#                 j = costs_idx_sorted_rows[i][1]
+#                 if !isfinite(costs[i, j])
+#                     recompute_rows!(i, true); continue
+#                 end
+#             else
+#                 if isempty(costs_idx_sorted_cols[j])
+#                     col_regret[j] = -Inf; continue
+#                 end
+#                 i = costs_idx_sorted_cols[j][1]
+#                 if !isfinite(costs[i, j])
+#                     recompute_cols!(j, true); continue
+#                 end
+#             end
+
+#             rem = 1 - fulfillment[j]
+#             take = min(rem, capacities[i] / demands[j])
+#             assignments[i, j] = take; fulfillment[j] += take; capacities[i] -= take * demands[j]
+
+#             if capacities[i] <= 1e-6
+#                 costs[i, :] .= Inf
+#                 for col in map_best_ctr[i]
+#                     recompute_cols!(col, true)
+#                 end
+#                 empty!(map_best_ctr[i])
+#                 for col in map_best2_ctr[i]
+#                     recompute_cols!(col, false)
+#                 end
+#                 empty!(map_best2_ctr[i])
+#                 row_regret[i] = -Inf
+#             end
+            
+#             if fulfillment[j] >= 1 - 1e-6
+#                 costs[:, j] .= Inf
+#                 for row in map_best_rtc[j]
+#                     recompute_rows!(row, true)
+#                 end
+#                 empty!(map_best_rtc[j])
+#                 for row in map_best2_rtc[j]
+#                     recompute_rows!(row, false)
+#                 end
+#                 empty!(map_best2_rtc[j])
+#                 col_regret[j] = -Inf
+#             end
+#         end
+#     end
+#     @assert isapprox(sum(fulfillment), n; atol=1e-6) "demand not fulfilled: $(sum(fulfillment)), num customers: $n"
+#     @assert all(capacities .>= -1e-6) "capacity exceeds: $(capacities)"
 #     return sum((data.problem.costs.* demands') .* assignments)
 # end
 
-# GPT understanding
+# vogel fastest
 # function vogel(data, facilities::Vector{Float64})
 #     # --- problem data ---
 #     demands = copy(data.problem.demands); capacities = copy(data.problem.capacities)
@@ -424,6 +557,7 @@ end
 #             col_diff[j] = -Inf
 #         end
 #     end
+#     @assert isapprox(sum(fulfillment), n; atol=1e-6) "demand not fulfilled: $(sum(fulfillment)), num customers: $n"
+#     @assert all(capacities .>= -1e-6) "capacity exceeds: $(capacities)"
 #     return sum((data.problem.costs .* demands') .* assignments)
 # end
-
