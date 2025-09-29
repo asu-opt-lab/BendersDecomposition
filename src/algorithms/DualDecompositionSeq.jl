@@ -5,7 +5,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
 mutable struct DualDecompositionBendersSeq <: AbstractBendersSeq
     data::Data
     master::AbstractMaster
-    typcial_oracle::AbstractOracle
+    typical_oracle::AbstractOracle
     DD_oracle::AbstractPrimalDualOracle
 
     param::BendersSeqParam # initially default and add an interface function?
@@ -53,27 +53,28 @@ function solve!(env::DualDecompositionBendersSeq; iter_prefix = "")
                 
                 # Execute oracle
                 # state.oracle_time = @elapsed begin
-                #     state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.typcial_oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
-                    
+                #     state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.typical_oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
+                #     state.is_in_L = false
                 #     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
 
                 #     if !isnan(state.f_x[1])
                 #         update_upper_bound_and_gap!(state, log, (f_x, x) -> env.data.c_t' * f_x + env.data.c_x' * x)
                 #     end
                 # end
-                # @info state.f_x
-
-                # @info "optimal λ: $(dual.(env.typcial_oracle.model[:capacity]))"
-                # @info "optimal σ: $(dual.(env.typcial_oracle.model[:demand]))"
-                # @info "optimal δ: $(dual.(env.typcial_oracle.model[:facility_open]))"
+                # @info "optimal f_x: $(state.f_x)"
+                # @info sum(value.(env.typical_oracle.model[:y]))
+                # @info "optimal λ: $(dual.(env.typical_oracle.model[:capacity]))"
+                # @info "optimal σ: $(dual.(env.typical_oracle.model[:demand]))"
+                # @info "optimal δ: $(dual.(env.typical_oracle.model[:facility_open]))"
                 # @info sum(state.values[:x])
 
                 # Execute dual decomposition
                 state.oracle_time = @elapsed begin
                     if length(log.iterations) > env.DD_oracle.oracle_param.LB_stag_consecutive_iter && isapprox(log.iterations[end].LB, log.iterations[end-3].LB)
                         @info "Cplex"
+                        state.cplex_iter = log.n_iter + 1
                         state.oracle_time = @elapsed begin
-                            state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.typcial_oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
+                            state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.typical_oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
                             cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
                         
                             if !isnan(state.f_x[1])
@@ -82,21 +83,18 @@ function solve!(env::DualDecompositionBendersSeq; iter_prefix = "")
                         end
                     else
                         @info "Dual Decomposition"
-                        t = @elapsed env.DD_oracle.oracle_param.obj_limit = vogel(env.data, state.values[:x]);#@info env.DD_oracle.oracle_param.obj_limit; @info t
-                        state.f_x, hyperplanes = generate_cuts(env.data, env.DD_oracle, state.values[:x], log.n_iter)
+                        t = @elapsed env.DD_oracle.oracle_param.obj_limit = vogel(env.data, state.values[:x]); @info (env.DD_oracle.oracle_param.obj_limit, t)
+                        # env.DD_oracle.oracle_param.obj_limit = state.f_x[1]
+                        # hyperplanes = generate_cuts(env.data, env.DD_oracle, state.values[:x], state.f_x[1], dual.(env.typical_oracle.model[:capacity]), log.n_iter)
+                        hyperplanes = generate_cuts(env.data, env.DD_oracle, state.values[:x])
+                        # exit(1)
                         cuts = hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t])
-
-                        if !isnan(state.f_x[1])
-                            update_upper_bound_and_gap!(state, log, (f_x, x) -> env.data.c_t' * f_x + env.data.c_x' * x)
-                        else
-                            # use previous iteration UB rather than set it Inf (check if previous UB was Inf or not)
-                        end
+                        env.DD_oracle.oracle_log.flag_exceed && (state.exceed_iter = log.n_iter + 1; env.DD_oracle.oracle_log.flag_exceed = false)
                     end
                 end
                 record_iteration!(log, state)
             end
             param.verbose && print_iteration_info(state, log; prefix=iter_prefix)
-            # length(log.iterations) == 1 && exit(1)
 
             # Check termination criteria
             is_terminated(state, log, param) && break

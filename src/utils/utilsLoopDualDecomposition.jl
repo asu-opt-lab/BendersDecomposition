@@ -1,4 +1,4 @@
-export update_λ, update_y, retrieve_dual_values
+export update_λ, update_y, retrieve_dual_values, gen_figure
 
 """
 utility functions for Dual Decomposition
@@ -67,3 +67,66 @@ function retrieve_dual_values(log, d, sorted_indices, c_sorted, critical_facilit
         k != 1 && (log.dual_var[:δ][sort_idx_jth[1:k-1],j] .= c_sort_jth[k] .- c_sort_jth[1:k-1])
     end
 end 
+
+function gen_figure(log, global_iter)
+
+    x = 1:length(log.α_set)
+
+    # Draw α
+    plot(x, log.α_set,
+    xlabel = "Iteration",
+    ylabel = "step size",
+    legend = false)
+
+    # savefig("Polyak_α.png")
+    # savefig("α.png")
+    savefig("T1000x1000_Polyak_α_$(global_iter).png")
+    
+
+    # Draw LB
+    plot(x, log.obj_set,
+    xlabel = "Iteration",
+    ylabel = "LB",
+    ylims = (0, maximum(log.obj_set)),
+    legend = false)
+
+    # savefig("LB.png")
+    savefig("T1000x1000_Polyak_LB_$(global_iter).png")
+
+    # # Draw obj without penalty
+    # plot(x, log.approx_obj_set,
+    # xlabel = "Iteration",
+    # ylabel = "sum(c.*y)",
+    # ylims = (0, maximum(log.approx_obj_set)),
+    # legend = false)
+
+    # savefig("Polyak_sum(c.*y).png")
+    # savefig("obj_sum(c.*y).png")
+    # savefig("T1000x1000_Polyak_sum(c.*y).png")
+
+    # # Draw res norm
+    # plot(x, log.residual_norm_set,
+    # xlabel = "Iteration",
+    # ylabel = "Norm res",
+    # legend = false)
+
+    # savefig("Polyak_norm_res.png")
+    # savefig("norm_res.png")
+
+    # Draw λ_k norm
+    plot(x, log.λ_k_diff_set,
+    xlabel = "Iteration",
+    ylabel = "||opt_λ-λ||",
+    legend = false)
+
+    # savefig("Polyak_norm_λ_diff.png")
+    savefig("T1000x1000_Polyak_norm_λ_diff_$(global_iter).png")
+
+    # plot(x, log.λ_k_norm_set,
+    # xlabel = "Iteration",
+    # ylabel = "Norm norm λ",
+    # legend = false)
+
+    # savefig("Polyak_norm_λ.png")
+
+end
