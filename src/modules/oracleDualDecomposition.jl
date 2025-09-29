@@ -54,15 +54,16 @@ end
 #     d, u = data.problem.demands, data.problem.capacities; c = data.problem.costs .* d'
 
 #     iter, γ = 1, 0
-#     while α >= param.stepsize_bound
+#     # while α >= param.stepsize_bound
+#     while α >= 1e-2
 #         # Update y, compute residual and LB
 #         y_k, _, _, _, _ = update_y(y_k, λ_k, c, d, x)
 #         residual = [d'*y_k[i,:] - u[i]*x[i] for i in eachindex(u)]
 #         z_lb = sum(c .* y_k) + λ_k' * residual
 
 #         # Update step size
-#         α = halving_value * abs(param.obj_limit - z_lb)/norm(residual)^2 # Polyak's stepsize
-#         # α = α/sqrt(iter) # diminishing
+#         # α = halving_value * abs(param.obj_limit - z_lb)/norm(residual)^2 # Polyak's stepsize
+#         α = 0.1/sqrt(iter) # diminishing
 
 #         # Update dual value
 #         λ_k = update_λ(λ_k, y_k, u, d, x, α)
@@ -82,7 +83,6 @@ end
 
 #         # Handle divergence of Polyak caused by not diminishing stepsize (do not immediately terminate)
 #         (best_obj > param.obj_limit && iter > param.max_iter) && (@info "best f: $(best_obj) > overestimated f: $(param.obj_limit)"; log.flag_exceed = true; break)
-
 #         iter += 1
 #     end
 #     _, sorted_indices, c_sorted, _, critical_facility_indices = update_y(y_k, λ_k, c, d, x)
@@ -93,7 +93,7 @@ end
 #     a_0 = sum(log.dual_var[:σ]) 
 
 #     # gen_figure(log, global_iter)
-#     empty!(log.α_set); empty!(log.obj_set); empty!(log.λ_k_diff_set)
+#     # empty!(log.α_set); empty!(log.obj_set); empty!(log.λ_k_diff_set)
 
 #     @assert (sum(log.dual_var[:σ]) - dot(x, vec(sum(log.dual_var[:δ],dims = 2))) - dot(log.dual_var[:λ], u.*x) <= f_x +1e-3) "Dual obj > primal opt obj"
 #     feasibility = ((log.dual_var[:σ]') .- log.dual_var[:δ] .- (log.dual_var[:λ] * d')) .<= c .+ 1e-6
@@ -116,7 +116,7 @@ function generate_cuts(data::Data, oracle::DualDecomposition, x::Vector{Float64}
 
         # Update step size
         α = halving_value * abs(param.obj_limit - z_lb)/norm(residual)^2 # Polyak's stepsize
-        # α = α/sqrt(iter) # diminishing
+        # α = 0.1/sqrt(iter) # diminishing
 
         # Update dual value
         λ_k = update_λ(λ_k, y_k, u, d, x, α)
