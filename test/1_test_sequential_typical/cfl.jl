@@ -2,10 +2,14 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/data_reader.jl")
 include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
 include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
+using CSV, Random
+
+Random.seed!(1234)
+
 @testset verbose = true "CFLP Sequential Benders Tests" begin
     instances = setdiff(1:71, [67])
-    instances = 25:25
-    # instances = 1:1
+    instances = 1:1
+    dd_log = []
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -24,7 +28,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
             # loop parameters
             benders_param = BendersSeqParam(;
-                            time_limit = 200.0,
+                            time_limit = 1200.0,
                             gap_tolerance = 1e-6,
                             verbose = true
                         )
@@ -32,8 +36,10 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             # solver parameters
             mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
             master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
-            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
-            basic_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_SCRIND" => 0)
+            # typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_SCRIND" => 0)
+            # master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_SCRIND" => 0)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_SCRIND" => 0)
 
             # oracle parameters & corepoint
             rtol, atol = 1e-9, 1e-9
@@ -44,6 +50,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             mip = Mip(data)
             assign_attributes!(mip.model, mip_solver_param)
             update_model!(mip, data)
+            # set_optimizer_attribute(mip.model, MOI.Silent(), false)
             optimize!(mip.model)
             @assert termination_status(mip.model) == OPTIMAL
             mip_opt_val = objective_value(mip.model)
@@ -65,9 +72,16 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
                 env = DualDecompositionBendersSeq(data, master, typical_oracle, DD_oracle; param = benders_param)
                 log = solve!(env)
+                push!(dd_log, [sum(log.total_time), length(log.total_time), filter(!iszero, log.exceed_iter), filter(!iszero, log.cplex_iter)])
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
             end 
+
+            names = [:time, :iteration, :exceed_iter, :cplex_iter]
+            cols  = [ [r[j] for r in dd_log] for j in 1:length(dd_log[1]) ]  # collect columns
+            df    = DataFrame(cols, names)
+            CSV.write("Validity_Polyak(fullupdate)strictparams(atol)_updateλy.csv", df)
+            # # @info df
 
             # @testset "Classic oracle" begin
             #     @info "solving CFLP p$i - classical oracle - seq..."

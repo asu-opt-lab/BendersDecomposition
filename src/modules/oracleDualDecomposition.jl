@@ -135,8 +135,8 @@ function generate_cuts(data::Data, oracle::DualDecomposition, x::Vector{Float64}
         # push!(log.λ_k_norm_set, norm(λ_k)); push!(log.λ_k_diff_set, norm(opt_λ .+ λ_k)); push!(log.residual_norm_set, norm(residual)); push!(log.approx_obj_set, sum(c .* y_k))
 
         # Handle divergence of Polyak caused by not diminishing stepsize (do not immediately terminate)
-        (best_obj > param.obj_limit && iter > param.max_iter) && (@info "best f: $(best_obj) > overestimated f: $(param.obj_limit)"; log.flag_exceed = true; break)
-
+        # (best_obj > param.obj_limit && iter > param.max_iter) && (@info "best f: $(best_obj) > overestimated f: $(param.obj_limit)"; log.flag_exceed = true; break)
+        (best_obj > param.obj_limit && iter > param.max_iter) && (@info "best f: $(best_obj) > overestimated f: $(param.obj_limit)"; log.flag_exceed = true)
         iter += 1
     end
     _, sorted_indices, c_sorted, _, critical_facility_indices = update_y(y_k, λ_k, c, d, x)
@@ -152,15 +152,14 @@ function generate_cuts(data::Data, oracle::DualDecomposition, x::Vector{Float64}
 end
 
 # Update lambda firt, then update y_k
-# function generate_cuts(data::Data, oracle::DualDecomposition, x::Vector{Float64}, f_x; time_limit = 3600)
+# function generate_cuts(data::Data, oracle::DualDecomposition, x::Vector{Float64})
 #     param = oracle.oracle_param; log = oracle.oracle_log
+#     # y_k =log.pri_var; λ_k = copy(log.dual_var[:λ]); best_obj = copy(log.best_obj); halving_value = copy(param.halving_value); α = copy(param.step_size)
 #     y_k =log.pri_var; λ_k = log.dual_var[:λ]; best_obj = copy(log.best_obj); halving_value = copy(param.halving_value); α = copy(param.step_size)
 #     d, u = data.problem.demands, data.problem.capacities; c = data.problem.costs .* d'
 
 #     iter, γ = 1, 0
 #     sorted_indices = nothing; c_sorted = nothing; critical_facility_indices =nothing
-#     @info param.obj_limit
-
 #     while α >= param.stepsize_bound
 #         # Update dual value
 #         λ_k = update_λ(λ_k, y_k, u, d, x, α)
@@ -186,20 +185,15 @@ end
 #         end
 #         push!(log.α_set, α); push!(log.obj_set, z_lb)
 #         # push!(log.λ_k_norm_set, norm(λ_k)); push!(log.λ_k_diff_set, norm(opt_λ .+ λ_k)); push!(log.residual_norm_set, norm(residual)); push!(log.approx_obj_set, sum(c .* y_k))
-
-#         # Handle divergence of Polyak caused by not diminishing stepsize (do not immediately terminate)
-#         (best_obj > param.obj_limit && iter > param.max_iter) && (@info "best f: $(best_obj) > overestimated f: $(param.obj_limit)"; log.flag_exceed = true; break)
-
 #         iter += 1
 #     end
 #     retrieve_dual_values(log, d, sorted_indices, c_sorted, critical_facility_indices)
 
-#     a_x = -log.dual_var[:λ].*u .- [sum(log.dual_var[:δ][i,:]) for i in eachindex(u)]
+#     a_x = -λ_k.*u .- [sum(log.dual_var[:δ][i,:]) for i in eachindex(u)]
 #     a_t = [-1.0]
 #     a_0 = sum(log.dual_var[:σ]) 
 
-#     @assert (sum(log.dual_var[:σ]) - dot(x, vec(sum(log.dual_var[:δ],dims = 2))) - dot(log.dual_var[:λ], u.*x) <= f_x +1e-3) "Dual obj > primal opt obj"
-#     feasibility = ((log.dual_var[:σ]') .- log.dual_var[:δ] .- (log.dual_var[:λ] * d')) .<= c .+ 1e-6
+#     feasibility = ((log.dual_var[:σ]') .- log.dual_var[:δ] .- (λ_k * d')) .<= c .+ 1e-6
 #     @assert all(feasibility) "Dual feasibility violated"
 #     return [Hyperplane(a_x, a_t, a_0)]
 # end
