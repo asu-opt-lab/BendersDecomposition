@@ -30,12 +30,10 @@ mutable struct BendersSeqState <: AbstractBendersSeqState
     LB::Float64
     UB::Float64
     gap::Float64
-    cplex_iter::Int64
-    exceed_iter::Int64
    
     # Constructor with specified values
     function BendersSeqState()
-        new(0.0, 0.0, 0.0, Dict(:x => Vector{Float64}(), :t => Vector{Float64}()), Vector{Float64}(), false, -Inf, Inf, 100.0, 0, 0)
+        new(0.0, 0.0, 0.0, Dict(:x => Vector{Float64}(), :t => Vector{Float64}()), Vector{Float64}(), false, -Inf, Inf, 100.0)
     end
 end
 
@@ -81,8 +79,13 @@ mutable struct BendersSeqParam <: AbstractBendersSeqParam
     end
 end
 function update_upper_bound_and_gap!(state::BendersSeqState, log::BendersSeqLog, f::Function)
-    evaluation = f(max.(state.values[:t], state.f_x), state.values[:x])
-    state.UB = log.n_iter >= 1 ? min(log.iterations[end].UB, evaluation) : evaluation
+    if !isnan(state.f_x[1])
+        evaluation = f(max.(state.values[:t], state.f_x), state.values[:x])
+        state.UB = log.n_iter >= 1 ? min(log.iterations[end].UB, evaluation) : evaluation
+    elseif !isempty(log.iterations)
+        prev_UB = log.iterations[end].UB
+        !isnan(prev_UB) && (state.UB = log.iterations[end].UB)
+    end
     state.gap = (state.UB - state.LB) / abs(state.UB) * 100
 end
 
