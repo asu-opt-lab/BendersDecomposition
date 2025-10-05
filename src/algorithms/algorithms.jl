@@ -6,6 +6,3 @@ include("BendersSeqInOut.jl")
 include("BendersBnB.jl") # must be after BendersSeq files
 include("Dcglp.jl") 
 include("SpecializedBendersSeq.jl") 
-
-
-include("DualDecompositionSeq.jl")
