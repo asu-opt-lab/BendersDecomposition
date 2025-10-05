@@ -9,12 +9,11 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
 
 
 # load settings
-# args = parse_commandline()
+args = parse_commandline()
 
-# instance = args["instance"]
-# output_dir = args["output_dir"]
-instance = "T100x100_5_1"
-output_dir = "scripts"
+instance = args["instance"]
+output_dir = args["output_dir"]
+
 # -----------------------------------------------------------------------------
 # load problem data
 # -----------------------------------------------------------------------------
@@ -31,18 +30,34 @@ data = Data(dim_x, dim_t, problem, c_x, c_t)
 # Algorithm parameters
 
 # Solver parameters
+# master_solver_param = Dict(
+#     "solver" => "CPLEX", 
+#     "CPX_PARAM_EPINT" => 1e-9, 
+#     "CPX_PARAM_EPRHS" => 1e-9,
+#     "CPX_PARAM_EPGAP" => 1e-6,
+#     "CPX_PARAM_SCRIND" => 0
+# )
+
+# Basic parameter
 master_solver_param = Dict(
     "solver" => "CPLEX", 
-    "CPX_PARAM_EPINT" => 1e-9, 
-    "CPX_PARAM_EPRHS" => 1e-9,
-    "CPX_PARAM_EPGAP" => 1e-6
+    "CPX_PARAM_SCRIND" => 0
 )
 
+# typical_oracle_solver_param = Dict(
+#     "solver" => "CPLEX",
+#     "CPXPARAM_Threads" => 7,
+#     "CPX_PARAM_EPRHS" => 1e-9,
+#     "CPX_PARAM_EPOPT" => 1e-9,
+#     "CPX_PARAM_NUMERICALEMPHASIS" => 1,
+#     "CPX_PARAM_SCRIND" => 0
+# )
+
+# Basic parameter
 typical_oracle_solver_param = Dict(
-    "solver" => "CPLEX", 
-    "CPX_PARAM_EPRHS" => 1e-9, 
-    "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
-    "CPX_PARAM_EPOPT" => 1e-9
+    "solver" => "CPLEX",
+    "CPXPARAM_Threads" => 7,
+    "CPX_PARAM_SCRIND" => 0
 )
 
 # -----------------------------------------------------------------------------
@@ -54,7 +69,6 @@ update_model!(master, data)
 # -----------------------------------------------------------------------------
 # typical oracles
 # -----------------------------------------------------------------------------
-# Create two oracles for kappa & nu
 typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
 update_model!(typical_oracle, data)
 
@@ -94,8 +108,7 @@ println("Spend time: $spend_time_prev seconds")
 # -----------------------------------------------------------------------------
 root_preprocessing = NoRootNodePreprocessing()
 benders_param = BendersBnBParam(
-    time_limit = 14400.0 - spend_time_prev,
-    gap_tolerance = 1e-6,
+    time_limit = 3600.0 - spend_time_prev,
     verbose = true
 )
 env = BendersBnB(
