@@ -171,9 +171,58 @@ function retrieve_mins(v)
 end
 
 # mine ver.1-1 (threads)
+# function vogel(data, facilities::Vector{Float64})
+#     demands, capacities = copy(data.problem.demands), copy(data.problem.capacities)
+#     costs =  data.problem.costs .* demands'
+#     not_opened = findall(x -> x == 0.0, facilities)
+#     costs[not_opened,:] .= +Inf
+
+#     m = data.dim_x; n = data.problem.n_customers
+#     assignments = zeros(Float64, m, n); fulfillment = zeros(n)
+#     row_diff = fill(-Inf, m); col_diff = fill(-Inf, n)
+
+#     while any(fulfillment .< 1 - 1e-6)
+#         @threads for i in 1:m
+#             v = @view costs[i,:]
+#             all(isinf, v) && (row_diff[i] = -Inf; continue)
+#             s1, s2 = retrieve_mins(v)
+#             row_diff[i] = s2 - s1
+#         end
+
+#         @threads for j in 1:n
+#             v = @view costs[:, j]
+#             all(isinf, v) && (col_diff[j] = -Inf; continue)
+#             s1, s2 = retrieve_mins(v)
+#             col_diff[j] = s2 - s1
+#         end
+
+#         i = nothing; j = nothing
+#         if maximum(row_diff) >= maximum(col_diff)
+#             i = argmax(row_diff)
+#             j = argmin(costs[i,:])
+#         else
+#             j = argmax(col_diff)
+#             i = argmin(costs[:,j])
+#         end
+
+#         rem = 1 - fulfillment[j]
+#         take = min(rem, capacities[i] / demands[j])
+#         assignments[i, j] = take
+#         fulfillment[j] += take     
+#         capacities[i] -= take * demands[j]
+
+#         isapprox(capacities[i], 0.0; atol=1e-6) && (costs[i,:] .= Inf)
+#         isapprox(fulfillment[j], 1.0; atol=1e-6) && (costs[:, j] .= Inf)
+#     end
+#     @assert isapprox(sum(fulfillment), data.problem.n_customers; atol=1e-6) "demand not fulfilled: $(sum(fulfillment)), num customers: $(data.problem.n_customers))"
+#     @assert all(capacities .>= -1e-6) "capacity exceeds: $(capacities)"
+#     return sum((data.problem.costs.* demands') .* assignments)
+# end
+
+# mine ver.1-2 (threads + use unit cost, not cost*demand)
 function vogel(data, facilities::Vector{Float64})
     demands, capacities = copy(data.problem.demands), copy(data.problem.capacities)
-    costs =  data.problem.costs .* demands'
+    costs =  copy(data.problem.costs)
     not_opened = findall(x -> x == 0.0, facilities)
     costs[not_opened,:] .= +Inf
 
@@ -219,9 +268,9 @@ function vogel(data, facilities::Vector{Float64})
     return sum((data.problem.costs.* demands') .* assignments)
 end
 
-# mine ver.2 (lazy update) 
+# mine ver.2 (lazy update) -> should use unit cost
 # function vogel(data, facilities::Vector{Float64})
-#     demands = copy(data.problem.demands); capacities = copy(data.problem.capacities); costs =  data.problem.costs .* demands'
+#     demands = copy(data.problem.demands); capacities = copy(data.problem.capacities); costs =  copy(data.problem.costs) 
 #     closed = findall(x -> x == 0.0, facilities); costs[closed,:] .= Inf
 #     m,n = size(costs)
 
@@ -419,14 +468,14 @@ end
 #     return sum((data.problem.costs.* demands') .* assignments)
 # end
 
-# vogel fastest
+# vogel fastest -> should use unit cost
 # function vogel(data, facilities::Vector{Float64})
 #     # --- problem data ---
 #     demands = copy(data.problem.demands); capacities = copy(data.problem.capacities)
 #     open_mask = facilities .> 0.0
 
 #     # working costs for selection (mask with Inf); assignments store FRACTIONS of demand
-#     costs = data.problem.costs .* demands'           
+#     costs = copy(data.problem.costs)
 #     costs[.!open_mask, :] .= Inf
 #     m, n = size(costs)
 

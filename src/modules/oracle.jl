@@ -1,4 +1,4 @@
-export AbstractTypicalOracle, AbstractDisjunctiveOracle, AbstractPrimalDualOracle, EmptyOracle, generate_cuts, EmptyOracleParam, set_parameter!
+export AbstractTypicalOracle, AbstractDisjunctiveOracle, EmptyOracle, generate_cuts, EmptyOracleParam, set_parameter!
 """
 Abstract type for typical oracles used in Benders decomposition.
 """
@@ -8,11 +8,6 @@ abstract type AbstractTypicalOracle <: AbstractOracle end
 Abstract type for disjunctive oracles.
 """
 abstract type AbstractDisjunctiveOracle <: AbstractOracle end
-
-"""
-Abstract type for oracles that leverage primal-dual information.
-"""
-abstract type AbstractPrimalDualOracle <: AbstractOracle end
 
 """
 Oracle struct for NoUsercallback

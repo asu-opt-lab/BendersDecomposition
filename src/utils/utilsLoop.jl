@@ -128,8 +128,6 @@ function to_dataframe(log::AbstractLoopLog)
         master_time = [info.master_time for info in log.iterations],
         oracle_time = [info.oracle_time for info in log.iterations],
         total_time = [info.total_time for info in log.iterations],
-        exceed_iter = [info.exceed_iter for info in log.iterations],
-        cplex_iter = [info.cplex_iter for info in log.iterations]
         # is_in_L = [info.is_in_L for info in log.iterations]
     )
 end

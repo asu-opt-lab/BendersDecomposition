@@ -82,35 +82,23 @@ function gen_figure(log, global_iter)
 
     # Draw α
     plot(x, log.α_set,
-    xlabel = "Iteration",
+    xlabel = "DD iteration",
     ylabel = "step size",
     legend = false)
 
     # savefig("Polyak_α.png")
-    # savefig("α.png")
-    savefig("T1000x1000_Polyak_α_$(global_iter).png")
+    savefig("Polyak_α_yλorder_$(global_iter).png")
+    # savefig("T1000x1000_Polyak_α_$(global_iter).png")
     
-
     # Draw LB
-    plot(x, log.obj_set,
-    xlabel = "Iteration",
-    ylabel = "LB",
-    ylims = (0, maximum(log.obj_set)),
-    legend = false)
-
-    # savefig("LB.png")
-    savefig("T1000x1000_Polyak_LB_$(global_iter).png")
-
-    # # Draw obj without penalty
-    # plot(x, log.approx_obj_set,
+    # plot(x, log.obj_set,
     # xlabel = "Iteration",
-    # ylabel = "sum(c.*y)",
-    # ylims = (0, maximum(log.approx_obj_set)),
+    # ylabel = "LB",
+    # ylims = (0, maximum(log.obj_set)),
     # legend = false)
 
-    # savefig("Polyak_sum(c.*y).png")
-    # savefig("obj_sum(c.*y).png")
-    # savefig("T1000x1000_Polyak_sum(c.*y).png")
+    # # savefig("LB.png")
+    # savefig("T1000x1000_Polyak_LB_$(global_iter).png")
 
     # # Draw res norm
     # plot(x, log.residual_norm_set,
@@ -123,12 +111,13 @@ function gen_figure(log, global_iter)
 
     # Draw λ_k norm
     plot(x, log.λ_k_diff_set,
-    xlabel = "Iteration",
+    xlabel = "DD iteration",
     ylabel = "||opt_λ-λ||",
     legend = false)
 
     # savefig("Polyak_norm_λ_diff.png")
-    savefig("T1000x1000_Polyak_norm_λ_diff_$(global_iter).png")
+    savefig("Polyak_norm_λ_diff_yλorder_$(global_iter).png")
+    # savefig("T1000x1000_Polyak_norm_λ_diff_$(global_iter).png")
 
     # plot(x, log.λ_k_norm_set,
     # xlabel = "Iteration",
@@ -136,5 +125,13 @@ function gen_figure(log, global_iter)
     # legend = false)
 
     # savefig("Polyak_norm_λ.png")
+
+    # Draw trajectory of (||y^*-y^{approx}||, ||λ^*-λ^{approx}||)
+    # plot(log.y_diff_set, log.λ_k_diff_set,
+    # xlabel = "||y^*-y^k||",
+    # ylabel = "||λ^*-λ^k||",
+    # legend = false)
+
+    # savefig("Polyak_trajectory(norm_y,norm_λ)_yλorder_$(global_iter).png")
 
 end

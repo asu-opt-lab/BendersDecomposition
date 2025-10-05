@@ -50,6 +50,9 @@ function solve!(env::DualDecompositionBendersSeq; iter_prefix = "")
                         # if infeasible, then the milp is infeasible
                     end
                 end
+
+                # _, _, state.f_x = generate_cuts(env.typical_oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
+                # @info "f_x: $(state.f_x[1])"
                 
                 # Execute dual decomposition
                 state.oracle_time = @elapsed begin
@@ -75,6 +78,12 @@ function solve!(env::DualDecompositionBendersSeq; iter_prefix = "")
                 record_iteration!(log, state)
             end
             param.verbose && print_iteration_info(state, log; prefix=iter_prefix)
+            # @info "lambda", env.DD_oracle.oracle_log.dual_var[s:λ]
+            # @info "y_k", env.DD_oracle.oracle_log.pri_var
+            # @info "sigma", env.DD_oracle.oracle_log.dual_var[:σ]
+            # @info "delta", env.DD_oracle.oracle_log.dual_var[:δ]
+            # @info state.values[:x]
+            # log.n_iter == 2 && exit(1)
 
             # Check termination criteria
             is_terminated(state, log, param) && break
