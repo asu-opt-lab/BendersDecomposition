@@ -4,8 +4,18 @@ struct FacilityKnapsackInfo
     capacity::Vector{Float64}
 end
 
+mutable struct CFLKnapsackOracleParam <: AbstractOracleParam
+    rtol::Float64
+    atol::Float64
+    zero_tol::Float64
+
+    function CFLKnapsackOracleParam(; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9)
+        new(rtol, atol, zero_tol)
+    end
+end
+
 mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
-    oracle_param::EmptyOracleParam
+    oracle_param::CFLKnapsackOracleParam
 
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
@@ -14,7 +24,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     function CFLKnapsackOracle(data::Data; 
                                scen_idx=-1, 
                                solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                               oracle_param::EmptyOracleParam = EmptyOracleParam())
+                               oracle_param::CFLKnapsackOracleParam = CFLKnapsackOracleParam())
         @debug "Building classical oracle"
         model = Model()
 
@@ -61,7 +71,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
 
         a_x = KP_values # Vector{Float64}
         a_0 = sum(μ) 
-        if sub_obj_val >= t_value[1] * (1 + tol)
+        if sub_obj_val >= t_value[1] * (1 + oracle.oracle_param.rtol)
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
             return true, [Hyperplane(a_x, a_t, a_0)], deepcopy(t_value)
@@ -75,7 +85,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
             a_x = dual.(oracle.fixed_x_constraints)
             a_t = [0.0]
             a_0 = dual_sub_obj_val - a_x' * x_value 
-            if dual_sub_obj_val >= tol
+            if dual_sub_obj_val >= oracle.oracle_param.zero_tol
                 return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
             else
                 return true, [Hyperplane(a_x, a_t, a_0)], [Inf]
