@@ -1,4 +1,4 @@
-export AbstractTypicalOracle, AbstractDisjunctiveOracle, generate_cuts, EmptyOracleParam, set_parameter!
+export AbstractTypicalOracle, AbstractDisjunctiveOracle, generate_cuts, EmptyOracleParam, set_parameter!, BasicOracleParam
 """
 Abstract type for typical oracles used in Benders decomposition.
 """
@@ -37,6 +37,19 @@ end
 Parameter struct for oracles without parameters.
 """
 struct EmptyOracleParam <: AbstractOracleParam
+end
+
+"""
+Parameter struct for oracles with common parameters.
+"""
+struct BasicOracleParam <: AbstractOracleParam
+    rtol::Float64
+    atol::Float64
+    zero_tol::Float64
+
+    function BasicOracleParam(; rtol = 1e-9, atol = 0.0, zero_tol = 1e-6)
+        new(rtol, atol, zero_tol)
+    end
 end
 
 # Common utility functions for managing oracle parameters

@@ -2,7 +2,7 @@ export ClassicalOracle
 
 mutable struct ClassicalOracle <: AbstractTypicalOracle
     
-    oracle_param::EmptyOracleParam
+    oracle_param::AbstractOracleParam
 
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
@@ -10,7 +10,7 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
     function ClassicalOracle(data::Data; 
                              scen_idx::Int=-1, 
                              solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                             oracle_param::EmptyOracleParam = EmptyOracleParam())
+                             oracle_param::BasicOracleParam = BasicOracleParam())
         @debug "Building classical oracle"
         model = Model()
 
@@ -41,7 +41,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
         a_x = dual.(oracle.fixed_x_constraints) 
         a_t = [-1.0] 
         a_0 = sub_obj_val - a_x'*x_value 
-        if sub_obj_val >= t_value[1] * (1 + tol)
+        if sub_obj_val >= t_value[1] * (1 + oracle.oracle_param.rtol)
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
             return true, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
@@ -54,7 +54,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
             a_x = dual.(oracle.fixed_x_constraints)
             a_t = [0.0]
             a_0 = dual_sub_obj_val - a_x'*x_value 
-            if dual_sub_obj_val >= tol
+            if dual_sub_obj_val >= oracle.oracle_param.zero_tol
                 return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
             else
                 return true, [Hyperplane(a_x, a_t, a_0)], [Inf]
