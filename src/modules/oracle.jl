@@ -29,7 +29,11 @@ Returns (to be implemented by concrete oracles):
 
 Throws an error if not implemented for a specific oracle type.
 """
-function generate_cuts(oracle::AbstractOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-9, time_limit = 3600)
+function generate_cuts(oracle::AbstractTypicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
+    throw(UndefError("update generate_cuts for $(typeof(oracle))"))
+end
+
+function generate_cuts(oracle::AbstractDisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; time_limit = 3600)
     throw(UndefError("update generate_cuts for $(typeof(oracle))"))
 end
 

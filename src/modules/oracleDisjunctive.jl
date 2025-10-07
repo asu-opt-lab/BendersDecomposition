@@ -10,6 +10,7 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
     reuse_dcglp::Bool
     lift::Bool 
     adjust_t_to_fx::Bool
+    zero_tol::Float64
 
     function DisjunctiveOracleParam(; 
                                     norm::AbstractNorm = LpNorm(Inf), 
@@ -19,10 +20,11 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
                                     fraction_of_benders_cuts_to_master::Float64 = 1.0, 
                                     reuse_dcglp::Bool=true,
                                     lift::Bool=false,
-                                    adjust_t_to_fx::Bool=false) 
+                                    adjust_t_to_fx::Bool=false,
+                                    zero_tol=1e-9) 
         add_bcuts_to_master = add_benders_cuts_to_master === true ? 1 : add_benders_cuts_to_master === false ? 0 : add_benders_cuts_to_master in (0, 1, 2) ? add_benders_cuts_to_master : throw(ArgumentError("`add_benders_cuts_to_master` must be true, false, or an integer in {0, 1, 2}"))
         
-        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_bcuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift, adjust_t_to_fx)
+        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_bcuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift, adjust_t_to_fx, zero_tol)
     end
 end 
 
@@ -84,11 +86,11 @@ end
 `throw_typical_cuts_for_errors` determines whether to return a typical Benders cut, when DCGLP encounters some issue. It must be `false` for SpecializedBendersSeq
 `include_disjuctive_cuts_to_hyperplanes` determines whether to add a disjunctive cut found to `hyperplanes` to be returned; if it is `false`, the disjuctive cut should be added at a desired place via `oracle.disjunctiveCuts` or `oracle.disjunctiveCutsByIndex`
 """
-function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-6, atol = 1e-9, time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
+function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
 
     tic = time()
     
-    push!(oracle.splits, select_disjunctive_inequality(x_value, oracle.oracle_param.split_index_selection_rule))
+    push!(oracle.splits, select_disjunctive_inequality(x_value, oracle.oracle_param.split_index_selection_rule; zero_tol = oracle.oracle_param.zero_tol))
     
     if get_sec_remaining(tic, time_limit) <= 0.0
         throw(TimeLimitException("Time limit reached during cut generation"))
@@ -115,7 +117,7 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 
     # Retrieve zero and one indices if lifting is enabled
-    zero_indices, one_indices = oracle.oracle_param.lift ? retrieve_zero_one(x_value, atol=atol) : (Int[], Int[]) 
+    zero_indices, one_indices = oracle.oracle_param.lift ? retrieve_zero_one(x_value, oracle.oracle_param.zero_tol) : (Int[], Int[])
 
     add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices) 
 
@@ -203,9 +205,9 @@ function solve_dcglp!(oracle::AbstractDisjunctiveOracle, x_value::Vector{Float64
     throw(UndefError("update solve_dcglp! for $(typeof(oracle))"))
 end
 
-function retrieve_zero_one(x_value::Vector{Float64}; atol = 1e-9)
-    zeros_indices = findall(x -> isapprox(x, 0.0; atol=atol), x_value)
-    ones_indices = findall(x -> isapprox(x, 1.0; atol=atol), x_value)
+function retrieve_zero_one(x_value::Vector{Float64}, zero_tol)
+    zeros_indices = findall(x -> isapprox(x, 0.0; atol=zero_tol), x_value)
+    ones_indices = findall(x -> isapprox(x, 1.0; atol=zero_tol), x_value)
     return zeros_indices, ones_indices
 end
 
