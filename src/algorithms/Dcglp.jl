@@ -80,8 +80,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                 # Threads.lock(my_lock) do
                 state.oracle_times[i] = @elapsed begin
                     if ω_0[i] >= oracle.oracle_param.zero_tol
-
-
                          state.is_in_L[i], hyperplanes_a, state.f_x[i] = generate_cuts(typical_oracles[i], clamp.(ω_x[i] / ω_0[i], 0.0, 1.0), ω_t[i] / ω_0[i], tol_normalize = ω_0[i], time_limit = get_sec_remaining(log.start_time, time_limit))
 
                         # adjust the tolerance with respect to dcglp: (sum(state.sub_obj_vals[i]) - sum(t_value)) * omega_value[:z][i] < zero_tol

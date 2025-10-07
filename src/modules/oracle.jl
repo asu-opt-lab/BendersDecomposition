@@ -51,7 +51,7 @@ struct BasicOracleParam <: AbstractOracleParam
     atol::Float64
     zero_tol::Float64
 
-    function BasicOracleParam(; rtol = 1e-9, atol = 0.0, zero_tol = 1e-6)
+    function BasicOracleParam(; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9)
         new(rtol, atol, zero_tol)
     end
 end
