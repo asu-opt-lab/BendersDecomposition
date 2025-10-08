@@ -2,7 +2,7 @@ export ClassicalOracle
 
 mutable struct ClassicalOracle <: AbstractTypicalOracle
     
-    oracle_param::AbstractOracleParam
+    oracle_param::BasicOracleParam
 
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
@@ -41,7 +41,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
         a_x = dual.(oracle.fixed_x_constraints) 
         a_t = [-1.0] 
         a_0 = sub_obj_val - a_x'*x_value 
-        if sub_obj_val >= t_value[1]/tol_normalize * (1 + oracle.oracle_param.rtol) + oracle.oracle_param.atol
+        if sub_obj_val >= t_value[1] * (1 + oracle.oracle_param.rtol) + oracle.oracle_param.atol
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
             return true, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]

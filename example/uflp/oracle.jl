@@ -53,7 +53,7 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
         # Calculate objective value contribution
         oracle.obj_values[j] = c_sorted[k] - (k > 1 ? sum((c_sorted[k] - c_sorted[i]) * x_sorted[i] for i in 1:k-1) : 0)
 
-        if oracle.obj_values[j] >= t_value[j]/tol_normalize * (1 + oracle.oracle_param.rtol)
+        if oracle.obj_values[j] >= t_value[j] * (1 + oracle.oracle_param.rtol)
             critical_facility[j] = k
         else
             critical_facility[j] = oracle.oracle_param.add_only_violated_cuts ? -1 : k
@@ -67,7 +67,7 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
     customers = findall(x -> x != -1, critical_facility)
 
     # is_in_L should be determined by the sum of t's, must not individually
-    is_in_L = sum(oracle.obj_values) >= sum(t_value)/tol_normalize * (1 + oracle.oracle_param.rtol) ? false : true
+    is_in_L = sum(oracle.obj_values) >= sum(t_value) * (1 + oracle.oracle_param.rtol) ? false : true
 
     hyperplanes = Vector{Hyperplane}()
     for j in customers
