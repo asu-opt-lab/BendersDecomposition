@@ -14,11 +14,11 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
                             oracle::T, 
                             N::Int; 
                             solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9), 
-                            sub_oracle_param::AbstractOracleParam = EmptyOracleParam(),
+                            sub_oracle_param::AbstractOracleParam = BasicOracleParam(),
                             oracle_param::SeparableOracleParam = SeparableOracleParam()) where {T<:AbstractTypicalOracle}
         @debug "Building classical separable oracle"
         # assume each oracle is associated with a single t, that is dim_t = N
-        oracles = typeof(sub_oracle_param) != EmptyOracleParam ? [T(data, scen_idx=j, solver_param = solver_param, oracle_param = sub_oracle_param) for j=1:N] : [T(data, scen_idx=j, solver_param = solver_param) for j=1:N]
+        oracles = typeof(sub_oracle_param) != BasicOracleParam ? [T(data, scen_idx=j, solver_param = solver_param, oracle_param = sub_oracle_param) for j=1:N] : [T(data, scen_idx=j, solver_param = solver_param) for j=1:N]
 
         new(oracle_param, oracles, N)
     end
