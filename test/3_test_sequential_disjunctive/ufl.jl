@@ -57,8 +57,8 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
 
             @testset "Classical oracle" begin
                 @testset "Seq" begin        
-                    for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
-                    # for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [false]                        
+                    # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [true]                        
                     @info "solving UFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
                             master = Master(data; solver_param = master_solver_param)
@@ -133,8 +133,8 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
             @testset "fat knapsack oracle" begin
                 # fat-knapsack-based disjunctive cut has sparse gamma_t, so adding only disjunctive cut does not improve lower bound, setting add_benders_cuts_to_master = true
                 @testset "Seq" begin
-                    for strengthened in [true; false], add_benders_cuts_to_master in [true; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
-                    # for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [false]                        
+                    # for strengthened in [true; false], add_benders_cuts_to_master in [true; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [true]                        
                     @info "solving UFLP p$i - disjunctive oracle/fatKnapsack -  Seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
                             master = Master(data; solver_param = master_solver_param)

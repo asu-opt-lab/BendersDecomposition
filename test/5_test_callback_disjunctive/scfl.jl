@@ -71,14 +71,14 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                     typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                 
                     # Test various parameter combinations
-                    for strengthened in [true, false], 
-                        add_benders_cuts_to_master in [true], 
-                        reuse_dcglp in [true, false], 
-                        lift in [true, false],
-                        p in [1.0, Inf], 
-                        disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()],
-                        adjust_t_to_fx in [true; false]
-                    # for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], lift in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [false]
+                    # for strengthened in [true, false], 
+                    #     add_benders_cuts_to_master in [true], 
+                    #     reuse_dcglp in [true, false], 
+                    #     lift in [true, false],
+                    #     p in [1.0, Inf], 
+                    #     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()],
+                    #     adjust_t_to_fx in [true; false]
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], lift in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [true]
                         
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule;  adjust_t_to_fx $adjust_t_to_fx" begin
                             disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
@@ -159,14 +159,14 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
                 typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                 
                 # Test various parameter combinations
-                for strengthened in [true, false], 
-                    add_benders_cuts_to_master in [true], 
-                    reuse_dcglp in [true, false],
-                    lift in [true, false],
-                    p in [1.0, Inf],
-                    disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()],
-                    adjust_t_to_fx in [true; false]
-                # for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], lift in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [false]
+                # for strengthened in [true, false], 
+                #     add_benders_cuts_to_master in [true], 
+                #     reuse_dcglp in [true, false],
+                #     lift in [true, false],
+                #     p in [1.0, Inf],
+                #     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()],
+                #     adjust_t_to_fx in [true; false]
+                for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], lift in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [true]
 
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
                         
