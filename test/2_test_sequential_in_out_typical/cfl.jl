@@ -3,8 +3,8 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
 include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Sequential In/Out Benders Tests" begin
-    # instances = setdiff(1:71, [67])
-    instances = 29:29
+    instances = setdiff(1:71, [67])
+
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary

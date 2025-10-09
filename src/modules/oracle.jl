@@ -1,4 +1,4 @@
-export AbstractTypicalOracle, AbstractDisjunctiveOracle, generate_cuts, EmptyOracleParam, set_parameter!
+export AbstractTypicalOracle, AbstractDisjunctiveOracle, generate_cuts, set_parameter!, BasicOracleParam
 """
 Abstract type for typical oracles used in Benders decomposition.
 """
@@ -29,14 +29,26 @@ Returns (to be implemented by concrete oracles):
 
 Throws an error if not implemented for a specific oracle type.
 """
-function generate_cuts(oracle::AbstractOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-9, time_limit = 3600)
+function generate_cuts(oracle::AbstractTypicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
+    throw(UndefError("update generate_cuts for $(typeof(oracle))"))
+end
+
+function generate_cuts(oracle::AbstractDisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; time_limit = 3600)
     throw(UndefError("update generate_cuts for $(typeof(oracle))"))
 end
 
 """
-Parameter struct for oracles without parameters.
+Basic parameter structure for oracles. Users can define oracle-specific parameter structures as subtypes of AbstractOracleParam. 
+If the oracle has no specific parameter fields, use BasicOracleParam.
 """
-struct EmptyOracleParam <: AbstractOracleParam
+struct BasicOracleParam <: AbstractOracleParam
+    rtol::Float64
+    atol::Float64
+    zero_tol::Float64
+
+    function BasicOracleParam(; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9)
+        new(rtol, atol, zero_tol)
+    end
 end
 
 # Common utility functions for managing oracle parameters

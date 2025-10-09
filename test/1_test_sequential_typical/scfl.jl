@@ -1,6 +1,6 @@
 # to be overwritten, they should be included outside testset
 include("$(dirname(dirname(@__DIR__)))/example/scflp/data_reader.jl")
-# include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
+include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
 include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
 
 @testset verbose = true "Stochastic CFLP Sequential Benders Tests" begin

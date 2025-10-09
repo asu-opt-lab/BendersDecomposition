@@ -1,5 +1,6 @@
 # Include SCFLP model files
 include("$(dirname(dirname(@__DIR__)))/example/scflp/data_reader.jl")
+include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
 include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
 
 @testset verbose = true "SCFLP Sequential Benders Tests" begin

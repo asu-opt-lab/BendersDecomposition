@@ -1,9 +1,10 @@
 mutable struct UFLKnapsackOracleParam <: AbstractOracleParam
     slim::Bool
     add_only_violated_cuts::Bool
+    rtol::Float64
 
-    function UFLKnapsackOracleParam(; slim = false, add_only_violated_cuts = false)
-        new(slim, add_only_violated_cuts)
+    function UFLKnapsackOracleParam(; slim = false, add_only_violated_cuts = false, rtol = 1e-9)
+        new(slim, add_only_violated_cuts, rtol)
     end
 end
 mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
@@ -38,7 +39,7 @@ mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
     UFLKnapsackOracle() = new()
 end
 
-function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol = 1e-9, time_limit = 3600.0)
+function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600.0)
     tic = time()
     critical_facility = Vector{Int}(undef, oracle.J)
     for j in 1:oracle.J
@@ -52,7 +53,7 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
         # Calculate objective value contribution
         oracle.obj_values[j] = c_sorted[k] - (k > 1 ? sum((c_sorted[k] - c_sorted[i]) * x_sorted[i] for i in 1:k-1) : 0)
 
-        if oracle.obj_values[j] >= t_value[j] * (1 + tol)
+        if oracle.obj_values[j] >= t_value[j] * (1 + oracle.oracle_param.rtol)
             critical_facility[j] = k
         else
             critical_facility[j] = oracle.oracle_param.add_only_violated_cuts ? -1 : k
@@ -66,7 +67,7 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
     customers = findall(x -> x != -1, critical_facility)
 
     # is_in_L should be determined by the sum of t's, must not individually
-    is_in_L = sum(oracle.obj_values) >= sum(t_value) * (1 + tol) ? false : true
+    is_in_L = sum(oracle.obj_values) >= sum(t_value) * (1 + oracle.oracle_param.rtol) ? false : true
 
     hyperplanes = Vector{Hyperplane}()
     for j in customers
