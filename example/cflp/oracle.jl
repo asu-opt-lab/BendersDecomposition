@@ -55,7 +55,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
 
     if status == FEASIBLE_POINT
         sub_obj_val = objective_value(oracle.model)
-
+        println("opt_lambda: $(-dual.(oracle.model[:capacity]))")
         μ = dual.(oracle.model[:demand])
         a_t = [-1.0] 
         
@@ -221,6 +221,12 @@ end
 
 # mine ver.1-2 (threads + use unit cost, not cost*demand)
 function vogel(data, facilities::Vector{Float64})
+
+    for idx in eachindex(facilities)
+        isapprox(facilities[idx], 1.0, atol = 1e-6) && (facilities[idx] = 1.0)
+        isapprox(facilities[idx], 0.0, atol = 1e-6) && (facilities[idx] = 0.0)
+    end
+
     demands, capacities = copy(data.problem.demands), copy(data.problem.capacities)
     costs =  copy(data.problem.costs)
     not_opened = findall(x -> x == 0.0, facilities)
@@ -470,6 +476,12 @@ end
 
 # vogel fastest -> should use unit cost
 # function vogel(data, facilities::Vector{Float64})
+
+#     for idx in eachindex(facilities)
+#         isapprox(facilities[idx], 1.0, atol = 1e-6) && (facilities[idx] = 1.0)
+#         isapprox(facilities[idx], 0.0, atol = 1e-6) && (facilities[idx] = 0.0)
+#     end
+
 #     # --- problem data ---
 #     demands = copy(data.problem.demands); capacities = copy(data.problem.capacities)
 #     open_mask = facilities .> 0.0
