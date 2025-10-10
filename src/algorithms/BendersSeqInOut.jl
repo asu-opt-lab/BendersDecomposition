@@ -42,8 +42,8 @@ function solve!(env::BendersSeqInOut)
                     optimize!(env.master.model)
                     if is_solved_and_feasible(env.master.model; allow_local = false, dual = false)
                         state.LB = JuMP.objective_value(env.master.model)
-                        state.values[:x] = value.(env.master.model[:x])
-                        state.values[:t] = value.(env.master.model[:t])
+                        state.values[:x] = value.(env.master.x)
+                        state.values[:t] = value.(env.master.t)
                     elseif termination_status(env.master.model) == TIME_LIMIT
                         throw(TimeLimitException("Time limit reached during master solving"))
                     else 
@@ -68,7 +68,7 @@ function solve!(env::BendersSeqInOut)
                         state.is_in_L = false
                     end
 
-                    cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
+                    cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.x, env.master.t) : []
                 end
             
                 # Update state and record information

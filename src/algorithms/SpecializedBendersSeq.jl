@@ -35,13 +35,13 @@ function solve!(env::SpecializedBendersSeq)
             state = BendersSeqState()
             state.total_time = @elapsed begin
                 ## add all found disjunctive cuts to master
-                all_disj_cuts = hyperplanes_to_expression(env.master.model, env.oracle.disjunctiveCuts, env.master.model[:x], env.master.model[:t])    
+                all_disj_cuts = hyperplanes_to_expression(env.master.model, env.oracle.disjunctiveCuts, env.master.x, env.master.t)    
                 @constraint(env.master.model, con_disjunctive, 0.0 .>= all_disj_cuts)
 
                 # Solve linear relaxation
                 state.master_time = @elapsed begin
                     solve!(L_env; iter_prefix = " LP")
-                    state.LB, state.values[:x], state.values[:t] = JuMP.objective_value(env.master.model), value.(env.master.model[:x]), value.(env.master.model[:t])
+                    state.LB, state.values[:x], state.values[:t] = JuMP.objective_value(env.master.model), value.(env.master.x), value.(env.master.t)
                 end
                 @debug state.values[:x]
 
@@ -53,7 +53,7 @@ function solve!(env::SpecializedBendersSeq)
                 
                 state.oracle_time = @elapsed begin
                     state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, env.param), throw_typical_cuts_for_errors = false, include_disjuctive_cuts_to_hyperplanes = false)
-                    cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
+                    cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.x, env.master.t) : []
                 end
 
                 state.is_in_L && throw(UnexpectedModelStatusException("SpecializedBendersSeq: τ=0 at fractional point, possibily numerical issue"))
@@ -103,14 +103,14 @@ function generate_optimal_vertex!(env::SpecializedBendersSeq, L_env::AbstractBen
     @debug "frac_idx: $frac_idx"
 
     ## modify master problem
-    env.master.model[:fix_x] = @constraint(env.master.model, [i in frac_idx+1:dim_x], env.master.model[:x][i] == round(state.values[:x][i]))
+    env.master.model[:fix_x] = @constraint(env.master.model, [i in frac_idx+1:dim_x], env.master.x[i] == round(state.values[:x][i]))
     # env.master.model[:fix_x] = @constraint(env.master.model, [i in frac_idx+1:dim_x], env.master.model[:x][i] == state.values[:x][i])
     ## remove and add all disjunctive cuts up to idx
     if haskey(env.master.model, :con_disjunctive)
         delete.(env.master.model, env.master.model[:con_disjunctive]) 
         unregister(env.master.model, :con_disjunctive)
     end
-    disj_cuts_idx = reduce(vcat, [hyperplanes_to_expression(env.master.model, env.oracle.disjunctiveCutsByIndex[i], env.master.model[:x], env.master.model[:t]) for i = 1:frac_idx])
+    disj_cuts_idx = reduce(vcat, [hyperplanes_to_expression(env.master.model, env.oracle.disjunctiveCutsByIndex[i], env.master.x, env.master.t) for i = 1:frac_idx])
     @constraint(env.master.model, con_disjunctive, 0.0 .>= disj_cuts_idx)
 
     ## solve master again
@@ -120,7 +120,7 @@ function generate_optimal_vertex!(env::SpecializedBendersSeq, L_env::AbstractBen
     end
 
     ## compare the solutions; the optimal obj. val. should match
-    LB, x_val, t_val = JuMP.objective_value(env.master.model), value.(env.master.model[:x]), value.(env.master.model[:t])
+    LB, x_val, t_val = JuMP.objective_value(env.master.model), value.(env.master.x), value.(env.master.t)
     @debug "state.LB = $(state.LB) vs LB = $LB"
     @debug "state.values[:x] = $(state.values[:x]) vs x_val = $x_val"
     !isapprox(state.LB, LB, rtol = 1e-4) && throw(UnexpectedModelStatusException("SpecializedBendersSeq: fail to generate vertex for P^{k,j}, possibily numerical issue"))

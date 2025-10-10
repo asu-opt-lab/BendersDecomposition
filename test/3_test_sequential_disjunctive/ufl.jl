@@ -93,10 +93,10 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                                 # optimize!(master.model)
                                 opt_sol = Dict{VariableRef, Float64}()
                                 for i = 1:data.dim_x
-                                    opt_sol[master.model[:x][i]] = x_opt[i]
+                                    opt_sol[master.x[i]] = x_opt[i]
                                 end
                                 for i = 1:data.dim_t
-                                    opt_sol[master.model[:t][i]] = t_opt_[i]
+                                    opt_sol[master.t[i]] = t_opt_[i]
                                 end
                                 
                                 @info primal_feasibility_report(env.master.model, opt_sol)
@@ -163,16 +163,16 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
                             @test env.termination_status == Optimal()
                             # if env.log.termination_status == Optimal()
                             if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                                @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
+                                @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)"
                                 # optimize!(master.model)
                                 opt_sol = Dict{VariableRef, Float64}()
                                 for i = 1:data.dim_x
-                                    opt_sol[master.model[:x][i]] = x_opt[i]
+                                    opt_sol[master.x[i]] = x_opt[i]
                                 end
                                 for i = 1:data.dim_t
-                                    opt_sol[master.model[:t][i]] = t_opt[i]
+                                    opt_sol[master.t[i]] = t_opt[i]
                                 end
-                                
+
                                 @info primal_feasibility_report(env.master.model, opt_sol)
                                 @info data.c_x' * x_opt + data.c_t' * t_opt
                                 
