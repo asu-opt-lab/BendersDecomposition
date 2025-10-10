@@ -2,10 +2,12 @@ using JuMP, DataFrames, Logging, CSV
 using BendersDecomposition
 using Printf  
 using Statistics  
+using Random
 import BendersDecomposition: generate_cuts
 include("$(dirname(@__DIR__))/example/cflp/data_reader.jl")
 include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
 include("$(dirname(@__DIR__))/example/cflp/model.jl")
+Random.seed!(1234)
 
 
 # load settings
@@ -34,10 +36,10 @@ benders_param = BendersBnBParam(
 )
 
 dcglp_param = DcglpParam(
-    time_limit = 1000.0,
+    time_limit = 200.0,
     gap_tolerance = 1e-3,
     halt_limit = 3,
-    iter_limit = 250,
+    iter_limit = 15,
     verbose = true
 )
 
@@ -98,13 +100,14 @@ disjunctive_oracle = DisjunctiveOracle(
 ) 
 
 oracle_param = DisjunctiveOracleParam(
-    norm = LpNorm(1.0), 
+    norm = LpNorm(Inf), 
     split_index_selection_rule = RandomFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(), 
     strengthened = true, 
     add_benders_cuts_to_master = true, 
-    fraction_of_benders_cuts_to_master = 0.5, 
-    reuse_dcglp = true
+    fraction_of_benders_cuts_to_master = 1.0, 
+    reuse_dcglp = true,
+    lift = true
 )
 
 set_parameter!(disjunctive_oracle, oracle_param)

@@ -28,9 +28,9 @@ data = Data(dim_x, dim_t, problem, c_x, c_t)
 # load parameters
 # -----------------------------------------------------------------------------
 # Strict parameters
-# mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, "CPXPARAM_Threads" => 7)
+mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, "CPXPARAM_Threads" => 7)
 # Default parameters with threads
-mip_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7)
+# mip_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7)
 # -----------------------------------------------------------------------------
 # MIP model
 # -----------------------------------------------------------------------------

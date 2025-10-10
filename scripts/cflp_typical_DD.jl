@@ -134,12 +134,7 @@ undo()
 spend_time_prev = time() - start_time
 println("Spend time: $spend_time_prev seconds")
 
-# -----------------------------------------------------------------------------
-# DD oracles
-# -----------------------------------------------------------------------------
-# DD_param = DualDecompositionParam()
-# DD_log = DualDecompositionLog(data)
-# DD_oracle = DualDecomposition(data; typical_oracle = EmptyOracle(), oracle_param = DD_param, oracle_log = DD_log)
+DD_oracle.oracle_log.prev_is_in_L = false
 DD_oracle.flag_bnb = true
 
 # -----------------------------------------------------------------------------

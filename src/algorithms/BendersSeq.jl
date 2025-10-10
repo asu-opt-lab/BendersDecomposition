@@ -57,6 +57,7 @@ function solve!(env::BendersSeq; iter_prefix = "")
                     update_upper_bound_and_gap!(state, log, (f_x, x) -> env.data.c_t' * f_x + env.data.c_x' * x)
                 end
                 println("t:$(state.values[:t][1]),f_dual:$(env.oracle.oracle_log.fin_LB_set[end]), f_opt:$(state.f_x), vogel:$(env.oracle.oracle_param.obj_limit), vogel_time:$(env.oracle.oracle_log.vogel_time), seq_time:$(state.oracle_time)")
+                !isnan(state.f_x[1]) && @assert env.oracle.oracle_param.obj_limit >= state.f_x[1] "vogel is smaller"
 
                 record_iteration!(log, state)
             end
