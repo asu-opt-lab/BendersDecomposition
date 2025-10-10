@@ -58,7 +58,7 @@ function generate_cuts(oracle::DualDecomposition, x::Vector{Float64}, t_value::V
 
     if log.prev_is_in_L || (length(log.fin_LB_set) >= param.stale_lim + 1 && all(isapprox.(log.fin_LB_set[end], log.fin_LB_set[end-param.stale_lim:end-1])))
         println("Exact solver")
-        log.num_solver_used += 1; log.prev_is_in_L = false
+        log.num_solver_used += 1; log.prev_is_in_L = false; param.obj_limit = Inf # implies vogel is not applied in DD
         is_in_L, hyperplanes, f_x = generate_cuts(typical_oracle, x, t_value; time_limit = time_limit)
         return is_in_L, hyperplanes, f_x
     else
