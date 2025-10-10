@@ -66,8 +66,8 @@ function generate_cuts(oracle::DualDecomposition, x::Vector{Float64}, t_value::V
         log.vogel_time = @elapsed param.obj_limit = vogel(data, x);
 
         # Just for comparison with optimal info
-        _, _, f_x = generate_cuts(typical_oracle, x, t_value)
-        opt_y = value.(typical_oracle.model[:y]); opt_λ = dual.(typical_oracle.model[:capacity]); @debug opt_λ
+        # _, _, f_x = generate_cuts(typical_oracle, x, t_value)
+        # opt_y = value.(typical_oracle.model[:y]); opt_λ = dual.(typical_oracle.model[:capacity]); @debug opt_λ
 
         # call necessary parameters
         y_k =log.pri_var; λ_k = log.dual_var[:λ]; halving_value = copy(param.halving_value); α = copy(param.step_size)
@@ -110,13 +110,13 @@ function generate_cuts(oracle::DualDecomposition, x::Vector{Float64}, t_value::V
             a_x = -log.dual_var[:λ].*u .- [sum(log.dual_var[:δ][i,:]) for i in eachindex(u)]
             a_t = [-1.0]
             a_0 = sum(log.dual_var[:σ]) 
-            # return false, [Hyperplane(a_x, a_t, a_0)], [NaN]
-            return false, [Hyperplane(a_x, a_t, a_0)], f_x
+            return false, [Hyperplane(a_x, a_t, a_0)], [NaN]
+            # return false, [Hyperplane(a_x, a_t, a_0)], f_x
         else
             if !oracle.flag_bnb
                 log.prev_is_in_L = true
-                # return false, [Hyperplane(zeros(length(x)), [0.0], 0.0)], [NaN]
-                return false, [Hyperplane(zeros(length(x)), [0.0], 0.0)], f_x
+                return false, [Hyperplane(zeros(length(x)), [0.0], 0.0)], [NaN]
+                # return false, [Hyperplane(zeros(length(x)), [0.0], 0.0)], f_x
             else
                 is_in_L, hyperplanes, f_x = generate_cuts(typical_oracle, x, t_value; time_limit = time_limit)
                 println("lambda_DD:$(log.dual_var[:λ])")
