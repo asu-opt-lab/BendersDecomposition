@@ -93,10 +93,10 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
                                 # optimize!(master.model)
                                 opt_sol = Dict{VariableRef, Float64}()
                                 for i = 1:data.dim_x
-                                    opt_sol[master.model[:x][i]] = x_opt[i]
+                                    opt_sol[master.x[i]] = x_opt[i]
                                 end
                                 for i = 1:data.dim_t
-                                    opt_sol[master.model[:t][i]] = t_opt_[i]
+                                    opt_sol[master.t[i]] = t_opt_[i]
                                 end
 
                                 @info primal_feasibility_report(env.master.model, opt_sol)
@@ -163,10 +163,10 @@ include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
                                 # optimize!(master.model)
                                 opt_sol = Dict{VariableRef, Float64}()
                                 for i = 1:data.dim_x
-                                    opt_sol[master.model[:x][i]] = x_opt[i]
+                                    opt_sol[master.x[i]] = x_opt[i]
                                 end
                                 for i = 1:data.dim_t
-                                    opt_sol[master.model[:t][i]] = t_opt_[i]
+                                    opt_sol[master.t[i]] = t_opt_[i]
                                 end
 
                                 @info primal_feasibility_report(env.master.model, opt_sol)

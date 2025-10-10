@@ -19,7 +19,7 @@ end
 
 
 function update_model!(master::AbstractMaster, data::Data)
-    x = master.model[:x]
+    x = master.x
 
     I = data.problem.n_facilities
     @constraint(master.model, capacity, sum(data.problem.capacities[i] * x[i] for i in 1:I) >= sum(data.problem.demands))

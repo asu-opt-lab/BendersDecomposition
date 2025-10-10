@@ -20,7 +20,7 @@ function update_model!(mip::AbstractMip, data::Data)
 end
 
 function update_model!(master::AbstractMaster, data::Data)
-    x = master.model[:x]
+    x = master.x
 
     I = data.problem.n_facilities
     max_demand = maximum(sum(demands) for demands in data.problem.demands)
