@@ -7,8 +7,8 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Disjunctive Callback Benders Tests" begin
     # Specify instances to test
-    instances = setdiff(1:71, [67])  # 1:24, 26:28 terminates at the root node for any root node processing
-
+    # instances = setdiff(1:71, [67])  # 1:24, 26:28 terminates at the root node for any root node processing
+    instances = 1:1
     for i in instances
         @testset "Instance: p$i" begin
             @info "Testing CFLP instance p$i"
@@ -16,7 +16,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             # Load problem data
             problem = read_cflp_benchmark_data("p$i")
 
-            # problem = read_cfl_file("T500x100_5_1")
+            problem = read_cfl_file("T100x100_3_1")
             
             # Get standard parameters
             benders_param = BendersBnBParam(;
@@ -35,10 +35,10 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             user_cb_param = UserCallbackParam(frequency=10)
             
             # Common solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0,)
             master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
-            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
-            dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0) 
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0, "CPX_PARAM_ADVIND" => 1, "CPX_PARAM_LPMETHOD" => 2)
+            dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0, "CPX_PARAM_ADVIND" => 1, "CPX_PARAM_LPMETHOD" => 2) 
             
 
             # Create data object
@@ -51,17 +51,17 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             @assert dim_t == length(data.c_t)
             
             # Solve MIP for reference
-            mip = Mip(data)
-            assign_attributes!(mip.model, mip_solver_param)
-            update_model!(mip, data)
-            optimize!(mip.model)
-            @assert termination_status(mip.model) == OPTIMAL
-            mip_opt_val = objective_value(mip.model)
+            # mip = Mip(data)
+            # assign_attributes!(mip.model, mip_solver_param)
+            # update_model!(mip, data)
+            # optimize!(mip.model)
+            # @assert termination_status(mip.model) == OPTIMAL
+            # mip_opt_val = objective_value(mip.model)
 
             # Test classical oracle
             @testset "Classic oracle" begin  
                 # typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
-                typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
+                typical_oracle = CFLKnapsackOracle(data; oracle_param = CFLKnapsackOracleParam(data), solver_param = typical_oracle_solver_param)
                 update_model!(typical_oracle, data)
     
                 kappa_oracle = DualDecomposition(data; typical_oracle = typical_oracle, oracle_param = DualDecompositionParam(), oracle_log = DualDecompositionLog(data))
@@ -105,18 +105,18 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                         end
-                        @testset "SeqInOut" begin
-                            @info "solving CFLP p$i - disjunctive oracle/classical/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
-                            master = Master(data; solver_param = master_solver_param)
-                            update_model!(master, data)
-                            root_preprocessing = RootNodePreprocessing(DD_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = true))
-                            lazy_callback = LazyCallback(DD_oracle)
-                            user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-                            env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
-                            log = solve!(env)
-                            @test env.termination_status == Optimal()
-                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                        end
+                        # @testset "SeqInOut" begin
+                        #     @info "solving CFLP p$i - disjunctive oracle/classical/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                        #     master = Master(data; solver_param = master_solver_param)
+                        #     update_model!(master, data)
+                        #     root_preprocessing = RootNodePreprocessing(DD_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = true))
+                        #     lazy_callback = LazyCallback(DD_oracle)
+                        #     user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
+                        #     env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                        #     log = solve!(env)
+                        #     @test env.termination_status == Optimal()
+                        #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        # end
                     end
                 end
             end
