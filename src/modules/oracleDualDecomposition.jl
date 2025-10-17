@@ -59,7 +59,7 @@ function generate_cuts(oracle::DualDecomposition, x::Vector{Float64}, t_value::V
         y_k =log.pri_var; λ_k = log.dual_var[:λ]
         d = data.problem.demands; u= data.problem.capacities; c = data.problem.costs .* d'
 
-        iter = 1
+        iter = 1; y_time =0; λ_time = 0; y_dual_time = 0
         while true
             # Update y, compute residual and LB
             s1 = time()
