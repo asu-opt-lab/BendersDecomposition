@@ -86,12 +86,11 @@ function solve!(env::BendersBnB)
     end
 
     # Rest necessary parameters for DD
-    if env.lazy_callback.oracle == DualDecomposition
+    if typeof(env.lazy_callback.oracle) == DualDecomposition
         empty!(env.lazy_callback.oracle.oracle_log.fin_LB_set)
         env.lazy_callback.oracle.oracle_log.prev_is_in_L = false
         env.lazy_callback.oracle.flag_bnb = true
     end
-
     
     # Apply disjunctive root node preprocessing if specified
     if param.disjunctive_root_process
