@@ -9,9 +9,12 @@ end
 mutable struct CFLKnapsackOracleParam <: AbstractOracleParam
     atol::Float64
     rtol::Float64
+    dual_value::Dict{Symbol, Array{Float64}}
 
-    function CFLKnapsackOracleParam(; atol = 1e-9, rtol = 1e-9)
-        new(atol, rtol)
+    function CFLKnapsackOracleParam(data; atol = 1e-9, rtol = 1e-9)
+        m = data.dim_x; n = data.problem.n_customers
+        dual_value = Dict(:λ => zeros(m), :σ => zeros(n), :δ => zeros(Float64, m, n))
+        new(atol, rtol, dual_value)
     end
 end
 
@@ -25,7 +28,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     function CFLKnapsackOracle(data::Data; 
                                scen_idx=-1, 
                                solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                               oracle_param::CFLKnapsackOracleParam = CFLKnapsackOracleParam())
+                               oracle_param::CFLKnapsackOracleParam = CFLKnapsackOracleParam(data))
         @debug "Building classical oracle"
         model = Model()
 
@@ -43,7 +46,69 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     CFLKnapsackOracle() = new()
 end
 
+# helper for dual warm start
+function get_cplex_backend(model::Model)::CPLEX.Optimizer
+    b = backend(model)
+    seen = String[]
+    for _ in 1:12
+        push!(seen, string(typeof(b)))
+        if b isa CPLEX.Optimizer
+            return b
+        end
+        advanced = false
+        for name in (:optimizer, :inner, :model, :inner_optimizer, :bridge,
+                     :cached, :cache, :model_cache)
+            if hasproperty(b, name)
+                b = getproperty(b, name)
+                advanced = true
+                break
+            end
+        end
+        advanced && continue
+        error("Unable to reach CPLEX backend. Chain: "*join(seen, " -> "))
+    end
+    error("Exceeded unwrap depth. Chain: "*join(seen, " -> "))
+end
+
 function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
+    # dual warm start
+    # if !iszero(oracle.oracle_param.dual_value[:λ])
+    #     @info "eneter"
+    #     σ = oracle.oracle_param.dual_value[:σ]             # length J
+    #     δ = oracle.oracle_param.dual_value[:δ]             # size (I,J), elementwise for y[i,j] ≤ x[i]
+    #     λ = oracle.oracle_param.dual_value[:λ]             # length I
+
+    #     I = length(λ)
+    #     J = length(σ)
+    #     rdual = Vector{Cdouble}(undef, J + I*J + I)
+    #     rdual[1:J] .= σ
+    #     rdual[J+1 : J+I*J] .= vec(δ)                       # column-major vec matches Julia default
+    #     rdual[J+I*J+1 : end] .= λ
+
+    #     cdual = C_NULL
+    #     cstat = C_NULL; rstat = C_NULL; cprim = C_NULL; rprim = C_NULL
+
+    #     cpx = get_cplex_backend(oracle.model)
+    #     ret = CPLEX.CPXcopystart(cpx.env, cpx.lp, cstat, rstat, cprim, rprim, cdual, rdual)
+    #     ret == 0 || error("CPXcopystart failed with code $ret")
+    #     set_optimizer_attribute(oracle.model, "CPX_PARAM_PREIND", 0)   # presolve off
+    #     set_optimizer_attribute(oracle.model, "CPX_PARAM_SCAIND", 0)   # scaling off
+    #     set_optimizer_attribute(oracle.model, "CPX_PARAM_ITLIM", 0)    # 0 simplex iterations
+    #     optimize!(oracle.model)
+
+    #     nrows = length(rdual)
+    #     pi = Vector{Cdouble}(undef, nrows)
+    #     ret = (hasmethod(CPLEX.CPXgetpi, (typeof(cpx.env), typeof(cpx.lp), Vector{Cdouble}, Cint, Cint)) ?
+    #         CPLEX.CPXgetpi(cpx.env, cpx.lp, pi, 0, nrows - 1) :
+    #         CPLEX.CPXgetpi_c(cpx.env, cpx.lp, pi, 0, nrows - 1))
+    #     ret == 0 || error("CPXgetpi failed: $ret")
+    #     # dσ  = maximum(@view absdiff[1:J])
+    #     # dδ  = maximum(@view absdiff[Jm+1:Jm+IJm])
+    #     # dλ  = maximum(@view absdiff[Jm+IJm+1:end])
+    #     @info σ 
+    #     @info pi[1:J]
+    #     exit(1)
+    # end
     s_time = time()
     set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
