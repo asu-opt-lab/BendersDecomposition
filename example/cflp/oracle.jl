@@ -127,95 +127,6 @@ function calculate_KP_value(costs::Vector{Float64}, demands::Vector{Float64}, ca
     return kp_value
 end
 
-function retrieve_mins(v) 
-    s1 = Inf; s2 = Inf
-    for x in v
-        if x < s1
-            s2 = s1; s1 = x
-        elseif x < s2
-            s2 = x
-        end
-    end
-    return s1, s2
-end
-
-# mine ver.1 (threads)
-# function vogel(data, facilities::Vector{Float64})
-#     tol = 1e-9
-#     for idx in eachindex(facilities)
-#         isapprox(facilities[idx], 1.0, atol = 1e-6) && (facilities[idx] = 1.0)
-#         isapprox(facilities[idx], 0.0, atol = 1e-6) && (facilities[idx] = 0.0)
-#     end
-    
-#     demands, capacities = copy(data.problem.demands), copy(data.problem.capacities) .* facilities
-#     costs =  copy(data.problem.costs)
-#     not_opened = findall(x -> x == 0.0, facilities)
-#     costs[not_opened,:] .= +Inf
-
-#     m = data.dim_x; n = data.problem.n_customers
-#     assignments = zeros(Float64, m, n); fulfillment = zeros(n)
-#     row_diff = fill(-Inf, m); col_diff = fill(-Inf, n)
-
-#     while any(fulfillment .< 1 - tol)
-#         @threads for i in 1:m
-#             v = @view costs[i,:]
-#             all(isinf, v) && (row_diff[i] = -Inf; continue)
-#             s1, s2 = retrieve_mins(v)
-#             row_diff[i] = s2 - s1
-#         end
-
-#         @threads for j in 1:n
-#             v = @view costs[:, j]
-#             all(isinf, v) && (col_diff[j] = -Inf; continue)
-#             s1, s2 = retrieve_mins(v)
-#             col_diff[j] = s2 - s1
-#         end
-
-#         i = nothing; j = nothing
-#         if maximum(row_diff) >= maximum(col_diff)
-#             i = argmax(row_diff)
-#             j = argmin(costs[i,:])
-#         else
-#             j = argmax(col_diff)
-#             i = argmin(costs[:,j])
-#         end
-
-#         rem = 1 - fulfillment[j]
-#         take = min(rem, capacities[i] / demands[j])
-#         assignments[i, j] = take
-#         fulfillment[j] += take     
-#         capacities[i] -= take * demands[j]
-
-#         isapprox(capacities[i], 0.0; atol=tol) && (costs[i,:] .= Inf)
-#         isapprox(fulfillment[j], 1.0; atol=tol) && (costs[:, j] .= Inf)
-#     end
-
-#     @assert all([sum(assignments[i, :] .* demands) .<= data.problem.capacities[i] * facilities[i] + tol for i in eachindex(facilities)]) "sum(d*y) <= c*x violation" # sum(d*y) <= c*x 
-#     # @assert all([all(assignments[i,:] .<= facilities[i] + tol) for i in eachindex(facilities)]) "y <= x violation" # y <= x 
-#     @assert isapprox(sum(fulfillment), data.problem.n_customers; atol=1e-6) "demand not fulfilled: $(sum(fulfillment)), num customers: $(data.problem.n_customers))" # demand satisfaction
-#     @assert all(capacities .>= -1e-6) "capacity exceeds: $(capacities)" # capacity exhaustion
-#     return sum((data.problem.costs.* demands') .* assignments)
-# end
-
-# function UB_approximation(data, x; tol=1e-9)
-#     costs, demands, capacities = data.problem.costs, data.problem.demands, data.problem.capacities
-
-#     m, n = size(costs)
-#     total_demands, usuable_capa = sum(demands), capacities .* x
-
-#     # Uniform distribution
-#     s = map(i -> min(x[i], usuable_capa[i] / total_demands), 1:m); S = sum(s)
-#     @assert S ≥ 1 - tol "Uniform distribution cannot be applied (S<1)"
-#     w = s ./ S # scaling to satisfy Σ_j y_ij = 1 ∀ j
-#     y = repeat(w, 1, n) # distriubte w_i to each row
-
-#     # ---------- 3) Final safety checks ----------
-#     @assert all(abs.(sum(y, dims=1)[:] .- 1.0) .≤ tol)
-#     @assert all(y .≥ -tol .&& y .≤ x .+ tol)
-#     @assert all([sum(demands .* y[i, :]) ≤ capacities[i]*x[i] + tol for i=1:m])
-#     return sum((costs.* demands') .* y)
-# end
-
 function UB_approximation(data, x; tol=1e-9)
     costs, demands, capacities = data.problem.costs, data.problem.demands, data.problem.capacities
 
@@ -276,9 +187,8 @@ function UB_approximation(data, x; tol=1e-9)
         end
     end
 
-    # ---------- 3) Final safety checks ----------
     @assert all(abs.(sum(y, dims=1)[:] .- 1.0) .≤ tol)
     @assert all(y .≥ -tol .&& y .≤ x .+ tol)
     @assert all([sum(demands .* y[i, :]) ≤ capacities[i]*x[i] + tol for i=1:m])
-    return sum((costs.* demands') .* y)
+    return sum((costs.* demands') .* y) * 2
 end
