@@ -28,7 +28,7 @@ using DataFrames, CSV, Random, Logging
             benders_param = BendersSeqParam(;
                             time_limit = 1200.0,
                             gap_tolerance = 1e-9,
-                            verbose = false
+                            verbose = true
                         )
 
             # solver parameters

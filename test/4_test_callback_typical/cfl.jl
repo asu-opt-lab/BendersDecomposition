@@ -49,35 +49,35 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             mip_opt_val = objective_value(mip.model)
 
             @testset "Dual Decomposition" begin
-                # @testset "Seq" begin
-                #     @info "solving CFLP p$i - dual decomposition - seq..."
-                #     master = Master(data; solver_param = master_solver_param)
-                #     update_model!(master, data)
+                @testset "Seq" begin
+                    @info "solving CFLP p$i - dual decomposition - seq..."
+                    master = Master(data; solver_param = master_solver_param)
+                    update_model!(master, data)
 
-                #     # Construct typical oracle and set parameters
-                #     typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
-                #     # typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
-                #     update_model!(typical_oracle, data)
+                    # Construct typical oracle and set parameters
+                    typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
+                    # typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
+                    update_model!(typical_oracle, data)
 
-                #     # Construct dual decomposition (DD) oracle and set parameters
-                #     DD_param = DualDecompositionParam()
-                #     DD_log = DualDecompositionLog(data)
-                #     DD_oracle = DualDecomposition(data; typical_oracle = typical_oracle, oracle_param = DD_param, oracle_log = DD_log)
+                    # Construct dual decomposition (DD) oracle and set parameters
+                    DD_param = DualDecompositionParam()
+                    DD_log = DualDecompositionLog(data)
+                    DD_oracle = DualDecomposition(data; typical_oracle = typical_oracle, oracle_param = DD_param, oracle_log = DD_log)
 
-                #     root_seq_type = BendersSeq
-                #     root_param = BendersSeqParam(;
-                #         time_limit = 200.0,
-                #         gap_tolerance = 1e-6,
-                #         verbose = true
-                #     )
-                #     root_preprocessing = RootNodePreprocessing(DD_oracle, root_seq_type, root_param)
-                #     lazy_callback = LazyCallback(DD_oracle)
-                #     user_callback = NoUserCallback()
-                #     env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
-                #     log = solve!(env)
-                #     @test env.termination_status == Optimal()
-                #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                # end
+                    root_seq_type = BendersSeq
+                    root_param = BendersSeqParam(;
+                        time_limit = 200.0,
+                        gap_tolerance = 1e-6,
+                        verbose = true
+                    )
+                    root_preprocessing = RootNodePreprocessing(DD_oracle, root_seq_type, root_param)
+                    lazy_callback = LazyCallback(DD_oracle)
+                    user_callback = NoUserCallback()
+                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    log = solve!(env)
+                    @test env.termination_status == Optimal()
+                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                end
 
                 @testset "SeqInOut" begin
                     @info "solving CFLP p$i - classical oracle - seqinout..."
