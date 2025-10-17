@@ -70,6 +70,9 @@ function solve!(env::BendersSeqInOut)
 
                     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
                 end
+                if typeof(env.oracle) == DualDecomposition
+                    println("t:$(state.values[:t][1]),f_dual:$(env.oracle.oracle_log.fin_LB_set[end]), f_opt:$(state.f_x), seq_time:$(state.oracle_time)")
+                end
             
                 # Update state and record information
                 record_iteration!(log, state)
