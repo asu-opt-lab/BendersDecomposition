@@ -62,13 +62,17 @@ function generate_cuts(oracle::DualDecomposition, x::Vector{Float64}, t_value::V
         iter = 1
         while true
             # Update y, compute residual and LB
+            s1 = time()
             y_k, _, _, _, _ = update_y(y_k, λ_k, c, d, x)
+            y_time += (time() - s1)
 
             # Update step size
             α = param.stepsize_constant/sqrt(iter)
 
             # Update dual value
+            s2 = time()
             λ_k = update_λ(λ_k, y_k, u, d, x, α)
+            λ_time += (time() - s2)
 
             # Store necessary results
             # push!(log.α_set, α); # push!(log.λ_k_diff_set, norm(opt_λ .+ λ_k))
@@ -77,8 +81,10 @@ function generate_cuts(oracle::DualDecomposition, x::Vector{Float64}, t_value::V
             α < param.stepsize_bound && break
             iter +=1
         end
+        s3 = time()
         y_k, sorted_indices, c_sorted, _, critical_facility_indices = update_y(y_k, λ_k, c, d, x)
         retrieve_dual_values(log, d, sorted_indices, c_sorted, critical_facility_indices)
+        y_dual_time += (time() - s3)
         
         feasibility = ((log.dual_var[:σ]') .- log.dual_var[:δ] .- (log.dual_var[:λ] * d')) .<= c .+ 1e-9
         @assert all(feasibility) "Dual feasibility violated"
@@ -86,6 +92,7 @@ function generate_cuts(oracle::DualDecomposition, x::Vector{Float64}, t_value::V
         dual_obj = sum(log.dual_var[:σ]) - dot(x, vec(sum(log.dual_var[:δ],dims = 2))) - dot(log.dual_var[:λ], u.*x)
         !oracle.flag_bnb && push!(log.fin_LB_set, dual_obj)
 
+        println("y_time: $y_time, λ_time: $λ_time, y_dual_time: $y_dual_time")
         log.prev_is_in_L = false
         if dual_obj >= t_value[1]* (1 + 1e-6) + 1e-6/tol_normalize
             a_x = -log.dual_var[:λ].*u .- [sum(log.dual_var[:δ][i,:]) for i in eachindex(u)]
