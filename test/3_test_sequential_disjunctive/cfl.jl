@@ -4,7 +4,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
 @testset verbose = true "CFLP Sequential Benders Tests" begin
     instances = setdiff(1:71, [67])
-    # instances = 30:35
+    
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
@@ -24,20 +24,20 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             benders_param = BendersSeqParam(;
                                             time_limit = 800.0,
                                             gap_tolerance = 1e-6,
-                                            verbose = false
+                                            verbose = true
                                             )
             dcglp_param = DcglpParam(;
                                     time_limit = 1000.0, 
                                     gap_tolerance = 1e-3, 
                                     halt_limit = 3, 
                                     iter_limit = 250,
-                                    verbose = false
+                                    verbose = true
                                     )
             # solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
-            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
-            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
-            dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
+            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4, "CPX_PARAM_SCRIND" => 0)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
+            dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0)
 
             # solve mip for reference
             mip = Mip(data)
@@ -51,19 +51,24 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             t_opt = value.(mip.model[:t])
             @debug x_opt
             @debug t_opt
-            
+
             @testset "Classic oracle" begin
                 @testset "Seq" begin     
-                    for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
-                        @info "solving CFLP p$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                    @info "solving CFLP p$i - dual decomposition - seq_disjunctive..."
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], lift in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [false]
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
 
-                            typical_oracles = [ClassicalOracle(data; solver_param = typical_oracle_solver_param); ClassicalOracle(data; solver_param = typical_oracle_solver_param)] # for kappa & nu
-                            for k=1:2
-                                update_model!(typical_oracles[k], data)
-                            end
+                            typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
+                            update_model!(typical_oracle, data)
+
+                            kappa_oracle = DualDecomposition(data; typical_oracle = typical_oracle, oracle_param = DualDecompositionParam(), oracle_log = DualDecompositionLog(data))
+                            nu_oracle = DualDecomposition(data; typical_oracle = typical_oracle, oracle_param = DualDecompositionParam(), oracle_log = DualDecompositionLog(data))
+                            DD_oracle = DualDecomposition(data; typical_oracle = typical_oracle, oracle_param = DualDecompositionParam(), oracle_log = DualDecompositionLog(data))
+
+                            # Create two oracles for kappa & nu
+                            typical_oracles = [kappa_oracle, nu_oracle]
 
                             disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                                                                     solver_param = dcglp_solver_param,
@@ -105,81 +110,139 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                                 @info objective_value(env.master.model)
                             end
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                            # elseif env.termination_status == TimeLimit()
-                            #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
-                            #     @test env.log.LB <= mip_opt_val <= env.log.UB
-                            # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
-                            #     @test false
-                            # end
                         end
                     end
                 end
             end 
-            @testset "Knapsack oracle" begin
-                @testset "Seq" begin
-                    for strengthened in [true; false], add_benders_cuts_to_master in [true; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
-                        # for strengthened in [false], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts()]
-                        @info "solving CFLP p$i - disjunctive oracle/knapsack- Seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
-                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
-                            master = Master(data; solver_param = master_solver_param)
-                            update_model!(master, data)
+            
+            # @testset "Classic oracle" begin
+            #     @testset "Seq" begin     
+            #         for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
+            #             @info "solving CFLP p$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+            #             @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
+            #                 master = Master(data; solver_param = master_solver_param)
+            #                 update_model!(master, data)
 
-                            typical_oracles = [CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param); CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)]
-                            for k=1:2
-                                update_model!(typical_oracles[k], data)
-                            end
+            #                 typical_oracles = [ClassicalOracle(data; solver_param = typical_oracle_solver_param); ClassicalOracle(data; solver_param = typical_oracle_solver_param)] # for kappa & nu
+            #                 for k=1:2
+            #                     update_model!(typical_oracles[k], data)
+            #                 end
 
-                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
-                                                                solver_param = dcglp_solver_param,
-                                                                param = dcglp_param) 
-                            oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
-                                                                    split_index_selection_rule = RandomFractional(),
-                                                                    disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
-                                                                    strengthened=strengthened, 
-                                                                    add_benders_cuts_to_master=add_benders_cuts_to_master, 
-                                                                    fraction_of_benders_cuts_to_master = 1.0, 
-                                                                    reuse_dcglp=reuse_dcglp,
-                                                                    adjust_t_to_fx = adjust_t_to_fx)
-                            # norm is used in the initialization.
-                            set_parameter!(disjunctive_oracle, oracle_param)
-                            update_model!(disjunctive_oracle, data)
+            #                 disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+            #                                                         solver_param = dcglp_solver_param,
+            #                                                         param = dcglp_param) 
+            #                 oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
+            #                                                         split_index_selection_rule = RandomFractional(),
+            #                                                         disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
+            #                                                         strengthened=strengthened, 
+            #                                                         add_benders_cuts_to_master=add_benders_cuts_to_master, 
+            #                                                         fraction_of_benders_cuts_to_master = 1.0, 
+            #                                                         reuse_dcglp=reuse_dcglp,
+            #                                                         adjust_t_to_fx = adjust_t_to_fx)
+            #                 set_parameter!(disjunctive_oracle, oracle_param)
+            #                 update_model!(disjunctive_oracle, data)
+
+            #                 env = BendersSeq(data, master, disjunctive_oracle; param = benders_param)
+            #                 log = solve!(env)
+            #                 @test env.termination_status == Optimal()
+            #                 # if env.log.termination_status == Optimal()
+            #                 if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            #                     t_opt_ = [sum(t_opt)]
+            #                     @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
+            #                     # optimize!(master.model)
+            #                     opt_sol = Dict{VariableRef, Float64}()
+            #                     for i = 1:data.dim_x
+            #                         opt_sol[master.model[:x][i]] = x_opt[i]
+            #                     end
+            #                     for i = 1:data.dim_t
+            #                         opt_sol[master.model[:t][i]] = t_opt_[i]
+            #                     end
+                                
+            #                     @info primal_feasibility_report(env.master.model, opt_sol)
+            #                     @info data.c_x' * x_opt + data.c_t' * t_opt_
+                                
+            #                     for v in keys(opt_sol)
+            #                         fix(v, opt_sol[v]; force=true)
+            #                     end
+            #                     optimize!(env.master.model)
+            #                     @info objective_value(env.master.model)
+            #                 end
+            #                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            #                 # elseif env.termination_status == TimeLimit()
+            #                 #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+            #                 #     @test env.log.LB <= mip_opt_val <= env.log.UB
+            #                 # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+            #                 #     @test false
+            #                 # end
+            #             end
+            #         end
+            #     end
+            # end 
+            # @testset "Knapsack oracle" begin
+            #     @testset "Seq" begin
+            #         for strengthened in [true; false], add_benders_cuts_to_master in [true; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
+            #             # for strengthened in [false], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts()]
+            #             @info "solving CFLP p$i - disjunctive oracle/knapsack- Seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+            #             @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
+            #                 master = Master(data; solver_param = master_solver_param)
+            #                 update_model!(master, data)
+
+            #                 typical_oracles = [CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param); CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)]
+            #                 for k=1:2
+            #                     update_model!(typical_oracles[k], data)
+            #                 end
+
+            #                 disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+            #                                                     solver_param = dcglp_solver_param,
+            #                                                     param = dcglp_param) 
+            #                 oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
+            #                                                         split_index_selection_rule = RandomFractional(),
+            #                                                         disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
+            #                                                         strengthened=strengthened, 
+            #                                                         add_benders_cuts_to_master=add_benders_cuts_to_master, 
+            #                                                         fraction_of_benders_cuts_to_master = 1.0, 
+            #                                                         reuse_dcglp=reuse_dcglp,
+            #                                                         adjust_t_to_fx = adjust_t_to_fx)
+            #                 # norm is used in the initialization.
+            #                 set_parameter!(disjunctive_oracle, oracle_param)
+            #                 update_model!(disjunctive_oracle, data)
                             
-                            env = BendersSeq(data, master, disjunctive_oracle; param = benders_param)
-                            log = solve!(env)
-                            @test env.termination_status == Optimal()
-                            # if env.log.termination_status == Optimal()
-                            if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                                t_opt_ = [sum(t_opt)]
-                                @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
-                                # optimize!(master.model)
-                                opt_sol = Dict{VariableRef, Float64}()
-                                for i = 1:data.dim_x
-                                    opt_sol[master.model[:x][i]] = x_opt[i]
-                                end
-                                for i = 1:data.dim_t
-                                    opt_sol[master.model[:t][i]] = t_opt_[i]
-                                end
+            #                 env = BendersSeq(data, master, disjunctive_oracle; param = benders_param)
+            #                 log = solve!(env)
+            #                 @test env.termination_status == Optimal()
+            #                 # if env.log.termination_status == Optimal()
+            #                 if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            #                     t_opt_ = [sum(t_opt)]
+            #                     @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
+            #                     # optimize!(master.model)
+            #                     opt_sol = Dict{VariableRef, Float64}()
+            #                     for i = 1:data.dim_x
+            #                         opt_sol[master.model[:x][i]] = x_opt[i]
+            #                     end
+            #                     for i = 1:data.dim_t
+            #                         opt_sol[master.model[:t][i]] = t_opt_[i]
+            #                     end
                                 
-                                @info primal_feasibility_report(env.master.model, opt_sol)
-                                @info data.c_x' * x_opt + data.c_t' * t_opt_
+            #                     @info primal_feasibility_report(env.master.model, opt_sol)
+            #                     @info data.c_x' * x_opt + data.c_t' * t_opt_
                                 
-                                for v in keys(opt_sol)
-                                    fix(v, opt_sol[v]; force=true)
-                                end
-                                optimize!(env.master.model)
-                                @info objective_value(env.master.model)
-                            end
-                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                            # elseif env.termination_status == TimeLimit()
-                            #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
-                            #     @test env.log.LB <= mip_opt_val <= env.log.UB
-                            # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
-                            #     @test false
-                            # end
-                        end
-                    end
-                end
-            end
+            #                     for v in keys(opt_sol)
+            #                         fix(v, opt_sol[v]; force=true)
+            #                     end
+            #                     optimize!(env.master.model)
+            #                     @info objective_value(env.master.model)
+            #                 end
+            #                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            #                 # elseif env.termination_status == TimeLimit()
+            #                 #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
+            #                 #     @test env.log.LB <= mip_opt_val <= env.log.UB
+            #                 # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
+            #                 #     @test false
+            #                 # end
+            #             end
+            #         end
+            #     end
+            # end
         end
     end
 end

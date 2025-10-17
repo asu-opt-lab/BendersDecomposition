@@ -4,9 +4,6 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
 
 using DataFrames, CSV, Random, Logging
 
-# Random.seed!(1234)
-# global_logger(ConsoleLogger(stderr, Logging.Debug))
-# 43 timelimit
 @testset verbose = true "CFLP Sequential Benders Tests" begin
     instances = setdiff(1:71, [67])
     # instances = 30:30
@@ -31,7 +28,7 @@ using DataFrames, CSV, Random, Logging
             benders_param = BendersSeqParam(;
                             time_limit = 1200.0,
                             gap_tolerance = 1e-9,
-                            verbose = true
+                            verbose = false
                         )
 
             # solver parameters
@@ -61,8 +58,8 @@ using DataFrames, CSV, Random, Logging
                 update_model!(master, data)
 
                 # Construct typical oracle and set parameters
-                classical_param = ClassicalOracleParam(rtol = rtol, atol = atol)
-                typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
+                classical_param = CFLKnapsackOracleParam(rtol = rtol, atol = atol)
+                typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
                 update_model!(typical_oracle, data)
 
                 # Construct dual decomposition (DD) oracle and set parameters
@@ -72,6 +69,7 @@ using DataFrames, CSV, Random, Logging
 
                 env = BendersSeq(data, master, DD_oracle; param = benders_param)
                 log = solve!(env)
+                @info DD_oracle.oracle_log.λ_k_diff_set
                 push!(dd_information, [sum(log.total_time), length(log.total_time)])
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -144,5 +142,5 @@ using DataFrames, CSV, Random, Logging
         end
     end
     df = DataFrame(sum_time = [row[1] for row in dd_information], len_time = [row[2] for row in dd_information])
-    CSV.write("λy_reset.csv", df)
+    CSV.write("uniform_distribute.csv", df)
 end

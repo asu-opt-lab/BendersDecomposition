@@ -12,7 +12,7 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             # Load problem data
             problem = read_cflp_benchmark_data("p$i")
 
-            problem = read_cfl_file("T1000x1000_5_1")
+            # problem = read_cfl_file("T1000x1000_5_1")
             
             # Get standard parameters
             benders_param = BendersBnBParam(;
@@ -41,22 +41,51 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
             # core_point = fill(sum(data.problem.demands)/sum(data.problem.capacities) + 0.3, dim_x) # faster core point
             
             # Solve MIP for reference
-            # mip = Mip(data)
-            # assign_attributes!(mip.model, mip_solver_param)
-            # update_model!(mip, data)
-            # optimize!(mip.model)
-            # @assert termination_status(mip.model) == OPTIMAL
-            # mip_opt_val = objective_value(mip.model)
+            mip = Mip(data)
+            assign_attributes!(mip.model, mip_solver_param)
+            update_model!(mip, data)
+            optimize!(mip.model)
+            @assert termination_status(mip.model) == OPTIMAL
+            mip_opt_val = objective_value(mip.model)
 
             @testset "Dual Decomposition" begin
-                @testset "Seq" begin
-                    @info "solving CFLP p$i - dual decomposition - seq..."
+                # @testset "Seq" begin
+                #     @info "solving CFLP p$i - dual decomposition - seq..."
+                #     master = Master(data; solver_param = master_solver_param)
+                #     update_model!(master, data)
+
+                #     # Construct typical oracle and set parameters
+                #     typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
+                #     # typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
+                #     update_model!(typical_oracle, data)
+
+                #     # Construct dual decomposition (DD) oracle and set parameters
+                #     DD_param = DualDecompositionParam()
+                #     DD_log = DualDecompositionLog(data)
+                #     DD_oracle = DualDecomposition(data; typical_oracle = typical_oracle, oracle_param = DD_param, oracle_log = DD_log)
+
+                #     root_seq_type = BendersSeq
+                #     root_param = BendersSeqParam(;
+                #         time_limit = 200.0,
+                #         gap_tolerance = 1e-6,
+                #         verbose = true
+                #     )
+                #     root_preprocessing = RootNodePreprocessing(DD_oracle, root_seq_type, root_param)
+                #     lazy_callback = LazyCallback(DD_oracle)
+                #     user_callback = NoUserCallback()
+                #     env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                #     log = solve!(env)
+                #     @test env.termination_status == Optimal()
+                #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                # end
+
+                @testset "SeqInOut" begin
+                    @info "solving CFLP p$i - classical oracle - seqinout..."
                     master = Master(data; solver_param = master_solver_param)
                     update_model!(master, data)
-
                     # Construct typical oracle and set parameters
-                    classical_param = ClassicalOracleParam(rtol = rtol, atol = atol)
-                    typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
+                    typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
+                    # typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
                     update_model!(typical_oracle, data)
 
                     # Construct dual decomposition (DD) oracle and set parameters
@@ -64,10 +93,13 @@ include("$(dirname(dirname(@__DIR__)))/example/cflp/model.jl")
                     DD_log = DualDecompositionLog(data)
                     DD_oracle = DualDecomposition(data; typical_oracle = typical_oracle, oracle_param = DD_param, oracle_log = DD_log)
 
-                    root_seq_type = BendersSeq
-                    root_param = BendersSeqParam(;
-                        time_limit = 200.0,
+                    root_seq_type = BendersSeqInOut
+                    root_param = BendersSeqInOutParam(
+                        time_limit = 300.0,
                         gap_tolerance = 1e-6,
+                        stabilizing_x = ones(data.dim_x),
+                        α = 0.9,
+                        λ = 0.1,
                         verbose = true
                     )
                     root_preprocessing = RootNodePreprocessing(DD_oracle, root_seq_type, root_param)
