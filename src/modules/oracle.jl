@@ -18,11 +18,11 @@ valid inequalities.
 Arguments:
 - `x_value`: Given `x` solution.
 - `t_value`: Given `t` solution.
-- `tol`: Numerical tolerance for cut generation (default: `1e-6`).
+- `tol_normalize`: Normalization tolerance for cut generation (default: 1.0).
 - `time_limit`: Maximum time allowed for the oracle call (default: 3600 seconds).
 
 Returns (to be implemented by concrete oracles):
-- `is_separated::Bool`: Whether any cuts were generated.
+- `is_in_L::Bool`: Whether the point is in the feasible region L (true if feasible, false if cuts were generated).
 - `hyperplanes::Vector{Hyperplane}`: List of valid inequalities to be added to the master.
 - `sub_obj_vals::Vector{Float64}`: Subproblem objective values for updating the upper bound. 
   Can be `NaN` if no meaningful objective was computed.

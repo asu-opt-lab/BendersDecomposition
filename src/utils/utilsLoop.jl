@@ -33,8 +33,8 @@ Abstract type for parameter containers used in the optimization loop.
 
 Concrete subtypes should store:
 - `time_limit::Float64`: Time budget for the algorithm in seconds.
-- `gap_tolerance::Float64`: .
-- `iter_limit::Float64`: .
+- `gap_tolerance::Float64`: Optimality gap tolerance for termination (as a percentage).
+- `iter_limit::Int`: Maximum number of iterations allowed.
 - `verbose::Bool`: Whether and how much to log to stdout.
 - Other algorithm-specific parameters for controlling behavior and tuning.
 """
@@ -127,8 +127,7 @@ function to_dataframe(log::AbstractLoopLog)
         gap = [info.gap for info in log.iterations],
         master_time = [info.master_time for info in log.iterations],
         oracle_time = [info.oracle_time for info in log.iterations],
-        total_time = [info.total_time for info in log.iterations],
-        # is_in_L = [info.is_in_L for info in log.iterations]
+        total_time = [info.total_time for info in log.iterations]
     )
 end
 

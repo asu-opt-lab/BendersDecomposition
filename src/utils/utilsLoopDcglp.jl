@@ -76,10 +76,9 @@ function update_upper_bound_and_gap!(state::DcglpState, log::DcglpLog, f::Functi
         state.omega_t_[i] = state.is_in_L[i] ? state.values[:ω_t][i] : state.f_x[i] * state.values[:ω_0][i]
     end
     evaluation = f(state.omega_t_[1], state.omega_t_[2])
-    
+
     state.UB = log.n_iter >= 1 ? min(log.iterations[end].UB, evaluation) : evaluation
     state.gap = (state.UB - state.LB) / abs(state.UB) * 100
-    # (t1, t2) -> LinearAlgebra.norm([state.other_values[:sx]; t1 .+ t2 .- t_value], norm.p)
 end
 
 """

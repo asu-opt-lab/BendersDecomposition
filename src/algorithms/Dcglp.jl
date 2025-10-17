@@ -1,9 +1,46 @@
 
 """
-Run DCGLP cutting-plane
+    solve_dcglp!(oracle::DisjunctiveOracle, x_value, t_value, zero_indices, one_indices; kwargs...) -> (Bool, Vector{Hyperplane}, Vector{Float64})
+
+Execute the Disjunctive Cut Generating Linear Program (DCGLP) cutting-plane method.
+
+This function solves a specialized LP to generate disjunctive cuts for mixed-integer problems. It iteratively refines a linear master problem by adding Benders cuts from two complementary subproblem oracles (kappa and nu).
+
+# Arguments
+- `oracle::DisjunctiveOracle`: Disjunctive oracle containing the DCGLP model and typical oracles
+- `x_value::Vector{Float64}`: Current first-stage solution
+- `t_value::Vector{Float64}`: Current second-stage approximation
+- `zero_indices::Vector{Int64}`: Indices of variables fixed to 0 (for lifted cuts)
+- `one_indices::Vector{Int64}`: Indices of variables fixed to 1 (for lifted cuts)
+
+# Keyword Arguments
+- `time_limit::Float64`: Maximum time allowed for DCGLP solving
+- `throw_typical_cuts_for_errors::Bool`: If true, return typical Benders cuts when DCGLP encounters errors (default: true)
+- `include_disjunctive_cuts_to_hyperplanes::Bool`: If true, include generated disjunctive cuts in the returned hyperplanes (default: true)
+
+# Returns
+A tuple `(is_in_L, hyperplanes, f_x)`:
+- `is_in_L::Bool`: Whether the point is in the feasible region L (false if disjunctive cut was generated)
+- `hyperplanes::Vector{Hyperplane}`: Benders cuts and optionally the disjunctive cut to add to master
+- `f_x::Vector{Float64}`: Subproblem objective values (set to `Inf` if disjunctive cut was generated)
+
+# Algorithm Overview
+1. Optionally adjust `t_value` to `f(x)` if `oracle.oracle_param.adjust_t_to_fx` is true
+2. Solve the DCGLP master problem to obtain dual multipliers (ω_x, ω_t, ω_0, τ)
+3. For each subproblem oracle (kappa and nu), solve at the normalized point (ω_x/ω_0, ω_t/ω_0)
+4. Generate Benders cuts and add them to both kappa and nu systems in DCGLP
+5. Repeat until convergence (τ ≥ tolerance) or termination
+6. If τ ≥ tolerance, generate a disjunctive cut and return it
+
+# Notes
+- If the DCGLP master encounters numerical issues or infeasibility, the function can fall back to typical Benders cuts
+- The disjunctive cut can be lifted using variable fixing information if specified
+- The generated disjunctive cut is stored in `oracle.disjunctiveCuts` for future use
+
+See also: [`DisjunctiveOracle`](@ref), [`generate_cuts`](@ref)
 """
 
-function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}, zero_indices::Vector{Int64}, one_indices::Vector{Int64}; time_limit = time_limit, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
+function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}, zero_indices::Vector{Int64}, one_indices::Vector{Int64}; time_limit = time_limit, throw_typical_cuts_for_errors = true, include_disjunctive_cuts_to_hyperplanes = true)
     log = DcglpLog()
     
     dcglp = oracle.dcglp
@@ -66,7 +103,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                     throw(TimeLimitException("Time limit reached during dcglp solving"))
                 else
                     throw(UnexpectedModelStatusException("DCGLP master: $(termination_status(dcglp))"))
-                    # if infeasible, then the problem is infeasible
                 end
             end
             
@@ -74,22 +110,18 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
             ω_x = state.values[:ω_x]
             ω_t = state.values[:ω_t]
             ω_0 = state.values[:ω_0]
-            # my_lock = Threads.ReentrantLock()
-            # Threads.@threads for i in 1:2
             for i in 1:2
-                # Threads.lock(my_lock) do
                 state.oracle_times[i] = @elapsed begin
                     if ω_0[i] >= oracle.oracle_param.zero_tol
                          state.is_in_L[i], hyperplanes_a, state.f_x[i] = generate_cuts(typical_oracles[i], clamp.(ω_x[i] / ω_0[i], 0.0, 1.0), ω_t[i] / ω_0[i], tol_normalize = ω_0[i], time_limit = get_sec_remaining(log.start_time, time_limit))
 
-                        # adjust the tolerance with respect to dcglp: (sum(state.sub_obj_vals[i]) - sum(t_value)) * omega_value[:z][i] < zero_tol
                         if !state.is_in_L[i]
-                            for k = 1:2 # add to both kappa and nu systems
+                            for k = 1:2
                                 append!(benders_cuts[i], hyperplanes_to_expression(dcglp, hyperplanes_a, dcglp[:omega_x][k,:], dcglp[:omega_t][k,:], dcglp[:omega_0][k]))
                             end
                             if oracle.oracle_param.add_benders_cuts_to_master != 0
                                 add_violated = oracle.oracle_param.add_benders_cuts_to_master == 2
-                                append!(hyperplanes, select_top_fraction(hyperplanes_a, h -> evaluate_violation(h, x_value, t_value), oracle.oracle_param.fraction_of_benders_cuts_to_master; add_only_violated_cuts = add_violated)) 
+                                append!(hyperplanes, select_top_fraction(hyperplanes_a, h -> evaluate_violation(h, x_value, t_value), oracle.oracle_param.fraction_of_benders_cuts_to_master; add_only_violated_cuts = add_violated))
                             end
                         end
                     else
@@ -97,11 +129,9 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                         state.f_x[i] = zeros(length(t_value))
                     end
                 end
-                # end
             end
         
             if state.f_x[1] !== NaN && state.f_x[2] !== NaN
-                # update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], oracle.oracle_param.norm.p))
                 update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- f_x], oracle.oracle_param.norm.p))
             end
 
@@ -125,7 +155,7 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
         end
 
         h = Hyperplane(gamma_x, gamma_t, gamma_0)
-        if include_disjuctive_cuts_to_hyperplanes
+        if include_disjunctive_cuts_to_hyperplanes
             push!(hyperplanes, h)
         end
         
@@ -147,7 +177,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
     else
         return generate_cuts(typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
     end
-    # statistics_of_disjunctive_cuts(env)
 end
 
 function generate_disjunctive_cut(dcglp::Model; strengthen = false, zero_tol = 1e-9)
@@ -201,7 +230,6 @@ end
 
 function strengthening!(gamma_x, sigma, delta; zero_tol = 1e-9)
     @debug "dcglp strengthening - sigma values: [σ₁: $(sigma[1]), σ₂: $(sigma[2])]"
-    # @debug "dcglp strengthening - delta values: [δ₁: $(delta[1]), δ₂: $(delta[2])]"
 
     a₁ = gamma_x .- delta[1]
     a₂ = gamma_x .- delta[2]

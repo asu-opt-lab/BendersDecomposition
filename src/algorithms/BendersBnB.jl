@@ -87,7 +87,7 @@ function solve!(env::BendersBnB)
     
     # Apply disjunctive root node preprocessing if specified
     if param.disjunctive_root_process
-        # Update root_prepreocessing params
+        # Update root_preprocessing params
         env.root_preprocessing.params.time_limit -= root_node_time
         env.root_preprocessing.oracle = env.user_callback.oracle
 

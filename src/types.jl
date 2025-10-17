@@ -19,8 +19,8 @@ abstract type AbstractMip end
 abstract type AbstractMaster end
 
 """
-Any concrete subtype of `AbstractOracle` must have a field `oracle_param<:AbstractOracleParam` containing adjustable parameters that affect the oracle's behavior. 
-The type of `oracle_param` can be EmptyOracleParam when there is no adjustable oracle parameter. 
+Any concrete subtype of `AbstractOracle` must have a field `oracle_param<:AbstractOracleParam` containing adjustable parameters that affect the oracle's behavior.
+The type of `oracle_param` can be BasicOracleParam when there is no oracle-specific adjustable parameter.
 
 Subtypes should implement `generate_cuts` to return separating hyperplanes based on the given candidate solutions.
 """

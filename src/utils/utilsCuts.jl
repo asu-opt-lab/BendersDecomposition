@@ -1,6 +1,34 @@
 export Hyperplane, aggregate
+
 """
-hyperplane related structure and functions
+    Hyperplane
+
+A structure representing a hyperplane (linear inequality) in Benders decomposition.
+
+Hyperplanes are used to represent Benders cuts and disjunctive cuts. A hyperplane is defined by:
+`a_x' * x + a_t' * t + a_0 >= 0`
+
+# Fields
+- `a_x::SparseVector{Float64, Int}`: Coefficients for first-stage variables x
+- `a_t::SparseVector{Float64, Int}`: Coefficients for second-stage variables t
+- `a_0::Float64`: Constant term
+
+# Main Functions
+- [`aggregate`](@ref): Aggregate multiple hyperplanes by averaging
+- [`evaluate_violation`](@ref): Check if a point violates the hyperplane
+- [`select_top_fraction`](@ref): Select the most violated or highest-scoring hyperplanes
+- [`hyperplanes_to_expression`](@ref): Convert hyperplanes to JuMP expressions for adding to models
+
+# Examples
+```julia
+# Create a hyperplane
+h = Hyperplane([1.0, 2.0], [3.0, 4.0], -5.0)
+
+# Check violation at a point
+x_val = [0.5, 0.3]
+t_val = [1.0, 2.0]
+is_violated = evaluate_violation(h, x_val, t_val)
+```
 """
 mutable struct Hyperplane
     
@@ -59,8 +87,6 @@ function select_top_fraction(a::Vector{Hyperplane}, f::Function, p::Float64; add
     l = (!add_only_violated_cuts || scores[sorted_indices[end]] > 0.0) ? length(a) + 1 : findfirst(x -> scores[x] <= 0.0, sorted_indices)
 
     # How many elements to select
-    # k = ceil(Int, p * length(a))
-    # k = min(ceil(Int, p * length(a)), l-1)
     k = ceil(Int, p * (l-1))
     
     # Get the top-k indices and return corresponding elements from a

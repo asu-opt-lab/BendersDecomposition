@@ -1,7 +1,24 @@
+"""
+    add_normalization_constraint(dcglp::Model, norm::LpNorm)
+
+Add normalization constraints to the DCGLP model based on the specified Lp norm.
+
+This function enforces that the dual variables (tau, sx, st) satisfy a norm constraint,
+which is essential for generating valid disjunctive cuts. CPLEX only supports p ∈ {1, 2, ∞}.
+
+# Arguments
+- `dcglp::Model`: The DCGLP JuMP model
+- `norm::LpNorm`: The Lp norm specification (p = 1, 2, or Inf)
+
+# Notes
+- For conic solvers, an alternative formulation using `MOI.NormCone(norm.p, n)` can be used
+- CPLEX-specific implementation uses `MOI.NormOneCone`, `MOI.SecondOrderCone`, or `MOI.NormInfinityCone`
+
+# Throws
+- `UndefError`: If the norm p value is not 1, 2, or Inf
+"""
 function add_normalization_constraint(dcglp::Model, norm::LpNorm)
     # CPLEX only accepts p=1,2,Inf
-    # if conic solver, we can use the following line
-    # @constraint(dcglp, concone, var_vec in MOI.NormCone(norm.p, data.dim_x + data.dim_t + 1))
     var_vec = [dcglp[:tau]; dcglp[:sx]; dcglp[:st]]
     
     if norm.p == 1.0

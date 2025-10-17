@@ -1,5 +1,43 @@
 export DisjunctiveOracle, DisjunctiveOracleParam
 
+"""
+    DisjunctiveOracleParam <: AbstractOracleParam
+
+Parameters for configuring a DisjunctiveOracle in Benders decomposition.
+
+This structure contains all the parameters needed to control the behavior of the disjunctive cut generation process via the DCGLP (Disjunctive Cut Generating Linear Program).
+
+# Fields
+- `norm::AbstractNorm`: Norm type used for normalization in DCGLP (default: `LpNorm(Inf)`)
+- `split_index_selection_rule::SplitIndexSelectionRule`: Rule for selecting which variable to split on (default: `RandomFractional()`)
+- `disjunctive_cut_append_rule::DisjunctiveCutsAppendRule`: Rule for adding previously found disjunctive cuts to DCGLP (default: `AllDisjunctiveCuts()`)
+- `strengthened::Bool`: Whether to apply strengthening to the disjunctive cuts (default: `true`)
+- `add_benders_cuts_to_master::Int`: Controls adding Benders cuts to master problem (default: `1`)
+  - `0`: Do not add Benders cuts to master
+  - `1`: Add all Benders cuts regardless of violation at (x,t)
+  - `2`: Add only violated Benders cuts
+- `fraction_of_benders_cuts_to_master::Float64`: Fraction of Benders cuts to add to master (default: `1.0`)
+- `reuse_dcglp::Bool`: Whether to reuse DCGLP model across iterations (default: `true`)
+- `lift::Bool`: Whether to use lifting for variables fixed to 0 or 1 (default: `false`)
+- `adjust_t_to_fx::Bool`: Whether to adjust t to f(x) before solving DCGLP (default: `false`)
+- `zero_tol::Float64`: Tolerance for considering values as zero (default: `1e-9`)
+
+# Examples
+```julia
+# Create with default parameters
+param = DisjunctiveOracleParam()
+
+# Create with custom parameters
+param = DisjunctiveOracleParam(
+    norm = LpNorm(1.0),
+    split_index_selection_rule = MostFractional(),
+    strengthened = true,
+    add_benders_cuts_to_master = 2  # Only violated cuts
+)
+```
+
+See also: [`DisjunctiveOracle`](@ref), [`LpNorm`](@ref)
+"""
 mutable struct DisjunctiveOracleParam <: AbstractOracleParam
     norm::AbstractNorm
     split_index_selection_rule::SplitIndexSelectionRule
@@ -26,8 +64,62 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
         
         new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_bcuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift, adjust_t_to_fx, zero_tol)
     end
-end 
+end
 
+"""
+    DisjunctiveOracle <: AbstractDisjunctiveOracle
+
+An oracle for generating disjunctive cuts in Benders decomposition using the DCGLP method.
+
+The DisjunctiveOracle combines two typical oracles (for the kappa and nu subproblems) and
+solves a Disjunctive Cut Generating Linear Program (DCGLP) to produce stronger cuts than
+standard Benders cuts. This can significantly improve convergence for mixed-integer programs.
+
+# Fields
+- `oracle_param::DisjunctiveOracleParam`: Parameters controlling the oracle's behavior
+- `dcglp::Model`: The JuMP model for the Disjunctive Cut Generating Linear Program
+- `typical_oracles::Vector{AbstractTypicalOracle}`: Two typical oracles (index 1: kappa, index 2: nu)
+- `param::DcglpParam`: Parameters for the DCGLP cutting-plane loop
+- `disjunctiveCutsByIndex::Vector{Vector{Hyperplane}}`: Disjunctive cuts organized by split variable index
+- `disjunctiveCuts::Vector{Hyperplane}`: All disjunctive cuts generated so far
+- `splits::Vector{Tuple{SparseVector{Float64, Int}, Float64}}`: History of split inequalities (phi, phi_0)
+
+# Constructor
+```julia
+DisjunctiveOracle(data, typical_oracles::Vector{T};
+                  param::DcglpParam = DcglpParam(),
+                  solver_param::Dict{String,Any} = Dict(...),
+                  oracle_param::DisjunctiveOracleParam = DisjunctiveOracleParam()) where {T<:AbstractTypicalOracle}
+```
+
+# Arguments
+- `data`: Problem data containing dimensions
+- `typical_oracles`: Vector of two typical oracles for kappa and nu subproblems
+- `param`: DCGLP loop parameters (optional)
+- `solver_param`: Solver configuration for DCGLP model (optional)
+- `oracle_param`: Oracle behavior parameters (optional)
+
+# Examples
+```julia
+# Create typical oracles
+oracle_kappa = ClassicalOracle(data, scen_idx=1)
+oracle_nu = ClassicalOracle(data, scen_idx=2)
+
+# Create disjunctive oracle with default parameters
+disj_oracle = DisjunctiveOracle(data, [oracle_kappa, oracle_nu])
+
+# Create with custom parameters
+disj_param = DisjunctiveOracleParam(strengthened = true, lift = true)
+disj_oracle = DisjunctiveOracle(data, [oracle_kappa, oracle_nu]; oracle_param = disj_param)
+```
+
+# Notes
+- The DCGLP model is built automatically during construction
+- The oracle maintains a history of all disjunctive cuts and splits
+- Disjunctive cuts can be organized by split variable index for specialized algorithms
+
+See also: [`DisjunctiveOracleParam`](@ref), [`generate_cuts`](@ref), [`solve_dcglp!`](@ref)
+"""
 mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
     
     oracle_param::DisjunctiveOracleParam
@@ -82,11 +174,37 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
         new(oracle_param, dcglp, typical_oracles, param, disjunctiveCutsByIndex, Vector{Hyperplane}(), splits)
     end
 end
+
 """
-`throw_typical_cuts_for_errors` determines whether to return a typical Benders cut, when DCGLP encounters some issue. It must be `false` for SpecializedBendersSeq
-`include_disjuctive_cuts_to_hyperplanes` determines whether to add a disjunctive cut found to `hyperplanes` to be returned; if it is `false`, the disjuctive cut should be added at a desired place via `oracle.disjunctiveCuts` or `oracle.disjunctiveCutsByIndex`
+    generate_cuts(oracle::DisjunctiveOracle, x_value, t_value; kwargs...) -> (Bool, Vector{Hyperplane}, Vector{Float64})
+
+Generate cuts for a disjunctive oracle by solving the DCGLP problem.
+
+This function selects a disjunctive inequality, updates the DCGLP model, and calls `solve_dcglp!` to generate either a disjunctive cut or fall back to typical Benders cuts.
+
+# Arguments
+- `oracle::DisjunctiveOracle`: The disjunctive oracle containing DCGLP model and typical oracles
+- `x_value::Vector{Float64}`: Current first-stage solution
+- `t_value::Vector{Float64}`: Current second-stage approximation
+
+# Keyword Arguments
+- `time_limit::Float64`: Maximum time allowed for cut generation (default: 3600.0)
+- `throw_typical_cuts_for_errors::Bool`: If true, return typical Benders cuts when DCGLP encounters errors; if false, throw an exception instead (default: true)
+- `include_disjunctive_cuts_to_hyperplanes::Bool`: If true, add the generated disjunctive cut to the returned hyperplanes; if false, the cut is only stored in `oracle.disjunctiveCuts` (default: true)
+
+# Returns
+A tuple `(is_in_L, hyperplanes, f_x)`:
+- `is_in_L::Bool`: Whether the point is feasible (false if cuts were generated)
+- `hyperplanes::Vector{Hyperplane}`: Generated cuts to add to the master problem
+- `f_x::Vector{Float64}`: Subproblem objective values
+
+# Notes
+- The parameter `throw_typical_cuts_for_errors` must be set to `false` when using `SpecializedBendersSeq`
+- When `include_disjunctive_cuts_to_hyperplanes` is `false`, the disjunctive cut can be accessed via `oracle.disjunctiveCuts` or `oracle.disjunctiveCutsByIndex` for specialized algorithms
+
+See also: [`solve_dcglp!`](@ref), [`DisjunctiveOracle`](@ref)
 """
-function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjuctive_cuts_to_hyperplanes = true)
+function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjunctive_cuts_to_hyperplanes = true)
 
     tic = time()
     
@@ -121,7 +239,7 @@ function generate_cuts(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_va
 
     add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices) 
 
-    return solve_dcglp!(oracle, x_value, t_value, zero_indices, one_indices; time_limit = time_limit, throw_typical_cuts_for_errors = throw_typical_cuts_for_errors, include_disjuctive_cuts_to_hyperplanes = include_disjuctive_cuts_to_hyperplanes)
+    return solve_dcglp!(oracle, x_value, t_value, zero_indices, one_indices; time_limit = time_limit, throw_typical_cuts_for_errors = throw_typical_cuts_for_errors, include_disjunctive_cuts_to_hyperplanes = include_disjunctive_cuts_to_hyperplanes)
 end
 """
 Updates parameters of the DisjunctiveOracle. Changing the normalization updates the dcglp model, which is initially set during declaration.

@@ -50,7 +50,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
     elseif status == INFEASIBILITY_CERTIFICATE
         if has_duals(oracle.model)
             dual_sub_obj_val = dual_objective_value(oracle.model)
-            @info "dual_sub_obj_val = $dual_sub_obj_val"
+            @debug "dual_sub_obj_val = $dual_sub_obj_val"
             a_x = dual.(oracle.fixed_x_constraints)
             a_t = [0.0]
             a_0 = dual_sub_obj_val - a_x'*x_value 

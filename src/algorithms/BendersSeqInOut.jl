@@ -1,4 +1,42 @@
 export BendersSeqInOut
+
+"""
+    BendersSeqInOut <: AbstractBendersSeq
+
+Sequential Benders decomposition with In-Out stabilization technique.
+
+This variant of Benders decomposition uses stabilization to improve convergence by maintaining a stabilizing point and perturbing query points. The algorithm can switch to Kelley's cutting-plane method if progress stalls.
+
+# Fields
+- `data::Data`: Problem data containing dimensions, cost vectors, and problem-specific information
+- `master::AbstractMaster`: Master problem formulation
+- `oracle::AbstractOracle`: Oracle for subproblem solving and cut generation
+- `param::BendersSeqInOutParam`: Parameters controlling algorithm behavior (includes stabilization parameters α, λ, and stabilizing_x)
+- `obj_value::Float64`: Objective value of the best solution found
+- `termination_status::TerminationStatus`: Status of the algorithm upon termination
+
+# Constructors
+```julia
+BendersSeqInOut(data, master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam())
+BendersSeqInOut(data; param::BendersSeqInOutParam = BendersSeqInOutParam())  # Uses default Master and ClassicalOracle
+```
+
+# Stabilization Parameters
+The stabilization technique requires three parameters (specified in `BendersSeqInOutParam`):
+- `α`: Weight for updating the stabilizing point
+- `λ`: Weight for perturbing the query point
+- `stabilizing_x`: Initial stabilizing point
+
+# Examples
+```julia
+data = Data(...)
+param = BendersSeqInOutParam(α = 0.8, λ = 0.5, stabilizing_x = zeros(data.dim_x))
+algorithm = BendersSeqInOut(data; param = param)
+df = solve!(algorithm)
+```
+
+See also: [`BendersSeq`](@ref), [`SpecializedBendersSeq`](@ref)
+"""
 mutable struct BendersSeqInOut <: AbstractBendersSeq
     data::Data
     master::AbstractMaster
@@ -19,9 +57,45 @@ mutable struct BendersSeqInOut <: AbstractBendersSeq
     end
 end
 """
-Run BendersSeqInOut
+    solve!(env::BendersSeqInOut) -> DataFrame
+
+Execute the sequential Benders decomposition with In-Out stabilization.
+
+This function implements a stabilized Benders cutting-plane method that uses a perturbed query point
+to improve convergence. If the lower bound stagnates for multiple iterations, the algorithm switches
+to Kelley's cutting-plane method (setting λ = 1.0).
+
+# Arguments
+- `env::BendersSeqInOut`: The configured Benders In-Out algorithm environment
+
+# Returns
+- `DataFrame`: A log of iterations containing lower bounds, upper bounds, gaps, and timing information
+
+# Algorithm Steps
+1. Solve the master problem to obtain candidate solution (x, t)
+2. Update the stabilizing point: `stabilizing_x = α * stabilizing_x + (1 - α) * x`
+3. Generate perturbed query point: `intermediate_x = λ * x + (1 - λ) * stabilizing_x`
+4. Query the oracle at the perturbed point to generate Benders cuts
+5. Update bounds and check termination criteria
+6. Add generated cuts to the master problem
+7. Check if switching to Kelley mode is needed (if no improvement for 5 consecutive iterations)
+8. Repeat until convergence or termination
+
+# Termination Criteria
+- Optimal solution found (point is in L after switching to Kelley mode)
+- Time limit reached
+- Gap tolerance met
+- Master problem becomes infeasible
+
+# Examples
+```julia
+algorithm = BendersSeqInOut(data; param = BendersSeqInOutParam(α = 0.8, λ = 0.5, stabilizing_x = zeros(data.dim_x)))
+log_df = solve!(algorithm)
+println("Objective: ", algorithm.obj_value)
+```
+
+See also: [`BendersSeq`](@ref)
 """
-# param should have stabilizing_x
 function solve!(env::BendersSeqInOut)
     param = env.param
     log = BendersSeqLog()
@@ -30,7 +104,6 @@ function solve!(env::BendersSeqInOut)
         stabilizing_x = param.stabilizing_x
         α = param.α
         λ = param.λ
-        # relax_integrality(env.master.model)
         kelley_mode = false
         
         while true
@@ -46,9 +119,8 @@ function solve!(env::BendersSeqInOut)
                         state.values[:t] = value.(env.master.t)
                     elseif termination_status(env.master.model) == TIME_LIMIT
                         throw(TimeLimitException("Time limit reached during master solving"))
-                    else 
+                    else
                         throw(ErrorException("master termination status: $(termination_status(env.master.model))"))
-                        # if infeasible, then the milp is infeasible
                     end
                 end
                 
@@ -58,7 +130,7 @@ function solve!(env::BendersSeqInOut)
 
                 # Execute oracle
                 state.oracle_time = @elapsed begin
-                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, intermediate_x, state.values[:t]; time_limit = get_sec_remaining(log, param)) # only modify the knapsack cut and classical cut
+                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, intermediate_x, state.values[:t]; time_limit = get_sec_remaining(log, param))
 
                     if kelley_mode 
                         if state.f_x != NaN
@@ -114,5 +186,4 @@ function solve!(env::BendersSeqInOut)
         end
         return to_dataframe(log)
     end
-    # even if it terminates in the middle due to time limit, should be able to access the latest x_value via env.iterations[end].x_value
 end
