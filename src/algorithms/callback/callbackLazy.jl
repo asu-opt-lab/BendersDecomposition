@@ -57,7 +57,8 @@ function lazy_callback(cb_data, master_model::Model, log::BendersBnBLog, param::
             state.num_cuts += length(hyperplanes)
         end
         if typeof(callback.oracle) == DualDecomposition
-            println("t:$(state.values[:t][1]),f_dual:$(callback.oracle.oracle_log.fin_LB_set[end]), f_opt:$(state.f_x), lazy_time:$(state.oracle_time)")
+            println("t:$(state.values[:t][1]),f_dual:$(callback.oracle.oracle_log.dual_obj), f_opt:$(state.f_x), vogel:$(callback.oracle.oracle_param.obj_limit), vogel_time:$(callback.oracle.oracle_log.vogel_time), lazy_time:$(state.oracle_time)")
+            !isnan(state.f_x[1]) && @assert callback.oracle.oracle_param.obj_limit >= state.f_x[1] "vogel is smaller"
         else
             println("lazy_time:$(state.oracle_time)")
         end

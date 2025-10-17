@@ -71,7 +71,7 @@ function solve!(env::BendersSeqInOut)
                     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
                 end
                 if typeof(env.oracle) == DualDecomposition
-                    println("t:$(state.values[:t][1]),f_dual:$(env.oracle.oracle_log.fin_LB_set[end]), f_opt:$(state.f_x), vogel:$(env.oracle.oracle_param.obj_limit), vogel_time:$(env.oracle.oracle_log.vogel_time), seq_time:$(state.oracle_time)")
+                    println("t:$(state.values[:t][1]),f_dual:$(env.oracle.oracle_log.dual_obj), f_opt:$(state.f_x), vogel:$(env.oracle.oracle_param.obj_limit), vogel_time:$(env.oracle.oracle_log.vogel_time), seq_time:$(state.oracle_time)")
                     !isnan(state.f_x[1]) && @assert env.oracle.oracle_param.obj_limit >= state.f_x[1] "vogel is smaller"
                 end
             
