@@ -62,31 +62,34 @@ end
 # update order: y → λ (uniform distribution)
 function generate_cuts(oracle::DualDecomposition, x::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     println("DualDecomposition")
+    s_0 = time()
     data = oracle.data; param = oracle.oracle_param; log = oracle.oracle_log; typical_oracle = oracle.typical_oracle
 
     log.vogel_time = @elapsed param.obj_limit = UB_approximation(data, x)
 
     # Just for comparison with optimal info
-    _, _, f_x = generate_cuts(typical_oracle, x, t_value)
-    opt_y = value.(typical_oracle.model[:y]); opt_λ = dual.(typical_oracle.model[:capacity]); @debug opt_λ, f_x
+    # _, _, f_x = generate_cuts(typical_oracle, x, t_value)
+    # opt_y = value.(typical_oracle.model[:y]); opt_λ = dual.(typical_oracle.model[:capacity]); @debug opt_λ, f_x
 
     # call necessary parameters
     y_k =log.pri_var; λ_k = log.dual_var[:λ]; halving_value = copy(param.halving_value); α = copy(param.step_size)
     d = data.problem.demands; u= data.problem.capacities; c = data.problem.costs .* d'
 
     iter, γ = 1, 0; y_time =0; res_time = 0; λ_time = 0; y_dual_time = 0; residual = Vector{Float64}(undef, length(u))
-    while α >= param.stepsize_bound
+    println("before UB_approx: $(time() - s_0)")
+    # while α >= param.stepsize_bound
+    while iter <= 100
         # Update y, compute residual and LB
         s1 = time()
         y_k, _, _, _, _ = update_y(y_k, λ_k, c, d, x)
-        y_time = (time() -s1)
+        y_time += (time() -s1)
 
         s2 = time()
         @threads for i in eachindex(u)
             residual[i] = dot(d, @view y_k[i, :]) - u[i] * x[i]
         end
         z_lb = sum(c .* y_k) + λ_k' * residual
-        res_time = (time() - s2)
+        res_time += (time() - s2)
 
         # Update step size
         α = halving_value * abs(param.obj_limit - z_lb)/norm(residual)^2 # Polyak's stepsize
@@ -94,7 +97,7 @@ function generate_cuts(oracle::DualDecomposition, x::Vector{Float64}, t_value::V
         # Update dual value
         s3 = time()
         λ_k = update_λ(λ_k, y_k, u, d, x, α)
-        λ_time = (time() - s3)
+        λ_time += (time() - s3)
 
         # Update halving parameter
         γ += 1
@@ -102,30 +105,34 @@ function generate_cuts(oracle::DualDecomposition, x::Vector{Float64}, t_value::V
 
         iter += 1
     end
-    @info iter
+    println("iter: $iter, α: $α")
     s4 = time()
     y_k, sorted_indices, c_sorted, _, critical_facility_indices = update_y(y_k, λ_k, c, d, x)
     retrieve_dual_values(log, d, sorted_indices, c_sorted, critical_facility_indices)
     y_dual_time = (time() - s4)
     println("y_time: $y_time, res_time: $res_time, λ_time: $λ_time, y_dual_time: $y_dual_time")
     
+    s5 = time()
     feasibility = ((log.dual_var[:σ]') .- log.dual_var[:δ] .- (log.dual_var[:λ] * d')) .<= c .+ 1e-9
     @assert all(feasibility) "Dual feasibility violated"
 
-    dual_obj = sum(log.dual_var[:σ]) - dot(x, vec(sum(log.dual_var[:δ],dims = 2))) - dot(log.dual_var[:λ], u.*x)
-
-    @assert dual_obj <= f_x[1] + 1e-3 "dual($dual_obj) > f^*($(f_x[1]))"
-    log.dual_obj = dual_obj
-    if dual_obj >= t_value[1]* (1 + 1e-9) + 1e-6/tol_normalize
+    log.dual_obj = sum(log.dual_var[:σ]) - dot(x, vec(sum(log.dual_var[:δ],dims = 2))) - dot(log.dual_var[:λ], u.*x)
+    println("s5 time: $(time() - s5)")
+    # @assert log.dual_obj <= f_x[1] + 1e-3 "dual($(log.dual_obj)) > f^*($(f_x[1]))"
+    if log.dual_obj >= t_value[1]* (1 + 1e-9) + 1e-6/tol_normalize
+        s6 = time()
         a_x = -log.dual_var[:λ].*u .- [sum(log.dual_var[:δ][i,:]) for i in eachindex(u)]
         a_t = [-1.0]
         a_0 = sum(log.dual_var[:σ]) 
-        # return false, [Hyperplane(a_x, a_t, a_0)], [NaN]
-        return false, [Hyperplane(a_x, a_t, a_0)], f_x
+        println("s6 time: $(time() - s6)")
+        return false, [Hyperplane(a_x, a_t, a_0)], [NaN]
+        # return false, [Hyperplane(a_x, a_t, a_0)], f_x
     else
+        s7 = time()
         typical_oracle.oracle_param.dual_value[:λ] = -λ_k; typical_oracle.oracle_param.dual_value[:δ] = log.dual_var[:δ]; typical_oracle.oracle_param.dual_value[:σ] = log.dual_var[:σ]
         is_in_L, hyperplanes, f_x = generate_cuts(typical_oracle, x, t_value; time_limit = time_limit)
-        println("DD_dual_obj ≤ t")
+        println("ExactSolver")
+        println("s7 time: $(time() - s7)")
         return is_in_L, hyperplanes, f_x
     end
 end
@@ -135,44 +142,41 @@ end
 #     data = oracle.data; param = oracle.oracle_param; log = oracle.oracle_log; typical_oracle = oracle.typical_oracle
 
 #     # call necessary parameters
-#     y_k =log.pri_var; λ_k = log.dual_var[:λ]
+#     y_k =log.pri_var; λ_k = log.dual_var[:λ]; α = copy(param.stepsize)
 #     d = data.problem.demands; u= data.problem.capacities; c = data.problem.costs .* d'
 
 #     iter = 1; y_time =0; λ_time = 0; y_dual_time = 0
-#     while true
+#     # while true
+#     while iter <= 100
 #         # Update y, compute residual and LB
 #         s1 = time()
 #         y_k, _, _, _, _ = update_y(y_k, λ_k, c, d, x)
 #         y_time += (time() - s1)
 
 #         # Update step size
-#         # α = param.stepsize_constant/sqrt(iter)
-#         α = param.stepsize_constant/iter^0.25
+#         α = param.stepsize_constant/iter
 
 #         # Update dual value
 #         s2 = time()
 #         λ_k = update_λ(λ_k, y_k, u, d, x, α)
 #         λ_time += (time() - s2)
 
-#         # Store necessary results
-#         # push!(log.α_set, α); # push!(log.λ_k_diff_set, norm(opt_λ .+ λ_k))
-
 #         # Termination
-#         α < param.stepsize_bound && break
+#         # α < param.stepsize_bound && break
 #         iter +=1
 #     end
-#     @info iter
+#     println("iter: $iter, α: $α")
 #     s3 = time()
 #     y_k, sorted_indices, c_sorted, _, critical_facility_indices = update_y(y_k, λ_k, c, d, x)
 #     retrieve_dual_values(log, d, sorted_indices, c_sorted, critical_facility_indices)
 #     y_dual_time += (time() - s3)
+#     println("y_time: $y_time, λ_time: $λ_time, y_dual_time: $y_dual_time")
     
 #     feasibility = ((log.dual_var[:σ]') .- log.dual_var[:δ] .- (log.dual_var[:λ] * d')) .<= c .+ 1e-9
 #     @assert all(feasibility) "Dual feasibility violated"
     
 #     dual_obj = sum(log.dual_var[:σ]) - dot(x, vec(sum(log.dual_var[:δ],dims = 2))) - dot(log.dual_var[:λ], u.*x)
 
-#     println("y_time: $y_time, λ_time: $λ_time, y_dual_time: $y_dual_time")
 #     log.dual_obj = dual_obj
 #     if dual_obj >= t_value[1]* (1 + 1e-6) + 1e-6/tol_normalize
 #         a_x = -log.dual_var[:λ].*u .- [sum(log.dual_var[:δ][i,:]) for i in eachindex(u)]
@@ -181,7 +185,7 @@ end
 #         return false, [Hyperplane(a_x, a_t, a_0)], [NaN]
 #     else
 #         is_in_L, hyperplanes, f_x = generate_cuts(typical_oracle, x, t_value; time_limit = time_limit)
-#         println("DD_dual_obj ≤ t")
+#         println("ExactSolver")
 #         return is_in_L, hyperplanes, f_x
 #     end
 # end
