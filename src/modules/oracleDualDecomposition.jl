@@ -129,7 +129,6 @@ function generate_cuts(oracle::DualDecomposition, x::Vector{Float64}, t_value::V
         # return false, [Hyperplane(a_x, a_t, a_0)], f_x
     else
         s7 = time()
-        typical_oracle.oracle_param.dual_value[:λ] = -λ_k; typical_oracle.oracle_param.dual_value[:δ] = log.dual_var[:δ]; typical_oracle.oracle_param.dual_value[:σ] = log.dual_var[:σ]
         is_in_L, hyperplanes, f_x = generate_cuts(typical_oracle, x, t_value; time_limit = time_limit)
         println("ExactSolver")
         println("s7 time: $(time() - s7)")
