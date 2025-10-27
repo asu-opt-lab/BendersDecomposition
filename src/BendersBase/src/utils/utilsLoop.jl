@@ -1,4 +1,4 @@
-export get_sec_remaining
+export get_sec_remaining, record_iteration!, update_upper_bound_and_gap!, is_terminated, check_lb_improvement!, print_iteration_info, to_dataframe
 
 """
 Abstract type representing the state of an algorithm at a given iteration.

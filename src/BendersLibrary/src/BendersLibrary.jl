@@ -8,7 +8,7 @@ using CPLEX
 using Printf
 using SparseArrays
 
-import BendersBase: solve!, generate_cuts
+import BendersBase: solve!, generate_cuts, update_upper_bound_and_gap!, is_terminated, print_iteration_info, set_parameter!
 
 include("types.jl")
 include("utils/utils.jl")

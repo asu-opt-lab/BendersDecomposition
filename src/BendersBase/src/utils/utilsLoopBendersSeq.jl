@@ -1,4 +1,6 @@
-export BendersSeqParam 
+export BendersSeqParam
+# Note: update_upper_bound_and_gap!, print_iteration_info, and is_terminated
+# are already exported in utilsLoop.jl and are implemented here for BendersSeqState/Log 
 
 abstract type AbstractBendersSeqState <: AbstractLoopState end
 abstract type AbstractBendersSeqLog <: AbstractLoopLog end
