@@ -9,12 +9,9 @@ end
 mutable struct CFLKnapsackOracleParam <: AbstractOracleParam
     atol::Float64
     rtol::Float64
-    dual_value::Dict{Symbol, Array{Float64}}
 
-    function CFLKnapsackOracleParam(data; atol = 1e-9, rtol = 1e-9)
-        m = data.dim_x; n = data.problem.n_customers
-        dual_value = Dict(:λ => zeros(m), :σ => zeros(n), :δ => zeros(Float64, m, n))
-        new(atol, rtol, dual_value)
+    function CFLKnapsackOracleParam(;atol = 1e-9, rtol = 1e-9)
+        new(atol, rtol)
     end
 end
 
@@ -28,7 +25,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     function CFLKnapsackOracle(data::Data; 
                                scen_idx=-1, 
                                solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                               oracle_param::CFLKnapsackOracleParam = CFLKnapsackOracleParam(data))
+                               oracle_param::CFLKnapsackOracleParam = CFLKnapsackOracleParam())
         @debug "Building classical oracle"
         model = Model()
 
