@@ -1,5 +1,6 @@
 export update_model!
-function update_model!(mip::AbstractMip, data::Data)
+function update_model!(mip::AbstractMip, data::Data{<:CFLPData})
+
     x = mip.model[:x]
     model = mip.model
     
@@ -19,14 +20,14 @@ function update_model!(mip::AbstractMip, data::Data)
 end
 
 
-function update_model!(master::AbstractMaster, data::Data)
+function update_model!(master::AbstractMaster, data::Data{<:CFLPData})
     x = master.x
 
     I = data.problem.n_facilities
     @constraint(master.model, capacity, sum(data.problem.capacities[i] * x[i] for i in 1:I) >= sum(data.problem.demands))
 end
 
-function update_model!(oracle::AbstractTypicalOracle, data::Data)
+function update_model!(oracle::AbstractTypicalOracle, data::Data{<:CFLPData})
     model = oracle.model
     x = oracle.model[:x]
 
@@ -41,7 +42,7 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data)
     @constraint(model, capacity[i in 1:I], sum(data.problem.demands[:] .* y[i,:]) <= data.problem.capacities[i] * x[i])
 end
 
-function update_model!(oracle::DisjunctiveOracle, data::Data)
+function update_model!(oracle::DisjunctiveOracle, data::Data{<:CFLPData})
     dcglp = oracle.dcglp 
 
     @constraint(dcglp, [i=1:2], sum(data.problem.capacities[j] * dcglp[:omega_x][i,j] for j in 1:data.problem.n_facilities) >= sum(data.problem.demands) * dcglp[:omega_0][i])

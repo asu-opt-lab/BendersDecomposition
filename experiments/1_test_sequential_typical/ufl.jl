@@ -1,6 +1,6 @@
-include("$(dirname(dirname(@__DIR__)))/example/uflp/data_reader.jl")
-include("$(dirname(dirname(@__DIR__)))/example/uflp/oracle.jl")
-include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
+using BendersDecomposition
+using Test
+using JuMP
 
 @testset verbose = true "UFLP Sequential Benders Tests" begin
     instances = setdiff(1:71, [67])
@@ -14,7 +14,7 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
             dim_x = problem.n_facilities
             c_x = problem.fixed_costs
             dim_t = 1 # classical cut
-            c_t = [1]
+            c_t = [1.0]
             
             data = Data(dim_x, dim_t, problem, c_x, c_t)
             @assert dim_x == length(data.c_x)
@@ -62,6 +62,7 @@ include("$(dirname(dirname(@__DIR__)))/example/uflp/model.jl")
             data = Data(dim_x, dim_t, problem, c_x, c_t)
             @assert dim_x == length(data.c_x)
             @assert dim_t == length(data.c_t)
+
 
             @testset "fat knapsack oracle" begin
                 @info "solving UFLP p$i - fat Knapsack oracle - seq..."

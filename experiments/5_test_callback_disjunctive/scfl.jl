@@ -1,6 +1,6 @@
-include("$(dirname(dirname(@__DIR__)))/example/scflp/data_reader.jl")
-include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
-include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
+using BendersDecomposition
+using Test
+using JuMP
 
 @testset verbose = true "SCFLP Callback Disjunctive Benders Tests" begin
     # Specify instances to test

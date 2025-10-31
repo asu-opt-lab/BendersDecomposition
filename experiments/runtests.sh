@@ -12,11 +12,11 @@ mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${JOBSCRIPT_DIR}"
 
 instances=(
-    # "1_test_sequential_typical"
-    # "2_test_sequential_in_out_typical"
+    "1_test_sequential_typical"
+    "2_test_sequential_in_out_typical"
     "3_test_sequential_disjunctive"
-    # "4_test_callback_typical"
-    # "5_test_callback_disjunctive"
+    "4_test_callback_typical"
+    "5_test_callback_disjunctive"
 )
 
 # Loop through the instances and create a job script for each

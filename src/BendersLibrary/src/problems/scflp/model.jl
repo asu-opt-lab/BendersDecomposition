@@ -1,5 +1,5 @@
 export update_model!
-function update_model!(mip::AbstractMip, data::Data)
+function update_model!(mip::AbstractMip, data::Data{<:SCFLPData})
     x = mip.model[:x]
     model = mip.model
     
@@ -20,7 +20,7 @@ function update_model!(mip::AbstractMip, data::Data)
     @constraint(model, capacity[i in 1:I, s in 1:N], sum(data.problem.demands[s][j] * y[i,j,s] for j in 1:J) <= data.problem.capacities[i] * x[i])
 end
 
-function update_model!(master::AbstractMaster, data::Data)
+function update_model!(master::AbstractMaster, data::Data{<:SCFLPData})
     x = master.x
 
     I = data.problem.n_facilities
@@ -28,7 +28,7 @@ function update_model!(master::AbstractMaster, data::Data)
     @constraint(master.model, capacity, sum(data.problem.capacities[i] * x[i] for i in 1:I) >= max_demand)
 end
 
-function update_model!(oracle::AbstractTypicalOracle, data::Data, scen_idx::Int)
+function update_model!(oracle::AbstractTypicalOracle, data::Data{<:SCFLPData}, scen_idx::Int)
     model = oracle.model
     x = oracle.model[:x]
 
@@ -43,7 +43,7 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data, scen_idx::Int)
     @constraint(model, capacity[i in 1:I], sum(data.problem.demands[scen_idx][:] .* y[i,:]) <= data.problem.capacities[i] * x[i])
 end
 
-function update_model!(oracle::DisjunctiveOracle, data::Data)
+function update_model!(oracle::DisjunctiveOracle, data::Data{<:SCFLPData})
     dcglp = oracle.dcglp 
 
     I = data.problem.n_facilities

@@ -30,7 +30,7 @@ export AbstractBendersSeqState, AbstractBendersSeqLog, AbstractBendersSeqParam
 export AbstractBendersBnBState, AbstractBendersBnBLog, AbstractBendersBnBParam
 export BendersSeqState, BendersSeqLog, BendersSeqParam
 export BendersBnBState, BendersBnBLog, BendersBnBParam
-export Hyperplane, aggregate, generate_cuts, set_parameter!, hyperplanes_to_expression
+export Hyperplane, aggregate, generate_cuts, set_parameter!, hyperplanes_to_expression, select_top_fraction, evaluate_violation, add_constraints
 export get_sec_remaining, record_iteration!, update_upper_bound_and_gap!, is_terminated, check_lb_improvement!, print_iteration_info, to_dataframe
 
 end # module BendersBase

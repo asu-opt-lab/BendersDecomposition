@@ -36,7 +36,7 @@ function create_node_mapping(D, A_minus_D, S)
     return node_mapping
 end
 
-function read_snip_data(instance_no::Int, snip_no::Int, budget::Float64; base_dir::String="example/snip/data/SNIP/")
+function read_snip_data(instance_no::Int, snip_no::Int, budget::Float64; base_dir::String=joinpath(@__DIR__, "data", "SNIP")::AbstractString)
     # Define file paths
     intd_arc = joinpath(base_dir, "intd_arc$(instance_no).txt")
     arcgain = joinpath(base_dir, "arcgain$(instance_no).txt")

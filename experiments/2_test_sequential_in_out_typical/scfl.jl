@@ -1,7 +1,6 @@
-# to be overwritten, they should be included outside testset
-include("$(dirname(dirname(@__DIR__)))/example/scflp/data_reader.jl")
-include("$(dirname(dirname(@__DIR__)))/example/cflp/oracle.jl")
-include("$(dirname(dirname(@__DIR__)))/example/scflp/model.jl")
+using BendersDecomposition
+using Test
+using JuMP
 
 @testset verbose = true "Stochastic CFLP Sequential In/Out Benders Tests" begin
     # instances = setdiff(1:71, [67])

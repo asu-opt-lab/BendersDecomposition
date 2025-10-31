@@ -11,7 +11,7 @@ struct MCNDPData <: AbstractData
     demands::Vector{Tuple{Int,Int,Float64}} # Demands (origin, destination, quantity)
 end
 
-function read_mcndp_instance(filename::String;filepath="example/mcndp/data/NDR/"::AbstractString)
+function read_mcndp_instance(filename::String;filepath=joinpath(@__DIR__, "data", "NDR")::AbstractString)
     fullpath = joinpath(filepath, filename)
     open(fullpath, "r") do f
         # Skip the filename line

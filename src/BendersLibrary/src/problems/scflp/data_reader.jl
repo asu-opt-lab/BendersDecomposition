@@ -11,7 +11,7 @@ struct SCFLPData <: AbstractData
     costs::Matrix{Float64}
 end
 
-function read_stochastic_capacited_facility_location_problem(filename::String;filepath="example/scflp/data/SCFLP/"::AbstractString)
+function read_stochastic_capacited_facility_location_problem(filename::String;filepath=joinpath(@__DIR__, "data", "SCFLP")::AbstractString)
     fullpath = joinpath(filepath, join([filename, ".json"]))
     loaded_json = open(fullpath, "r") do file
         read(file, String)

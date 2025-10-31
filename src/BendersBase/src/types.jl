@@ -17,10 +17,10 @@ abstract type AbstractOracleParam end
 # To-Do: think about the type for `problem`. Should we remove `AbstractData`?
 # ============================================================================
 abstract type AbstractData end
-struct Data
+struct Data{T<:AbstractData}
     dim_x::Int
     dim_t::Int
-    problem::AbstractData
+    problem::T
     c_x::Vector{Float64}
     c_t::Vector{Float64}
 end

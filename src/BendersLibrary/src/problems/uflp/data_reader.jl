@@ -8,7 +8,7 @@ struct UFLPData <: AbstractData
     costs::Matrix{Float64}
 end
 
-function read_uflp_benchmark_data(filename::AbstractString;filepath="example/uflp/data/locssall/"::AbstractString)
+function read_uflp_benchmark_data(filename::AbstractString;filepath=joinpath(@__DIR__, "data", "locssall")::AbstractString)
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
 
@@ -60,7 +60,7 @@ function read_uflp_benchmark_data(filename::AbstractString;filepath="example/ufl
     return UFLPData(n_facilities, n_customers, demands, fixed_costs, costs)
 end
 
-function read_Simple_data(filename::AbstractString;filepath="example/uflp/data/AllKoerkelGhosh"::AbstractString)
+function read_Simple_data(filename::AbstractString;filepath=joinpath(@__DIR__, "data", "AllKoerkelGhosh")::AbstractString)
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
 

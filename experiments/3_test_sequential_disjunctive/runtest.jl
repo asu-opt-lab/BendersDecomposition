@@ -24,14 +24,9 @@
 # 2. DisjunctiveOracle: Setting zero_tol in solve_dcglp! large (e.g., 1e-4) results in disjunctive Benders with reuse_dcglp = true terminating with incorrect solution --> set it tightly as 1e-9
 # 3. DisjunctiveOracle: solve_dcglp! becomes stall since the true violation should be multipled with omega_value[:z], which can be fairly small --> terminate dcglp when LB does not improve for a certain number of iterations
 # 4. DisjunctiveOracle: the fat-knapsack-based disjunctive cut may have a sparse gamma_t, so adding only disjunctive cut does not improve lower bound, add_benders_cuts_to_master should be set at true
+using BendersDecomposition
 using Test
 using JuMP
-using CPLEX
-using Printf
-using DataFrames
-using Logging
-using BendersDecomposition
-import BendersDecomposition: generate_cuts
 
 
 @testset "Sequential Disjunctive Tests" begin
