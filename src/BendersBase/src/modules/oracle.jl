@@ -13,7 +13,7 @@ valid inequalities.
 Arguments:
 - `x_value`: Given `x` solution.
 - `t_value`: Given `t` solution.
-- `tol_normalize`: Normalization tolerance for cut generation (default: 1.0).
+- `tol_normalize`: Factor used to normalize the tolerance for cut generation (default: 1.0). This parameter is used only in the DCGLP procedure, and users typically do not need to modify it.
 - `time_limit`: Maximum time allowed for the oracle call (default: 3600 seconds).
 
 Returns (to be implemented by concrete oracles):
@@ -32,6 +32,10 @@ end
 """
 Basic parameter structure for oracles. Users can define oracle-specific parameter structures as subtypes of AbstractOracleParam. 
 If the oracle has no specific parameter fields, use BasicOracleParam.
+- `rtol` and `atol` determine the threshold for identifying a violation. Specifically, a violation is detected when
+`sub_obj_val` >= `t_value` * (1 + `rtol`) + `atol`
+in the finite-optimal subproblem case.
+- `zero_tol` specifies the threshold below which a value is considered zero.
 """
 struct BasicOracleParam <: AbstractOracleParam
     rtol::Float64

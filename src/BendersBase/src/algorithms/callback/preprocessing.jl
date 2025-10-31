@@ -21,8 +21,8 @@ Used to generate initial cuts before the branch-and-bound procedure begins.
 
 # Fields
 - `oracle::AbstractOracle`: Oracle used to generate Benders cuts
-- `seq_type::Type{<:AbstractBendersSeq}`: Type of Benders sequence to use
-- `params::AbstractBendersSeqParam`: Parameters for the Benders sequence
+- `seq_type::Type{<:AbstractBendersSeq}`: Type of BendersSeq to use
+- `params::AbstractBendersSeqParam`: Parameters for the BendersSeq
 """
 mutable struct RootNodePreprocessing <: AbstractRootNodePreprocessing
     oracle::AbstractOracle

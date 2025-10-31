@@ -18,7 +18,7 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
                             oracle_param::SeparableOracleParam = SeparableOracleParam()) where {T<:AbstractTypicalOracle}
         @debug "Building classical separable oracle"
         # assume each oracle is associated with a single t, that is dim_t = N
-        oracles = typeof(sub_oracle_param) != BasicOracleParam ? [T(data, scen_idx=j, solver_param = solver_param, oracle_param = sub_oracle_param) for j=1:N] : [T(data, scen_idx=j, solver_param = solver_param) for j=1:N]
+        oracles = [T(data, scen_idx=j, solver_param = solver_param, oracle_param = sub_oracle_param) for j=1:N] 
 
         new(oracle_param, oracles, N)
     end

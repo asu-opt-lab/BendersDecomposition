@@ -14,7 +14,6 @@ abstract type AbstractOracleParam end
 
 # ============================================================================
 # Global data type; Problem Data is optional; user can define their own structure for problem-specific data
-# To-Do: think about the type for `problem`. Should we remove `AbstractData`?
 # ============================================================================
 abstract type AbstractData end
 struct Data{T<:AbstractData}

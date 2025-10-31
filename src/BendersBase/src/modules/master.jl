@@ -8,7 +8,7 @@ A mutable struct representing the master problem in Benders decomposition.
 # Fields
 - `model::Model`: The underlying JuMP optimization model
 - `x::Vector{VariableRef}`: Binary first-stage decision variables
-- `t::Vector{VariableRef}`: Continuous second-stage approximation variables
+- `t::Vector{VariableRef}`: Auxiliary variables for epigraph constraints
 """
 mutable struct Master <: AbstractMaster
     model::Model
