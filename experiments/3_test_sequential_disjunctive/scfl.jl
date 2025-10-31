@@ -51,9 +51,9 @@ using JuMP
             @testset "Classic oracle" begin
                 @testset "Seq" begin        
                     # for strengthened in [true; false], add_benders_cuts_to_master in [true; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]   
-                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [true]    
-                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
-                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
+                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
+                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
 
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
@@ -77,8 +77,7 @@ using JuMP
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 1.0, 
-                                                                    reuse_dcglp=reuse_dcglp,
-                                                                    adjust_t_to_fx = adjust_t_to_fx)
+                                                                    reuse_dcglp=reuse_dcglp)
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
 
@@ -121,9 +120,9 @@ using JuMP
             @testset "Knapsack oracle" begin
                 @testset "Seq" begin        
                     # for strengthened in [true; false], add_benders_cuts_to_master in [true; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
-                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [true]    
-                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/knapsack - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
-                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
+                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/knapsack - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
+                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
 
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
@@ -147,8 +146,7 @@ using JuMP
                                                                     strengthened=strengthened, 
                                                                     add_benders_cuts_to_master=add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 1.0, 
-                                                                    reuse_dcglp=reuse_dcglp,
-                                                                    adjust_t_to_fx = adjust_t_to_fx)
+                                                                    reuse_dcglp=reuse_dcglp)
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
 

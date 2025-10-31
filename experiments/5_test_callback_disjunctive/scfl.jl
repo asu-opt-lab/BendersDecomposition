@@ -78,9 +78,9 @@ using JuMP
                     #     p in [1.0, Inf], 
                     #     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()],
                     #     adjust_t_to_fx in [true; false]
-                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], lift in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [true]
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], lift in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                         
-                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule;  adjust_t_to_fx $adjust_t_to_fx" begin
+                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule" begin
                             disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                                 solver_param = dcglp_solver_param,
                                 param = dcglp_param
@@ -95,14 +95,13 @@ using JuMP
                                 add_benders_cuts_to_master = add_benders_cuts_to_master, 
                                 fraction_of_benders_cuts_to_master = 0.5, 
                                 reuse_dcglp = reuse_dcglp,
-                                lift = lift,
-                                adjust_t_to_fx = adjust_t_to_fx
+                                lift = lift
                             )
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
                             
                             @testset "NoSeq" begin
-                                @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                                @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                                 master = Master(data; solver_param = master_solver_param)
                                 update_model!(master, data)
                                 root_preprocessing = NoRootNodePreprocessing()
@@ -114,7 +113,7 @@ using JuMP
                                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             end
                             @testset "Seq" begin
-                                @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                                @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                                 master = Master(data; solver_param = master_solver_param)
                                 update_model!(master, data)
                                 root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-6, verbose=false))
@@ -126,7 +125,7 @@ using JuMP
                                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             end
                             @testset "SeqInOut" begin
-                                @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                                @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                                 master = Master(data; solver_param = master_solver_param)
                                 update_model!(master, data)
                                 root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = false))
@@ -166,9 +165,9 @@ using JuMP
                 #     p in [1.0, Inf],
                 #     disjunctive_cut_append_rule in [NoDisjunctiveCuts(), AllDisjunctiveCuts(), DisjunctiveCutsSmallerIndices()],
                 #     adjust_t_to_fx in [true; false]
-                for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], lift in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()], adjust_t_to_fx in [true]
+                for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], lift in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
 
-                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx" begin
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule" begin
                         
                         disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
                             solver_param = dcglp_solver_param,
@@ -184,14 +183,13 @@ using JuMP
                             add_benders_cuts_to_master = add_benders_cuts_to_master,
                             fraction_of_benders_cuts_to_master = 0.5,
                             reuse_dcglp = reuse_dcglp,
-                            lift = lift,
-                            adjust_t_to_fx = adjust_t_to_fx
+                            lift = lift
                         )
                         set_parameter!(disjunctive_oracle, oracle_param)
                         update_model!(disjunctive_oracle, data)
 
                         @testset "NoSeq" begin
-                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/CFLKnapsack/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/CFLKnapsack/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = NoRootNodePreprocessing()
@@ -203,7 +201,7 @@ using JuMP
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                         end
                         @testset "Seq" begin
-                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/CFLKnapsack/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/CFLKnapsack/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-6, verbose=false))
@@ -215,7 +213,7 @@ using JuMP
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                         end
                         @testset "SeqInOut" begin
-                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/CFLKnapsack/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule adjust_t_to_fx $adjust_t_to_fx"
+                            @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/CFLKnapsack/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-6, stabilizing_x = ones(data.dim_x), α = 0.9, λ = 0.1, verbose = false))
