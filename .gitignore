@@ -1,6 +1,5 @@
 Manifest.toml
 .vscode/
 **/.DS_Store
-experiments/
 job_scripts/
 test/results/
