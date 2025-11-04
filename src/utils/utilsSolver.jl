@@ -13,6 +13,8 @@ function assign_attributes!(model::Model, config::Dict{String,Any})
         set_optimizer(model, () -> Gurobi.Optimizer(GRB_ENV[]))
     elseif config["solver"] == "CPLEX"
         set_optimizer(model, CPLEX.Optimizer)
+    elseif config["solver"] == "OSQP"
+        set_optimizer(model, OSQP.Optimizer)
     else
         error("Unsupported solver: $(config["solver"])")
     end
