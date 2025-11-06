@@ -1,3 +1,4 @@
+export SNIPData, read_snip_data
 using JSON
 
 struct SNIPData <: AbstractData
