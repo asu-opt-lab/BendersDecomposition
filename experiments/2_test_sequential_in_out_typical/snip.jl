@@ -4,33 +4,35 @@ using JuMP
 @testset verbose = true "SNIP Sequential Benders Tests" begin
     for instance in [0], snipno in [0], budget in [30.0]
         @testset "instance $instance; snipno $snipno budget $budget" begin
-            # Load problem data if necessary
+            # Load problem data
             problem = read_snip_data(instance, snipno, budget)
 
-            # initialize dim_x, dim_t, c_x, c_t
+            # Initialize data object
             dim_x = length(problem.D)
             dim_t = problem.num_scenarios
             c_x = zeros(dim_x)
             c_t = map(p -> p[3], problem.scenarios)
+            
             data = Data(dim_x, dim_t, problem, c_x, c_t)
             @assert dim_x == length(data.c_x)
             @assert dim_t == length(data.c_t)
 
-            # loop parameters
+            # Loop parameters
             benders_inout_param = BendersSeqInOutParam(;
-                time_limit = 200.0,
-                gap_tolerance = 1e-6,
-                verbose = false,
-                stabilizing_x = ones(data.dim_x),
-                α = 0.9,
-                λ = 0.1
-            )
-            # solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, "CPX_PARAM_SCRIND" => 0)
-            master_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, "CPX_PARAM_SCRIND" => 0)
-            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_SCRIND" => 0)
+                            time_limit = 200.0,
+                            gap_tolerance = 1e-6,
+                            verbose = false,
+                            stabilizing_x = ones(data.dim_x),
+                            α = 0.9,
+                            λ = 0.1
+                        )
+            
+            # Solver parameters
+            mip_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6)
+            master_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1)
 
-            # solve mip for reference
+            # Solve MIP for reference
             mip = Mip(data)
             assign_attributes!(mip.model, mip_solver_param)
             update_model!(mip, data)

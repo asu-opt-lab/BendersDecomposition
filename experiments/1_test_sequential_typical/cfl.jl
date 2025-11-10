@@ -1,36 +1,38 @@
 using BendersDecomposition
 using Test
 using JuMP
+
 @testset verbose = true "CFLP Sequential Benders Tests" begin
     instances = setdiff(1:71, [67])
 
     for i in instances
         @testset "Instance: p$i" begin
-            # Load problem data if necessary
+            # Load problem data
             problem = read_cflp_benchmark_data("p$i")
             
-            # initialize dim_x, dim_t, c_x, c_t
+            # Initialize data object
             dim_x = problem.n_facilities
             dim_t = 1
             c_x = problem.fixed_costs
             c_t = [1.0]
+            
             data = Data(dim_x, dim_t, problem, c_x, c_t)
             @assert dim_x == length(data.c_x)
             @assert dim_t == length(data.c_t)
 
-            # loop parameters
+            # Loop parameters
             benders_param = BendersSeqParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
                             verbose = false
                         )
 
-            # solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 4)
-            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
-            typical_oracal_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
+            # Solver parameters
+            mip_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6)
+            master_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1)
 
-            # solve mip for reference
+            # Solve MIP for reference
             mip = Mip(data)
             assign_attributes!(mip.model, mip_solver_param)
             update_model!(mip, data)
@@ -43,7 +45,7 @@ using JuMP
                 master = Master(data; solver_param = master_solver_param)
                 update_model!(master, data)
 
-                oracle = ClassicalOracle(data; solver_param = typical_oracal_solver_param)
+                oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
                 update_model!(oracle, data)
 
                 env = BendersSeq(data, master, oracle; param = benders_param)
@@ -57,7 +59,7 @@ using JuMP
                 master = Master(data; solver_param = master_solver_param)
                 update_model!(master, data)
 
-                oracle = CFLKnapsackOracle(data; solver_param = typical_oracal_solver_param)
+                oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
                 update_model!(oracle, data)
 
                 env = BendersSeq(data, master, oracle; param = benders_param)
