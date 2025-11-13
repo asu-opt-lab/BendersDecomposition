@@ -40,6 +40,25 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data)
     @constraint(model, capacity[i in 1:I], sum(data.problem.demands[:] .* y[i,:]) <= data.problem.capacities[i] * x[i])
 end
 
+# dual
+# function update_model!(oracle::AbstractTypicalOracle, data::Data)
+#     model = oracle.model
+
+#     I, J = data.problem.n_facilities, data.problem.n_customers
+#     @variable(model, p[1:J])
+#     @variable(model, s[1:I])
+#     @variable(model, d[1:I, 1:J] >= 0)
+#     @variable(model, l[1:I] >= 0)
+
+#     cost_demands = data.problem.costs .* data.problem.demands'
+
+#     # Set objective
+#     @objective(model, Max, sum(p) + sum(s))
+#     # Add constraints
+#     @constraint(model, [i in 1:I], sum(d[i,j] for j in J) + data.problem.capacities[i] * l[i] + s[i] == 0)
+#     @constraint(model, [i in 1:I, j in 1:J], p[j] + d[i,j] - l[i] * data.problem.demands[j] <= cost_demands[i,j])
+# end
+
 function update_model!(oracle::DisjunctiveOracle, data::Data)
     dcglp = oracle.dcglp 
 

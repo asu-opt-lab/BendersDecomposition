@@ -21,13 +21,14 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
                              solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
                              oracle_param::ClassicalOracleParam = ClassicalOracleParam())
         @debug "Building classical oracle"
-        model = Model()
+        model = Model(cuOpt.Optimizer)
+        # model = Model()
 
         # Define coupling variables and constraints
         @variable(model, x[1:data.dim_x])
         @constraint(model, fix_x, x .== 0)
 
-        assign_attributes!(model, solver_param)
+        # assign_attributes!(model, solver_param)
         
         new(oracle_param, model, fix_x)
     end

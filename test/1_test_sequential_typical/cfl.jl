@@ -6,14 +6,12 @@ using DataFrames, CSV, Random, Logging
 
 @testset verbose = true "CFLP Sequential Benders Tests" begin
     instances = setdiff(1:71, [67])
-    # instances = 30:30
-    dd_information = []
+    instances = 1:1
+
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
             problem = read_cflp_benchmark_data("p$i")
-
-            # problem = read_cfl_file("T1000x1000_5_1")
             
             # initialize dim_x, dim_t, c_x, c_t
             dim_x = problem.n_facilities
@@ -52,44 +50,63 @@ using DataFrames, CSV, Random, Logging
             @assert termination_status(mip.model) == OPTIMAL
             mip_opt_val = objective_value(mip.model)
 
-            @testset "Dual Decompostion" begin
-                @info "solving CFLP p$i - dual decomposition - seq..."
-                master = Master(data; solver_param = master_solver_param)
-                update_model!(master, data)
-
-                # Construct typical oracle and set parameters
-                classical_param = CFLKnapsackOracleParam(rtol = rtol, atol = atol)
-                typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
-                update_model!(typical_oracle, data)
-
-                # Construct dual decomposition (DD) oracle and set parameters
-                DD_param = DualDecompositionParam()
-                DD_log = DualDecompositionLog(data)
-                DD_oracle = DualDecomposition(data; typical_oracle = typical_oracle, oracle_param = DD_param, oracle_log = DD_log)
-
-                env = BendersSeq(data, master, DD_oracle; param = benders_param)
-                log = solve!(env)
-                @info DD_oracle.oracle_log.λ_k_diff_set
-                push!(dd_information, [sum(log.total_time), length(log.total_time)])
-                @test env.termination_status == Optimal()
-                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-            end 
-
-            # @testset "Classic oracle" begin
-            #     @info "solving CFLP p$i - classical oracle - seq..."
+            # @testset "Dual Decompostion" begin
+            #     @info "solving CFLP p$i - dual decomposition - seq..."
             #     master = Master(data; solver_param = master_solver_param)
             #     update_model!(master, data)
 
-            #     # Construct oracle and set parameters
-            #     classical_param = ClassicalOracleParam(rtol = rtol, atol = atol)
-            #     oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
-            #     update_model!(oracle, data)
+            #     # Construct typical oracle and set parameters
+            #     classical_param = CFLKnapsackOracleParam(rtol = rtol, atol = atol)
+            #     typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
+            #     update_model!(typical_oracle, data)
 
-            #     env = BendersSeq(data, master, oracle; param = benders_param)
+            #     # Construct dual decomposition (DD) oracle and set parameters
+            #     DD_param = DualDecompositionParam()
+            #     DD_log = DualDecompositionLog(data)
+            #     DD_oracle = DualDecomposition(data; typical_oracle = typical_oracle, oracle_param = DD_param, oracle_log = DD_log)
+
+            #     env = BendersSeq(data, master, DD_oracle; param = benders_param)
+            #     log = solve!(env)
+            #     @info DD_oracle.oracle_log.λ_k_diff_set
+            #     @test env.termination_status == Optimal()
+            #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            # end 
+
+            # @testset "Inexact method" begin
+            #     @info "solving CFLP p$i - inexact method - seq..."
+            #     master = Master(data; solver_param = master_solver_param)
+            #     update_model!(master, data)
+
+            #     # Construct typical oracle and set parameters
+            #     inexact_oracle_solver_param = Dict("solver" => "OSQP", "max_iter" => 10000, "verbose" => true)
+            #     typical_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
+            #     update_model!(typical_oracle, data)
+            #     assign_attributes!(typical_oracle.model, inexact_oracle_solver_param)
+
+            #     # Construct dual decomposition (DD) oracle and set parameters
+            #     inexact_oracle = InexactOracle(typical_oracle; solver_param = inexact_oracle_solver_param)
+
+            #     env = BendersSeq(data, master, inexact_oracle; param = benders_param)
             #     log = solve!(env)
             #     @test env.termination_status == Optimal()
             #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
             # end 
+
+            @testset "Classic oracle" begin
+                @info "solving CFLP p$i - classical oracle - seq..."
+                master = Master(data; solver_param = master_solver_param)
+                update_model!(master, data)
+
+                # Construct oracle and set parameters
+                classical_param = ClassicalOracleParam(rtol = rtol, atol = atol)
+                oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
+                update_model!(oracle, data)
+
+                env = BendersSeq(data, master, oracle; param = benders_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end 
 
             # @testset "Pareto oracle" begin
             #     @info "solving CFLP p$i - pareto oracle - seq..."
@@ -141,6 +158,4 @@ using DataFrames, CSV, Random, Logging
             # end
         end
     end
-    df = DataFrame(sum_time = [row[1] for row in dd_information], len_time = [row[2] for row in dd_information])
-    CSV.write("uniform_distribute.csv", df)
 end

@@ -72,3 +72,4 @@ include("oracleTypicalUnified.jl")
 include("oracleTypicalPareto.jl")
 
 include("oracleDualDecomposition.jl")
+include("oracleInexact.jl")

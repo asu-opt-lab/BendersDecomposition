@@ -31,10 +31,12 @@ SCS = "c946c3f1-0d1f-5ce8-9dea-7daa1f7e2d13"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+cuOpt = "29a73d17-8276-40b7-9ffb-d89e58023643"
 
 [compat]
 CSV = "0.10.15"
 Plots = "1.41.0"
+cuOpt = "0.1.1"
 julia = "1.10.4"
 
 [extras]

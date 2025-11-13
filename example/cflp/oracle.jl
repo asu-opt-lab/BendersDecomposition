@@ -18,6 +18,7 @@ end
 
 mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     oracle_param::CFLKnapsackOracleParam
+    solver_param::Dict{String,Any}
 
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
@@ -38,7 +39,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
 
         assign_attributes!(model, solver_param)
         
-        new(oracle_param, model, fix_x, facility_knapsack_info)
+        new(oracle_param, solver_param, model, fix_x, facility_knapsack_info)
     end
     
     CFLKnapsackOracle() = new()
@@ -46,19 +47,9 @@ end
 
 function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     s_time = time()
-    # set_optimizer(oracle.model, OSQP.Optimizer) # for OSQP
     set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     optimize!(oracle.model)
-
-    # for OSQP
-    # optimize!(oracle.model)
-    # if objective_value(oracle.model) < t_value[1]
-    #     println("obj of OSQP: $(objective_value(oracle.model)), t_value: $(t_value[1])")
-    #     set_optimizer(oracle.model, CPLEX.Optimizer)
-    #     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
-    #     optimize!(oracle.model)
-    # end
 
     if termination_status(oracle.model) == TIME_LIMIT
         throw(TimeLimitException("Time limit reached during cut generation"))
