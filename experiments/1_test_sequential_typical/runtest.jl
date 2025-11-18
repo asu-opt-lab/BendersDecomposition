@@ -2,8 +2,6 @@ using BendersDecomposition
 using Test
 using JuMP
 
-
-
 @testset "Sequential Typical Tests" begin
     @info "Running Sequential Typical Tests"
     include("ufl.jl")

@@ -3,23 +3,24 @@ using Test
 using JuMP
 
 @testset verbose = true "Stochastic CFLP Sequential Benders Tests" begin
-    # instances = setdiff(1:71, [67])
     instances = 1:5
+
     for i in instances
         @testset "Instance: f25-c50-s64-r10-$i" begin
-            # Load problem data if necessary
+            # Load problem data
             problem = read_stochastic_capacited_facility_location_problem("f25-c50-s64-r10-$i")
             
-            # initialize dim_x, dim_t, c_x, c_t
+            # Initialize data object
             dim_x = problem.n_facilities
             dim_t = problem.n_scenarios
             c_x = problem.fixed_costs
             c_t = fill(1/problem.n_scenarios, problem.n_scenarios)
+
             data = Data(dim_x, dim_t, problem, c_x, c_t)
             @assert dim_x == length(data.c_x)
             @assert dim_t == length(data.c_t)
 
-            # algorithm parameters
+            # Algorithm parameters
             benders_param = BendersSeqParam(;
                                             time_limit = 2000.0,
                                             gap_tolerance = 1e-6,
@@ -33,10 +34,10 @@ using JuMP
                                     verbose = false
                                     )
             # solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
-            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 4)
-            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
-            dcglp_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9)
+            mip_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6)
+            master_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1)
+            dcglp_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1)
 
             # solve mip for reference
             mip = Mip(data)
@@ -46,15 +47,13 @@ using JuMP
             @assert termination_status(mip.model) == OPTIMAL
             mip_opt_val = objective_value(mip.model)
 
-            @debug x_opt
-            @debug t_opt
             @testset "Classic oracle" begin
                 @testset "Seq" begin        
-                    # for strengthened in [true; false], add_benders_cuts_to_master in [true; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]   
-                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
-                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
-                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
-
+                    # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
+                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
+                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
+                            
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
                                      
@@ -66,6 +65,7 @@ using JuMP
                             for j=1:typical_oracle_nu.N
                                 update_model!(typical_oracle_nu.oracles[j], data, j)
                             end
+
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
 
                             disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
@@ -74,10 +74,11 @@ using JuMP
                             oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
                                                                     split_index_selection_rule = RandomFractional(),
                                                                     disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
-                                                                    strengthened=strengthened, 
-                                                                    add_benders_cuts_to_master=add_benders_cuts_to_master, 
+                                                                    strengthened = strengthened, 
+                                                                    add_benders_cuts_to_master = add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 1.0, 
-                                                                    reuse_dcglp=reuse_dcglp)
+                                                                    reuse_dcglp = reuse_dcglp,
+                                                                    lift = lift)
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
 
@@ -117,12 +118,13 @@ using JuMP
                     end
                 end
             end 
+            
             @testset "Knapsack oracle" begin
                 @testset "Seq" begin        
-                    # for strengthened in [true; false], add_benders_cuts_to_master in [true; 2], reuse_dcglp in [true; false], p in [1.0; Inf], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
-                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
-                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/knapsack - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule"
-                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p dcut_append $disjunctive_cut_append_rule" begin
+                    # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
+                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
+                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
                             master = Master(data; solver_param = master_solver_param)
                             update_model!(master, data)
@@ -135,6 +137,7 @@ using JuMP
                             for j=1:typical_oracle_nu.N
                                 update_model!(typical_oracle_nu.oracles[j], data, j)
                             end
+                            
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
 
                             disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
@@ -143,10 +146,11 @@ using JuMP
                             oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
                                                                     split_index_selection_rule = RandomFractional(),
                                                                     disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
-                                                                    strengthened=strengthened, 
-                                                                    add_benders_cuts_to_master=add_benders_cuts_to_master, 
+                                                                    strengthened = strengthened, 
+                                                                    add_benders_cuts_to_master = add_benders_cuts_to_master, 
                                                                     fraction_of_benders_cuts_to_master = 1.0, 
-                                                                    reuse_dcglp=reuse_dcglp)
+                                                                    reuse_dcglp = reuse_dcglp,
+                                                                    lift = lift)
                             set_parameter!(disjunctive_oracle, oracle_param)
                             update_model!(disjunctive_oracle, data)
 

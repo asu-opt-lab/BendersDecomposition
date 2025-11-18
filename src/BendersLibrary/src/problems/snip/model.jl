@@ -1,5 +1,5 @@
 export update_model!
-function update_model!(mip::AbstractMip, data::Data)
+function update_model!(mip::AbstractMip, data::Data{<:SNIPData})
     x = mip.model[:x]
     model = mip.model
     
@@ -28,13 +28,13 @@ function update_model!(mip::AbstractMip, data::Data)
 
 end
 
-function update_model!(master::AbstractMaster, data::Data)
+function update_model!(master::AbstractMaster, data::Data{<:SNIPData})
     x = master.model[:x]
 
     @constraint(master.model, sum(x) <= data.problem.budget)
 end
 
-function update_model!(oracle::AbstractTypicalOracle, data::Data, k::Int)
+function update_model!(oracle::AbstractTypicalOracle, data::Data{<:SNIPData}, k::Int)
     model = oracle.model
     x = oracle.model[:x]
 
@@ -60,7 +60,7 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data, k::Int)
 
 end
 
-function update_model!(oracle::DisjunctiveOracle, data::Data)
+function update_model!(oracle::DisjunctiveOracle, data::Data{<:SNIPData})
     dcglp = oracle.dcglp 
 
     @constraint(dcglp, [i=1:2], sum(dcglp[:omega_x][i,:]) <= data.problem.budget * dcglp[:omega_0][i])
