@@ -1,5 +1,5 @@
 using Base.Threads: @threads
-using OSQP, CPLEX
+using OSQP#, CPLEX
 
 struct FacilityKnapsackInfo
     costs::Matrix{Float64}
