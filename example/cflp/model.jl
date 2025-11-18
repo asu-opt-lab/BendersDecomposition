@@ -41,23 +41,34 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data)
 end
 
 # dual
-# function update_model!(oracle::AbstractTypicalOracle, data::Data)
-#     model = oracle.model
+function update_model!(oracle::InexactOracle, data::Data)
+    model = oracle.model
+    
+    I, J = data.problem.n_facilities, data.problem.n_customers
+    cost_demands = data.problem.costs .* data.problem.demands'
+    
+    if oracle.inexact_solver_param["solver"] != "cuOpt"
+        x = oracle.model[:x]
+        @variable(model, y[1:I, 1:J] >= 0)
+        # Set objective
+        @objective(model, Min, sum(cost_demands .* y))
+        # Add constraints
+        @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
+        @constraint(model, facility_open, y .<= x)
+        @constraint(model, capacity[i in 1:I], sum(data.problem.demands[:] .* y[i,:]) <= data.problem.capacities[i] * x[i])
+    else
+        @variable(model, p[1:J])
+        @variable(model, s[1:I])
+        @variable(model, l[1:I] >= 0)
+        @variable(model, d[1:I, 1:J] >= 0)
 
-#     I, J = data.problem.n_facilities, data.problem.n_customers
-#     @variable(model, p[1:J])
-#     @variable(model, s[1:I])
-#     @variable(model, d[1:I, 1:J] >= 0)
-#     @variable(model, l[1:I] >= 0)
-
-#     cost_demands = data.problem.costs .* data.problem.demands'
-
-#     # Set objective
-#     @objective(model, Max, sum(p) + sum(s))
-#     # Add constraints
-#     @constraint(model, [i in 1:I], sum(d[i,j] for j in J) + data.problem.capacities[i] * l[i] + s[i] == 0)
-#     @constraint(model, [i in 1:I, j in 1:J], p[j] + d[i,j] - l[i] * data.problem.demands[j] <= cost_demands[i,j])
-# end
+        # Set objective
+        @objective(model, Max, sum(p) + sum(s))
+        # Add constraints
+        @constraint(model, [i in 1:I], sum(d[i,:]) + l[i]*data.problem.capacities[i] + s[i] == 0)
+        @constraint(model, [i in 1:I, j in 1:J], p[j] - d[i,j] - l[i] * data.problem.demands[j] <= cost_demands[i,j])
+    end
+end
 
 function update_model!(oracle::DisjunctiveOracle, data::Data)
     dcglp = oracle.dcglp 
