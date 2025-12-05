@@ -1,6 +1,7 @@
 using BendersDecomposition
 using Test
 using JuMP
+using CPLEX
 
 @testset verbose = true "UFLP Sequential Benders Tests" begin
     instances = setdiff(1:71, [67])
@@ -29,7 +30,7 @@ using JuMP
                 @info "solving UFLP p$i - classical oracle - seq..."
                 master = Master(problem; customize = customize_master_model!)
                 oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
-                env = BendersSeq(problem, master, oracle; param = benders_param)
+                env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -38,6 +39,8 @@ using JuMP
             @testset "Fat knapsack oracle" begin
                 @info "solving UFLP p$i - fat knapsack oracle - seq..."
                 function customize_master_model!(model::Model, problem::UFLPData)
+                    optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
+                    set_optimizer(model, optimizer)
                     @variable(model, x[1:problem.n_facilities], Bin)
                     @variable(model, t[1:problem.n_customers] >= -1e6)
                     @constraint(model, sum(x) >= 2)
@@ -48,7 +51,7 @@ using JuMP
                 oracle = UFLKnapsackOracle(problem) 
                 set_parameter!(oracle, "add_only_violated_cuts", true)
 
-                env = BendersSeq(problem, master, oracle; param = benders_param)
+                env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -57,6 +60,8 @@ using JuMP
             @testset "slim knapsack oracle" begin
                 @info "solving UFLP p$i - slim Knapsack oracle - seq..."
                 function customize_master_model!(model::Model, problem::UFLPData)
+                    optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
+                    set_optimizer(model, optimizer)
                     @variable(model, x[1:problem.n_facilities], Bin)
                     @variable(model, t[1:problem.n_customers] >= -1e6)
                     @constraint(model, sum(x) >= 2)
@@ -68,7 +73,7 @@ using JuMP
                 set_parameter!(oracle, "add_only_violated_cuts", false)
                 set_parameter!(oracle, "slim", true)
 
-                env = BendersSeq(problem, master, oracle; param = benders_param)
+                env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)

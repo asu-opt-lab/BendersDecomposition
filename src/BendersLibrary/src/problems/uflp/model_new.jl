@@ -56,11 +56,11 @@ function customize_sub_model!(model::Model, problem::UFLPData; x)
     @constraint(model, facility_open[j in 1:J], y[:, j] .<= x)
 end
 
-"""
-To-do
-"""
-function update_model!(oracle::DisjunctiveOracle, data::Data{<:UFLPData})
-    dcglp = oracle.dcglp 
+# """
+# To-do
+# """
+# function update_model!(oracle::DisjunctiveOracle, data::Data{<:UFLPData})
+#     dcglp = oracle.dcglp 
 
-    @constraint(dcglp, [i=1:2], sum(dcglp[:omega_x][i,:]) >= 2 * dcglp[:omega_0][i])
-end
+#     @constraint(dcglp, [i=1:2], sum(dcglp[:omega_x][i,:]) >= 2 * dcglp[:omega_0][i])
+# end

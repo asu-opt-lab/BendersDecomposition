@@ -31,13 +31,14 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
             @debug "Building classical oracle"
             model = Model()
 
+            # Copy the master’s coupling variables into the submodel (with identical axes and symbols)
             x_copy = copy_variables!(model, master.x_tuple)
 
+            # Build the submodel using user-defined customization, passing the copied variables
             customize(model, problem; x_copy...)
 
+            # Collect all copied master variables and add linking constraint
             @constraint(model, fix_x, collect(values(x_copy...)) .== 0)
-
-            assign_attributes!(model, solver_param)
 
             new(oracle_param, model, fix_x)
     end

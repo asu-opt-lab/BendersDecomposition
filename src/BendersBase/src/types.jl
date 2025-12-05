@@ -16,13 +16,18 @@ abstract type AbstractOracleParam end
 # Global data type; Problem Data is optional; user can define their own structure for problem-specific data
 # ============================================================================
 abstract type AbstractData end
-struct Data{T<:AbstractData}
+"""
+To-Do: remove `problem` field from Data
+"""
+struct EmptyData <: AbstractData end 
+mutable struct Data{T<:AbstractData}
     dim_x::Int
     dim_t::Int
     problem::T
     c_x::Vector{Float64}
     c_t::Vector{Float64}
 end
+
 
 abstract type AbstractBendersSeq <: AbstractBendersDecomposition end
 abstract type AbstractBendersCallback <: AbstractBendersDecomposition end
