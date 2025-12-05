@@ -8,3 +8,5 @@ include("scflp/data_reader.jl")
 include("scflp/model.jl")
 include("snip/data_reader.jl")
 include("snip/model.jl")
+
+include("uflp/model_new.jl")

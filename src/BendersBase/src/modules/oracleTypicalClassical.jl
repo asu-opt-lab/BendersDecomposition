@@ -23,6 +23,25 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
         new(oracle_param, model, fix_x)
     end
 
+    function ClassicalOracle(problem::AbstractData, master::Master; 
+                            customize = customize_sub_model!,
+                            scen_idx::Int=-1, 
+                            oracle_param::BasicOracleParam = BasicOracleParam())
+    
+            @debug "Building classical oracle"
+            model = Model()
+
+            x_copy = copy_variables!(model, master.x_tuple)
+
+            customize(model, problem; x_copy...)
+
+            @constraint(model, fix_x, collect(values(x_copy...)) .== 0)
+
+            assign_attributes!(model, solver_param)
+
+            new(oracle_param, model, fix_x)
+    end
+
     ClassicalOracle() = new()
 end
 

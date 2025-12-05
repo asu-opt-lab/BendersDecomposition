@@ -12,6 +12,7 @@ A mutable struct representing the master problem in Benders decomposition.
 """
 mutable struct Master <: AbstractMaster
     model::Model
+    x_tuple::NamedTuple
     x::Vector{VariableRef}
     t::Vector{VariableRef}
 
@@ -29,4 +30,22 @@ mutable struct Master <: AbstractMaster
         assign_attributes!(model, solver_param)
         new(model, x, t)
     end
+
+    function Master(problem::AbstractData; customize=customize_master_model!)
+
+        @debug "Building Master module"
+
+        model = Model()
+
+        x_tuple, t = customize(model, problem)
+        t = t isa VariableRef ? [t] : t
+        
+        x = collect(values(x_tuple...))
+
+        new(model, x_tuple, x, t)
+    end
+end
+
+function customize_master_model!(model::Model, problem::AbstractData)
+    throw(UndefError("update customize_master_model! for $(typeof(problem))"))
 end

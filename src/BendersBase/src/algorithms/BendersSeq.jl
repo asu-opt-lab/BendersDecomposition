@@ -48,6 +48,21 @@ mutable struct BendersSeq <: AbstractBendersSeq
     function BendersSeq(data; param::BendersSeqParam = BendersSeqParam())
         new(data, Master(data), ClassicalOracle(data), param, Inf, NotSolved())
     end
+
+    function BendersSeq(problem::AbstractData, master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqParam = BendersSeqParam())
+
+        # Initialize data object
+        dim_x = length(master.x)
+        obj = objective_function(master.model)
+        c_x = [coefficient(obj, master.x[i]) for i in 1:dim_x]
+        
+        dim_t = length(master.t)
+        c_t = [coefficient(obj, master.t[i]) for i in 1:dim_t]
+        
+        data = Data(dim_x, dim_t, problem, c_x, c_t)
+
+        new(data, master, oracle, param, Inf, NotSolved())
+    end
 end
 
 """
