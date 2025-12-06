@@ -3,7 +3,6 @@ using BendersBase
 using JuMP
 
 @testset "BendersBase copy_variables!" begin
-    
     @testset "VariableRef" begin
         master_model = Model()
         @variable(master_model, u[1:10])
@@ -169,4 +168,89 @@ using JuMP
             print(sub_model)
         end
     end
+end
+
+@testset "BendersBase customize model functions" begin
+    struct EmptyData <: AbstractData end
+    problem = EmptyData()
+
+    @testset "master variable container Vector{VariableRef}" begin
+        function customize_master_model!(model::Model, problem::EmptyData)
+
+            @variable(model, u[1:10], Bin)
+            @variable(model, t >= -1e6)
+            @constraint(model, sum(u) >= 2)
+            @objective(model, Min, 1.0 * t)
+            
+            return (u = u, ), t
+        end
+        
+        function customize_sub_model!(model::Model, problem::EmptyData; u) 
+        
+            @variable(model, y[1:10] >= 0)
+            @objective(model, Min, sum(y))
+            @constraint(model, y .<= u)
+        end
+
+        master = Master(problem; customize = customize_master_model!)
+        oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+
+        print(master.model)
+        print(oracle.model)
+    end
+    @testset "master variable container Matrix{VariableRef}" begin
+        function customize_master_model!(model::Model, problem::EmptyData)
+
+            @variable(model, u[1:10,1:3], Bin)
+            @variable(model, t >= -1e6)
+            @constraint(model, sum(u) >= 2)
+            @objective(model, Min, 1.0 * t)
+            
+            return (u = u, ), t
+        end
+        
+        function customize_sub_model!(model::Model, problem::EmptyData; u) 
+        
+            @variable(model, y[1:10] >= 0)
+            @objective(model, Min, sum(y))
+            @constraint(model, sum(u) == 1)
+            @constraint(model, y .<= u[:,1])
+        end
+
+        master = Master(problem; customize = customize_master_model!)
+        oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+
+        print(master.model)
+        print(oracle.model)
+    end
+    @testset "Multiple master variable containers of varying types" begin
+        function customize_master_model!(model::Model, problem::EmptyData)
+
+            @variable(model, u[1:10], Bin) # Array
+            @variable(model, v[3:10, [:A, :B]], Bin) # DenseAxisArray
+            @variable(model, w[i=1:3,j=i:10], Bin) # SparseAxisArray
+            @variable(model, t >= -1e6)
+            @constraint(model, sum(u) >= 2)
+            @objective(model, Min, 1.0 * t)
+            
+            return (u = u, v = v, w = w), t
+        end
+        
+        function customize_sub_model!(model::Model, problem::EmptyData; u, v, w) 
+        
+            @variable(model, y[1:10] >= 0)
+            @objective(model, Min, sum(y))
+            @constraint(model, y .<= u)
+            @constraint(model, sum(v) == 1)
+            @constraint(model, v[10,:A] == 1)
+            @constraint(model, w[3,10] <= 1)
+        end
+
+        master = Master(problem; customize = customize_master_model!)
+        oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+
+        print(master.model)
+        print(oracle.model)
+    end
+    
 end

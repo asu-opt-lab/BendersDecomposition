@@ -38,7 +38,8 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
             customize(model, problem; x_copy...)
 
             # Collect all copied master variables and add linking constraint
-            @constraint(model, fix_x, collect(values(x_copy...)) .== 0)
+            x = var_from_tuple(x_copy)
+            @constraint(model, fix_x, x .== 0)
 
             new(oracle_param, model, fix_x)
     end

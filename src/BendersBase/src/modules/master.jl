@@ -39,8 +39,7 @@ mutable struct Master <: AbstractMaster
 
         x_tuple, t = customize(model, problem)
         t = t isa VariableRef ? [t] : t
-        
-        x = collect(values(x_tuple...))
+        x = var_from_tuple(x_tuple)
 
         new(model, x_tuple, x, t)
     end

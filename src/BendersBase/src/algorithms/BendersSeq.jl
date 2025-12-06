@@ -112,8 +112,8 @@ function solve!(env::BendersSeq; iter_prefix = "")
                     optimize!(env.master.model)
                     if is_solved_and_feasible(env.master.model; allow_local = false, dual = false)
                         state.LB = JuMP.objective_value(env.master.model)
-                        state.values[:x] = value.(env.master.x)
-                        state.values[:t] = value.(env.master.t)
+                        state.values[:x] = JuMP.value.(env.master.x)
+                        state.values[:t] = JuMP.value.(env.master.t)
                     elseif termination_status(env.master.model) == TIME_LIMIT
                         throw(TimeLimitException("Time limit reached during master solving"))
                     else
