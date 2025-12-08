@@ -12,16 +12,6 @@ using JuMP
             # Load problem data
             problem = read_cflp_benchmark_data("p$i")
 
-            # Initialize data object
-            dim_x = problem.n_facilities
-            dim_t = 1
-            c_x = problem.fixed_costs
-            c_t = [1.0]
-            
-            data = Data(dim_x, dim_t, problem, c_x, c_t)
-            @assert dim_x == length(data.c_x)
-            @assert dim_t == length(data.c_t)
-            
             # BnB parameters
             benders_param = BendersBnBParam(;
                             time_limit = 200.0,
@@ -29,33 +19,24 @@ using JuMP
                             verbose = false
                         )
             
-            # Solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6)
-            master_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6)
-            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1)
-            
             # Solve MIP for reference
-            mip = Mip(data)
-            assign_attributes!(mip.model, mip_solver_param)
-            update_model!(mip, data)
-            optimize!(mip.model)
-            @assert termination_status(mip.model) == OPTIMAL
-            mip_opt_val = objective_value(mip.model)
+            mip_model = Model()
+            customize_mip_model!(mip_model, problem)
+            optimize!(mip_model)
+            @assert termination_status(mip_model) == OPTIMAL
+            mip_opt_val = objective_value(mip_model)
             
             @testset "Classic oracle" begin
                 @testset "NoSeq" begin
                     @info "solving CFLP p$i - classical oracle - no seq..."
-                    master = Master(data; solver_param = master_solver_param)
-                    update_model!(master, data)
-
-                    typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
-                    update_model!(typical_oracle, data)
+                    master = Master(problem; customize = customize_master_model!)
+                    oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
 
                     root_preprocessing = NoRootNodePreprocessing()
-                    lazy_callback = LazyCallback(typical_oracle)
+                    lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
-                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -63,11 +44,8 @@ using JuMP
 
                 @testset "Seq" begin
                     @info "solving CFLP p$i - classical oracle - seq..."
-                    master = Master(data; solver_param = master_solver_param)
-                    update_model!(master, data)
-
-                    typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
-                    update_model!(typical_oracle, data)
+                    master = Master(problem; customize = customize_master_model!)
+                    oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -76,11 +54,11 @@ using JuMP
                                 verbose = false
                             )
 
-                    root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
-                    lazy_callback = LazyCallback(typical_oracle)
+                    root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
+                    lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
-                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -88,27 +66,24 @@ using JuMP
 
                 @testset "SeqInOut" begin
                     @info "solving CFLP p$i - classical oracle - seqinout..."
-                    master = Master(data; solver_param = master_solver_param)
-                    update_model!(master, data)
-
-                    typical_oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param)
-                    update_model!(typical_oracle, data)
+                    master = Master(problem; customize = customize_master_model!)
+                    oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
                                 time_limit = 300.0,
                                 gap_tolerance = 1e-9,
-                                stabilizing_x = ones(data.dim_x),
+                                stabilizing_x = ones(problem.n_facilities),
                                 α = 0.9,
                                 λ = 0.1,
                                 verbose = false
                             )
 
-                    root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
-                    lazy_callback = LazyCallback(typical_oracle)
+                    root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
+                    lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
-                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -118,17 +93,14 @@ using JuMP
             @testset "Knapsack oracle" begin
                 @testset "NoSeq" begin
                     @info "solving CFLP p$i - knapsack oracle - no seq..."
-                    master = Master(data; solver_param = master_solver_param)
-                    update_model!(master, data)
-
-                    oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
-                    update_model!(oracle, data)
+                    master = Master(problem; customize = customize_master_model!)
+                    oracle = CFLKnapsackOracle(problem, master; customize = customize_sub_model!)
 
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
-                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -136,11 +108,8 @@ using JuMP
                 
                 @testset "Seq" begin
                     @info "solving CFLP p$i - knapsack oracle - seq..."
-                    master = Master(data; solver_param = master_solver_param)
-                    update_model!(master, data)
-
-                    oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
-                    update_model!(oracle, data)
+                    master = Master(problem; customize = customize_master_model!)
+                    oracle = CFLKnapsackOracle(problem, master; customize = customize_sub_model!)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -153,7 +122,7 @@ using JuMP
                     lazy_callback = LazyCallback(oracle)    
                     user_callback = NoUserCallback()
 
-                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -161,17 +130,14 @@ using JuMP
 
                 @testset "SeqInOut" begin
                     @info "solving CFLP p$i - knapsack oracle - seqinout..."
-                    master = Master(data; solver_param = master_solver_param)
-                    update_model!(master, data)
-
-                    oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
-                    update_model!(oracle, data)
+                    master = Master(problem; customize = customize_master_model!)
+                    oracle = CFLKnapsackOracle(problem, master; customize = customize_sub_model!)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
                                 time_limit = 300.0,
                                 gap_tolerance = 1e-9,
-                                stabilizing_x = ones(data.dim_x),
+                                stabilizing_x = ones(problem.n_facilities),
                                 α = 0.9,    
                                 λ = 0.1,
                                 verbose = false
@@ -181,7 +147,7 @@ using JuMP
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
-                    env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)

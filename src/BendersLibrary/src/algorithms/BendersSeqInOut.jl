@@ -55,6 +55,21 @@ mutable struct BendersSeqInOut <: AbstractBendersSeq
     function BendersSeqInOut(data; param::BendersSeqInOutParam = BendersSeqInOutParam())
         new(data, Master(data), ClassicalOracle(data), param, Inf, NotSolved())
     end
+
+    function BendersSeqInOut(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam())
+
+        # Initialize data object
+        dim_x = length(master.x)
+        obj = objective_function(master.model)
+        c_x = [coefficient(obj, master.x[i]) for i in 1:dim_x]
+        
+        dim_t = length(master.t)
+        c_t = [coefficient(obj, master.t[i]) for i in 1:dim_t]
+        
+        data = Data(dim_x, dim_t, EmptyData(), c_x, c_t)
+
+        new(data, master, oracle, param, Inf, NotSolved())
+    end
 end
 """
     solve!(env::BendersSeqInOut) -> DataFrame
@@ -115,8 +130,8 @@ function solve!(env::BendersSeqInOut)
                     optimize!(env.master.model)
                     if is_solved_and_feasible(env.master.model; allow_local = false, dual = false)
                         state.LB = JuMP.objective_value(env.master.model)
-                        state.values[:x] = value.(env.master.x)
-                        state.values[:t] = value.(env.master.t)
+                        state.values[:x] = JuMP.value.(env.master.x)
+                        state.values[:t] = JuMP.value.(env.master.t)
                     elseif termination_status(env.master.model) == TIME_LIMIT
                         throw(TimeLimitException("Time limit reached during master solving"))
                     else

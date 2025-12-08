@@ -31,7 +31,8 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         new(oracle_param, model, fix_x, facility_knapsack_info)
     end
 
-    function CFLKnapsackOracle(problem::CFLPData, master::Master; 
+    # Accept AbstractData so the oracle can operate on either SCFLPData or CFLPData.
+    function CFLKnapsackOracle(problem::AbstractData, master::Master; 
                             customize = customize_sub_model!,
                             scen_idx::Int=-1, 
                             oracle_param::BasicOracleParam = BasicOracleParam())
@@ -42,7 +43,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         x_copy = copy_variables!(model, master.x_tuple)
 
         # Build the submodel using user-defined customization, passing the copied variables
-        customize(model, problem; x_copy...)
+        customize(model, problem, scen_idx; x_copy...)
 
         # Collect all copied master variables and add linking constraint
         x = var_from_tuple(x_copy)

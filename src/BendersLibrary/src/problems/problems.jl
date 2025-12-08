@@ -11,3 +11,4 @@ include("snip/model.jl")
 
 include("uflp/model_new.jl")
 include("cflp/model_new.jl")
+include("scflp/model_new.jl")

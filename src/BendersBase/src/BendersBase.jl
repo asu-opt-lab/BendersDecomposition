@@ -18,7 +18,7 @@ include("algorithms/algorithms.jl")
 
 # Export abstract types
 export AbstractBendersDecomposition
-export Data, AbstractData
+export Data, AbstractData, EmptyData
 export AbstractMaster, AbstractMip
 export AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, BasicOracleParam
 export AbstractBendersSeq, AbstractBendersCallback
@@ -34,3 +34,10 @@ export Hyperplane, aggregate, generate_cuts, set_parameter!, hyperplanes_to_expr
 export get_sec_remaining, record_iteration!, update_upper_bound_and_gap!, is_terminated, check_lb_improvement!, print_iteration_info, to_dataframe
 
 end # module BendersBase
+
+# To-Do: 
+# 1. Remove mip.jl and Mip struct
+# 2. Remove EmptyData; remove AbstractData completely and consider accepting Any
+# 3. remove previous initializer of master, oracle, env modules
+# 4. rename Data
+# 4. rename oracle_param to param for all oracles as we no longer has solver_param

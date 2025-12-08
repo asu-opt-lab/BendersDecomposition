@@ -50,13 +50,14 @@ end
 
 mutable struct DcglpParam <: AbstractDcglpParam
     
+    optimizer::MOI.OptimizerWithAttributes
     time_limit::Float64
     gap_tolerance::Float64
     halt_limit::Int
     iter_limit::Int
     verbose::Bool
 
-    function DcglpParam(; 
+    function DcglpParam(optimizer::MOI.OptimizerWithAttributes; 
                         time_limit::Float64 = 1000.0, 
                         gap_tolerance::Float64 = 1e-3, 
                         halt_limit::Int = 3, 
@@ -64,7 +65,7 @@ mutable struct DcglpParam <: AbstractDcglpParam
                         verbose::Bool = true
                         ) 
         
-        new(time_limit, gap_tolerance, halt_limit, iter_limit, verbose)
+        new(optimizer, time_limit, gap_tolerance, halt_limit, iter_limit, verbose)
     end
 end
 

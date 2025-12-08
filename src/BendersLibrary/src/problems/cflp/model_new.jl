@@ -40,7 +40,7 @@ function customize_master_model!(model::Model, problem::CFLPData)
     return (x = x, ), t
 end
 
-function customize_sub_model!(model::Model, problem::CFLPData; x) 
+function customize_sub_model!(model::Model, problem::CFLPData, scen_idx::Int; x) 
     optimizer = optimizer_with_attributes(
         CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
 
@@ -56,11 +56,3 @@ function customize_sub_model!(model::Model, problem::CFLPData; x)
     @constraint(model, facility_open, y .<= x)
     @constraint(model, capacity[i in 1:I], sum(problem.demands[:] .* y[i,:]) <= problem.capacities[i] * x[i])
 end
-# """
-# To-do
-# """
-# function update_model!(oracle::DisjunctiveOracle, data::Data{<:CFLPData})
-#     dcglp = oracle.dcglp 
-
-#     @constraint(dcglp, [i=1:2], sum(data.problem.capacities[j] * dcglp[:omega_x][i,j] for j in 1:data.problem.n_facilities) >= sum(data.problem.demands) * dcglp[:omega_0][i])
-# end

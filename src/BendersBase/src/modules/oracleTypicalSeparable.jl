@@ -22,6 +22,19 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
 
         new(oracle_param, oracles, N)
     end
+    function SeparableOracle(problem::AbstractData, 
+                            master::Master,
+                            oracle::T, 
+                            N::Int; 
+                            customize = customize_sub_model!,
+                            sub_oracle_param::AbstractOracleParam = BasicOracleParam(),
+                            oracle_param::SeparableOracleParam = SeparableOracleParam()) where {T<:AbstractTypicalOracle}
+        @debug "Building classical separable oracle"
+        # assume each oracle is associated with a single t, that is dim_t = N
+        oracles = [T(problem, master; customize = customize, scen_idx=j, oracle_param = sub_oracle_param) for j=1:N] 
+
+        new(oracle_param, oracles, N)
+    end
 end
 
 function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600.0)

@@ -25,7 +25,7 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
 
     function ClassicalOracle(problem::AbstractData, master::Master; 
                             customize = customize_sub_model!,
-                            scen_idx::Int=-1, 
+                            scen_idx::Int=0, 
                             oracle_param::BasicOracleParam = BasicOracleParam())
     
             @debug "Building classical oracle"
@@ -35,7 +35,7 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
             x_copy = copy_variables!(model, master.x_tuple)
 
             # Build the submodel using user-defined customization, passing the copied variables
-            customize(model, problem; x_copy...)
+            customize(model, problem, scen_idx; x_copy...)
 
             # Collect all copied master variables and add linking constraint
             x = var_from_tuple(x_copy)

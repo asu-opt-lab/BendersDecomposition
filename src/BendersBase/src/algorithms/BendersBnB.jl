@@ -48,6 +48,21 @@ mutable struct BendersBnB <: AbstractBendersCallback
     function BendersBnB(data, master::AbstractMaster, root_preprocessing::AbstractRootNodePreprocessing, lazy_callback::AbstractLazyCallback, user_callback::AbstractUserCallback; param::BendersBnBParam = BendersBnBParam())
         new(data, master, param, root_preprocessing, lazy_callback, user_callback, Inf, NotSolved())
     end
+
+    function BendersBnB(master::AbstractMaster, root_preprocessing::AbstractRootNodePreprocessing, lazy_callback::AbstractLazyCallback, user_callback::AbstractUserCallback; param::BendersBnBParam = BendersBnBParam())
+        
+        # Initialize data object
+        dim_x = length(master.x)
+        obj = objective_function(master.model)
+        c_x = [coefficient(obj, master.x[i]) for i in 1:dim_x]
+        
+        dim_t = length(master.t)
+        c_t = [coefficient(obj, master.t[i]) for i in 1:dim_t]
+        
+        data = Data(dim_x, dim_t, EmptyData(), c_x, c_t)
+
+        new(data, master, param, root_preprocessing, lazy_callback, user_callback, Inf, NotSolved())
+    end
 end
 
 """
@@ -82,7 +97,7 @@ function solve!(env::BendersBnB)
     # Apply root node preprocessing if specified
     root_node_time = 0.0
     if isa(env.root_preprocessing, RootNodePreprocessing)
-        root_node_time = root_node_processing!(env.data, env.master, env.root_preprocessing)
+        root_node_time = root_node_processing!(env.master, env.root_preprocessing)
     end
     
     # Apply disjunctive root node preprocessing if specified
@@ -91,7 +106,7 @@ function solve!(env::BendersBnB)
         env.root_preprocessing.params.time_limit -= root_node_time
         env.root_preprocessing.oracle = env.user_callback.oracle
 
-        disjunctive_root_node_time = root_node_processing!(env.data, env.master, env.root_preprocessing)
+        disjunctive_root_node_time = root_node_processing!(env.master, env.root_preprocessing)
         root_node_time += disjunctive_root_node_time
     end
     

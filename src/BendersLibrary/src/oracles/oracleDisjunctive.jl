@@ -39,6 +39,8 @@ param = DisjunctiveOracleParam(
 See also: [`DisjunctiveOracle`](@ref), [`LpNorm`](@ref)
 """
 mutable struct DisjunctiveOracleParam <: AbstractOracleParam
+    
+    dcglp_param::DcglpParam # Dcglp loop parameters
     norm::AbstractNorm
     split_index_selection_rule::SplitIndexSelectionRule
     disjunctive_cut_append_rule::DisjunctiveCutsAppendRule
@@ -49,8 +51,9 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
     lift::Bool 
     adjust_t_to_fx::Bool
     zero_tol::Float64
+    
 
-    function DisjunctiveOracleParam(; 
+    function DisjunctiveOracleParam(dcglp_param::DcglpParam; 
                                     norm::AbstractNorm = LpNorm(Inf), 
                                     split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(), disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
                                     strengthened::Bool=true, 
@@ -62,7 +65,7 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
                                     zero_tol=1e-9) 
         add_bcuts_to_master = add_benders_cuts_to_master === true ? 1 : add_benders_cuts_to_master === false ? 0 : add_benders_cuts_to_master in (0, 1, 2) ? add_benders_cuts_to_master : throw(ArgumentError("`add_benders_cuts_to_master` must be true, false, or an integer in {0, 1, 2}"))
         
-        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_bcuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift, adjust_t_to_fx, zero_tol)
+        new(dcglp_param, norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_bcuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift, adjust_t_to_fx, zero_tol)
     end
 end
 
@@ -127,9 +130,6 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
     dcglp::Model
     typical_oracles::Vector{AbstractTypicalOracle}
 
-    # Dcglp loop parameters
-    param::DcglpParam
-
     # log for splits and disjunctive cuts
     disjunctiveCutsByIndex::Vector{Vector{Hyperplane}}
     disjunctiveCuts::Vector{Hyperplane}
@@ -137,11 +137,10 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
 
     function DisjunctiveOracle(data, 
                                typical_oracles::Vector{T}; 
-                               param::DcglpParam = DcglpParam(),
-                               solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                               oracle_param::DisjunctiveOracleParam = DisjunctiveOracleParam()) where {T<:AbstractTypicalOracle}
+                               param::DisjunctiveOracleParam = DisjunctiveOracleParam()) where {T<:AbstractTypicalOracle}
         @debug "Building disjunctive oracle"
         dcglp = Model()
+
         # Define variables
         @variable(dcglp, tau)
         @variable(dcglp, omega_0[1:2]) # 1 for kappa; 2 for nu
@@ -172,6 +171,63 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
         splits = Vector{Tuple{SparseVector{Float64, Int}, Float64}}()
 
         new(oracle_param, dcglp, typical_oracles, param, disjunctiveCutsByIndex, Vector{Hyperplane}(), splits)
+    end
+
+    # oracle_param should not be optional unless we have default software-free optimizer
+    function DisjunctiveOracle(master::Master, 
+                            typical_oracles::Vector{T},
+                            oracle_param::DisjunctiveOracleParam) where {T<:AbstractTypicalOracle}
+        @debug "Building disjunctive oracle"
+
+        # Initialize data object
+        dim_x = length(master.x)
+        obj = objective_function(master.model)
+        c_x = [coefficient(obj, master.x[i]) for i in 1:dim_x]
+        dim_t = length(master.t)
+        c_t = [coefficient(obj, master.t[i]) for i in 1:dim_t]
+        data = Data(dim_x, dim_t, EmptyData(), c_x, c_t)
+
+        for xi in master.x
+            if !is_binary(xi)
+                @error "Split oracles currently require all master variables to be binary."
+            end
+        end
+
+        # Initialize dcglp problem
+        dcglp = Model(oracle_param.dcglp_param.optimizer)
+        
+        # Define variables
+        @variable(dcglp, tau)
+        @variable(dcglp, omega_0[1:2]) # 1 for kappa; 2 for nu
+        @variable(dcglp, omega_x[1:2,1:data.dim_x])
+        @variable(dcglp, omega_t[1:2,1:data.dim_t])
+        @variable(dcglp, sx[1:data.dim_x])
+        @variable(dcglp, st[1:data.dim_t])
+
+        # Set objective
+        @objective(dcglp, Min, tau)
+
+        # Add constraints
+        @constraint(dcglp, [i=1:2], omega_t[i,:] .>= -1e6 * omega_0[i])
+        @constraint(dcglp, coneta[i in 1:2, j in 1:data.dim_x], 0 >= -omega_0[i] + omega_x[i,j]) 
+        @constraint(dcglp, condelta[i in 1:2, j in 1:data.dim_x], 0 >= -omega_x[i,j])
+        @constraint(dcglp, conineq[i in 1:2], omega_0[i] >= 0)
+
+        # Add gamma constraints
+        @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
+        @constraint(dcglp, conx, omega_x[1,:] + omega_x[2,:] - sx .== 0)
+        @constraint(dcglp, cont[j=1:data.dim_t], omega_t[1,j] + omega_t[2,j] - st[j] == 0) # must be in this form to recognize it as a vector
+
+        for i=1:2
+            transfer_scaled_linear_rows_and_bounds_with_types!(master.model, master.x, dcglp, omega_x[i,:], omega_0[i])
+        end
+
+        add_normalization_constraint(dcglp, oracle_param.norm)
+
+        disjunctiveCutsByIndex = [Vector{Hyperplane}() for i=1:data.dim_x]
+        splits = Vector{Tuple{SparseVector{Float64, Int}, Float64}}()
+
+        new(oracle_param, dcglp, typical_oracles, disjunctiveCutsByIndex, Vector{Hyperplane}(), splits)
     end
 end
 
