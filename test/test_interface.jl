@@ -185,7 +185,7 @@ end
             return (u = u, ), t
         end
         
-        function customize_sub_model!(model::Model, problem::EmptyData; u) 
+        function customize_sub_model!(model::Model, problem::EmptyData, scen_idx::Int; u) 
         
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
@@ -209,7 +209,7 @@ end
             return (u = u, ), t
         end
         
-        function customize_sub_model!(model::Model, problem::EmptyData; u) 
+        function customize_sub_model!(model::Model, problem::EmptyData, scen_idx::Int; u) 
         
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
@@ -236,7 +236,7 @@ end
             return (u = u, v = v, w = w), t
         end
         
-        function customize_sub_model!(model::Model, problem::EmptyData; u, v, w) 
+        function customize_sub_model!(model::Model, problem::EmptyData, scen_idx::Int; u, v, w) 
         
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
