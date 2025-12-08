@@ -36,10 +36,6 @@ mutable struct RootNodePreprocessing <: AbstractRootNodePreprocessing
     function RootNodePreprocessing(oracle::AbstractOracle; params::AbstractBendersSeqParam = BendersSeqParam())
         new(oracle, BendersSeq, params)
     end
-
-    function RootNodePreprocessing(data::Data; params::AbstractBendersSeqParam = BendersSeqParam())
-        new(ClassicalOracle(data), BendersSeq, params)
-    end
 end
 
 """

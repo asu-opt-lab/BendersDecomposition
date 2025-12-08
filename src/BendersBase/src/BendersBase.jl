@@ -18,8 +18,8 @@ include("algorithms/algorithms.jl")
 
 # Export abstract types
 export AbstractBendersDecomposition
-export Data, AbstractData, EmptyData
-export AbstractMaster, AbstractMip
+export AbstractData
+export AbstractMaster
 export AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, BasicOracleParam
 export AbstractBendersSeq, AbstractBendersCallback
 export Seq, SeqInOut
@@ -36,8 +36,12 @@ export get_sec_remaining, record_iteration!, update_upper_bound_and_gap!, is_ter
 end # module BendersBase
 
 # To-Do: 
-# 1. Remove mip.jl and Mip struct
-# 2. Remove EmptyData; remove AbstractData completely and consider accepting Any
-# 3. remove previous initializer of master, oracle, env modules
-# 4. remove Data by having dim_x, dim_t, c_x, c_t info in master module
-# 4. rename oracle_param to param for all oracles as we no longer has solver_param
+# 1. Remove mip.jl and Mip struct --> done
+# 2. remove Data by having dim_x, dim_t, c_x, c_t info in master module --> done
+# 3. clean initializers of master, oracle, env modules --> done
+# 4. rename `problem::AbstractData` to `data::AbstractData`
+# 5. rename oracle_param to param for all oracles as we no longer has solver_param
+# 6. consider returning `to_dataframe(log)` for all solve! functions.
+# 7. Remove AbstractCallbackParam and EmptyCallbackParam <: AbstractCallbackParam and add AbstractUserCallbackParam; Lazy callback does not need parameters.
+# 8. Kaiwen: refactor all files in script folder
+# 9. Inho: refactor all snip-related files

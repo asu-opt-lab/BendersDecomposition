@@ -100,7 +100,7 @@ function transfer_scaled_linear_rows_and_bounds_with_types!(
                     push!(added_constraints, @constraint(dcglp, lhs <= upper * omega0))
                 end
             end
-            @show added_constraints
+            # @show added_constraints
         end
     end
 end

@@ -1,7 +1,6 @@
 export SpecializedBendersSeq
 
 mutable struct SpecializedBendersSeq <: AbstractBendersSeq
-    data::Data
     master::AbstractMaster
     oracle::DisjunctiveOracle
 
@@ -11,34 +10,15 @@ mutable struct SpecializedBendersSeq <: AbstractBendersSeq
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function SpecializedBendersSeq(data, master::AbstractMaster, oracle::DisjunctiveOracle; param::SpecializedBendersSeqParam = SpecializedBendersSeqParam()) 
-        relax_integrality(master.model)
-
-        oracle.oracle_param.split_index_selection_rule != LargestFractional() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.split_index_selection_rule). Use LargestFractional() instead."))
-        oracle.oracle_param.disjunctive_cut_append_rule != DisjunctiveCutsSmallerIndices() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.disjunctive_cut_append_rule). Use DisjunctiveCutsSmallerIndices() instead."))
-
-        new(data, master, oracle, param, Inf, NotSolved())
-    end
-
     function SpecializedBendersSeq(master::AbstractMaster, oracle::DisjunctiveOracle; param::SpecializedBendersSeqParam = SpecializedBendersSeqParam()) 
         
-        # Initialize data object
-        dim_x = length(master.x)
-        obj = objective_function(master.model)
-        c_x = [coefficient(obj, master.x[i]) for i in 1:dim_x]
-        
-        dim_t = length(master.t)
-        c_t = [coefficient(obj, master.t[i]) for i in 1:dim_t]
-        
-        data = Data(dim_x, dim_t, EmptyData(), c_x, c_t)
-
         # Relax integrality in master
         relax_integrality(master.model)
 
         oracle.oracle_param.split_index_selection_rule != LargestFractional() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.split_index_selection_rule). Use LargestFractional() instead."))
         oracle.oracle_param.disjunctive_cut_append_rule != DisjunctiveCutsSmallerIndices() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.disjunctive_cut_append_rule). Use DisjunctiveCutsSmallerIndices() instead."))
 
-        new(data, master, oracle, param, Inf, NotSolved())
+        new(master, oracle, param, Inf, NotSolved())
     end
 end
 
@@ -48,7 +28,7 @@ Run SpecializedBendersSeq
 function solve!(env::SpecializedBendersSeq) 
     log = BendersSeqLog()
     L_param = BendersSeqParam(; time_limit = env.param.time_limit, gap_tolerance = env.param.lp_gap_tolerance, verbose = env.param.verbose)
-    L_env = BendersSeq(env.data, env.master, env.oracle.typical_oracles[1]; param = L_param)
+    L_env = BendersSeq(env.master, env.oracle.typical_oracles[1]; param = L_param)
 
     try
         while true
@@ -108,7 +88,7 @@ function solve!(env::SpecializedBendersSeq)
 end
 
 function generate_optimal_vertex!(env::SpecializedBendersSeq, L_env::AbstractBendersSeq, state::BendersSeqState)
-    dim_x = env.data.dim_x
+    dim_x = env.master.dim_x
     
     ## find largest fractional idx
     frac_idx = -1

@@ -29,14 +29,16 @@ using JuMP
             @testset "Classic oracle" begin
                 @testset "NoSeq" begin
                     @info "solving CFLP p$i - classical oracle - no seq..."
+                    # This setting can use default initializer
                     master = Master(problem; customize = customize_master_model!)
                     oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
 
-                    root_preprocessing = NoRootNodePreprocessing()
-                    lazy_callback = LazyCallback(oracle)
-                    user_callback = NoUserCallback()
+                    # root_preprocessing = NoRootNodePreprocessing()
+                    # lazy_callback = LazyCallback(oracle)
+                    # user_callback = NoUserCallback()
+                    # env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
 
-                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    env = BendersBnB(master, oracle; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)

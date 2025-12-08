@@ -29,16 +29,18 @@ using CPLEX
             @testset "Classic oracle" begin
                 @testset "NoSeq" begin
                     @info "solving UFLP p$i - classical oracle - no seq..."
-                    
+                    # This setting can use default initializer
                     master = Master(problem; customize = customize_master_model!)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                     oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
                 
-                    root_preprocessing = NoRootNodePreprocessing()
-                    lazy_callback = LazyCallback(oracle)
-                    user_callback = NoUserCallback()
+                    # root_preprocessing = NoRootNodePreprocessing()
+                    # lazy_callback = LazyCallback(oracle)
+                    # user_callback = NoUserCallback()
+                    # env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
 
-                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    env = BendersBnB(master, oracle; param = benders_param)
+
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -109,15 +111,17 @@ using CPLEX
 
                 @testset "NoSeq" begin
                     @info "solving UFLP p$i - fat knapsack oracle - no seq..."
+                    # This setting can use default initializer
                     master = Master(problem; customize = customize_master_model!)
                     oracle = UFLKnapsackOracle(problem) 
                     set_parameter!(oracle, "add_only_violated_cuts", true)
                     
-                    root_preprocessing = NoRootNodePreprocessing()
-                    lazy_callback = LazyCallback(oracle)
-                    user_callback = NoUserCallback()
+                    # root_preprocessing = NoRootNodePreprocessing()
+                    # lazy_callback = LazyCallback(oracle)
+                    # user_callback = NoUserCallback()
+                    # env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
 
-                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    env = BendersBnB(master, oracle; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
@@ -172,7 +176,6 @@ using CPLEX
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                 end
             end
-            
             # To test slim version, users can use # set_parameter!(oracle, "slim", true)
         end
     end

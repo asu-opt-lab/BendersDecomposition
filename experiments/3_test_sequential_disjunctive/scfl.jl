@@ -59,34 +59,9 @@ using CPLEX
 
                             log = solve!(env)
                             @test env.termination_status == Optimal()
-                            # if env.log.termination_status == Optimal()
-                            if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                                t_opt_ = [sum(t_opt)]
-                                @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
-                                # optimize!(master.model)
-                                opt_sol = Dict{VariableRef, Float64}()
-                                for i = 1:data.dim_x
-                                    opt_sol[master.x[i]] = x_opt[i]
-                                end
-                                for i = 1:data.dim_t
-                                    opt_sol[master.t[i]] = t_opt_[i]
-                                end
-
-                                @info primal_feasibility_report(env.master.model, opt_sol)
-                                @info data.c_x' * x_opt + data.c_t' * t_opt_
-
-                                for v in keys(opt_sol)
-                                    fix(v, opt_sol[v]; force=true)
-                                end
-                                optimize!(env.master.model)
-                                @info objective_value(env.master.model)
-                            end
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                            # elseif env.termination_status == TimeLimit()
-                            #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
-                            #     @test env.log.LB <= mip_opt_val <= env.log.UB
-                            # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
-                            #     @test false
+                            # if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            #     infeasibility_report(master, x_opt, t_opt)
                             # end
                         end
                     end
@@ -119,34 +94,9 @@ using CPLEX
 
                             log = solve!(env)
                             @test env.termination_status == Optimal()
-                            # if env.log.termination_status == Optimal()
-                            if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                                t_opt_ = [sum(t_opt)]
-                                @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
-                                # optimize!(master.model)
-                                opt_sol = Dict{VariableRef, Float64}()
-                                for i = 1:data.dim_x
-                                    opt_sol[master.x[i]] = x_opt[i]
-                                end
-                                for i = 1:data.dim_t
-                                    opt_sol[master.t[i]] = t_opt_[i]
-                                end
-
-                                @info primal_feasibility_report(env.master.model, opt_sol)
-                                @info data.c_x' * x_opt + data.c_t' * t_opt_
-
-                                for v in keys(opt_sol)
-                                    fix(v, opt_sol[v]; force=true)
-                                end
-                                optimize!(env.master.model)
-                                @info objective_value(env.master.model)
-                            end
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                            # elseif env.termination_status == TimeLimit()
-                            #     @warn "TIME LIMIT, elapsed time = $(time() - env.log.start_time)"
-                            #     @test env.log.LB <= mip_opt_val <= env.log.UB
-                            # elseif env.log.termination_status == InfeasibleOrNumericalIssue()
-                            #     @test false
+                            # if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            #     infeasibility_report(master, x_opt, t_opt)
                             # end
                         end
                     end

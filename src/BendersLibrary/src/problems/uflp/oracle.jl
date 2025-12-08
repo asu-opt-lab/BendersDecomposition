@@ -18,25 +18,6 @@ mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
     J::Int
     obj_values::Vector{Float64}
 
-    function UFLKnapsackOracle(data; 
-                               scen_idx::Int=-1, 
-                               solver_param::Any = nothing,
-                               oracle_param::UFLKnapsackOracleParam = UFLKnapsackOracleParam())
-        @debug "Building knapsack oracle for UFLP"
-        if solver_param != nothing
-            throw(AlgorithmException("UFLKnapsackOracle is solver-free, but it is given with solver_param of type $(type(solver_param))"))
-        end
-        
-        J = data.problem.n_customers
-        cost_demands = [data.problem.costs[:,j] .* data.problem.demands[j] for j in 1:J]
-        sorted_indices = [sortperm(cost_demands[j]) for j in 1:J]
-        sorted_cost_demands = [cost_demands[j][sorted_indices[j]] for j in 1:J]
-        
-        obj_values = Vector{Float64}(undef, J)
-
-        new(oracle_param, sorted_cost_demands, sorted_indices, J, obj_values)
-    end
-
     function UFLKnapsackOracle(problem::UFLPData; 
         scen_idx::Int=-1, 
         oracle_param::UFLKnapsackOracleParam = UFLKnapsackOracleParam())

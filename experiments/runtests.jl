@@ -7,4 +7,5 @@ using Test
     include("3_test_sequential_disjunctive/runtest.jl")
     include("4_test_callback_typical/runtest.jl")
     include("5_test_callback_disjunctive/runtest.jl")
+    include("6_test_specialized_sequential.jl")
 end

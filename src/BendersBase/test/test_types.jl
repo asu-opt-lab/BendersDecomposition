@@ -6,7 +6,6 @@ using BendersBase
 
     @testset "Abstract Types" begin
         @test isabstracttype(AbstractBendersDecomposition)
-        @test isabstracttype(AbstractMip)
         @test isabstracttype(AbstractMaster)
         @test isabstracttype(AbstractOracle)
         @test isabstracttype(AbstractBendersSeq)

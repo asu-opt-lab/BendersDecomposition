@@ -9,6 +9,10 @@ A mutable struct representing the master problem in Benders decomposition.
 - `model::Model`: The underlying JuMP optimization model
 - `x::Vector{VariableRef}`: Binary first-stage decision variables
 - `t::Vector{VariableRef}`: Auxiliary variables for epigraph constraints
+- `dim_x::Int`: dimension of `x`
+- `dim_t::Int`: dimension of `t`
+- `c_x::Vector{Float64}`: objective coefficient vector of `x`
+- `c_x::Vector{Float64}`: objective coefficient vector of `t`
 """
 mutable struct Master <: AbstractMaster
     model::Model
@@ -16,20 +20,10 @@ mutable struct Master <: AbstractMaster
     x::Vector{VariableRef}
     t::Vector{VariableRef}
 
-    function Master(data::Data; solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9))
-
-        @debug "Building Master Problem for CFLP"
-    
-        model = Model()
-
-        @variable(model, x[1:data.dim_x], Bin)
-        @variable(model, t[1:data.dim_t] >= -1e6)
-
-        @objective(model, Min, data.c_x'* x + data.c_t'* t)
-
-        assign_attributes!(model, solver_param)
-        new(model, x, t)
-    end
+    dim_x::Int
+    dim_t::Int
+    c_x::Vector{Float64}
+    c_t::Vector{Float64}
 
     function Master(problem::AbstractData; customize=customize_master_model!)
 
@@ -41,7 +35,13 @@ mutable struct Master <: AbstractMaster
         t = t isa VariableRef ? [t] : t
         x = var_from_tuple(x_tuple)
 
-        new(model, x_tuple, x, t)
+        dim_x = length(x)
+        obj = objective_function(model)
+        c_x = [coefficient(obj, x[i]) for i in 1:dim_x]
+        dim_t = length(t)
+        c_t = [coefficient(obj, t[i]) for i in 1:dim_t]
+
+        new(model, x_tuple, x, t, dim_x, dim_t, c_x, c_t)
     end
 end
 

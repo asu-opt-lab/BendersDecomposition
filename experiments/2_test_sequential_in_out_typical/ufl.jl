@@ -62,18 +62,7 @@ using CPLEX
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                 end
 
-                # @testset "slim version" begin
-                #     @info "solving UFLP p$i - slim Knapsack oracle - seqInOut..."
-                #     master = Master(problem; customize = customize_master_model!)
-                #     oracle = UFLKnapsackOracle(problem) 
-                #     set_parameter!(oracle, "add_only_violated_cuts", false)
-                #     set_parameter!(oracle, "slim", true)
-
-                #     env = BendersSeqInOut(master, oracle; param = benders_inout_param)
-                #     log = solve!(env)
-                #     @test env.termination_status == Optimal()
-                #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                # end
+                # To test slim version, users can use # set_parameter!(oracle, "slim", true)
             end
         end
     end

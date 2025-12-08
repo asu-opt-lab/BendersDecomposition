@@ -13,25 +13,6 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     fixed_x_constraints::Vector{ConstraintRef}
     facility_knapsack_info::FacilityKnapsackInfo
 
-    function CFLKnapsackOracle(data::Data; 
-                               scen_idx=-1, 
-                               solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                               oracle_param::BasicOracleParam = BasicOracleParam())
-        @debug "Building knapsack oracle for CFLP"
-        model = Model()
-
-        # Define coupling variables and constraints
-        @variable(model, 0 <= x[1:data.dim_x] <= 1)
-        @constraint(model, fix_x, x .== 0)
-
-        facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.problem.costs, data.problem.demands, data.problem.capacities) : FacilityKnapsackInfo(data.problem.costs, data.problem.demands[scen_idx], data.problem.capacities)
-
-        assign_attributes!(model, solver_param)
-        
-        new(oracle_param, model, fix_x, facility_knapsack_info)
-    end
-
-    # Accept AbstractData so the oracle can operate on either SCFLPData or CFLPData.
     function CFLKnapsackOracle(problem::AbstractData, master::Master; 
                             customize = customize_sub_model!,
                             scen_idx::Int=-1, 

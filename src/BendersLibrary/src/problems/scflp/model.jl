@@ -59,14 +59,3 @@ function customize_sub_model!(model::Model, problem::SCFLPData, scen_idx::Int; x
     @constraint(model, facility_open, y .<= x)
     @constraint(model, capacity[i in 1:I], sum(problem.demands[scen_idx][:] .* y[i,:]) <= problem.capacities[i] * x[i])
 end
-
-# """
-# To-do
-# """
-# function update_model!(oracle::DisjunctiveOracle, data::Data{<:SCFLPData})
-#     dcglp = oracle.dcglp 
-
-#     I = data.problem.n_facilities
-#     max_demand = maximum(sum(demands) for demands in data.problem.demands)
-#     @constraint(dcglp, [i=1:2], sum(data.problem.capacities[j] * dcglp[:omega_x][i,j] for j in 1:I) >= max_demand * dcglp[:omega_0][i])
-# end

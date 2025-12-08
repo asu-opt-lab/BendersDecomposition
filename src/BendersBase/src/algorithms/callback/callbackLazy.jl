@@ -20,10 +20,6 @@ struct LazyCallback <: AbstractLazyCallback
     function LazyCallback(oracle::AbstractTypicalOracle)
         new(EmptyCallbackParam(), oracle)
     end
-    
-    function LazyCallback(data)
-        new(EmptyCallbackParam(), ClassicalOracle(data))
-    end
 end
 
 """
