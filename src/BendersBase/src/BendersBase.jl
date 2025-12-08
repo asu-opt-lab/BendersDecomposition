@@ -39,5 +39,5 @@ end # module BendersBase
 # 1. Remove mip.jl and Mip struct
 # 2. Remove EmptyData; remove AbstractData completely and consider accepting Any
 # 3. remove previous initializer of master, oracle, env modules
-# 4. rename Data
+# 4. remove Data by having dim_x, dim_t, c_x, c_t info in master module
 # 4. rename oracle_param to param for all oracles as we no longer has solver_param

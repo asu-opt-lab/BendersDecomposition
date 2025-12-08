@@ -64,15 +64,15 @@ using CPLEX
                                 @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
                                 # optimize!(master.model)
                                 opt_sol = Dict{VariableRef, Float64}()
-                                for i = 1:data.dim_x
+                                for i = 1:master.dim_x
                                     opt_sol[master.x[i]] = x_opt[i]
                                 end
-                                for i = 1:data.dim_t
+                                for i = 1:master.dim_t
                                     opt_sol[master.t[i]] = t_opt_[i]
                                 end
                                 
                                 @info primal_feasibility_report(env.master.model, opt_sol)
-                                @info data.c_x' * x_opt + data.c_t' * t_opt_
+                                @info master.c_x' * x_opt + master.c_t' * t_opt_
                                 
                                 for v in keys(opt_sol)
                                     fix(v, opt_sol[v]; force=true)
@@ -122,15 +122,15 @@ using CPLEX
                                 @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)" 
                                 # optimize!(master.model)
                                 opt_sol = Dict{VariableRef, Float64}()
-                                for i = 1:data.dim_x
+                                for i = 1:master.dim_x
                                     opt_sol[master.x[i]] = x_opt[i]
                                 end
-                                for i = 1:data.dim_t
+                                for i = 1:master.dim_t
                                     opt_sol[master.t[i]] = t_opt_[i]
                                 end
                                 
                                 @info primal_feasibility_report(env.master.model, opt_sol)
-                                @info data.c_x' * x_opt + data.c_t' * t_opt_
+                                @info master.c_x' * x_opt + master.c_t' * t_opt_
                                 
                                 for v in keys(opt_sol)
                                     fix(v, opt_sol[v]; force=true)

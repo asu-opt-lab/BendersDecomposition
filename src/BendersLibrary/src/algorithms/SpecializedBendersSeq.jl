@@ -19,6 +19,27 @@ mutable struct SpecializedBendersSeq <: AbstractBendersSeq
 
         new(data, master, oracle, param, Inf, NotSolved())
     end
+
+    function SpecializedBendersSeq(master::AbstractMaster, oracle::DisjunctiveOracle; param::SpecializedBendersSeqParam = SpecializedBendersSeqParam()) 
+        
+        # Initialize data object
+        dim_x = length(master.x)
+        obj = objective_function(master.model)
+        c_x = [coefficient(obj, master.x[i]) for i in 1:dim_x]
+        
+        dim_t = length(master.t)
+        c_t = [coefficient(obj, master.t[i]) for i in 1:dim_t]
+        
+        data = Data(dim_x, dim_t, EmptyData(), c_x, c_t)
+
+        # Relax integrality in master
+        relax_integrality(master.model)
+
+        oracle.oracle_param.split_index_selection_rule != LargestFractional() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.split_index_selection_rule). Use LargestFractional() instead."))
+        oracle.oracle_param.disjunctive_cut_append_rule != DisjunctiveCutsSmallerIndices() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.disjunctive_cut_append_rule). Use DisjunctiveCutsSmallerIndices() instead."))
+
+        new(data, master, oracle, param, Inf, NotSolved())
+    end
 end
 
 """
