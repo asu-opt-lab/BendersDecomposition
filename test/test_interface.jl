@@ -174,6 +174,24 @@ end
     struct EmptyData <: AbstractData end
     problem = EmptyData()
 
+    @testset "no customize functions provided (should throw)" begin
+        # Master without customize must throw
+        @test_throws UndefError Master(problem)
+
+        # Model-based oracle without customize must throw
+        function customize_master_model!(model::Model, problem::EmptyData)
+
+            @variable(model, u[1:10], Bin)
+            @variable(model, t >= -1e6)
+            @constraint(model, sum(u) >= 2)
+            @objective(model, Min, 1.0 * t)
+            
+            return (u = u, ), t
+        end
+        master = Master(problem; customize = customize_master_model!)
+        @test_throws UndefError ClassicalOracle(problem, master)
+    end
+
     @testset "master variable container Vector{VariableRef}" begin
         function customize_master_model!(model::Model, problem::EmptyData)
 

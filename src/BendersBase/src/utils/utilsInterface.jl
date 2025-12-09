@@ -1,5 +1,96 @@
-export copy_variables!, var_from_tuple
+export customize_master_model!, customize_sub_model!, copy_variables!, var_from_tuple
 
+"""
+    customize_master_model!(model::Model, problem::AbstractData)
+
+User-defined hook for constructing the master model.
+
+This function is intended to be implemented by users for their specific
+problem type. Given a JuMP `model` and a problem instance data `problem`,
+the method should:
+
+1. Add all master-level variables to the model.
+2. Add all master-level constraints and any auxiliary structures needed.
+3. Return a `NamedTuple` containing the master decision variables  
+   (for use by the oracles) and a vector of any auxiliary variables needed by the
+   algorithm.
+
+By default, this function throws an `UndefError`, indicating that no
+implementation exists for the given subtype of `AbstractData`. Users must
+provide a specialized method:
+
+```julia
+function customize_master_model!(model::Model, problem::MyDataType)
+    # build variables and constraints
+    @variable(model, u[1:10])
+    @variable(model, v[1:2, 2:3, [:A,:B], 4:5])
+    @variable(model, t[1:10]) # auxiliary variables for Benders
+
+    # return variables in a NamedTuple
+    return (u = u, v = v), t
+end
+
+Arguments
+- `model::Model`: A JuMP model that will be modified in place.
+- `problem::AbstractData`: A user-defined data object describing the instance required to build the formulation.
+
+Returns
+- A `NamedTuple` mapping variable symbolic names to the JuMP variable containers (e.g., `Vector{VariableRef}`, `DenseAxisArray`, or `SparseAxisArray`) created for the master problem.
+
+Notes
+- This function must be implemented by the user for each concrete
+subtype of `AbstractData`.
+
+"""
+function customize_master_model!(model::Model, problem::AbstractData)
+    throw(UndefError("update customize_master_model! for $(typeof(problem))"))
+end
+
+"""
+    customize_sub_model!(model::Model, problem::AbstractData, scen_idx::Int; kwargs...)
+
+User-defined hook for constructing a subproblem model associated with a
+specific scenario.
+
+This function must be implemented by users for their concrete subtype of
+`AbstractData`. Given a JuMP `model`, a problem instance `problem`, and a
+scenario index `scen_idx`, the method should:
+
+1. Add all subproblem variables associated with the given scenario.
+2. Add all subproblem constraints associated with the given scenario,
+   using master variables passed through `kwargs` (intended for oracle use).
+
+By default, this method throws an `UndefError`, indicating that no implementation
+exists for the provided argument types. Users must define their own specialized
+method. For example:
+
+```julia
+function customize_sub_model!(model::Model, problem::MyDataType, scen_idx::Int; u, v)
+    # Create variables
+    @variable(model, y >= 0)
+
+    scen_data = problem[scen_idx]
+
+    # Add constraints based on scenario data, referencing master variables u and v
+    @constraint(model, sum(u) + y == 1)
+    @constraint(model, sum(v) == 1)
+    @constraint(model, v[2, 3, :A, 4] + y == 1)
+end
+
+Arguments
+- `model::Model` A JuMP model that will be modified in place to represent the subproblem.
+- `problem::AbstractData` A user-defined data object describing the information required to build the
+subproblem formulation.
+- `scen_idx::Int` Index of the scenario for which the subproblem is built. This may be -1 if the model does not explicitly use scenarios.
+- `kwargs...` Symbolic names of the master variables passed from the master model to the subproblem for use by the oracle.
+
+Notes
+- This function must be implemented by the user to construct problem-specific sub-models.
+"""
+
+function customize_sub_model!(model::Model, problem::AbstractData, scen_idx::Int; kwargs...) 
+    throw(UndefError("update customize_sub_model! for $(typeof(problem))"))
+end
 """
     copy_variables!(model::Model, x::NamedTuple)
 

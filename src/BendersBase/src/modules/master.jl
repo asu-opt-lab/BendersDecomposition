@@ -45,6 +45,3 @@ mutable struct Master <: AbstractMaster
     end
 end
 
-function customize_master_model!(model::Model, problem::AbstractData)
-    throw(UndefError("update customize_master_model! for $(typeof(problem))"))
-end
