@@ -34,14 +34,3 @@ export Hyperplane, aggregate, generate_cuts, set_parameter!, hyperplanes_to_expr
 export get_sec_remaining, record_iteration!, update_upper_bound_and_gap!, is_terminated, check_lb_improvement!, print_iteration_info, to_dataframe
 
 end # module BendersBase
-
-# To-Do: 
-# 1. Remove mip.jl and Mip struct --> done
-# 2. remove Data by having dim_x, dim_t, c_x, c_t info in master module --> done
-# 3. clean initializers of master, oracle, env modules --> done
-# 4. rename `problem::AbstractData` to `data::AbstractData`
-# 5. rename oracle_param to param for all oracles as we no longer has solver_param
-# 6. consider returning `to_dataframe(log)` for all solve! functions.
-# 7. Remove AbstractCallbackParam and EmptyCallbackParam <: AbstractCallbackParam and add AbstractUserCallbackParam; Lazy callback does not need parameters.
-# 8. Kaiwen: refactor all files in script folder
-# 9. Inho: refactor all snip-related files
