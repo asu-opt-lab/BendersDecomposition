@@ -9,7 +9,7 @@ using CPLEX
     for i in instances
         @testset "Instance: f25-c50-s64-r10-$i" begin
             # Load problem data
-            problem = read_stochastic_capacited_facility_location_problem("f25-c50-s64-r10-$i")
+            data = read_stochastic_capacited_facility_location_problem("f25-c50-s64-r10-$i")
             
             # Algorithm parameters
             benders_param = BendersSeqParam(;
@@ -28,7 +28,7 @@ using CPLEX
             
             # Solve MIP for reference
             mip_model = Model()
-            customize_mip_model!(mip_model, problem)
+            customize_mip_model!(mip_model, data)
             optimize!(mip_model)
             @assert termination_status(mip_model) == OPTIMAL
             mip_opt_val = objective_value(mip_model)
@@ -50,9 +50,9 @@ using CPLEX
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
                                                                     
-                            master = Master(problem; customize = customize_master_model!)
-                            typical_oracle_kappa = SeparableOracle(problem, master, ClassicalOracle(), problem.n_scenarios; customize = customize_sub_model!)
-                            typical_oracle_nu = SeparableOracle(problem, master, ClassicalOracle(), problem.n_scenarios; customize = customize_sub_model!)
+                            master = Master(data; customize = customize_master_model!)
+                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model!)
+                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model!)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
@@ -85,9 +85,9 @@ using CPLEX
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
                                                                     
-                            master = Master(problem; customize = customize_master_model!)
-                            typical_oracle_kappa = SeparableOracle(problem, master, CFLKnapsackOracle(), problem.n_scenarios; customize = customize_sub_model!)
-                            typical_oracle_nu = SeparableOracle(problem, master, CFLKnapsackOracle(), problem.n_scenarios; customize = customize_sub_model!)
+                            master = Master(data; customize = customize_master_model!)
+                            typical_oracle_kappa = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!)
+                            typical_oracle_nu = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)

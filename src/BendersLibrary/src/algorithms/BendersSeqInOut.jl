@@ -8,8 +8,8 @@ Sequential Benders decomposition with In-Out stabilization technique.
 This variant of Benders decomposition uses stabilization to improve convergence by maintaining a stabilizing point and perturbing query points. The algorithm can switch to Kelley's cutting-plane method if progress stalls.
 
 # Fields
-- `master::AbstractMaster`: Master problem formulation
-- `oracle::AbstractOracle`: Oracle for subproblem solving and cut generation
+- `master::AbstractMaster`: Master module
+- `oracle::AbstractOracle`: Oracle module for cut generation
 - `param::BendersSeqInOutParam`: Parameters controlling algorithm behavior (includes stabilization parameters α, λ, and stabilizing_x)
 - `obj_value::Float64`: Objective value of the best solution found
 - `termination_status::TerminationStatus`: Status of the algorithm upon termination
@@ -27,8 +27,8 @@ The stabilization technique requires three parameters (specified in `BendersSeqI
 
 # Examples
 ```julia
-master = Master(problem; customize = customize_master_model!)
-oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+master = Master(data; customize = customize_master_model!)
+oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
 param = BendersSeqInOutParam(α = 0.8, λ = 0.5, stabilizing_x = zeros(master.dim_x))
 env = BendersSeqInOut(master, oracle; param = param)
 df = solve!(env)

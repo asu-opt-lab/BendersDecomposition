@@ -9,7 +9,7 @@ using CPLEX
     for i in instances
         @testset "Instance: p$i" begin            
             # Load problem data
-            problem = read_uflp_benchmark_data("p$i")
+            data = read_uflp_benchmark_data("p$i")
 
             # Algorithm parameters
             benders_param = BendersBnBParam(;
@@ -29,7 +29,7 @@ using CPLEX
             
             # Solve MIP for reference
             mip_model = Model()
-            customize_mip_model!(mip_model, problem)
+            customize_mip_model!(mip_model, data)
             set_optimizer_attribute(mip_model, "CPX_PARAM_BRDIR", 1)
             optimize!(mip_model)
             @assert termination_status(mip_model) == OPTIMAL
@@ -54,10 +54,10 @@ using CPLEX
 
                         @testset "NoSeq" begin
                             @info "solving UFLP p$i - disjunctive oracle/classical/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(problem; customize = customize_master_model!)
+                            master = Master(data; customize = customize_master_model!)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
-                            typical_oracles = [ClassicalOracle(problem, master; customize = customize_sub_model!); ClassicalOracle(problem, master; customize = customize_sub_model!)] # for kappa & nu
+                            lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
                             disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
                     
                             root_preprocessing = NoRootNodePreprocessing()
@@ -72,10 +72,10 @@ using CPLEX
 
                         @testset "Seq" begin
                             @info "solving UFLP p$i - disjunctive oracle/classical/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(problem; customize = customize_master_model!)
+                            master = Master(data; customize = customize_master_model!)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
-                            typical_oracles = [ClassicalOracle(problem, master; customize = customize_sub_model!); ClassicalOracle(problem, master; customize = customize_sub_model!)] # for kappa & nu
+                            lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
                             disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
                     
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
@@ -90,13 +90,13 @@ using CPLEX
 
                         @testset "SeqInOut" begin
                             @info "solving UFLP p$i - disjunctive oracle/classical/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(problem; customize = customize_master_model!)
+                            master = Master(data; customize = customize_master_model!)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
-                            typical_oracles = [ClassicalOracle(problem, master; customize = customize_sub_model!); ClassicalOracle(problem, master; customize = customize_sub_model!)] # for kappa & nu
+                            lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
                             disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
 
-                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(problem.n_facilities), α = 0.9, λ = 0.1, verbose = false))
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
                             
@@ -110,13 +110,13 @@ using CPLEX
             end
             
             @testset "Fat knapsack oracle" begin
-                function customize_master_model!(model::Model, problem::UFLPData)
+                function customize_master_model!(model::Model, data::UFLPData)
                     optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
                     set_optimizer(model, optimizer)
-                    @variable(model, x[1:problem.n_facilities], Bin)
-                    @variable(model, t[1:problem.n_customers] >= -1e6)
+                    @variable(model, x[1:data.n_facilities], Bin)
+                    @variable(model, t[1:data.n_customers] >= -1e6)
                     @constraint(model, sum(x) >= 2)
-                    @objective(model, Min, problem.fixed_costs'* x + sum(t))
+                    @objective(model, Min, data.fixed_costs'* x + sum(t))
                     return (x = x, ), t
                 end
 
@@ -137,11 +137,11 @@ using CPLEX
                         
                         @testset "NoSeq" begin
                             @info "solving UFLP p$i - disjunctive oracle/fat knapsack/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(problem; customize = customize_master_model!)
+                            master = Master(data; customize = customize_master_model!)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = UFLKnapsackOracle(problem)
+                            lazy_oracle = UFLKnapsackOracle(data)
                             set_parameter!(lazy_oracle, "add_only_violated_cuts", true)
-                            typical_oracles = [UFLKnapsackOracle(problem), UFLKnapsackOracle(problem)]
+                            typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]
                             for k=1:2
                                 set_parameter!(typical_oracles[k], "add_only_violated_cuts", true)
                             end
@@ -159,11 +159,11 @@ using CPLEX
 
                         @testset "Seq" begin
                             @info "solving UFLP p$i - disjunctive oracle/fat knapsack/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(problem; customize = customize_master_model!)
+                            master = Master(data; customize = customize_master_model!)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = UFLKnapsackOracle(problem)
+                            lazy_oracle = UFLKnapsackOracle(data)
                             set_parameter!(lazy_oracle, "add_only_violated_cuts", true)
-                            typical_oracles = [UFLKnapsackOracle(problem), UFLKnapsackOracle(problem)]
+                            typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]
                             for k=1:2
                                 set_parameter!(typical_oracles[k], "add_only_violated_cuts", true)
                             end
@@ -181,17 +181,17 @@ using CPLEX
 
                         @testset "SeqInOut" begin
                             @info "solving UFLP p$i - disjunctive oracle/fat knapsack/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(problem; customize = customize_master_model!)
+                            master = Master(data; customize = customize_master_model!)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = UFLKnapsackOracle(problem)
+                            lazy_oracle = UFLKnapsackOracle(data)
                             set_parameter!(lazy_oracle, "add_only_violated_cuts", true)
-                            typical_oracles = [UFLKnapsackOracle(problem), UFLKnapsackOracle(problem)]
+                            typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]
                             for k=1:2
                                 set_parameter!(typical_oracles[k], "add_only_violated_cuts", true)
                             end
                             disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
 
-                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(problem.n_facilities), α = 0.9, λ = 0.1, verbose = false))
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
                             

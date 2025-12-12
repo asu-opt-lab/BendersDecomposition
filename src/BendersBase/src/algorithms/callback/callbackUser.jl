@@ -44,7 +44,7 @@ Generates and adds Benders cuts at fractional nodes based on the specified frequ
 
 # Arguments
 - `cb_data`: Callback data from the solver
-- `master::Master`: The master problem object
+- `master::Master`: The master module
 - `log::BendersBnBLog`: Log object to record statistics
 - `param::BendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::UserCallback`: Configuration for the user callback with parameters controlling when cuts are generated

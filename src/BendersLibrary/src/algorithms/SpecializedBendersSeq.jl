@@ -15,8 +15,8 @@ mutable struct SpecializedBendersSeq <: AbstractBendersSeq
         # Relax integrality in master
         relax_integrality(master.model)
 
-        oracle.oracle_param.split_index_selection_rule != LargestFractional() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.split_index_selection_rule). Use LargestFractional() instead."))
-        oracle.oracle_param.disjunctive_cut_append_rule != DisjunctiveCutsSmallerIndices() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.oracle_param.disjunctive_cut_append_rule). Use DisjunctiveCutsSmallerIndices() instead."))
+        oracle.param.split_index_selection_rule != LargestFractional() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.param.split_index_selection_rule). Use LargestFractional() instead."))
+        oracle.param.disjunctive_cut_append_rule != DisjunctiveCutsSmallerIndices() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.param.disjunctive_cut_append_rule). Use DisjunctiveCutsSmallerIndices() instead."))
 
         new(master, oracle, param, Inf, NotSolved())
     end

@@ -33,7 +33,7 @@ Generic function for implementing lazy callbacks. This should be overridden by s
 
 # Arguments
 - `cb_data`: Callback data from the solver
-- `master_model::Model`: The JuMP master problem model
+- `master_model::Model`: The JuMP master model
 - `log::AbstractBendersBnBLog`: Log object to record statistics
 - `param::AbstractBendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::AbstractLazyCallback`: Configuration for the lazy callback
@@ -66,7 +66,7 @@ Generic function for implementing user callbacks. This should be overridden by s
 
 # Arguments
 - `cb_data`: Callback data from the solver
-- `master_model::Model`: The JuMP master problem model
+- `master_model::Model`: The JuMP master model
 - `log::AbstractBendersBnBLog`: Log object to record statistics
 - `param::AbstractBendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::AbstractUserCallback`: Configuration for the user callback

@@ -83,7 +83,7 @@ function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::AllDisjunctiveCuts)
 end
 function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::DisjunctiveCutsSmallerIndices)
     
-    @assert typeof(oracle.oracle_param.split_index_selection_rule) <: SimpleSplit
+    @assert typeof(oracle.param.split_index_selection_rule) <: SimpleSplit
 
     dcglp = oracle.dcglp
     # remove all disjunctive cuts from DCGLP

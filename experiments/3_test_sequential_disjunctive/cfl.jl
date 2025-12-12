@@ -9,7 +9,7 @@ using CPLEX
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data
-            problem = read_cflp_benchmark_data("p$i")
+            data = read_cflp_benchmark_data("p$i")
             
             # Algorithm parameters
             benders_param = BendersSeqParam(;
@@ -29,7 +29,7 @@ using CPLEX
             
             # Solve MIP for reference
             mip_model = Model()
-            customize_mip_model!(mip_model, problem)
+            customize_mip_model!(mip_model, data)
             optimize!(mip_model)
             @assert termination_status(mip_model) == OPTIMAL
             mip_opt_val = objective_value(mip_model)
@@ -51,8 +51,8 @@ using CPLEX
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
                                                                     
-                            master = Master(problem; customize = customize_master_model!)
-                            typical_oracles = [ClassicalOracle(problem, master; customize = customize_sub_model!); ClassicalOracle(problem, master; customize = customize_sub_model!)] # for kappa & nu
+                            master = Master(data; customize = customize_master_model!)
+                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
                             disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
@@ -84,8 +84,8 @@ using CPLEX
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
                                                                     
-                            master = Master(problem; customize = customize_master_model!)
-                            typical_oracles = [CFLKnapsackOracle(problem, master; customize = customize_sub_model!); CFLKnapsackOracle(problem, master; customize = customize_sub_model!)]
+                            master = Master(data; customize = customize_master_model!)
+                            typical_oracles = [CFLKnapsackOracle(data, master; customize = customize_sub_model!); CFLKnapsackOracle(data, master; customize = customize_sub_model!)]
                             disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                             

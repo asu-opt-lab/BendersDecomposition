@@ -9,7 +9,7 @@ using CPLEX
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data
-            problem = read_uflp_benchmark_data("p$(i)")
+            data = read_uflp_benchmark_data("p$(i)")
             
             # Algorithm parameters
             benders_param = BendersSeqParam(;
@@ -29,7 +29,7 @@ using CPLEX
                 
             # Solve MIP for reference
             mip_model = Model()
-            customize_mip_model!(mip_model, problem)
+            customize_mip_model!(mip_model, data)
             optimize!(mip_model)
             @assert termination_status(mip_model) == OPTIMAL
             mip_opt_val = objective_value(mip_model)
@@ -51,8 +51,8 @@ using CPLEX
                                                             reuse_dcglp = reuse_dcglp,
                                                             lift = lift)
 
-                            master = Master(problem; customize = customize_master_model!)
-                            typical_oracles = [ClassicalOracle(problem, master; customize = customize_sub_model!); ClassicalOracle(problem, master; customize = customize_sub_model!)] # for kappa & nu
+                            master = Master(data; customize = customize_master_model!)
+                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
                             disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
                             
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
@@ -68,13 +68,13 @@ using CPLEX
             end 
 
             @testset "Fat knapsack oracle" begin
-                function customize_master_model!(model::Model, problem::UFLPData)
+                function customize_master_model!(model::Model, data::UFLPData)
                     optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
                     set_optimizer(model, optimizer)
-                    @variable(model, x[1:problem.n_facilities], Bin)
-                    @variable(model, t[1:problem.n_customers] >= -1e6)
+                    @variable(model, x[1:data.n_facilities], Bin)
+                    @variable(model, t[1:data.n_customers] >= -1e6)
                     @constraint(model, sum(x) >= 2)
-                    @objective(model, Min, problem.fixed_costs'* x + sum(t))
+                    @objective(model, Min, data.fixed_costs'* x + sum(t))
                     return (x = x, ), t
                 end
 
@@ -85,8 +85,8 @@ using CPLEX
                     @info "solving UFLP p$i - disjunctive oracle/fat knapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                             
-                            master = Master(problem; customize = customize_master_model!)
-                            typical_oracles = [UFLKnapsackOracle(problem); UFLKnapsackOracle(problem)] # for kappa & nu
+                            master = Master(data; customize = customize_master_model!)
+                            typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
 
                             oracle_param = DisjunctiveOracleParam(dcglp_param;
                                                             norm = LpNorm(p), 

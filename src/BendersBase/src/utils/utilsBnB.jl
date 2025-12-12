@@ -24,7 +24,7 @@ Represents the state of a node in the Branch-and-Bound tree for Benders decompos
 
 Fields:
 - `oracle_time::Float64`: Time spent in oracle calls for this node.
-- `values::Dict{Symbol,Vector{Float64}}`: Solution values at this node, typically includes `:x` (first-stage variables) and `:t` (a vector of subproblem objective approximations).
+- `values::Dict{Symbol,Vector{Float64}}`: Solution values at this node, typically includes `:x` (first-stage variables) and `:t` (a vector of auxiliary variables for subproblem objective approximations).
 - `f_x::Vector{Float64}`: A vector of subproblem objective function values at this node.
 - `is_in_L::Bool`: Flag indicating if the node is in the L-set.
 - `node::Int`: Unique identifier for this node.

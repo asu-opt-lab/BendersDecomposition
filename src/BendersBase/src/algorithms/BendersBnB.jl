@@ -22,8 +22,8 @@ avoiding the need to repeatedly solve the entire master problem.
 
 # Examples
 ```julia
-master = Master(problem; customize = customize_master_model!)
-oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+master = Master(data; customize = customize_master_model!)
+oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
 env = BendersBnB(master, oracle)  # Use default setting with no root node preprocessing and no user callback
 obj_value, solve_time = solve!(env)
 ```
@@ -151,7 +151,7 @@ function solve!(env::BendersBnB)
         @info "Lazy cuts added: $(log.n_lazy_cuts)"
         if typeof(env.user_callback.oracle) <: AbstractDisjunctiveOracle
             @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
-            env.user_callback.oracle.oracle_param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts - length(env.user_callback.oracle.disjunctiveCuts))"
+            env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts - length(env.user_callback.oracle.disjunctiveCuts))"
         end
     end
     

@@ -9,7 +9,7 @@ using CPLEX
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data
-            problem = read_uflp_benchmark_data("p$i")
+            data = read_uflp_benchmark_data("p$i")
 
             # BnB parameters
             benders_param = BendersBnBParam(;
@@ -20,7 +20,7 @@ using CPLEX
 
             # Solve MIP for reference
             mip_model = Model()
-            customize_mip_model!(mip_model, problem)
+            customize_mip_model!(mip_model, data)
             set_optimizer_attribute(mip_model, "CPX_PARAM_BRDIR", 1)
             optimize!(mip_model)
             @assert termination_status(mip_model) == OPTIMAL
@@ -30,9 +30,9 @@ using CPLEX
                 @testset "NoSeq" begin
                     @info "solving UFLP p$i - classical oracle - no seq..."
                     # This setting can use default initializer
-                    master = Master(problem; customize = customize_master_model!)
+                    master = Master(data; customize = customize_master_model!)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
                 
                     # root_preprocessing = NoRootNodePreprocessing()
                     # lazy_callback = LazyCallback(oracle)
@@ -49,9 +49,9 @@ using CPLEX
                 @testset "Seq" begin
                     @info "solving UFLP p$i - classical oracle - seq..."
                     
-                    master = Master(problem; customize = customize_master_model!)
+                    master = Master(data; customize = customize_master_model!)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -72,15 +72,15 @@ using CPLEX
 
                 @testset "SeqInOut" begin
                     @info "solving UFLP p$i - classical oracle - seqinout..."
-                    master = Master(problem; customize = customize_master_model!)
+                    master = Master(data; customize = customize_master_model!)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
                                 time_limit = 300.0,
                                 gap_tolerance = 1e-9,
-                                stabilizing_x = ones(problem.n_facilities),
+                                stabilizing_x = ones(data.n_facilities),
                                 α = 0.9,
                                 λ = 0.1,
                                 verbose = false
@@ -99,21 +99,21 @@ using CPLEX
             
             @testset "Knapsack oracle" begin
 
-                function customize_master_model!(model::Model, problem::UFLPData)
+                function customize_master_model!(model::Model, data::UFLPData)
                     optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPX_PARAM_BRDIR" => 1, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
                     set_optimizer(model, optimizer)
-                    @variable(model, x[1:problem.n_facilities], Bin)
-                    @variable(model, t[1:problem.n_customers] >= -1e6)
+                    @variable(model, x[1:data.n_facilities], Bin)
+                    @variable(model, t[1:data.n_customers] >= -1e6)
                     @constraint(model, sum(x) >= 2)
-                    @objective(model, Min, problem.fixed_costs'* x + sum(t))
+                    @objective(model, Min, data.fixed_costs'* x + sum(t))
                     return (x = x, ), t
                 end
 
                 @testset "NoSeq" begin
                     @info "solving UFLP p$i - fat knapsack oracle - no seq..."
                     # This setting can use default initializer
-                    master = Master(problem; customize = customize_master_model!)
-                    oracle = UFLKnapsackOracle(problem) 
+                    master = Master(data; customize = customize_master_model!)
+                    oracle = UFLKnapsackOracle(data) 
                     set_parameter!(oracle, "add_only_violated_cuts", true)
                     
                     # root_preprocessing = NoRootNodePreprocessing()
@@ -129,8 +129,8 @@ using CPLEX
 
                 @testset "Seq" begin
                     @info "solving UFLP p$i - fat knapsack oracle - seq..."
-                    master = Master(problem; customize = customize_master_model!)
-                    oracle = UFLKnapsackOracle(problem) 
+                    master = Master(data; customize = customize_master_model!)
+                    oracle = UFLKnapsackOracle(data) 
                     set_parameter!(oracle, "add_only_violated_cuts", true)
 
                     root_seq_type = BendersSeq
@@ -152,15 +152,15 @@ using CPLEX
 
                 @testset "SeqInOut" begin
                     @info "solving UFLP p$i - fat knapsack oracle - seqinout..."
-                    master = Master(problem; customize = customize_master_model!)
-                    oracle = UFLKnapsackOracle(problem) 
+                    master = Master(data; customize = customize_master_model!)
+                    oracle = UFLKnapsackOracle(data) 
                     set_parameter!(oracle, "add_only_violated_cuts", true)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
                                 time_limit = 300.0,
                                 gap_tolerance = 1e-9,
-                                stabilizing_x = ones(problem.n_facilities),
+                                stabilizing_x = ones(data.n_facilities),
                                 α = 0.9,
                                 λ = 0.1,
                                 verbose = false

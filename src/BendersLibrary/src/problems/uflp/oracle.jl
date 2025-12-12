@@ -10,7 +10,7 @@ mutable struct UFLKnapsackOracleParam <: AbstractOracleParam
 end
 mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
     
-    oracle_param::UFLKnapsackOracleParam
+    param::UFLKnapsackOracleParam
     
     sorted_cost_demands::Vector{Vector{Float64}}
     sorted_indices::Vector{Vector{Int}}
@@ -18,19 +18,19 @@ mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
     J::Int
     obj_values::Vector{Float64}
 
-    function UFLKnapsackOracle(problem::UFLPData; 
+    function UFLKnapsackOracle(data::UFLPData; 
         scen_idx::Int=-1, 
-        oracle_param::UFLKnapsackOracleParam = UFLKnapsackOracleParam())
+        param::UFLKnapsackOracleParam = UFLKnapsackOracleParam())
             @debug "Building knapsack oracle for UFLP"
             
-            J = problem.n_customers
-            cost_demands = [problem.costs[:,j] .* problem.demands[j] for j in 1:J]
+            J = data.n_customers
+            cost_demands = [data.costs[:,j] .* data.demands[j] for j in 1:J]
             sorted_indices = [sortperm(cost_demands[j]) for j in 1:J]
             sorted_cost_demands = [cost_demands[j][sorted_indices[j]] for j in 1:J]
 
             obj_values = Vector{Float64}(undef, J)
 
-            new(oracle_param, sorted_cost_demands, sorted_indices, J, obj_values)
+            new(param, sorted_cost_demands, sorted_indices, J, obj_values)
     end
 
     UFLKnapsackOracle() = new()
@@ -50,10 +50,10 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
         # Calculate objective value contribution
         oracle.obj_values[j] = c_sorted[k] - (k > 1 ? sum((c_sorted[k] - c_sorted[i]) * x_sorted[i] for i in 1:k-1) : 0)
 
-        if oracle.obj_values[j] >= t_value[j] * (1 + oracle.oracle_param.rtol)
+        if oracle.obj_values[j] >= t_value[j] * (1 + oracle.param.rtol)
             critical_facility[j] = k
         else
-            critical_facility[j] = oracle.oracle_param.add_only_violated_cuts ? -1 : k
+            critical_facility[j] = oracle.param.add_only_violated_cuts ? -1 : k
         end
     end
     
@@ -64,7 +64,7 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
     customers = findall(x -> x != -1, critical_facility)
 
     # is_in_L should be determined by the sum of t's, must not individually
-    is_in_L = sum(oracle.obj_values) >= sum(t_value) * (1 + oracle.oracle_param.rtol) ? false : true
+    is_in_L = sum(oracle.obj_values) >= sum(t_value) * (1 + oracle.param.rtol) ? false : true
 
     hyperplanes = Vector{Hyperplane}()
     for j in customers
@@ -82,9 +82,9 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
     end
 
     if is_in_L
-        return !(oracle.oracle_param.slim) ? (true, hyperplanes, deepcopy(t_value)) : (true, [aggregate(hyperplanes)], deepcopy(t_value))
+        return !(oracle.param.slim) ? (true, hyperplanes, deepcopy(t_value)) : (true, [aggregate(hyperplanes)], deepcopy(t_value))
     end
-    return !(oracle.oracle_param.slim) ? (false, hyperplanes, deepcopy(oracle.obj_values)) : (false, [aggregate(hyperplanes)], deepcopy(oracle.obj_values))
+    return !(oracle.param.slim) ? (false, hyperplanes, deepcopy(oracle.obj_values)) : (false, [aggregate(hyperplanes)], deepcopy(oracle.obj_values))
 end
 
 function find_critical_item(c::Vector{Float64}, x::Vector{Float64})
