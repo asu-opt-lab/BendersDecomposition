@@ -8,7 +8,6 @@ Sequential Benders decomposition with In-Out stabilization technique.
 This variant of Benders decomposition uses stabilization to improve convergence by maintaining a stabilizing point and perturbing query points. The algorithm can switch to Kelley's cutting-plane method if progress stalls.
 
 # Fields
-- `data::Data`: Problem data containing dimensions, cost vectors, and problem-specific information
 - `master::AbstractMaster`: Master problem formulation
 - `oracle::AbstractOracle`: Oracle for subproblem solving and cut generation
 - `param::BendersSeqInOutParam`: Parameters controlling algorithm behavior (includes stabilization parameters α, λ, and stabilizing_x)
@@ -17,8 +16,7 @@ This variant of Benders decomposition uses stabilization to improve convergence 
 
 # Constructors
 ```julia
-BendersSeqInOut(data, master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam())
-BendersSeqInOut(data; param::BendersSeqInOutParam = BendersSeqInOutParam())  # Uses default Master and ClassicalOracle
+BendersSeqInOut(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam())
 ```
 
 # Stabilization Parameters
@@ -29,16 +27,16 @@ The stabilization technique requires three parameters (specified in `BendersSeqI
 
 # Examples
 ```julia
-data = Data(...)
-param = BendersSeqInOutParam(α = 0.8, λ = 0.5, stabilizing_x = zeros(data.dim_x))
-algorithm = BendersSeqInOut(data; param = param)
-df = solve!(algorithm)
+master = Master(problem; customize = customize_master_model!)
+oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+param = BendersSeqInOutParam(α = 0.8, λ = 0.5, stabilizing_x = zeros(master.dim_x))
+env = BendersSeqInOut(master, oracle; param = param)
+df = solve!(env)
 ```
 
 See also: [`BendersSeq`](@ref), [`SpecializedBendersSeq`](@ref)
 """
 mutable struct BendersSeqInOut <: AbstractBendersSeq
-    data::Data
     master::AbstractMaster
     oracle::AbstractOracle
 
@@ -48,12 +46,9 @@ mutable struct BendersSeqInOut <: AbstractBendersSeq
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function BendersSeqInOut(data, master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam()) 
-        new(data, master, oracle, param, Inf, NotSolved())
-    end
+    function BendersSeqInOut(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam())
 
-    function BendersSeqInOut(data; param::BendersSeqInOutParam = BendersSeqInOutParam())
-        new(data, Master(data), ClassicalOracle(data), param, Inf, NotSolved())
+        new(master, oracle, param, Inf, NotSolved())
     end
 end
 """
@@ -86,15 +81,6 @@ to Kelley's cutting-plane method (setting λ = 1.0).
 - Time limit reached
 - Gap tolerance met
 - Master problem becomes infeasible
-
-# Examples
-```julia
-algorithm = BendersSeqInOut(data; param = BendersSeqInOutParam(α = 0.8, λ = 0.5, stabilizing_x = zeros(data.dim_x)))
-log_df = solve!(algorithm)
-println("Objective: ", algorithm.obj_value)
-```
-
-See also: [`BendersSeq`](@ref)
 """
 function solve!(env::BendersSeqInOut)
     param = env.param
@@ -115,8 +101,8 @@ function solve!(env::BendersSeqInOut)
                     optimize!(env.master.model)
                     if is_solved_and_feasible(env.master.model; allow_local = false, dual = false)
                         state.LB = JuMP.objective_value(env.master.model)
-                        state.values[:x] = value.(env.master.x)
-                        state.values[:t] = value.(env.master.t)
+                        state.values[:x] = JuMP.value.(env.master.x)
+                        state.values[:t] = JuMP.value.(env.master.t)
                     elseif termination_status(env.master.model) == TIME_LIMIT
                         throw(TimeLimitException("Time limit reached during master solving"))
                     else
@@ -134,7 +120,7 @@ function solve!(env::BendersSeqInOut)
 
                     if kelley_mode 
                         if state.f_x != NaN
-                            update_upper_bound_and_gap!(state, log, (f_x, x) -> env.data.c_t' * f_x + env.data.c_x' * x)
+                            update_upper_bound_and_gap!(state, log, (f_x, x) -> env.master.c_t' * f_x + env.master.c_x' * x)
                         end
                     else
                         state.is_in_L = false

@@ -13,21 +13,25 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     fixed_x_constraints::Vector{ConstraintRef}
     facility_knapsack_info::FacilityKnapsackInfo
 
-    function CFLKnapsackOracle(data::Data; 
-                               scen_idx=-1, 
-                               solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                               oracle_param::BasicOracleParam = BasicOracleParam())
-        @debug "Building classical oracle"
+    function CFLKnapsackOracle(problem::AbstractData, master::Master; 
+                            customize = customize_sub_model!,
+                            scen_idx::Int=-1, 
+                            oracle_param::BasicOracleParam = BasicOracleParam())
+        @debug "Building knapsack oracle for CFLP"
         model = Model()
 
-        # Define coupling variables and constraints
-        @variable(model, 0 <= x[1:data.dim_x] <= 1)
+        # Copy the master’s coupling variables into the submodel (with identical axes and symbols)
+        x_copy = copy_variables!(model, master.x_tuple)
+
+        # Build the submodel using user-defined customization, passing the copied variables
+        customize(model, problem, scen_idx; x_copy...)
+
+        # Collect all copied master variables and add linking constraint
+        x = var_from_tuple(x_copy)
         @constraint(model, fix_x, x .== 0)
 
-        facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.problem.costs, data.problem.demands, data.problem.capacities) : FacilityKnapsackInfo(data.problem.costs, data.problem.demands[scen_idx], data.problem.capacities)
+        facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(problem.costs, problem.demands, problem.capacities) : FacilityKnapsackInfo(problem.costs, problem.demands[scen_idx], problem.capacities)
 
-        assign_attributes!(model, solver_param)
-        
         new(oracle_param, model, fix_x, facility_knapsack_info)
     end
     

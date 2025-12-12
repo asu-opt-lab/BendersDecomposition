@@ -138,11 +138,11 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
             record_iteration!(log, state)
         end
         
-        oracle.param.verbose && print_iteration_info(state, log)
+        oracle.oracle_param.dcglp_param.verbose && print_iteration_info(state, log)
 
         check_lb_improvement!(state, log; zero_tol = oracle.oracle_param.zero_tol)
 
-        is_terminated(state, log, oracle.param, time_limit) && break
+        is_terminated(state, log, oracle.oracle_param.dcglp_param, time_limit) && break
 
         add_constraints(dcglp, :con_benders, [benders_cuts[1]; benders_cuts[2]]) 
     end

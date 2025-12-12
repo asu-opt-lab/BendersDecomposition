@@ -1,6 +1,5 @@
 
 abstract type AbstractBendersDecomposition end
-abstract type AbstractMip end
 abstract type AbstractMaster end
 """
 Any concrete subtype of `AbstractOracle` must have a field `oracle_param<:AbstractOracleParam` containing adjustable parameters that affect the oracle's behavior.
@@ -10,23 +9,10 @@ Subtypes should implement `generate_cuts` to return separating hyperplanes based
 """
 abstract type AbstractOracle end
 abstract type AbstractOracleParam end
-
-
-# ============================================================================
-# Global data type; Problem Data is optional; user can define their own structure for problem-specific data
-# ============================================================================
 abstract type AbstractData end
-struct Data{T<:AbstractData}
-    dim_x::Int
-    dim_t::Int
-    problem::T
-    c_x::Vector{Float64}
-    c_t::Vector{Float64}
-end
 
 abstract type AbstractBendersSeq <: AbstractBendersDecomposition end
 abstract type AbstractBendersCallback <: AbstractBendersDecomposition end
-
 
 # ============================================================================
 # Termination Status of Benders Decomposition

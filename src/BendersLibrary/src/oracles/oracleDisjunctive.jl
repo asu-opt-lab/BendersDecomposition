@@ -8,6 +8,7 @@ Parameters for configuring a DisjunctiveOracle in Benders decomposition.
 This structure contains all the parameters needed to control the behavior of the disjunctive cut generation process via the DCGLP (Disjunctive Cut Generating Linear Program).
 
 # Fields
+- `dcglp_param::DcglpParam `: Parameters controlling the cutting-plane algorithm for solving dcglp.
 - `norm::AbstractNorm`: Norm type used for normalization in DCGLP (default: `LpNorm(Inf)`)
 - `split_index_selection_rule::SplitIndexSelectionRule`: Rule for selecting which variable to split on (default: `RandomFractional()`)
 - `disjunctive_cut_append_rule::DisjunctiveCutsAppendRule`: Rule for adding previously found disjunctive cuts to DCGLP (default: `AllDisjunctiveCuts()`)
@@ -24,11 +25,19 @@ This structure contains all the parameters needed to control the behavior of the
 
 # Examples
 ```julia
-# Create with default parameters
-param = DisjunctiveOracleParam()
+# Create with default optimal parameters
+dcglp_optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
+dcglp_param = DcglpParam(dcglp_optimizer;
+                        time_limit = 1000.0, 
+                        gap_tolerance = 1e-3, 
+                        halt_limit = 3, 
+                        iter_limit = 250,
+                        verbose = false
+                        )
+param = DisjunctiveOracleParam(dcglp_param)
 
-# Create with custom parameters
-param = DisjunctiveOracleParam(
+# Create with custom optimal parameters
+param = DisjunctiveOracleParam(dcglp_param;
     norm = LpNorm(1.0),
     split_index_selection_rule = MostFractional(),
     strengthened = true,
@@ -39,6 +48,8 @@ param = DisjunctiveOracleParam(
 See also: [`DisjunctiveOracle`](@ref), [`LpNorm`](@ref)
 """
 mutable struct DisjunctiveOracleParam <: AbstractOracleParam
+    
+    dcglp_param::DcglpParam # Dcglp loop parameters
     norm::AbstractNorm
     split_index_selection_rule::SplitIndexSelectionRule
     disjunctive_cut_append_rule::DisjunctiveCutsAppendRule
@@ -49,8 +60,9 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
     lift::Bool 
     adjust_t_to_fx::Bool
     zero_tol::Float64
+    
 
-    function DisjunctiveOracleParam(; 
+    function DisjunctiveOracleParam(dcglp_param::DcglpParam; 
                                     norm::AbstractNorm = LpNorm(Inf), 
                                     split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(), disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
                                     strengthened::Bool=true, 
@@ -62,7 +74,7 @@ mutable struct DisjunctiveOracleParam <: AbstractOracleParam
                                     zero_tol=1e-9) 
         add_bcuts_to_master = add_benders_cuts_to_master === true ? 1 : add_benders_cuts_to_master === false ? 0 : add_benders_cuts_to_master in (0, 1, 2) ? add_benders_cuts_to_master : throw(ArgumentError("`add_benders_cuts_to_master` must be true, false, or an integer in {0, 1, 2}"))
         
-        new(norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_bcuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift, adjust_t_to_fx, zero_tol)
+        new(dcglp_param, norm, split_index_selection_rule, disjunctive_cut_append_rule, strengthened, add_bcuts_to_master, fraction_of_benders_cuts_to_master, reuse_dcglp, lift, adjust_t_to_fx, zero_tol)
     end
 end
 
@@ -79,38 +91,22 @@ standard Benders cuts. This can significantly improve convergence for mixed-inte
 - `oracle_param::DisjunctiveOracleParam`: Parameters controlling the oracle's behavior
 - `dcglp::Model`: The JuMP model for the Disjunctive Cut Generating Linear Program
 - `typical_oracles::Vector{AbstractTypicalOracle}`: Two typical oracles (index 1: kappa, index 2: nu)
-- `param::DcglpParam`: Parameters for the DCGLP cutting-plane loop
 - `disjunctiveCutsByIndex::Vector{Vector{Hyperplane}}`: Disjunctive cuts organized by split variable index
 - `disjunctiveCuts::Vector{Hyperplane}`: All disjunctive cuts generated so far
 - `splits::Vector{Tuple{SparseVector{Float64, Int}, Float64}}`: History of split inequalities (phi, phi_0)
 
 # Constructor
 ```julia
-DisjunctiveOracle(data, typical_oracles::Vector{T};
-                  param::DcglpParam = DcglpParam(),
-                  solver_param::Dict{String,Any} = Dict(...),
-                  oracle_param::DisjunctiveOracleParam = DisjunctiveOracleParam()) where {T<:AbstractTypicalOracle}
+DisjunctiveOracle(master::AbstractMaster, typical_oracles::Vector{T},
+                  oracle_param::DisjunctiveOracleParam)
 ```
-
-# Arguments
-- `data`: Problem data containing dimensions
-- `typical_oracles`: Vector of two typical oracles for kappa and nu subproblems
-- `param`: DCGLP loop parameters (optional)
-- `solver_param`: Solver configuration for DCGLP model (optional)
-- `oracle_param`: Oracle behavior parameters (optional)
-
 # Examples
 ```julia
 # Create typical oracles
-oracle_kappa = ClassicalOracle(data, scen_idx=1)
-oracle_nu = ClassicalOracle(data, scen_idx=2)
-
-# Create disjunctive oracle with default parameters
-disj_oracle = DisjunctiveOracle(data, [oracle_kappa, oracle_nu])
-
-# Create with custom parameters
-disj_param = DisjunctiveOracleParam(strengthened = true, lift = true)
-disj_oracle = DisjunctiveOracle(data, [oracle_kappa, oracle_nu]; oracle_param = disj_param)
+oracle_kappa = ClassicalOracle(problem, master; customize = customize_sub_model!)
+oracle_nu = ClassicalOracle(problem, master; customize = customize_sub_model!)
+disj_param = DisjunctiveOracleParam(dcglp_param; strengthened = true, lift = true)
+disj_oracle = DisjunctiveOracle(master, [oracle_kappa, oracle_nu]; oracle_param = disj_param)
 ```
 
 # Notes
@@ -127,51 +123,58 @@ mutable struct DisjunctiveOracle <: AbstractDisjunctiveOracle
     dcglp::Model
     typical_oracles::Vector{AbstractTypicalOracle}
 
-    # Dcglp loop parameters
-    param::DcglpParam
-
     # log for splits and disjunctive cuts
     disjunctiveCutsByIndex::Vector{Vector{Hyperplane}}
     disjunctiveCuts::Vector{Hyperplane}
     splits::Vector{Tuple{SparseVector{Float64, Int}, Float64}}
 
-    function DisjunctiveOracle(data, 
-                               typical_oracles::Vector{T}; 
-                               param::DcglpParam = DcglpParam(),
-                               solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                               oracle_param::DisjunctiveOracleParam = DisjunctiveOracleParam()) where {T<:AbstractTypicalOracle}
+    # oracle_param should not be optional unless we have default software-free optimizer
+    function DisjunctiveOracle(master::AbstractMaster, 
+                            typical_oracles::Vector{T},
+                            oracle_param::DisjunctiveOracleParam) where {T<:AbstractTypicalOracle}
         @debug "Building disjunctive oracle"
-        dcglp = Model()
+
+        for xi in master.x
+            if !is_binary(xi)
+                @error "Split oracles currently require all master variables to be binary."
+            end
+        end
+
+        # Initialize dcglp problem
+        dcglp = Model(oracle_param.dcglp_param.optimizer)
+        
         # Define variables
         @variable(dcglp, tau)
         @variable(dcglp, omega_0[1:2]) # 1 for kappa; 2 for nu
-        @variable(dcglp, omega_x[1:2,1:data.dim_x])
-        @variable(dcglp, omega_t[1:2,1:data.dim_t])
-        @variable(dcglp, sx[1:data.dim_x])
-        @variable(dcglp, st[1:data.dim_t])
-        
+        @variable(dcglp, omega_x[1:2,1:master.dim_x])
+        @variable(dcglp, omega_t[1:2,1:master.dim_t])
+        @variable(dcglp, sx[1:master.dim_x])
+        @variable(dcglp, st[1:master.dim_t])
+
         # Set objective
         @objective(dcglp, Min, tau)
 
         # Add constraints
         @constraint(dcglp, [i=1:2], omega_t[i,:] .>= -1e6 * omega_0[i])
-        @constraint(dcglp, coneta[i in 1:2, j in 1:data.dim_x], 0 >= -omega_0[i] + omega_x[i,j]) 
-        @constraint(dcglp, condelta[i in 1:2, j in 1:data.dim_x], 0 >= -omega_x[i,j])
+        @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i,j]) 
+        @constraint(dcglp, condelta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_x[i,j])
         @constraint(dcglp, conineq[i in 1:2], omega_0[i] >= 0)
 
         # Add gamma constraints
         @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
         @constraint(dcglp, conx, omega_x[1,:] + omega_x[2,:] - sx .== 0)
-        @constraint(dcglp, cont[j=1:data.dim_t], omega_t[1,j] + omega_t[2,j] - st[j] == 0) # must be in this form to recognize it as a vector
+        @constraint(dcglp, cont[j=1:master.dim_t], omega_t[1,j] + omega_t[2,j] - st[j] == 0) # must be in this form to recognize it as a vector
 
-        assign_attributes!(dcglp, solver_param)
-        
+        for i=1:2
+            transfer_scaled_linear_rows_and_bounds_with_types!(master.model, master.x, dcglp, omega_x[i,:], omega_0[i])
+        end
+
         add_normalization_constraint(dcglp, oracle_param.norm)
-        
-        disjunctiveCutsByIndex = [Vector{Hyperplane}() for i=1:data.dim_x]
+
+        disjunctiveCutsByIndex = [Vector{Hyperplane}() for i=1:master.dim_x]
         splits = Vector{Tuple{SparseVector{Float64, Int}, Float64}}()
 
-        new(oracle_param, dcglp, typical_oracles, param, disjunctiveCutsByIndex, Vector{Hyperplane}(), splits)
+        new(oracle_param, dcglp, typical_oracles, disjunctiveCutsByIndex, Vector{Hyperplane}(), splits)
     end
 end
 
@@ -187,7 +190,7 @@ This function selects a disjunctive inequality, updates the DCGLP model, and cal
 - `x_value::Vector{Float64}`: Current first-stage solution
 - `t_value::Vector{Float64}`: Current second-stage approximation
 
-# Keyword Arguments
+# Optional Arguments
 - `time_limit::Float64`: Maximum time allowed for cut generation (default: 3600.0)
 - `throw_typical_cuts_for_errors::Bool`: If true, return typical Benders cuts when DCGLP encounters errors; if false, throw an exception instead (default: true)
 - `include_disjunctive_cuts_to_hyperplanes::Bool`: If true, add the generated disjunctive cut to the returned hyperplanes; if false, the cut is only stored in `oracle.disjunctiveCuts` (default: true)

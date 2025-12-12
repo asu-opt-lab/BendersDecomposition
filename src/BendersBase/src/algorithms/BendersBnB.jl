@@ -12,7 +12,6 @@ This implementation uses callbacks to efficiently generate Benders cuts during t
 avoiding the need to repeatedly solve the entire master problem.
 
 # Fields
-- `data::Data`: Problem data containing dimensions, cost vectors, and problem-specific information
 - `master::AbstractMaster`: Master problem formulation
 - `param::BendersBnBParam`: Parameters controlling algorithm behavior
 - `root_preprocessing::AbstractRootNodePreprocessing`: Configuration for preprocessing at the root node
@@ -23,13 +22,13 @@ avoiding the need to repeatedly solve the entire master problem.
 
 # Examples
 ```julia
-data = Data(...)  # Create problem data
-algorithm = BendersBnB(data)  # Use default parameters
-obj_value, solve_time = solve!(algorithm)
+master = Master(problem; customize = customize_master_model!)
+oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+env = BendersBnB(master, oracle)  # Use default setting with no root node preprocessing and no user callback
+obj_value, solve_time = solve!(env)
 ```
 """
 mutable struct BendersBnB <: AbstractBendersCallback
-    data::Data
     master::AbstractMaster 
 
     param::BendersBnBParam 
@@ -41,12 +40,18 @@ mutable struct BendersBnB <: AbstractBendersCallback
     obj_value::Float64 
     termination_status::TerminationStatus 
 
-    function BendersBnB(data; param::BendersBnBParam = BendersBnBParam())
-        new(data, Master(data), param, RootNodePreprocessing(data), LazyCallback(data), UserCallback(data), Inf, NotSolved())
+    function BendersBnB(master::AbstractMaster, oracle::AbstractTypicalOracle; param::BendersBnBParam = BendersBnBParam())
+        
+        root_preprocessing = NoRootNodePreprocessing()
+        lazy_callback = LazyCallback(oracle)
+        user_callback = NoUserCallback()
+        
+        new(master, param, root_preprocessing, lazy_callback, user_callback, Inf, NotSolved())
     end
 
-    function BendersBnB(data, master::AbstractMaster, root_preprocessing::AbstractRootNodePreprocessing, lazy_callback::AbstractLazyCallback, user_callback::AbstractUserCallback; param::BendersBnBParam = BendersBnBParam())
-        new(data, master, param, root_preprocessing, lazy_callback, user_callback, Inf, NotSolved())
+    function BendersBnB(master::AbstractMaster, root_preprocessing::AbstractRootNodePreprocessing, lazy_callback::AbstractLazyCallback, user_callback::AbstractUserCallback; param::BendersBnBParam = BendersBnBParam())
+        
+        new(master, param, root_preprocessing, lazy_callback, user_callback, Inf, NotSolved())
     end
 end
 
@@ -82,7 +87,7 @@ function solve!(env::BendersBnB)
     # Apply root node preprocessing if specified
     root_node_time = 0.0
     if isa(env.root_preprocessing, RootNodePreprocessing)
-        root_node_time = root_node_processing!(env.data, env.master, env.root_preprocessing)
+        root_node_time = root_node_processing!(env.master, env.root_preprocessing)
     end
     
     # Apply disjunctive root node preprocessing if specified
@@ -91,7 +96,7 @@ function solve!(env::BendersBnB)
         env.root_preprocessing.params.time_limit -= root_node_time
         env.root_preprocessing.oracle = env.user_callback.oracle
 
-        disjunctive_root_node_time = root_node_processing!(env.data, env.master, env.root_preprocessing)
+        disjunctive_root_node_time = root_node_processing!(env.master, env.root_preprocessing)
         root_node_time += disjunctive_root_node_time
     end
     

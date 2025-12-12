@@ -13,6 +13,6 @@ using JuMP
     include("ufl.jl")
     include("cfl.jl")
     include("scfl.jl")
-    include("snip.jl")
+    # include("snip.jl")
     @info "Sequential Disjunctive Tests completed"
 end

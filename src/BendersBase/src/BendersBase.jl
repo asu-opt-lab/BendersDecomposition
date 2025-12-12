@@ -18,8 +18,8 @@ include("algorithms/algorithms.jl")
 
 # Export abstract types
 export AbstractBendersDecomposition
-export Data, AbstractData
-export AbstractMaster, AbstractMip
+export AbstractData
+export AbstractMaster
 export AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, BasicOracleParam
 export AbstractBendersSeq, AbstractBendersCallback
 export Seq, SeqInOut

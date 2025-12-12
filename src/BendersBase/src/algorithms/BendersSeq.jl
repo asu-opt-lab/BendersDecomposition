@@ -8,30 +8,23 @@ Sequential Benders decomposition algorithm using a cutting-plane method.
 This is the basic Benders decomposition implementation that iteratively solves the master problem, generates Benders cuts from the oracle, and refines the master problem until convergence or a termination criterion is met.
 
 # Fields
-- `data::Data`: Problem data containing dimensions, cost vectors, and problem-specific information
 - `master::AbstractMaster`: Master problem formulation
 - `oracle::AbstractOracle`: Oracle for subproblem solving and cut generation
 - `param::BendersSeqParam`: Parameters controlling algorithm behavior (time limit, gap tolerance, verbosity, etc.)
 - `obj_value::Float64`: Objective value of the best solution found
 - `termination_status::TerminationStatus`: Status of the algorithm upon termination
 
-# Constructors
-```julia
-BendersSeq(data, master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqParam = BendersSeqParam())
-BendersSeq(data; param::BendersSeqParam = BendersSeqParam())  # Uses default Master and ClassicalOracle
-```
-
 # Examples
 ```julia
-data = Data(...)
-algorithm = BendersSeq(data)  # Use default parameters
-df = solve!(algorithm)
+master = Master(problem; customize = customize_master_model!)
+oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+env = BendersSeq(master, oracle)  # Use default parameters
+df = solve!(env)
 ```
 
 See also: [`BendersSeqInOut`](@ref), [`SpecializedBendersSeq`](@ref), [`BendersBnB`](@ref)
 """
 mutable struct BendersSeq <: AbstractBendersSeq
-    data::Data
     master::AbstractMaster
     oracle::AbstractOracle
 
@@ -41,12 +34,8 @@ mutable struct BendersSeq <: AbstractBendersSeq
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function BendersSeq(data, master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqParam = BendersSeqParam())
-        new(data, master, oracle, param, Inf, NotSolved())
-    end
-
-    function BendersSeq(data; param::BendersSeqParam = BendersSeqParam())
-        new(data, Master(data), ClassicalOracle(data), param, Inf, NotSolved())
+    function BendersSeq(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqParam = BendersSeqParam())
+        new(master, oracle, param, Inf, NotSolved())
     end
 end
 
@@ -76,13 +65,6 @@ This function implements the core Benders cutting-plane method: repeatedly solvi
 - Time limit reached
 - Gap tolerance met
 - Master problem becomes infeasible
-
-# Examples
-```julia
-algorithm = BendersSeq(data)
-log_df = solve!(algorithm)
-println("Objective: ", algorithm.obj_value)
-```
 """
 function solve!(env::BendersSeq; iter_prefix = "") 
     log = BendersSeqLog()
@@ -97,8 +79,8 @@ function solve!(env::BendersSeq; iter_prefix = "")
                     optimize!(env.master.model)
                     if is_solved_and_feasible(env.master.model; allow_local = false, dual = false)
                         state.LB = JuMP.objective_value(env.master.model)
-                        state.values[:x] = value.(env.master.x)
-                        state.values[:t] = value.(env.master.t)
+                        state.values[:x] = JuMP.value.(env.master.x)
+                        state.values[:t] = JuMP.value.(env.master.t)
                     elseif termination_status(env.master.model) == TIME_LIMIT
                         throw(TimeLimitException("Time limit reached during master solving"))
                     else
@@ -113,7 +95,7 @@ function solve!(env::BendersSeq; iter_prefix = "")
                     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.x, env.master.t) : []
                 
                     if state.f_x !== NaN
-                        update_upper_bound_and_gap!(state, log, (f_x, x) -> env.data.c_t' * f_x + env.data.c_x' * x)
+                        update_upper_bound_and_gap!(state, log, (f_x, x) -> env.master.c_t' * f_x + env.master.c_x' * x)
                     end
                 end
 
