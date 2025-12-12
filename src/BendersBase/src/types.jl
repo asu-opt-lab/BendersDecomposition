@@ -1,5 +1,5 @@
 
-abstract type AbstractBendersDecomposition end
+abstract type AbstractBendersEnv end
 abstract type AbstractMaster end
 """
 Any concrete subtype of `AbstractOracle` must have a field `param<:AbstractOracleParam` containing adjustable parameters that affect the oracle's behavior.
@@ -11,8 +11,8 @@ abstract type AbstractOracle end
 abstract type AbstractOracleParam end
 abstract type AbstractData end
 
-abstract type AbstractBendersSeq <: AbstractBendersDecomposition end
-abstract type AbstractBendersCallback <: AbstractBendersDecomposition end
+abstract type AbstractBendersSeq <: AbstractBendersEnv end
+abstract type AbstractBendersBnB <: AbstractBendersEnv end
 
 # ============================================================================
 # Termination Status of Benders Decomposition

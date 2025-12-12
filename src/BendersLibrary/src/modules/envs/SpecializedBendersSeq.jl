@@ -2,7 +2,7 @@ export SpecializedBendersSeq
 
 mutable struct SpecializedBendersSeq <: AbstractBendersSeq
     master::AbstractMaster
-    oracle::DisjunctiveOracle
+    oracle::SplitOracle
 
     param::SpecializedBendersSeqParam
 
@@ -10,7 +10,7 @@ mutable struct SpecializedBendersSeq <: AbstractBendersSeq
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function SpecializedBendersSeq(master::AbstractMaster, oracle::DisjunctiveOracle; param::SpecializedBendersSeqParam = SpecializedBendersSeqParam()) 
+    function SpecializedBendersSeq(master::AbstractMaster, oracle::SplitOracle; param::SpecializedBendersSeqParam = SpecializedBendersSeqParam()) 
         
         # Relax integrality in master
         relax_integrality(master.model)

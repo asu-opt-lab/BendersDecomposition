@@ -75,13 +75,13 @@ function select_disjunctive_inequality(x_value::Vector{Float64}, ::RandomFractio
     return phi, phi_0
 end
 
-function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::NoDisjunctiveCuts)
+function add_disjunctive_cuts!(oracle::SplitOracle, ::NoDisjunctiveCuts)
     # do nothing
 end
-function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::AllDisjunctiveCuts)
+function add_disjunctive_cuts!(oracle::SplitOracle, ::AllDisjunctiveCuts)
     # do nothing; added at the time of generation
 end
-function add_disjunctive_cuts!(oracle::DisjunctiveOracle, ::DisjunctiveCutsSmallerIndices)
+function add_disjunctive_cuts!(oracle::SplitOracle, ::DisjunctiveCutsSmallerIndices)
     
     @assert typeof(oracle.param.split_index_selection_rule) <: SimpleSplit
 

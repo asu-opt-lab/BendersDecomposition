@@ -41,7 +41,7 @@ using CPLEX
                         @info "solving UFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                             
-                            oracle_param = DisjunctiveOracleParam(dcglp_param;
+                            oracle_param = SplitOracleParam(dcglp_param;
                                                             norm = LpNorm(p), 
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
@@ -53,7 +53,7 @@ using CPLEX
 
                             master = Master(data; customize = customize_master_model!)
                             typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
-                            disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                             
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                             log = solve!(env)
@@ -88,7 +88,7 @@ using CPLEX
                             master = Master(data; customize = customize_master_model!)
                             typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
 
-                            oracle_param = DisjunctiveOracleParam(dcglp_param;
+                            oracle_param = SplitOracleParam(dcglp_param;
                                                             norm = LpNorm(p), 
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
@@ -97,7 +97,7 @@ using CPLEX
                                                             fraction_of_benders_cuts_to_master = 0.05, 
                                                             reuse_dcglp = reuse_dcglp,
                                                             lift = lift)
-                            disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param)    
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)    
                             
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                             log = solve!(env)

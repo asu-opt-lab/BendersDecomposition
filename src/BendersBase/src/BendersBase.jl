@@ -13,15 +13,14 @@ using DataFrames
 include("types.jl")
 include("utils/utils.jl")
 include("modules/modules.jl") 
-include("algorithms/algorithms.jl")
 
 
 # Export abstract types
-export AbstractBendersDecomposition
+export AbstractBendersEnv
 export AbstractData
 export AbstractMaster
 export AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, BasicOracleParam
-export AbstractBendersSeq, AbstractBendersCallback
+export AbstractBendersSeq, AbstractBendersBnB
 export Seq, SeqInOut
 export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
 export TimeLimitException, UnexpectedModelStatusException, UndefError, AlgorithmException

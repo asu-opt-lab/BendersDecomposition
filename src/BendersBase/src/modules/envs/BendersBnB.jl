@@ -4,7 +4,7 @@ include("callback/preprocessing.jl") # must be included first
 include("callback/callback.jl") # must be included first
  
 """
-    BendersBnB <: AbstractBendersCallback
+    BendersBnB <: AbstractBendersBnB
 
 Branch-and-Bound implementation of Benders decomposition algorithm.
 
@@ -28,7 +28,7 @@ env = BendersBnB(master, oracle)  # Use default setting with no root node prepro
 obj_value, solve_time = solve!(env)
 ```
 """
-mutable struct BendersBnB <: AbstractBendersCallback
+mutable struct BendersBnB <: AbstractBendersBnB
     master::AbstractMaster 
 
     param::BendersBnBParam 

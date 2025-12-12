@@ -13,10 +13,10 @@ end # module BendersDecomposition
 # 5. Inho: refactor all snip-related files
 # 6. rename `problem` to `data` --> done
 # 7. rename `oracle_param` to `param` for all oracles as we no longer has `solver_param` --> done
-# 8. rename `AbstractBendersDecomposition` to `AbstractBendersEnv`
-# 9. rename \texttt{AbstractBendersCallback} to \texttt{AbstractBendersBnB}.
-# 10. rename \texttt{DisjunctiveOracle} to \texttt{SplitOracle}.
-# 11. rename the folder \texttt{algorithms} to \texttt{envs}.
+# 8. rename `AbstractBendersDecomposition` to `AbstractBendersEnv` --> done
+# 9. rename `AbstractBendersCallback` to `AbstractBendersBnB`. --> done
+# 10. rename `DisjunctiveOracle` to `SplitOracle`. --> done
+# 11. rename the folders named `algorithms` to `envs` and include both `envs` and `oracles` folders inside `modules` folder. --> done
 # 12. Remove `AbstractCallbackParam` and `EmptyCallbackParam <: AbstractCallbackParam` and add `AbstractUserCallbackParam`; Lazy callback does not need parameters.
 # 13. Return `to_dataframe(log)` for all solve! functions.
 # 14. clean up all error-handling

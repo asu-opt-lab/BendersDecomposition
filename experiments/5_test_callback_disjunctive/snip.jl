@@ -69,10 +69,10 @@ using JuMP
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                         
-                        disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+                        disjunctive_oracle = SplitOracle(data, typical_oracles; 
                                                                 solver_param = dcglp_solver_param,
                                                                 param = dcglp_param) 
-                        oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
+                        oracle_param = SplitOracleParam(norm = LpNorm(p), 
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
                                                                 strengthened = strengthened, 

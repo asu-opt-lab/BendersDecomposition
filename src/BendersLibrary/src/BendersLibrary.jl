@@ -1,6 +1,5 @@
 module BendersLibrary
 
-
 using JuMP
 using BendersBase
 using Gurobi
@@ -12,8 +11,7 @@ import BendersBase: solve!, generate_cuts, update_upper_bound_and_gap!, is_termi
 
 include("types.jl")
 include("utils/utils.jl")
-include("oracles/oracles.jl")
-include("algorithms/algorithms.jl")
+include("modules/modules.jl") 
 include("problems/problems.jl")
 
 

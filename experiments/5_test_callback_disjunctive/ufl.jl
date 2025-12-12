@@ -42,7 +42,7 @@ using CPLEX
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                         @info "solving UFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"   
                         
-                        oracle_param = DisjunctiveOracleParam(dcglp_param;
+                        oracle_param = SplitOracleParam(dcglp_param;
                                                             norm = LpNorm(p), 
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
@@ -58,7 +58,7 @@ using CPLEX
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                             lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
                             typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
-                            disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                     
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -76,7 +76,7 @@ using CPLEX
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                             lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
                             typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
-                            disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                     
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -94,7 +94,7 @@ using CPLEX
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                             lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
                             typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
-                            disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -125,7 +125,7 @@ using CPLEX
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                         @info "solving UFLP p$i - disjunctive oracle/fat knapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         
-                        oracle_param = DisjunctiveOracleParam(dcglp_param;
+                        oracle_param = SplitOracleParam(dcglp_param;
                                                             norm = LpNorm(p), 
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
@@ -145,7 +145,7 @@ using CPLEX
                             for k=1:2
                                 set_parameter!(typical_oracles[k], "add_only_violated_cuts", true)
                             end
-                            disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -167,7 +167,7 @@ using CPLEX
                             for k=1:2
                                 set_parameter!(typical_oracles[k], "add_only_violated_cuts", true)
                             end
-                            disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -189,7 +189,7 @@ using CPLEX
                             for k=1:2
                                 set_parameter!(typical_oracles[k], "add_only_violated_cuts", true)
                             end
-                            disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)

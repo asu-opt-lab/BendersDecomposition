@@ -5,11 +5,11 @@ using BendersBase
     
 
     @testset "Abstract Types" begin
-        @test isabstracttype(AbstractBendersDecomposition)
+        @test isabstracttype(AbstractBendersEnv)
         @test isabstracttype(AbstractMaster)
         @test isabstracttype(AbstractOracle)
         @test isabstracttype(AbstractBendersSeq)
-        @test isabstracttype(AbstractBendersCallback)
+        @test isabstracttype(AbstractBendersBnB)
     end
     
 end

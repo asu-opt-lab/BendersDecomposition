@@ -1,13 +1,13 @@
 
 """
-    solve_dcglp!(oracle::DisjunctiveOracle, x_value, t_value, zero_indices, one_indices; kwargs...) -> (Bool, Vector{Hyperplane}, Vector{Float64})
+    solve_dcglp!(oracle::SplitOracle, x_value, t_value, zero_indices, one_indices; kwargs...) -> (Bool, Vector{Hyperplane}, Vector{Float64})
 
 Execute the Disjunctive Cut Generating Linear Program (DCGLP) cutting-plane method.
 
 This function solves a specialized LP to generate disjunctive cuts for mixed-integer problems. It iteratively refines a linear dcglp problem by adding cuts from two complementary oracles (kappa and nu).
 
 # Arguments
-- `oracle::DisjunctiveOracle`: Disjunctive oracle containing the DCGLP model and typical oracles
+- `oracle::SplitOracle`: Disjunctive oracle containing the DCGLP model and typical oracles
 - `x_value::Vector{Float64}`: Current first-stage solution
 - `t_value::Vector{Float64}`: Current second-stage approximation
 - `zero_indices::Vector{Int64}`: Indices of variables fixed to 0 (for lifted cuts)
@@ -37,10 +37,10 @@ A tuple `(is_in_L, hyperplanes, f_x)`:
 - The disjunctive cut can be lifted using variable fixing information if specified
 - The generated disjunctive cut is stored in `oracle.disjunctiveCuts` for future use
 
-See also: [`DisjunctiveOracle`](@ref), [`generate_cuts`](@ref)
+See also: [`SplitOracle`](@ref), [`generate_cuts`](@ref)
 """
 
-function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}, zero_indices::Vector{Int64}, one_indices::Vector{Int64}; time_limit = time_limit, throw_typical_cuts_for_errors = true, include_disjunctive_cuts_to_hyperplanes = true)
+function solve_dcglp!(oracle::SplitOracle, x_value::Vector{Float64}, t_value::Vector{Float64}, zero_indices::Vector{Int64}, one_indices::Vector{Int64}; time_limit = time_limit, throw_typical_cuts_for_errors = true, include_disjunctive_cuts_to_hyperplanes = true)
     log = DcglpLog()
     
     dcglp = oracle.dcglp
