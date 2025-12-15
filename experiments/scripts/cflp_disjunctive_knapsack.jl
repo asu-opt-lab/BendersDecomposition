@@ -86,14 +86,14 @@ end
 # -----------------------------------------------------------------------------
 # disjunctive oracle
 # -----------------------------------------------------------------------------
-disjunctive_oracle = DisjunctiveOracle(
+disjunctive_oracle = SplitOracle(
     data, 
     typical_oracles; 
     solver_param = dcglp_solver_param, 
     param = dcglp_param
 ) 
 
-oracle_param = DisjunctiveOracleParam(
+oracle_param = SplitOracleParam(
     norm = LpNorm(1.0), 
     split_index_selection_rule = RandomFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(), 

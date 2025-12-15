@@ -172,14 +172,14 @@ end
 
 @testset "BendersBase customize model functions" begin
     struct EmptyData <: AbstractData end
-    problem = EmptyData()
+    data = EmptyData()
 
     @testset "no customize functions provided (should throw)" begin
         # Master without customize must throw
-        @test_throws UndefError Master(problem)
+        @test_throws UndefError Master(data)
 
         # Model-based oracle without customize must throw
-        function customize_master_model!(model::Model, problem::EmptyData)
+        function customize_master_model!(model::Model, data::EmptyData)
 
             @variable(model, u[1:10], Bin)
             @variable(model, t >= -1e6)
@@ -188,12 +188,12 @@ end
             
             return (u = u, ), t
         end
-        master = Master(problem; customize = customize_master_model!)
-        @test_throws UndefError ClassicalOracle(problem, master)
+        master = Master(data; customize = customize_master_model!)
+        @test_throws UndefError ClassicalOracle(data, master)
     end
 
     @testset "master variable container Vector{VariableRef}" begin
-        function customize_master_model!(model::Model, problem::EmptyData)
+        function customize_master_model!(model::Model, data::EmptyData)
 
             @variable(model, u[1:10], Bin)
             @variable(model, t >= -1e6)
@@ -203,21 +203,21 @@ end
             return (u = u, ), t
         end
         
-        function customize_sub_model!(model::Model, problem::EmptyData, scen_idx::Int; u) 
+        function customize_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u) 
         
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
             @constraint(model, y .<= u)
         end
 
-        master = Master(problem; customize = customize_master_model!)
-        oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+        master = Master(data; customize = customize_master_model!)
+        oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
 
         print(master.model)
         print(oracle.model)
     end
     @testset "master variable container Matrix{VariableRef}" begin
-        function customize_master_model!(model::Model, problem::EmptyData)
+        function customize_master_model!(model::Model, data::EmptyData)
 
             @variable(model, u[1:10,1:3], Bin)
             @variable(model, t >= -1e6)
@@ -227,7 +227,7 @@ end
             return (u = u, ), t
         end
         
-        function customize_sub_model!(model::Model, problem::EmptyData, scen_idx::Int; u) 
+        function customize_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u) 
         
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
@@ -235,14 +235,14 @@ end
             @constraint(model, y .<= u[:,1])
         end
 
-        master = Master(problem; customize = customize_master_model!)
-        oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+        master = Master(data; customize = customize_master_model!)
+        oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
 
         print(master.model)
         print(oracle.model)
     end
     @testset "Multiple master variable containers of varying types" begin
-        function customize_master_model!(model::Model, problem::EmptyData)
+        function customize_master_model!(model::Model, data::EmptyData)
 
             @variable(model, u[1:10], Bin) # Array
             @variable(model, v[3:10, [:A, :B]], Bin) # DenseAxisArray
@@ -254,7 +254,7 @@ end
             return (u = u, v = v, w = w), t
         end
         
-        function customize_sub_model!(model::Model, problem::EmptyData, scen_idx::Int; u, v, w) 
+        function customize_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w) 
         
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
@@ -264,8 +264,8 @@ end
             @constraint(model, w[3,10] <= 1)
         end
 
-        master = Master(problem; customize = customize_master_model!)
-        oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+        master = Master(data; customize = customize_master_model!)
+        oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
 
         print(master.model)
         print(oracle.model)

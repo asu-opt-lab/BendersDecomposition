@@ -3,7 +3,7 @@ export Master
 """
     Master <: AbstractMaster
 
-A mutable struct representing the master problem in Benders decomposition.
+A mutable struct representing the master module in Benders decomposition.
 
 # Fields
 - `model::Model`: The underlying JuMP optimization model
@@ -25,13 +25,13 @@ mutable struct Master <: AbstractMaster
     c_x::Vector{Float64}
     c_t::Vector{Float64}
 
-    function Master(problem::AbstractData; customize=customize_master_model!)
+    function Master(data::AbstractData; customize=customize_master_model!)
 
         @debug "Building Master module"
 
         model = Model()
 
-        x_tuple, t = customize(model, problem)
+        x_tuple, t = customize(model, data)
         t = t isa VariableRef ? [t] : t
         x = var_from_tuple(x_tuple)
 

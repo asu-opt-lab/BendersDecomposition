@@ -1,38 +1,40 @@
 export customize_master_model!, customize_sub_model!, copy_variables!, var_from_tuple
 
 """
-    customize_master_model!(model::Model, problem::AbstractData)
+    customize_master_model!(model::Model, data::AbstractData)
 
 User-defined hook for constructing the master model.
 
 This function is intended to be implemented by users for their specific
-problem type. Given a JuMP `model` and a problem instance data `problem`,
+problem. Given a JuMP `model` and an instance `data`,
 the method should:
 
 1. Add all master-level variables to the model.
-2. Add all master-level constraints and any auxiliary structures needed.
-3. Return a `NamedTuple` containing the master decision variables  
-   (for use by the oracles) and a vector of any auxiliary variables needed by the
-   algorithm.
+2. Return a `NamedTuple` containing the master decision variables x 
+and a vector of any auxiliary variables t (for use by the oracles).
 
 By default, this function throws an `UndefError`, indicating that no
 implementation exists for the given subtype of `AbstractData`. Users must
 provide a specialized method:
 
 ```julia
-function customize_master_model!(model::Model, problem::MyDataType)
+struct MyDataType <: AbstractData
+    ...
+end
+
+function customize_master_model!(model::Model, data::MyDataType)
     # build variables and constraints
     @variable(model, u[1:10])
     @variable(model, v[1:2, 2:3, [:A,:B], 4:5])
     @variable(model, t[1:10]) # auxiliary variables for Benders
 
-    # return variables in a NamedTuple
+    # return x-variables in a NamedTuple and t-variables in a vector
     return (u = u, v = v), t
 end
 
 Arguments
 - `model::Model`: A JuMP model that will be modified in place.
-- `problem::AbstractData`: A user-defined data object describing the instance required to build the formulation.
+- `data::MyDataType`: A user-defined data object describing the instance required to build the formulation.
 
 Returns
 - A `NamedTuple` mapping variable symbolic names to the JuMP variable containers (e.g., `Vector{VariableRef}`, `DenseAxisArray`, or `SparseAxisArray`) created for the master problem.
@@ -42,34 +44,34 @@ Notes
 subtype of `AbstractData`.
 
 """
-function customize_master_model!(model::Model, problem::AbstractData)
-    throw(UndefError("update customize_master_model! for $(typeof(problem))"))
+function customize_master_model!(model::Model, data::AbstractData)
+    throw(UndefError("update customize_master_model! for $(typeof(data))"))
 end
 
 """
-    customize_sub_model!(model::Model, problem::AbstractData, scen_idx::Int; kwargs...)
+    customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
 
 User-defined hook for constructing a subproblem model associated with a
 specific scenario.
 
 This function must be implemented by users for their concrete subtype of
-`AbstractData`. Given a JuMP `model`, a problem instance `problem`, and a
+`AbstractData`. Given a JuMP `model`, a problem instance `data`, and a
 scenario index `scen_idx`, the method should:
 
 1. Add all subproblem variables associated with the given scenario.
 2. Add all subproblem constraints associated with the given scenario,
-   using master variables passed through `kwargs` (intended for oracle use).
+   using master variables passed through `kwargs`.
 
 By default, this method throws an `UndefError`, indicating that no implementation
 exists for the provided argument types. Users must define their own specialized
-method. For example:
+method if they want to used any model-based oracle. For example:
 
 ```julia
-function customize_sub_model!(model::Model, problem::MyDataType, scen_idx::Int; u, v)
+function customize_sub_model!(model::Model, data::MyDataType, scen_idx::Int; u, v)
     # Create variables
     @variable(model, y >= 0)
 
-    scen_data = problem[scen_idx]
+    scen_data = data[scen_idx]
 
     # Add constraints based on scenario data, referencing master variables u and v
     @constraint(model, sum(u) + y == 1)
@@ -79,20 +81,20 @@ end
 
 Arguments
 - `model::Model` A JuMP model that will be modified in place to represent the subproblem.
-- `problem::AbstractData` A user-defined data object describing the information required to build the
+- `data::AbstractData` A user-defined data object describing the information required to build the
 subproblem formulation.
 - `scen_idx::Int` Index of the scenario for which the subproblem is built. This may be -1 if the model does not explicitly use scenarios.
 - `kwargs...` Symbolic names of the master variables passed from the master model to the subproblem for use by the oracle.
 
 Notes
-- This function must be implemented by the user to construct problem-specific sub-models.
+- This function must be implemented by the user to construct model-based oracles.
 """
-
-function customize_sub_model!(model::Model, problem::AbstractData, scen_idx::Int; kwargs...) 
-    throw(UndefError("update customize_sub_model! for $(typeof(problem))"))
+function customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...) 
+    throw(UndefError("update customize_sub_model! for $(typeof(data))"))
 end
+
 """
-    copy_variables!(model::Model, x::NamedTuple)
+    copy_variables!(model::Model, x::NamedTuple) -> NamedTuple
 
 Create JuMP variables inside `model` that mirror the structure of the NamedTuple `x`.
 
@@ -100,34 +102,34 @@ For each `(key, value)` pair in `x` the function:
 
 - If `value` is a `JuMP.VariableRef`, creates a new scalar variable and stores it at `model[key]`.
 - If `value` is a `JuMP.Containers.Array` or `JuMP.Containers.DenseAxisArray`, creates a JuMP array variable with the same axes and stores it at `model[key]`.
-- If `value` is a `JuMP.Containers.SparseAxisArray`, creates a sparse variable container with the same indices and stores it at `model[key]`.
+- If `value` is a `JuMP.Containers.SparseAxisArray`, creates a sparse variable container with the same index keys and stores it at `model[key]`.
 - Otherwise logs an error (`@error`) and does not add a variable for that key.
 
 # Arguments
 - `model::Model` : a JuMP model that will be mutated (new variables are added).
-- `x::NamedTuple` : named tuple whose values are JuMP variable containers or `VariableRef`s of another JuMP Model.
+- `x::NamedTuple` : named tuple whose values are JuMP variable containers or `VariableRef`s from another JuMP model.
 
 # Returns
-A `NamedTuple` with the same keys as `x` whose values are the newly created JuMP variable(s) for the given model. The function register each created variable container for the `model` with the original key.
-
-# Side effects / Notes
-- For dense arrays the implementation builds and `eval`s an expression that calls `@variable` with the original axes. Because `eval` is used, take care when calling this from inside modules or non-global scopes — you may need to adjust the implementation for those contexts.
-- For `SparseAxisArray` values the function creates a temporary vector of variables and then maps those to a `Containers.SparseAxisArray`.
-- Unsupported JuMP container types will produce an `@error` message; no variable will be created for that key.
+A `NamedTuple` with the same keys as `x` whose values are the newly-created JuMP variable(s) for `model`.
+The function registers each created variable container on `model` under the original `key`.
 
 # Example
 ```julia
 using JuMP, JuMP.Containers
 
 m = Model()
-x = (a = @variable(Model(), base_name="a"),   # scalar VariableRef (example)
-     b = Containers.DenseAxisArray{Float64}((1:3,)),  # placeholder array-like shape
-     c = Containers.SparseAxisArray(Dict(1=>0.0, 10=>0.0)))  # sparse indices example
+# original variables (in a different model)
+@variable(m, a >= 0)                    # scalar VariableRef
+@variable(m, b[2:3])                             # DenseAxisArray
+@variable(m, c[i=1:2, j=i:2, k=j:4])             # SparseAxisArray
+x = (a = a, b = b, c = c)
 
-# Create variables in `m` mirroring structure of `x`
-xvars = copy_variables!(m, x)
+model2 = Model()
 
-# Now `xvars.a`, `xvars.b`, `xvars.c` are JuMP variables (and `m` contains them)
+# Create variables in `model2` mirroring structure of `x`
+xvars = copy_variables!(model2, x)
+
+# Now `xvars.a`, `xvars.b`, `xvars.c` are JuMP variables created inside `model2`.
 """
 function copy_variables!(model::Model, x::NamedTuple)
     for (key, value) in pairs(x)
@@ -172,6 +174,11 @@ function copy_variables!(model::Model, x::NamedTuple)
     return x_copy
 end
 
+"""
+    var_from_tuple(x_tuple::NamedTuple) -> Vector{VariableRef}
+
+Extract all JuMP variables contained in a `NamedTuple`—including scalars, Arrays, `DenseAxisArray`s, and `SparseAxisArray`s—and return them as a flat `Vector{VariableRef}`.
+"""
 function var_from_tuple(x_tuple::NamedTuple)
     x = Vector{VariableRef}(undef,0)
     for value in values(x_tuple)

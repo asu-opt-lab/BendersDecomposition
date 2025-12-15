@@ -2,15 +2,15 @@ export ClassicalOracle
 
 mutable struct ClassicalOracle <: AbstractTypicalOracle
     
-    oracle_param::BasicOracleParam
+    param::BasicOracleParam
 
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
 
-    function ClassicalOracle(problem::AbstractData, master::Master; 
+    function ClassicalOracle(data::AbstractData, master::Master; 
                             customize = customize_sub_model!,
                             scen_idx::Int=0, 
-                            oracle_param::BasicOracleParam = BasicOracleParam())
+                            param::BasicOracleParam = BasicOracleParam())
     
             @debug "Building classical oracle"
             model = Model()
@@ -19,13 +19,13 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
             x_copy = copy_variables!(model, master.x_tuple)
 
             # Build the submodel using user-defined customization, passing the copied variables
-            customize(model, problem, scen_idx; x_copy...)
+            customize(model, data, scen_idx; x_copy...)
 
             # Collect all copied master variables and add linking constraint
             x = var_from_tuple(x_copy)
             @constraint(model, fix_x, x .== 0)
 
-            new(oracle_param, model, fix_x)
+            new(param, model, fix_x)
     end
 
     ClassicalOracle() = new()
@@ -46,7 +46,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
         a_x = dual.(oracle.fixed_x_constraints) 
         a_t = [-1.0] 
         a_0 = sub_obj_val - a_x'*x_value 
-        if sub_obj_val >= t_value[1] * (1 + oracle.oracle_param.rtol) + oracle.oracle_param.atol / tol_normalize
+        if sub_obj_val >= t_value[1] * (1 + oracle.param.rtol) + oracle.param.atol / tol_normalize
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
             return true, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
@@ -59,7 +59,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
             a_x = dual.(oracle.fixed_x_constraints)
             a_t = [0.0]
             a_0 = dual_sub_obj_val - a_x' * x_value 
-            if dual_sub_obj_val >= oracle.oracle_param.zero_tol / tol_normalize
+            if dual_sub_obj_val >= oracle.param.zero_tol / tol_normalize
                 return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
             else
                 return true, [Hyperplane(a_x, a_t, a_0)], [Inf]

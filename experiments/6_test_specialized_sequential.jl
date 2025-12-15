@@ -32,11 +32,11 @@ dcglp_param = DcglpParam(dcglp_optimizer;
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
-            problem = read_uflp_benchmark_data("p$(i)")
+            data = read_uflp_benchmark_data("p$(i)")
             
             # Solve MIP for reference
             mip_model = Model()
-            customize_mip_model!(mip_model, problem)
+            customize_mip_model!(mip_model, data)
             optimize!(mip_model)
             @assert termination_status(mip_model) == OPTIMAL
             mip_opt_val = objective_value(mip_model)
@@ -56,7 +56,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                 # for strengthened in [false], add_benders_cuts_to_master in [false], reuse_dcglp in [true], p in [1.0] #fail
                     @info "solving p$i - begin oracle - Specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = DisjunctiveOracleParam(dcglp_param;
+                        oracle_param = SplitOracleParam(dcglp_param;
                                                                 norm = LpNorm(p), 
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(), 
@@ -65,10 +65,10 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                                                                 fraction_of_benders_cuts_to_master = 0.5, 
                                                                 reuse_dcglp=reuse_dcglp)
 
-                        master = Master(problem; customize = customize_master_model!)
+                        master = Master(data; customize = customize_master_model!)
                         set_optimizer_attribute(master.model, "CPX_PARAM_LPMETHOD", 1)
-                        typical_oracles = [ClassicalOracle(problem, master; customize = customize_sub_model!); ClassicalOracle(problem, master; customize = customize_sub_model!)] # for kappa & nu
-                        disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
+                        typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
+                        disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                         env = SpecializedBendersSeq(master, disjunctive_oracle; param = specialized_benders_param)
                         
                         log = solve!(env)
@@ -78,13 +78,13 @@ dcglp_param = DcglpParam(dcglp_optimizer;
             end 
 
             @testset "fat knapsack oracle" begin
-                function customize_master_model!(model::Model, problem::UFLPData)
+                function customize_master_model!(model::Model, data::UFLPData)
                     optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
                     set_optimizer(model, optimizer)
-                    @variable(model, x[1:problem.n_facilities], Bin)
-                    @variable(model, t[1:problem.n_customers] >= -1e6)
+                    @variable(model, x[1:data.n_facilities], Bin)
+                    @variable(model, t[1:data.n_customers] >= -1e6)
                     @constraint(model, sum(x) >= 2)
-                    @objective(model, Min, problem.fixed_costs'* x + sum(t))
+                    @objective(model, Min, data.fixed_costs'* x + sum(t))
                     return (x = x, ), t
                 end
 
@@ -92,7 +92,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                 # for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf] 
                     @info "solving p$i - fat Knapsack oracle - Specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = DisjunctiveOracleParam(dcglp_param;
+                        oracle_param = SplitOracleParam(dcglp_param;
                                                                 norm = LpNorm(p), 
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(), 
@@ -101,10 +101,10 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                                                                 fraction_of_benders_cuts_to_master = 0.5, 
                                                                 reuse_dcglp=reuse_dcglp)
 
-                        master = Master(problem; customize = customize_master_model!)
+                        master = Master(data; customize = customize_master_model!)
                         set_optimizer_attribute(master.model, "CPX_PARAM_LPMETHOD", 1)
-                        typical_oracles = [UFLKnapsackOracle(problem); UFLKnapsackOracle(problem)] # for kappa & nu
-                        disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
+                        typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
+                        disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                         env = SpecializedBendersSeq(master, disjunctive_oracle; param = specialized_benders_param)
                         
                         log = solve!(env)
@@ -125,12 +125,12 @@ end
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
-            problem = read_cflp_benchmark_data("p$i")
-            # problem = read_GK_data("f100-c100-r3-1")
+            data = read_cflp_benchmark_data("p$i")
+            # data = read_GK_data("f100-c100-r3-1")
                             
             # Solve MIP for reference
             mip_model = Model()
-            customize_mip_model!(mip_model, problem)
+            customize_mip_model!(mip_model, data)
             optimize!(mip_model)
             @assert termination_status(mip_model) == OPTIMAL
             mip_opt_val = objective_value(mip_model)
@@ -144,7 +144,7 @@ end
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [false], p in [1.0]
                     @info "solving CFLP p$i - disjunctive oracle/classical - specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = DisjunctiveOracleParam(dcglp_param;
+                        oracle_param = SplitOracleParam(dcglp_param;
                                                                 norm = LpNorm(p), 
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(), 
@@ -153,9 +153,9 @@ end
                                                                 fraction_of_benders_cuts_to_master = 0.5, 
                                                                 reuse_dcglp=reuse_dcglp)
 
-                        master = Master(problem; customize = customize_master_model!)
-                        typical_oracles = [ClassicalOracle(problem, master; customize = customize_sub_model!); ClassicalOracle(problem, master; customize = customize_sub_model!)] # for kappa & nu
-                        disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
+                        master = Master(data; customize = customize_master_model!)
+                        typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
+                        disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                         env = SpecializedBendersSeq(master, disjunctive_oracle; param = specialized_benders_param)
                         
                         log = solve!(env)
@@ -192,7 +192,7 @@ end
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [false], p in [1.0] 
                     @info "solving CFLP p$i - disjunctive oracle/knapsack- specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                            oracle_param = DisjunctiveOracleParam(dcglp_param;
+                            oracle_param = SplitOracleParam(dcglp_param;
                                                                 norm = LpNorm(p), 
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(), 
@@ -201,9 +201,9 @@ end
                                                                 fraction_of_benders_cuts_to_master = 0.5, 
                                                                 reuse_dcglp=reuse_dcglp)
                             
-                                                                master = Master(problem; customize = customize_master_model!)
-                            typical_oracles = [CFLKnapsackOracle(problem, master; customize = customize_sub_model!); CFLKnapsackOracle(problem, master; customize = customize_sub_model!)]
-                            disjunctive_oracle = DisjunctiveOracle(master, typical_oracles, oracle_param) 
+                                                                master = Master(data; customize = customize_master_model!)
+                            typical_oracles = [CFLKnapsackOracle(data, master; customize = customize_sub_model!); CFLKnapsackOracle(data, master; customize = customize_sub_model!)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                             env = SpecializedBendersSeq(master, disjunctive_oracle; param = specialized_benders_param)
                         log = solve!(env)
                         @test env.termination_status == Optimal() ? isapprox(mip_opt_val, env.obj_value, atol=1e-5) : false

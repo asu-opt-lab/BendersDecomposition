@@ -67,10 +67,10 @@ using JuMP
 
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
 
-                            disjunctive_oracle = DisjunctiveOracle(data, typical_oracles; 
+                            disjunctive_oracle = SplitOracle(data, typical_oracles; 
                                                                     solver_param = dcglp_solver_param,
                                                                     param = dcglp_param) 
-                            oracle_param = DisjunctiveOracleParam(norm = LpNorm(p), 
+                            oracle_param = SplitOracleParam(norm = LpNorm(p), 
                                                                     split_index_selection_rule = LargestFractional(),
                                                                     disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
                                                                     strengthened = strengthened, 

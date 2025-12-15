@@ -23,13 +23,13 @@ This repository contains the source code and computational experiments for disju
 - `BendersSeq`: Sequential Benders decomposition
 - `BendersSeqInOut`: Sequential variant with in-out technique
 - `BendersBnB`: Branch-and-bound Benders decomposition  
-- `Dcglp`: Disjunctive Cut Generating Linear Program
+- `Dcglp`: Split Cut Generating Linear Program
 - `SpecializedBendersSeq`: Specialized sequential implementation
 
 ### Oracle Types
 - `ClassicalOracle`: Traditional Benders subproblem oracle
 - `KnapsackOracle`: Knapsack technique based oracle
-- `DisjunctiveOracle`: Disjunctive programming-based oracle
+- `SplitOracle`: Disjunctive programming-based oracle
 - `SeparableOracle`: Oracle for separable subproblems
 
 ## Problem Examples

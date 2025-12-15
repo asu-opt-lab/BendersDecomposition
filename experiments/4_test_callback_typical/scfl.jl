@@ -8,7 +8,7 @@ using JuMP
     for i in instances
         @testset "Instance: f25-c50-s64-r10-$i" begin
             # Load problem data
-            problem = read_stochastic_capacited_facility_location_problem("f25-c50-s64-r10-$i")
+            data = read_stochastic_capacited_facility_location_problem("f25-c50-s64-r10-$i")
 
             # BnB parameters
             benders_param = BendersBnBParam(;
@@ -19,7 +19,7 @@ using JuMP
             
             # Solve MIP for reference
             mip_model = Model()
-            customize_mip_model!(mip_model, problem)
+            customize_mip_model!(mip_model, data)
             optimize!(mip_model)
             @assert termination_status(mip_model) == OPTIMAL
             mip_opt_val = objective_value(mip_model) 
@@ -27,8 +27,8 @@ using JuMP
             @testset "Classic oracle" begin
                 @testset "NoSeq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle - no seq..."
-                    master = Master(problem; customize = customize_master_model!)
-                    oracle = SeparableOracle(problem, master, ClassicalOracle(), problem.n_scenarios; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!)
+                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model!)
 
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
@@ -42,8 +42,8 @@ using JuMP
 
                 @testset "Seq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle - seq..."
-                    master = Master(problem; customize = customize_master_model!)
-                    oracle = SeparableOracle(problem, master, ClassicalOracle(), problem.n_scenarios; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!)
+                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model!)
                     
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -64,14 +64,14 @@ using JuMP
 
                 @testset "SeqInOut" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle - seqinout..."
-                    master = Master(problem; customize = customize_master_model!)
-                    oracle = SeparableOracle(problem, master, ClassicalOracle(), problem.n_scenarios; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!)
+                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model!)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
                                 time_limit = 300.0,
                                 gap_tolerance = 1e-9,
-                                stabilizing_x = ones(problem.n_facilities),
+                                stabilizing_x = ones(data.n_facilities),
                                 α = 0.9,
                                 λ = 0.1,
                                 verbose = false
@@ -91,8 +91,8 @@ using JuMP
             @testset "Knapsack oracle" begin
                 @testset "NoSeq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - no seq..."
-                    master = Master(problem; customize = customize_master_model!)
-                    oracle = SeparableOracle(problem, master, CFLKnapsackOracle(), problem.n_scenarios; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!)
+                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!)
 
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
@@ -106,8 +106,8 @@ using JuMP
 
                 @testset "Seq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - seq..."
-                    master = Master(problem; customize = customize_master_model!)
-                    oracle = SeparableOracle(problem, master, CFLKnapsackOracle(), problem.n_scenarios; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!)
+                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -128,14 +128,14 @@ using JuMP
 
                 @testset "SeqInOut" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - seqinout..."
-                    master = Master(problem; customize = customize_master_model!)
-                    oracle = SeparableOracle(problem, master, CFLKnapsackOracle(), problem.n_scenarios; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!)
+                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
                                 time_limit = 300.0,
                                 gap_tolerance = 1e-9,
-                                stabilizing_x = ones(problem.n_facilities),
+                                stabilizing_x = ones(data.n_facilities),
                                 α = 0.9,
                                 λ = 0.1,
                                 verbose = false

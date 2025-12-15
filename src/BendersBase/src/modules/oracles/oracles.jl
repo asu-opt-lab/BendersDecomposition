@@ -49,22 +49,22 @@ end
 
 # Common utility functions for managing oracle parameters
 
-function set_parameter!(oracle::AbstractOracle, param::AbstractOracleParam)
-  if :oracle_param ∉ fieldnames(typeof(oracle))
-      throw(UndefError("$(typeof(oracle)) must have a field named `oracle_param`"))
-  elseif typeof(oracle.oracle_param) != typeof(param)
-      throw(ArgumentError("Type mismatch: expected parameter of type $(typeof(oracle.oracle_param)), got $(typeof(param))"))
+function set_parameter!(oracle::AbstractTypicalOracle, param::AbstractOracleParam)
+  if :param ∉ fieldnames(typeof(oracle))
+      throw(UndefError("$(typeof(oracle)) must have a field named `param`"))
+  elseif typeof(oracle.param) != typeof(param)
+      throw(ArgumentError("Type mismatch: expected parameter of type $(typeof(oracle.param)), got $(typeof(param))"))
   else
-      oracle.oracle_param = param
+      oracle.param = param
   end
 end
 
-function set_parameter!(oracle::AbstractOracle, param::String, value::Any)
+function set_parameter!(oracle::AbstractTypicalOracle, param::String, value::Any)
   sym_param = Symbol(param)
-  if sym_param ∈ fieldnames(typeof(oracle.oracle_param))
-      setfield!(oracle.oracle_param, sym_param, value)
+  if sym_param ∈ fieldnames(typeof(oracle.param))
+      setfield!(oracle.param, sym_param, value)
   else
-      throw(ArgumentError("Parameter `$(param)` not found in `$(typeof(oracle.oracle_param))` for oracle of type `$(typeof(oracle))`"))
+      throw(ArgumentError("Parameter `$(param)` not found in `$(typeof(oracle.param))` for oracle of type `$(typeof(oracle))`"))
   end
 end
 

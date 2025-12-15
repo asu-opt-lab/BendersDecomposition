@@ -8,7 +8,7 @@ using JuMP
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data
-            problem = read_cflp_benchmark_data("p$i")
+            data = read_cflp_benchmark_data("p$i")
             
             # Loop parameters
             benders_param = BendersSeqParam(;
@@ -19,15 +19,15 @@ using JuMP
 
             # Solve MIP for reference
             mip_model = Model()
-            customize_mip_model!(mip_model, problem)
+            customize_mip_model!(mip_model, data)
             optimize!(mip_model)
             @assert termination_status(mip_model) == OPTIMAL
             mip_opt_val = objective_value(mip_model)
 
             @testset "Classic oracle" begin
                 @info "solving CFLP p$i - classical oracle - seq..."
-                master = Master(problem; customize = customize_master_model!)
-                oracle = ClassicalOracle(problem, master; customize = customize_sub_model!)
+                master = Master(data; customize = customize_master_model!)
+                oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -36,8 +36,8 @@ using JuMP
             
             @testset "Knapsack oracle" begin
                 @info "solving CFLP p$i - knapsack oracle - seq..."
-                master = Master(problem; customize = customize_master_model!)
-                oracle = CFLKnapsackOracle(problem, master; customize = customize_sub_model!)
+                master = Master(data; customize = customize_master_model!)
+                oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()

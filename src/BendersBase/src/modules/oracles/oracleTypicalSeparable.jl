@@ -5,23 +5,23 @@ mutable struct SeparableOracleParam <: AbstractOracleParam
 end
 
 mutable struct SeparableOracle <: AbstractTypicalOracle
-    oracle_param::SeparableOracleParam 
+    param::SeparableOracleParam 
 
     oracles::Vector{AbstractTypicalOracle}
     N::Int
 
-    function SeparableOracle(problem::AbstractData, 
+    function SeparableOracle(data::AbstractData, 
                             master::Master,
                             oracle::T, 
                             N::Int; 
                             customize = customize_sub_model!,
                             sub_oracle_param::AbstractOracleParam = BasicOracleParam(),
-                            oracle_param::SeparableOracleParam = SeparableOracleParam()) where {T<:AbstractTypicalOracle}
+                            param::SeparableOracleParam = SeparableOracleParam()) where {T<:AbstractTypicalOracle}
         @debug "Building classical separable oracle"
         # assume each oracle is associated with a single t, that is dim_t = N
-        oracles = [T(problem, master; customize = customize, scen_idx=j, oracle_param = sub_oracle_param) for j=1:N] 
+        oracles = [T(data, master; customize = customize, scen_idx=j, param = sub_oracle_param) for j=1:N] 
 
-        new(oracle_param, oracles, N)
+        new(param, oracles, N)
     end
 end
 

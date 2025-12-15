@@ -60,7 +60,7 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data{<:SNIPData}, k:
 
 end
 
-function update_model!(oracle::DisjunctiveOracle, data::Data{<:SNIPData})
+function update_model!(oracle::SplitOracle, data::Data{<:SNIPData})
     dcglp = oracle.dcglp 
 
     @constraint(dcglp, [i=1:2], sum(dcglp[:omega_x][i,:]) <= data.problem.budget * dcglp[:omega_0][i])

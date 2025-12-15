@@ -1,7 +1,7 @@
 export UserCallbackParam, UserCallback
 
 """
-    UserCallbackParam <: AbstractCallbackParam
+    UserCallbackParam <: AbstractUserCallbackParam
 
 Parameters for user callbacks in the branch-and-bound process.
 
@@ -10,7 +10,7 @@ Parameters for user callbacks in the branch-and-bound process.
 - `node_count::Int = -1`: Only process nodes after this node count (-1 means process all)
 - `depth::Int = -1`: Only process nodes with depth >= this value (-1 means process all depths)
 """
-Base.@kwdef struct UserCallbackParam <: AbstractCallbackParam
+Base.@kwdef struct UserCallbackParam <: AbstractUserCallbackParam
     frequency::Int = 50
     node_count::Int = -1
     depth::Int = -1
@@ -44,7 +44,7 @@ Generates and adds Benders cuts at fractional nodes based on the specified frequ
 
 # Arguments
 - `cb_data`: Callback data from the solver
-- `master::Master`: The master problem object
+- `master::Master`: The master module
 - `log::BendersBnBLog`: Log object to record statistics
 - `param::BendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::UserCallback`: Configuration for the user callback with parameters controlling when cuts are generated

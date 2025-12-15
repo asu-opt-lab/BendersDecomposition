@@ -7,16 +7,16 @@ struct FacilityKnapsackInfo
 end
 
 mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
-    oracle_param::BasicOracleParam
+    param::BasicOracleParam
 
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
     facility_knapsack_info::FacilityKnapsackInfo
 
-    function CFLKnapsackOracle(problem::AbstractData, master::Master; 
+    function CFLKnapsackOracle(data::AbstractData, master::Master; 
                             customize = customize_sub_model!,
                             scen_idx::Int=-1, 
-                            oracle_param::BasicOracleParam = BasicOracleParam())
+                            param::BasicOracleParam = BasicOracleParam())
         @debug "Building knapsack oracle for CFLP"
         model = Model()
 
@@ -24,15 +24,15 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         x_copy = copy_variables!(model, master.x_tuple)
 
         # Build the submodel using user-defined customization, passing the copied variables
-        customize(model, problem, scen_idx; x_copy...)
+        customize(model, data, scen_idx; x_copy...)
 
         # Collect all copied master variables and add linking constraint
         x = var_from_tuple(x_copy)
         @constraint(model, fix_x, x .== 0)
 
-        facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(problem.costs, problem.demands, problem.capacities) : FacilityKnapsackInfo(problem.costs, problem.demands[scen_idx], problem.capacities)
+        facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.costs, data.demands, data.capacities) : FacilityKnapsackInfo(data.costs, data.demands[scen_idx], data.capacities)
 
-        new(oracle_param, model, fix_x, facility_knapsack_info)
+        new(param, model, fix_x, facility_knapsack_info)
     end
     
     CFLKnapsackOracle() = new()
@@ -67,7 +67,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
 
         a_x = KP_values # Vector{Float64}
         a_0 = sum(μ) 
-        if sub_obj_val >= t_value[1] * (1 + oracle.oracle_param.rtol)
+        if sub_obj_val >= t_value[1] * (1 + oracle.param.rtol)
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
             return true, [Hyperplane(a_x, a_t, a_0)], deepcopy(t_value)
@@ -81,7 +81,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
             a_x = dual.(oracle.fixed_x_constraints)
             a_t = [0.0]
             a_0 = dual_sub_obj_val - a_x' * x_value 
-            if dual_sub_obj_val >= oracle.oracle_param.zero_tol/tol_normalize
+            if dual_sub_obj_val >= oracle.param.zero_tol/tol_normalize
                 return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
             else
                 return true, [Hyperplane(a_x, a_t, a_0)], [Inf]

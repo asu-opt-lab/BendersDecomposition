@@ -1,21 +1,4 @@
-export EmptyCallbackParam, lazy_callback, NoUserCallback, user_callback
-
-"""
-    AbstractCallbackParam
-
-Abstract type for parameters used in callbacks during the branch-and-bound process.
-These parameters control how and when callbacks are executed.
-"""
-abstract type AbstractCallbackParam end
-
-"""
-    EmptyCallbackParam <: AbstractCallbackParam
-
-Represents empty (default) parameters for callbacks.
-Used when no specific parameters are needed for a callback.
-"""
-struct EmptyCallbackParam <: AbstractCallbackParam
-end
+export lazy_callback, NoUserCallback, user_callback
 
 """
     AbstractLazyCallback
@@ -33,7 +16,7 @@ Generic function for implementing lazy callbacks. This should be overridden by s
 
 # Arguments
 - `cb_data`: Callback data from the solver
-- `master_model::Model`: The JuMP master problem model
+- `master_model::Model`: The JuMP master model
 - `log::AbstractBendersBnBLog`: Log object to record statistics
 - `param::AbstractBendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::AbstractLazyCallback`: Configuration for the lazy callback
@@ -42,6 +25,13 @@ function lazy_callback(cb_data, master_model::Model, log::AbstractBendersBnBLog,
     throw(UndefError("Lazy callback not implemented for $(typeof(callback))"))
 end
 
+"""
+    AbstractUserCallbackParam
+
+Abstract type for parameters used in user callbacks during the branch-and-bound process.
+These parameters control how and when callbacks are executed.
+"""
+abstract type AbstractUserCallbackParam end
 
 """
     AbstractUserCallback
@@ -66,7 +56,7 @@ Generic function for implementing user callbacks. This should be overridden by s
 
 # Arguments
 - `cb_data`: Callback data from the solver
-- `master_model::Model`: The JuMP master problem model
+- `master_model::Model`: The JuMP master model
 - `log::AbstractBendersBnBLog`: Log object to record statistics
 - `param::AbstractBendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::AbstractUserCallback`: Configuration for the user callback
