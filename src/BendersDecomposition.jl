@@ -18,9 +18,10 @@ end # module BendersDecomposition
 # 10. rename `DisjunctiveOracle` to `SplitOracle`. --> done
 # 11. rename the folders named `algorithms` to `envs` and include both `envs` and `oracles` folders inside `modules` folder. --> done
 # 12. Remove `AbstractCallbackParam` and `EmptyCallbackParam <: AbstractCallbackParam` and add `AbstractUserCallbackParam`; Lazy callback does not need parameters. --> done
-# 13. Return `to_dataframe(log)` for all solve! functions.
-# 14. clean up all error-handling
-# 15. Kaiwen: refactor root node preprocessing
-# 16. Inho: unified oracle
-# 17. Kaiwen: better handle infeasible subproblem for `ClassicalOracle` by incorporating normalization when infeasible
-# 18. Inho: pareto oracle
+# 13. Return `to_dataframe(log)` for all solve! functions. --> done
+# 14: Move output of disjunctive-cut statistics out of main code --> done
+# 15. Refactor root node preprocessing --> done
+# 16. clean up all error-handling
+# 17. Inho: unified oracle
+# 18. Kaiwen: better handle infeasible subproblem for `ClassicalOracle` by incorporating normalization when infeasible
+# 19. Inho: pareto oracle

@@ -51,6 +51,8 @@ Fields:
 - `n_lazy_cuts::Int`: Total number of lazy Benders cuts generated.
 - `n_user_cuts::Int`: Total number of user Benders cuts generated.
 - `start_time::Float64`: Algorithm start time (used for calculating elapsed time).
+- `root_node_time::Float64`: Time spent preprocessing at the root node.
+- `total_time::Float64`: Total time spent in `solve!`.
 - `num_of_fraction_node::Int`: Number of nodes with fractional solutions.
 """
 mutable struct BendersBnBLog <: AbstractBendersBnBLog
@@ -59,9 +61,11 @@ mutable struct BendersBnBLog <: AbstractBendersBnBLog
     n_lazy_cuts::Int
     n_user_cuts::Int
     start_time::Float64
+    root_node_time::Float64
+    total_time::Float64
     num_of_fraction_node::Int
     function BendersBnBLog()
-        new(Vector{BendersBnBState}(), 0, 0, 0, 0, 0)
+        new(Vector{BendersBnBState}(), 0, 0, 0, 0.0, 0.0, 0.0, 0)
     end
 end
 
@@ -78,16 +82,14 @@ These parameters allow fine-tuning of the Benders algorithm performance.
 mutable struct BendersBnBParam <: AbstractBendersBnBParam
     time_limit::Float64
     gap_tolerance::Float64
-    disjunctive_root_process:: Bool
     verbose::Bool
 
     function BendersBnBParam(; 
                         time_limit::Float64 = 7200.0, 
                         gap_tolerance::Float64 = 1e-6, 
-                        disjunctive_root_process = false,
                         verbose::Bool = true
                         ) 
-        new(time_limit, gap_tolerance, disjunctive_root_process, verbose)
+        new(time_limit, gap_tolerance, verbose)
     end
 end 
 
@@ -110,4 +112,33 @@ end
 
 function get_sec_remaining(log::BendersBnBLog, param::BendersBnBParam)
     return get_sec_remaining(log.start_time, param.time_limit)
+end
+
+"""
+Convert the BnB log into a DataFrame.
+"""
+function to_dataframe(env::AbstractBendersBnB, log::BendersBnBLog)
+    if termination_status(env.master.model) == MOI.OPTIMIZE_NOT_CALLED
+        return DataFrame(
+            node_count = 0,
+            root_node_time = log.root_node_time,
+            time = log.total_time,
+            obj_bound = -Inf,
+            obj_val = Inf,
+            rel_gap = NaN,
+            n_lazy_cuts = log.n_lazy_cuts,
+            n_user_cuts = log.n_user_cuts
+        )
+    else
+        return DataFrame(
+            node_count = JuMP.node_count(env.master.model),
+            root_node_time = log.root_node_time,
+            time = log.total_time,
+            obj_bound = JuMP.objective_bound(env.master.model),
+            obj_val = env.obj_value,
+            rel_gap = has_values(env.master.model) ? JuMP.relative_gap(env.master.model) : NaN,
+            n_lazy_cuts = log.n_lazy_cuts,
+            n_user_cuts = log.n_user_cuts
+        )
+    end
 end

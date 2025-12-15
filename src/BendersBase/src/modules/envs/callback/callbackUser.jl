@@ -83,27 +83,20 @@ function user_callback(cb_data, master::Master, log::BendersBnBLog, param::Bende
                 state.values[:t] = JuMP.callback_value.(cb_data, master.t)
                 
                 # Generate cuts
-                try
-                    state.oracle_time = @elapsed begin
-                        state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
-                        cuts = !state.is_in_L ? hyperplanes_to_expression(master.model, hyperplanes, master.x, master.t) : []
-                        state.num_cuts += length(hyperplanes)
-                    end
-
-                    # Add cuts
-                    for cut in cuts
-                        cut_constraint = @build_constraint(0 >= cut)
-                        MOI.submit(master.model, MOI.UserCut(cb_data), cut_constraint)
-                    end
-                    
-                    # Record node information
-                    record_node!(log, state, false)
-                    
-                catch e
-                    if typeof(e) <: TimeLimitException
-                        return
-                    end
+                state.oracle_time = @elapsed begin
+                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, param))
+                    cuts = !state.is_in_L ? hyperplanes_to_expression(master.model, hyperplanes, master.x, master.t) : []
+                    state.num_cuts += length(hyperplanes)
                 end
+
+                # Add cuts
+                for cut in cuts
+                    cut_constraint = @build_constraint(0 >= cut)
+                    MOI.submit(master.model, MOI.UserCut(cb_data), cut_constraint)
+                end
+                
+                # Record node information
+                record_node!(log, state, false)
             end
         end
     end
