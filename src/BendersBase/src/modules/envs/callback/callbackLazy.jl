@@ -7,18 +7,16 @@ Configuration for lazy constraint callbacks in the branch-and-bound process.
 Used to dynamically add Benders cuts when integer solutions are found.
 
 # Fields
-- `params::EmptyCallbackParam`: Empty parameters for the callback (not used)
 - `oracle::AbstractTypicalOracle`: Oracle used to generate Benders cuts
 
 # Notes
 - It is recommended to use `AbstractTypicalOracle` rather than disjunctive oracles, as disjunctive oracles at integral nodes may yield incorrect results due to the nature of disjunctive programming.
 """
 struct LazyCallback <: AbstractLazyCallback
-    params::EmptyCallbackParam
     oracle::AbstractTypicalOracle
     
     function LazyCallback(oracle::AbstractTypicalOracle)
-        new(EmptyCallbackParam(), oracle)
+        new(oracle)
     end
 end
 

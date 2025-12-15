@@ -17,7 +17,7 @@ end # module BendersDecomposition
 # 9. rename `AbstractBendersCallback` to `AbstractBendersBnB`. --> done
 # 10. rename `DisjunctiveOracle` to `SplitOracle`. --> done
 # 11. rename the folders named `algorithms` to `envs` and include both `envs` and `oracles` folders inside `modules` folder. --> done
-# 12. Remove `AbstractCallbackParam` and `EmptyCallbackParam <: AbstractCallbackParam` and add `AbstractUserCallbackParam`; Lazy callback does not need parameters.
+# 12. Remove `AbstractCallbackParam` and `EmptyCallbackParam <: AbstractCallbackParam` and add `AbstractUserCallbackParam`; Lazy callback does not need parameters. --> done
 # 13. Return `to_dataframe(log)` for all solve! functions.
 # 14. clean up all error-handling
 # 15. Kaiwen: refactor root node preprocessing
