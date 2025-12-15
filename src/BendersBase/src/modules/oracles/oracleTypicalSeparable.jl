@@ -1,5 +1,43 @@
 export SeparableOracle, SeparableOracleParam
 
+"""
+Fallback constructor for subtypes of [`AbstractTypicalOracle`](@ref).
+
+This method is invoked when the user attempts to construct a `SeparableOracle`
+with a concrete oracle subtype `T` that does **not** define the required
+type-call constructor:
+
+    T(data::AbstractData, master::AbstractMaster;
+      customize = customize_sub_model!, scen_idx::Int, param::AbstractOracleParam)
+
+Calling this fallback indicates that the oracle type `T` has not implemented
+the interface expected by `SeparableOracle`. Any concrete oracle intended for
+use with `SeparableOracle` must therefore define a constructor matching the
+signature above.
+
+# Errors
+Throws an error indicating that the subtype `T` must provide the required
+constructor.
+"""
+(::Type{T})(data::AbstractData, master::AbstractMaster;
+            customize = customize_sub_model!,
+            scen_idx::Int,
+            param::AbstractOracleParam) where T <: AbstractTypicalOracle =
+    throw(UndefError(
+        """
+        Oracle subtype $(T) does not implement the required constructor
+        needed by `SeparableOracle`.
+
+        Expected constructor signature:
+
+          $(T)(data::AbstractData, master::AbstractMaster;
+              customize = customize_sub_model!, scen_idx::Int, param::AbstractOracleParam)
+
+        Define this constructor for $(T) in order to use it with `SeparableOracle`.
+        """
+    ))
+
+
 mutable struct SeparableOracleParam <: AbstractOracleParam
     # may contain parameters for scenario handling.
 end

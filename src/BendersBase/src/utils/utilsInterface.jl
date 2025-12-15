@@ -64,7 +64,7 @@ scenario index `scen_idx`, the method should:
 
 By default, this method throws an `UndefError`, indicating that no implementation
 exists for the provided argument types. Users must define their own specialized
-method if they want to used any model-based oracle. For example:
+method if they want to use any model-based oracle. For example:
 
 ```julia
 function customize_sub_model!(model::Model, data::MyDataType, scen_idx::Int; u, v)
@@ -89,7 +89,7 @@ subproblem formulation.
 Notes
 - This function must be implemented by the user to construct model-based oracles.
 """
-function customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...) 
+function customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
     throw(UndefError("update customize_sub_model! for $(typeof(data))"))
 end
 
