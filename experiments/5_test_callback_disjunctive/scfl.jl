@@ -66,6 +66,10 @@ using CPLEX
                             log = solve!(env)
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            if benders_param.verbose
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                            end
                         end
 
                         @testset "Seq" begin
@@ -85,6 +89,10 @@ using CPLEX
                             log = solve!(env)
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            if benders_param.verbose
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                            end
                         end
 
                         @testset "SeqInOut" begin
@@ -104,6 +112,10 @@ using CPLEX
                             log = solve!(env)
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            if benders_param.verbose
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                            end
                         end
                     end
                 end
@@ -141,6 +153,10 @@ using CPLEX
                             log = solve!(env)
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            if benders_param.verbose
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                            end
                         end
 
                         @testset "Seq" begin
@@ -160,6 +176,10 @@ using CPLEX
                             log = solve!(env)
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            if benders_param.verbose
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                            end
                         end
 
                         @testset "SeqInOut" begin
@@ -179,11 +199,14 @@ using CPLEX
                             log = solve!(env)
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            if benders_param.verbose
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                            end
                         end
                     end
                 end
             end
-
         end
     end
 end

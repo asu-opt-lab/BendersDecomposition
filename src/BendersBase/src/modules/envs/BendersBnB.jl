@@ -82,80 +82,74 @@ cutting plane approach, and processes the results.
 function solve!(env::BendersBnB) 
     log = BendersBnBLog()
     param = env.param
-    log.start_time = time()
-    
-    # Apply root node preprocessing if specified
-    root_node_time = 0.0
-    if isa(env.root_preprocessing, RootNodePreprocessing)
-        root_node_time = root_node_processing!(env.master, env.root_preprocessing)
-    end
-    
-    # Apply disjunctive root node preprocessing if specified
-    if param.disjunctive_root_process
-        # Update root_preprocessing params
-        env.root_preprocessing.params.time_limit -= root_node_time
-        env.root_preprocessing.oracle = env.user_callback.oracle
+    try 
+        log.start_time = time()
+        
+        # Apply root node preprocessing if specified
+        log.root_node_time = root_node_processing!(env.master, env.root_preprocessing)
 
-        disjunctive_root_node_time = root_node_processing!(env.master, env.root_preprocessing)
-        root_node_time += disjunctive_root_node_time
-    end
-    
-    # Set up lazy callback
-    function lazy_callback_wrapper(cb_data)
-        lazy_callback(cb_data, env.master, log, env.param, env.lazy_callback)
-    end
-    set_attribute(env.master.model, MOI.LazyConstraintCallback(), lazy_callback_wrapper)
-    
-    # Set up user callback if specified
-    if !isa(env.user_callback, NoUserCallback)
-        function user_callback_wrapper(cb_data)
-            user_callback(cb_data, env.master, log, env.param, env.user_callback)
+        # Set up lazy callback
+        function lazy_callback_wrapper(cb_data)
+            lazy_callback(cb_data, env.master, log, env.param, env.lazy_callback)
         end
-        set_attribute(env.master.model, MOI.UserCutCallback(), user_callback_wrapper)
-    end
-    
-    # Configure solver parameters
-    if param.time_limit <= root_node_time
-        throw(TimeLimitException("Time limit reached before BnB starts, please increase the time limit."))
-    end
-    set_time_limit_sec(env.master.model, param.time_limit - root_node_time)
-    set_optimizer_attribute(env.master.model, MOI.Silent(), !param.verbose)
-    set_optimizer_attribute(env.master.model, MOI.RelativeGapTolerance(), param.gap_tolerance)
-    
-    # Solve the master problem
-    JuMP.optimize!(env.master.model)
-    
-    # Process termination status
-    status = termination_status(env.master.model)
-    if status == MOI.OPTIMAL
-        env.termination_status = Optimal()
-        env.obj_value = JuMP.objective_value(env.master.model)
-    elseif status == MOI.TIME_LIMIT
-        env.termination_status = TimeLimit()
-        env.obj_value = has_values(env.master.model) ? JuMP.objective_value(env.master.model) : Inf
-    else
-        env.termination_status = InfeasibleOrNumericalIssue()
-        env.obj_value = Inf
-    end
-    
-    elapsed_time = time() - log.start_time
-    
-    # Print summary if verbose mode is enabled
-    if param.verbose 
-        @info "Node count: $(JuMP.node_count(env.master.model))"
-        @info "Root processing time: $(root_node_time) "
-        @info "Elapsed time: $(elapsed_time)"
-        @info "Objective bound: $(JuMP.objective_bound(env.master.model))"
-        @info "Objective value: $(env.obj_value)"
-        @info "Relative gap: $(JuMP.relative_gap(env.master.model))"
-        @info "Lazy cuts added: $(log.n_lazy_cuts)"
-        if typeof(env.user_callback.oracle) <: AbstractDisjunctiveOracle
-            @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
-            env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts - length(env.user_callback.oracle.disjunctiveCuts))"
+        set_attribute(env.master.model, MOI.LazyConstraintCallback(), lazy_callback_wrapper)
+        
+        # Set up user callback if specified
+        if !isa(env.user_callback, NoUserCallback)
+            function user_callback_wrapper(cb_data)
+                user_callback(cb_data, env.master, log, env.param, env.user_callback)
+            end
+            set_attribute(env.master.model, MOI.UserCutCallback(), user_callback_wrapper)
         end
+        
+        # Configure solver parameters
+        if param.time_limit <= log.root_node_time
+            throw(TimeLimitException("Time limit reached before BnB starts, please increase the time limit."))
+        end
+        set_time_limit_sec(env.master.model, param.time_limit - log.root_node_time)
+        set_optimizer_attribute(env.master.model, MOI.Silent(), !param.verbose)
+        set_optimizer_attribute(env.master.model, MOI.RelativeGapTolerance(), param.gap_tolerance)
+        
+        # Solve the master problem
+        JuMP.optimize!(env.master.model)
+        
+        log.total_time = time() - log.start_time
+
+        # Process termination status
+        status = termination_status(env.master.model)
+        if status == MOI.OPTIMAL
+            env.termination_status = Optimal()
+            env.obj_value = JuMP.objective_value(env.master.model)
+        elseif status == MOI.TIME_LIMIT
+            env.termination_status = TimeLimit()
+            env.obj_value = has_values(env.master.model) ? JuMP.objective_value(env.master.model) : Inf
+        else
+            throw(UnexpectedModelStatusException("BendersBnB: master $(status)"))
+            env.obj_value = Inf
+        end
+       
+        df = to_dataframe(env, log)
+
+        if param.verbose 
+            @info df
+        end
+        
+        return df
+    catch e
+        @warn e.msg
+        if typeof(e) <: TimeLimitException
+            env.termination_status = TimeLimit()
+            env.obj_value = has_values(env.master.model) ? JuMP.objective_value(env.master.model) : Inf
+        elseif typeof(e) <: UnexpectedModelStatusException
+            env.termination_status = InfeasibleOrNumericalIssue()
+        else
+            rethrow()  
+        end
+        if env.param.verbose
+            println("Terminated with $(env.termination_status)")
+        end
+        return to_dataframe(env, log)
     end
-    
-    return deepcopy(env.obj_value), elapsed_time
 end
 
 
