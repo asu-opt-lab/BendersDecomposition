@@ -1,8 +1,8 @@
 using JuMP, DataFrames, Logging, CSV
-using BendersDecomposition
+using BendersX
 using Printf  
 using Statistics  
-import BendersDecomposition: generate_cuts
+import BendersX: generate_cuts
 include("$(dirname(@__DIR__))/example/cflp/data_reader.jl")
 include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
 include("$(dirname(@__DIR__))/example/cflp/model.jl")
