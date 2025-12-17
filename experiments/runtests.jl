@@ -1,7 +1,7 @@
-using BendersDecomposition
+using BendersX
 using Test
 
-@testset "BendersDecomposition.jl" begin
+@testset "BendersX.jl" begin
     include("1_test_sequential_typical/runtest.jl")
     include("2_test_sequential_in_out_typical/runtest.jl")
     include("3_test_sequential_disjunctive/runtest.jl")

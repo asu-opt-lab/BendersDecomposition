@@ -1,4 +1,4 @@
-module BendersDecomposition
+module BendersX
 
 using Reexport
 
@@ -6,7 +6,7 @@ using Reexport
 @reexport using BendersLibrary
 
 
-end # module BendersDecomposition
+end # module BendersX
 
 # To-Do: 
 # 4. Kaiwen: refactor all files in script folder
