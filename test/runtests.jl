@@ -1,5 +1,5 @@
 using Test
-using BendersDecomposition
+using BendersX
 
-@testset "BendersDecomposition.jl" begin
+@testset "BendersX.jl" begin
 end
