@@ -100,8 +100,8 @@ This repository is actively under development and we welcome contributions! Feel
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
+Copyright © 2025 Arizona State University.
+Released under the MIT License (see [LICENSE](LICENSE) file for details).
 
 
 

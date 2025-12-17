@@ -1,4 +1,4 @@
-using BendersDecomposition
+using BendersX
 using Test
 using JuMP
 

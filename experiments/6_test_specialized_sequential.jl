@@ -3,7 +3,7 @@
 # remove other_constraints from classical oracle.
 # add a method for generating optimal vertex for SpecializedBendersSeq
 
-using BendersDecomposition
+using BendersX
 using Test
 using JuMP
 using CPLEX

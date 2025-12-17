@@ -1,4 +1,4 @@
-using BendersDecomposition
+using BendersX
 using Test
 using JuMP
 @testset verbose = true "SNIP Sequential Benders Tests" begin
