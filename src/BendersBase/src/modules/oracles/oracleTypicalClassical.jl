@@ -1,8 +1,10 @@
-export ClassicalOracle
+export ClassicalOracle, ClassicalOracleParam
+
+const ClassicalOracleParam = BasicOracleParam
 
 mutable struct ClassicalOracle <: AbstractTypicalOracle
     
-    param::BasicOracleParam
+    param::ClassicalOracleParam
 
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
@@ -10,7 +12,7 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
     function ClassicalOracle(data::AbstractData, master::Master; 
                             customize = customize_sub_model!,
                             scen_idx::Int=0, 
-                            param::BasicOracleParam = BasicOracleParam())
+                            param::ClassicalOracleParam = ClassicalOracleParam())
     
             @debug "Building classical oracle"
             model = Model()

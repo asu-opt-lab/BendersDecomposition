@@ -1,7 +1,7 @@
 export customize_master_model!, customize_sub_model!, copy_variables!, var_from_tuple
 
 """
-    customize_master_model!(model::Model, data::AbstractData)
+    customize_master_model!(model::Model, data::AbstractData) -> NamedTuple, Vector{VariableRef}
 
 User-defined hook for constructing the master model.
 
