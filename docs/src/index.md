@@ -3,63 +3,15 @@
 Welcome to the documentation for **BendersX.jl**.
 
 ## Introduction
-**BendersX.jl** is a modular and extensible framework for implementing Benders decomposition algorithms in Julia. The package separates the algorithm into three core components—**Master**, **Oracle**, and **Environment**—allowing each part of the algorithm to be customized, replaced, or extended independently. This design enables rapid prototyping, reproducible experiments, and fair comparison of alternative Benders strategies without modifying modeling code.
+**BendersX.jl** is a modular and extensible framework for implementing Benders decomposition algorithms in Julia. The package separates the algorithm into three core components—**Master**, **Oracle**, and **Environment**—allowing each part of the algorithm to be customized, replaced, or extended independently. This design enables rapid prototyping, reproducible experiments, and fair comparison of a wide range of Benders variants without modifying modeling code.
 
-Built on top of JuMP, BendersX.jl allows users to formulate master and subproblem models using standard JuMP modeling syntax while delegating all algorithmic components to the framework. The library includes a broad collection of built-in oracles (classical, unified, Pareto-optimal, split cuts, and problem-specific variants) and multiple environment controllers (sequential, in-out stabilized, branch-and-bound). Users can easily integrate custom oracles or environments to explore new algorithmic ideas.
+Built on top of JuMP, BendersX.jl allows users to formulate master and subproblem models using standard JuMP modeling syntax while delegating all algorithmic operations to the framework. The library includes a broad collection of built-in oracles (classical, unified, Pareto-optimal, split cuts, and problem-specific variants) and multiple environment (sequential, in-out stabilized, branch-and-bound). Users can easily integrate custom oracles or environments to explore new algorithmic ideas.
 
 BendersX.jl also provides a growing suite of benchmarking examples—including facility location variants and network interdiction models—designed to support reproducible computational studies and easy comparison across algorithms.
 
 Whether you are developing new Benders decomposition techniques, testing Benders variants, or building scalable optimization applications, BendersX.jl offers a clean, flexible, and extensible platform for working with Benders decomposition in Julia.
 
 
-## Architecture 
-BendersX.jl is organized into three main components, each responsible for part of the algorithm.
-
-### Master
-- Represents the master problem in a Benders decomposition.
-- Generates candidate points and handles integration of new cuts into the model.
-- Provides hooks for user-defined modeling code:
-```julia
-master = Master(data; customize = customize_master_model!)
-```
-Master model is given via user-defined function `customize_master_model!`[link]. 
-
-### Oracle
-- Encapsulates all procedures for cut generation given a separation point.
-- Built-in oracle types include:
-    - ClassicalOracle
-    - UnifiedOracle
-    - ParetoOracle
-    - KnapsackOracle (for facility location)
-    - SplitOracle
-- Users can implement customized cut-generation by defining:
-```julia
-struct MyOracle <: AbstractOracle
-    # fields
-end
-```
-together with
-```julia
-function generate_cuts() -> 
-```
-
-### Environment
-- Orchestrates the iteration logic of the Benders algorithm.
-- Controls how master and oracle interact each iteration.
-- Built-in environments include:
-    - BendersSeq — classic sequential algorithm
-    - BendersSeqInOut — sequential algorithm with in-out stabilization
-    - BendersBnB — branch-and-bound with Benders cuts
-    - Extensible through:
-    ```julia
-    struct MyEnv <: AbstractBendersEnv
-        # fields
-    end
-    ```
-    together with
-    ```julia
-    function solve! -> DataFrame
-    ```
 
 ## Quick Start
 A minimal working example:
