@@ -1,0 +1,5 @@
+[deps]
+BendersBase = "5d493250-739e-4f20-9003-5efb7f1b28da"
+BendersLibrary = "c2345678-f90a-1234-5678-901234567890"
+BendersX = "e6515e7d-f2f3-4cbe-b502-b49d10f04732"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
