@@ -1,12 +1,8 @@
 using JuMP, DataFrames, Logging, CSV
 using BendersX
-using Printf  
-using Statistics  
-import BendersX: generate_cuts
-include("$(dirname(@__DIR__))/example/cflp/data_reader.jl")
-include("$(dirname(@__DIR__))/example/cflp/oracle.jl")
-include("$(dirname(@__DIR__))/example/cflp/model.jl")
-
+using Printf
+using Statistics
+using CPLEX
 
 # load settings
 # args = parse_commandline()
@@ -15,15 +11,11 @@ include("$(dirname(@__DIR__))/example/cflp/model.jl")
 # output_dir = args["output_dir"]
 instance = "T100x100_5_1"
 output_dir = "scripts"
+
 # -----------------------------------------------------------------------------
 # load problem data
 # -----------------------------------------------------------------------------
-problem = read_cfl_file(instance)
-dim_x = problem.n_facilities
-dim_t = 1
-c_x = problem.fixed_costs
-c_t = [1.0]
-data = Data(dim_x, dim_t, problem, c_x, c_t)
+data = read_cfl_file(instance)
 
 # -----------------------------------------------------------------------------
 # load parameters
@@ -35,7 +27,10 @@ benders_param = BendersBnBParam(
     verbose = true
 )
 
-dcglp_param = DcglpParam(
+dcglp_optimizer = optimizer_with_attributes(CPLEX.Optimizer,
+    "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1,
+    "CPX_PARAM_EPOPT" => 1e-9, MOI.Silent() => true)
+dcglp_param = DcglpParam(dcglp_optimizer;
     time_limit = 1000.0,
     gap_tolerance = 1e-3,
     halt_limit = 3,
@@ -43,84 +38,49 @@ dcglp_param = DcglpParam(
     verbose = true
 )
 
-# Solver parameters
-master_solver_param = Dict(
-    "solver" => "CPLEX", 
-    "CPX_PARAM_EPINT" => 1e-9, 
-    "CPX_PARAM_EPRHS" => 1e-9
-)
-
-typical_oracle_solver_param = Dict(
-    "solver" => "CPLEX", 
-    "CPX_PARAM_EPRHS" => 1e-9, 
-    "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
-    "CPX_PARAM_EPOPT" => 1e-9
-)
-
-dcglp_solver_param = Dict(
-    "solver" => "CPLEX", 
-    "CPX_PARAM_EPRHS" => 1e-9, 
-    "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
-    "CPX_PARAM_EPOPT" => 1e-9
+oracle_param = SplitOracleParam(dcglp_param;
+    norm = LpNorm(1.0),
+    split_index_selection_rule = RandomFractional(),
+    disjunctive_cut_append_rule = AllDisjunctiveCuts(),
+    strengthened = true,
+    add_benders_cuts_to_master = true,
+    fraction_of_benders_cuts_to_master = 0.5,
+    reuse_dcglp = true
 )
 
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
-master = Master(data; solver_param = master_solver_param)
-update_model!(master, data)
+master = Master(data; customize = customize_master_model!)
 
 # -----------------------------------------------------------------------------
 # typical oracles
 # -----------------------------------------------------------------------------
 # Create two oracles for kappa & nu
 typical_oracles = [
-    CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param),
-    CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
+    CFLKnapsackOracle(data, master; customize = customize_sub_model!),
+    CFLKnapsackOracle(data, master; customize = customize_sub_model!)
 ]
-
-for k = 1:2
-    update_model!(typical_oracles[k], data)
-end
 
 # -----------------------------------------------------------------------------
 # disjunctive oracle
 # -----------------------------------------------------------------------------
-disjunctive_oracle = SplitOracle(
-    data, 
-    typical_oracles; 
-    solver_param = dcglp_solver_param, 
-    param = dcglp_param
-) 
-
-oracle_param = SplitOracleParam(
-    norm = LpNorm(1.0), 
-    split_index_selection_rule = RandomFractional(),
-    disjunctive_cut_append_rule = AllDisjunctiveCuts(), 
-    strengthened = true, 
-    add_benders_cuts_to_master = true, 
-    fraction_of_benders_cuts_to_master = 0.5, 
-    reuse_dcglp = true
-)
-
-set_parameter!(disjunctive_oracle, oracle_param)
-update_model!(disjunctive_oracle, data)
+disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
 # -----------------------------------------------------------------------------
 # root node preprocessing
 # -----------------------------------------------------------------------------
+lazy_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!)
+
 root_seq_type = BendersSeqInOut
 root_param = BendersSeqInOutParam(
     time_limit = 100.0,
     gap_tolerance = 1e-6,
-    stabilizing_x = ones(data.dim_x),
+    stabilizing_x = ones(data.n_facilities),
     α = 0.9,
     λ = 0.1,
     verbose = true
 )
-
-lazy_oracle = CFLKnapsackOracle(data; solver_param = typical_oracle_solver_param)
-update_model!(lazy_oracle, data)
 
 # Create root node preprocessing with oracle
 root_preprocessing = RootNodePreprocessing(lazy_oracle, root_seq_type, root_param)
@@ -139,11 +99,10 @@ user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(freque
 # BendersBnB
 # -----------------------------------------------------------------------------
 env = BendersBnB(
-    data, 
-    master, 
-    root_preprocessing, 
-    lazy_callback, 
-    user_callback; 
+    master,
+    root_preprocessing,
+    lazy_callback,
+    user_callback;
     param = benders_param
 )
 
@@ -151,9 +110,3 @@ env = BendersBnB(
 # solve
 # -----------------------------------------------------------------------------
 solution_log = solve!(env)
-
-
-
-
-
-

@@ -100,7 +100,7 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=. scripts/${FILE_NAME} --instance ${instance} --output_dir ${OUTPUT_DIR} --seed ${SEED}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=experiments/scripts experiments/scripts/${FILE_NAME} --instance ${instance} --output_dir ${OUTPUT_DIR} --seed ${SEED}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

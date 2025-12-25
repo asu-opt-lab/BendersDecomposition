@@ -1,12 +1,29 @@
 using JuMP, DataFrames, Logging, CSV
 using BendersX
+using ArgParse
 using Random
-using Printf  
-using Statistics  
-import BendersX: generate_cuts
-include("$(dirname(@__DIR__))/example/uflp/data_reader.jl")
-include("$(dirname(@__DIR__))/example/uflp/oracle.jl")
-include("$(dirname(@__DIR__))/example/uflp/model.jl")
+using Printf
+using Statistics
+
+function parse_commandline()
+    s = ArgParseSettings()
+    @add_arg_table! s begin
+        "--instance"
+            help = "Instance name"
+            arg_type = String
+            default = "ga250a-1"
+        "--seed"
+            help = "Random seed"
+            arg_type = Int
+            default = 1
+        "--output_dir"
+            help = "Output directory"
+            arg_type = String
+            default = "output"
+    end
+    return parse_args(s)
+end
+
 global_logger(ConsoleLogger(stderr, Logging.Debug))
 
 threads = 7
@@ -22,32 +39,22 @@ output_dir = args["output_dir"]
 # -----------------------------------------------------------------------------
 # load problem data
 # -----------------------------------------------------------------------------
-problem = read_Simple_data(instance)
-dim_x = problem.n_facilities
-dim_t = problem.n_customers
-c_x = problem.fixed_costs
-c_t = ones(dim_t)
-data = Data(dim_x, dim_t, problem, c_x, c_t)
-
-# -----------------------------------------------------------------------------
-# load parameters
-# -----------------------------------------------------------------------------
-mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, 
-"CPXPARAM_Threads" => threads,  "CPX_PARAM_BRDIR" => 1)
+data = read_Simple_data(instance)
 
 # -----------------------------------------------------------------------------
 # MIP model
 # -----------------------------------------------------------------------------
-mip = Mip(data)
-assign_attributes!(mip.model, mip_solver_param)
-set_time_limit_sec(mip.model, time_limit)
-update_model!(mip, data)
-set_optimizer_attribute(mip.model, MOI.Silent(), false)
-optimize!(mip.model)
+mip_model = Model()
+customize_mip_model!(mip_model, data)
+set_optimizer_attribute(mip_model, "CPXPARAM_Threads", threads)
+set_optimizer_attribute(mip_model, "CPX_PARAM_BRDIR", 1)
+set_time_limit_sec(mip_model, time_limit)
+set_optimizer_attribute(mip_model, MOI.Silent(), false)
+optimize!(mip_model)
 
-@info termination_status(mip.model)
-@info "Node count: $(node_count(mip.model))"
-@info "Elapsed time: $(solve_time(mip.model))"
-@info "Objective value: $(objective_value(mip.model))"
-@info "Objective bound: $(objective_bound(mip.model))"
-@info "Relative gap: $(relative_gap(mip.model))"
+@info termination_status(mip_model)
+@info "Node count: $(node_count(mip_model))"
+@info "Elapsed time: $(solve_time(mip_model))"
+@info "Objective value: $(objective_value(mip_model))"
+@info "Objective bound: $(objective_bound(mip_model))"
+@info "Relative gap: $(relative_gap(mip_model))"
