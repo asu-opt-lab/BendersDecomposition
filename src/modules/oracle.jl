@@ -66,6 +66,8 @@ function set_parameter!(oracle::AbstractOracle, param::String, value::Any)
 end
 
 include("oracleTypicalClassical.jl")
+# include("oracleTypicalClassical_original.jl")
+
 include("oracleTypicalSeparable.jl")
 include("oracleDisjunctive.jl")
 include("oracleTypicalUnified.jl")

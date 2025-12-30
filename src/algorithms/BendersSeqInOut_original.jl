@@ -27,6 +27,12 @@ function solve!(env::BendersSeqInOut)
     log = BendersSeqLog()
     try    
         state = BendersSeqState()
+        stabilizing_x = param.stabilizing_x
+        α = param.α
+        λ = param.λ
+        # relax_integrality(env.master.model)
+        kelley_mode = false
+        
         while true
             state = BendersSeqState()
             state.total_time = @elapsed begin
@@ -42,54 +48,36 @@ function solve!(env::BendersSeqInOut)
                         throw(TimeLimitException("Time limit reached during master solving"))
                     else 
                         throw(ErrorException("master termination status: $(termination_status(env.master.model))"))
+                        # if infeasible, then the milp is infeasible
                     end
                 end
-            end
-
-            # Binary search on line segment [x_fixed, x_current]
-            x_current = state.values[:x]
-            x_fixed = param.stabilizing_x
-
-            # Binary search parameters
-            θ_lower = 0.75
-            θ_upper = 1.0
-            θ = (θ_lower + θ_upper) / 2
-            binary_search_tol = 1e-6
-            cut_found = false
-            x_cut = nothing
-            result_cut = nothing
                 
-            # Binary search loop
-            state.oracle_time = @elapsed begin
-                while true
-                    # Interpolate x
-                    x_query = θ * x_current + (1 - θ) * x_fixed
+                # perturb point
+                stabilizing_x = α * stabilizing_x + (1 - α) * state.values[:x]
+                intermediate_x = λ * state.values[:x] + (1 - λ) * stabilizing_x
 
-                    # Query subproblem
-                    t = time()
-                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, x_query, state.values[:t]; time_limit = get_sec_remaining(log, param))
-                    # @info (time() -t)
-                    if !state.is_in_L
-                        # Found violated cut
-                        cut_found = true
-                        x_cut = copy(x_query)
-                        result_cut = hyperplanes
-                        break
-                    else
-                        # No violation, move toward x_current
-                        θ_lower = θ
-                        θ = (θ + θ_upper) / 2
+                # Execute oracle
+                state.oracle_time = @elapsed begin
+                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, intermediate_x, state.values[:t]; time_limit = get_sec_remaining(log, param)) # only modify the knapsack cut and classical cut
 
-                        # Check convergence threshold
-                        if θ_upper - θ_lower < binary_search_tol
-                            break
+                    if kelley_mode 
+                        if !isnan(state.f_x[1])
+                            update_upper_bound_and_gap!(state, log, (f_x, x) -> env.data.c_t' * f_x + env.data.c_x' * x)
                         end
+                    else
+                        state.is_in_L = false
                     end
-                end
-            end
 
-            cuts = cut_found ? hyperplanes_to_expression(env.master.model, result_cut, env.master.model[:x], env.master.model[:t]) : []
-            record_iteration!(log, state)
+                    cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
+                end
+                if typeof(env.oracle) == DualDecomposition
+                    println("t:$(state.values[:t][1]),f_dual:$(env.oracle.oracle_log.dual_obj), f_opt:$(state.f_x), vogel:$(env.oracle.oracle_param.obj_limit), vogel_time:$(env.oracle.oracle_log.vogel_time), seq_time:$(state.oracle_time)")
+                    !isnan(state.f_x[1]) && @assert env.oracle.oracle_param.obj_limit >= state.f_x[1] "vogel is smaller"
+                end
+            
+                # Update state and record information
+                record_iteration!(log, state)
+            end
 
             param.verbose && print_iteration_info(state, log)
 
@@ -98,10 +86,26 @@ function solve!(env::BendersSeqInOut)
 
             # add generated cuts to master
             @constraint(env.master.model, 0 .>= cuts)
+            
+            # # whether to switch kelley mode
+            # if !kelley_mode && log.n_iter != 0
+            #     check_lb_improvement!(state, log; zero_tol = 1e-8, tol_imprv = 0.05)
+
+            #     if log.consecutive_no_improvement >= 5
+            #         # Reset λ to 1 (switch to Kelley's cutting plane)
+            #         λ = 1.0
+            #         kelley_mode = true
+            #         param.verbose && println("Switching to Kelley's cutting plane method (λ = 1.0)")
+            #     end
+            # end
+
+            # Check improvement
+            check_lb_improvement!(state, log; zero_tol = 1e-8, tol_imprv = 1e-6)
+            log.consecutive_no_improvement >= 3 && break
         end
         env.termination_status = Optimal()
         env.obj_value = log.iterations[end].LB
-        
+
         return to_dataframe(log)
     catch e
         if typeof(e) <: TimeLimitException

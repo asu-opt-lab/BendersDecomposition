@@ -1,5 +1,5 @@
 using Base.Threads: @threads
-using OSQP#, CPLEX
+using OSQP, CPLEX, Gurobi
 
 struct FacilityKnapsackInfo
     costs::Matrix{Float64}
@@ -23,23 +23,38 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
     facility_knapsack_info::FacilityKnapsackInfo
+    gbc::Bool
+    manual_warm::Bool
+    bnb::Bool
+    prev_y::Vector{Float64}
 
     function CFLKnapsackOracle(data::Data; 
                                scen_idx=-1, 
                                solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                               oracle_param::CFLKnapsackOracleParam = CFLKnapsackOracleParam())
+                               oracle_param::CFLKnapsackOracleParam = CFLKnapsackOracleParam(),
+                               gbc::Bool = true,
+                               manual_warm::Bool = true,
+                               bnb::Bool = false,
+                               prev_y = zeros(data.problem.n_facilities*data.problem.n_customers))
         @debug "Building classical oracle"
-        model = Model()
+
+        if manual_warm
+            optimizer = optimizer_with_attributes(Gurobi.Optimizer, "Method" => 6, "PDHGGPU" => 1,
+            "Crossover" => 1, "Threads" => 7, "LPWarmStart" => 2, "Presolve" => 1, "OutputFlag" => 1,
+            "PDHGAbsTol" => 1e-4, "PDHGConvTol" => 1e-4, "PDHGRelTol" => 1e-4)
+            model = direct_model(optimizer)
+        else
+            model = Model()
+            assign_attributes!(model, solver_param)
+        end
 
         # Define coupling variables and constraints
         @variable(model, 0 <= x[1:data.dim_x] <= 1)
         @constraint(model, fix_x, x .== 0)
 
         facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.problem.costs, data.problem.demands, data.problem.capacities) : FacilityKnapsackInfo(data.problem.costs, data.problem.demands[scen_idx], data.problem.capacities)
-
-        assign_attributes!(model, solver_param)
         
-        new(oracle_param, solver_param, model, fix_x, facility_knapsack_info)
+        new(oracle_param, solver_param, model, fix_x, facility_knapsack_info, gbc, manual_warm, bnb, prev_y)
     end
     
     CFLKnapsackOracle() = new()
@@ -49,12 +64,43 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
     s_time = time()
     set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
+
+    # GBC
+    if oracle.gbc
+        I, J = size(oracle.facility_knapsack_info.costs)
+        #Update variable upper bounds
+        for i in 1:I, j in 1:J
+            set_upper_bound(oracle.model[:y][i, j], x_value[i])
+        end
+    end
+
+    if oracle.manual_warm
+        # Warmstart
+        constrs = vcat(
+            JuMP.all_constraints(oracle.model, JuMP.AffExpr, MOI.EqualTo{Float64}),
+            JuMP.all_constraints(oracle.model, JuMP.AffExpr, MOI.LessThan{Float64}),
+            JuMP.all_constraints(oracle.model, JuMP.AffExpr, MOI.GreaterThan{Float64}),
+        )
+
+        grb = JuMP.unsafe_backend(oracle.model)
+        Gurobi.GRBupdatemodel(grb) 
+
+        vars = all_variables(oracle.model)
+        for (v, p_val) in zip(vars, vcat(x_value, oracle.prev_y))
+            MOI.set(oracle.model, Gurobi.VariableAttribute("PStart"), v, p_val)
+        end
+        for c in constrs
+            MOI.set(oracle.model, Gurobi.ConstraintAttribute("DStart"), c, 0.0)
+        end
+    end
+
     optimize!(oracle.model)
 
     if termination_status(oracle.model) == TIME_LIMIT
         throw(TimeLimitException("Time limit reached during cut generation"))
     end
 
+    oracle.manual_warm && !oracle.bnb && (oracle.prev_y = vec(value.(oracle.model[:y])))        
     status = dual_status(oracle.model)
 
     if status == FEASIBLE_POINT
@@ -75,7 +121,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
 
         a_x = KP_values # Vector{Float64}
         a_0 = sum(μ) 
-        println("Exact time: $(time() - s_time)")
+        
         if sub_obj_val >= t_value[1] * (1 + oracle.oracle_param.rtol / tol_normalize)
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
