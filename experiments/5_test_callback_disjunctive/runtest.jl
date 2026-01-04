@@ -7,6 +7,6 @@ using JuMP
     include("ufl.jl")
     include("cfl.jl")
     include("scfl.jl")
-    # include("snip.jl")
+    include("snip.jl")
     @info "Callback Disjunctive Tests completed"
 end
