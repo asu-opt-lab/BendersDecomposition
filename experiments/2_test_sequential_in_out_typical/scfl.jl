@@ -35,7 +35,7 @@ using JuMP
                 log = solve!(env)
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-            end 
+            end
             
             @testset "Knapsack oracle" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - seqInOut..."

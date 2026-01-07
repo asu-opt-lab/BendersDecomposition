@@ -1,5 +1,5 @@
 using Test
-using BendersBase
+# using BendersBase
 using JuMP
 
 @testset "BendersBase copy_variables!" begin
