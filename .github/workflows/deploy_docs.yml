@@ -1,0 +1,48 @@
+name: Deploy docs (Documenter)
+
+# Trigger on pushes to main and documentation branches (adjust if needed)
+on:
+  push:
+    branches:
+      - main
+      - documentation
+
+permissions:
+  contents: write   # required by peaceiris/actions-gh-pages to push the site
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # important for Documenter edit-link detection
+
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v1
+        with:
+          version: 1.9   # adjust/add matrix if you want multiple versions
+
+      - name: Install dependencies for docs
+        run: julia --project=docs -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
+
+      - name: Build docs
+        # If your docs/make.jl expects env vars, add them under env:
+        run: julia --project=docs docs/make.jl
+        env:
+          # Example: set DOCUMENTER_KEY if you use deploydocs in your make.jl
+          # DOCUMENTER_KEY: ${{ secrets.GITHUB_TOKEN }}
+          # Optionally set JULIA_NUM_THREADS: 2
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/build
+          publish_branch: gh-pages
+          # Optional: set a custom cname or committer identity
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          keep_files: false
+
