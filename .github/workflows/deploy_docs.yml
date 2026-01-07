@@ -3,7 +3,6 @@ name: Deploy docs (Documenter)
 on:
   push:
     branches:
-      - main
       - documentation
 
 permissions:
@@ -29,9 +28,6 @@ jobs:
 
       - name: Build docs
         run: julia --project=docs docs/make.jl
-        env:
-          # Uncomment if your make.jl expects a DOCUMENTER_KEY (not required for peaceiris GH Pages step)
-          # DOCUMENTER_KEY: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
