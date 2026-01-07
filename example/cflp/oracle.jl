@@ -24,23 +24,27 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     fixed_x_constraints::Vector{ConstraintRef}
     facility_knapsack_info::FacilityKnapsackInfo
     gbc::Bool
-    manual_warm::Bool
     bnb::Bool
+    manual_warm::Bool
+    warm_root_sol::Bool
     prev_y::Vector{Float64}
+    prev_dual::Vector{Float64}
 
     function CFLKnapsackOracle(data::Data; 
                                scen_idx=-1, 
                                solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
                                oracle_param::CFLKnapsackOracleParam = CFLKnapsackOracleParam(),
                                gbc::Bool = true,
-                               manual_warm::Bool = true,
                                bnb::Bool = false,
-                               prev_y = zeros(data.problem.n_facilities*data.problem.n_customers))
+                               manual_warm::Bool = false,
+                               warm_root_sol::Bool = false,
+                               prev_y = zeros(data.problem.n_facilities*data.problem.n_customers),
+                               prev_dual = zeros(data.problem.n_customers + data.problem.n_facilities*2))
         @debug "Building classical oracle"
 
         if manual_warm
             optimizer = optimizer_with_attributes(Gurobi.Optimizer, "Method" => 6, "PDHGGPU" => 1,
-            "Crossover" => 1, "Threads" => 7, "LPWarmStart" => 2, "Presolve" => 1, "OutputFlag" => 1,
+            "Crossover" => 1, "Threads" => 7, "LPWarmStart" => 2, "Presolve" => 2, "OutputFlag" => 1,
             "PDHGAbsTol" => 1e-4, "PDHGConvTol" => 1e-4, "PDHGRelTol" => 1e-4)
             model = direct_model(optimizer)
         else
@@ -54,13 +58,14 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
 
         facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.problem.costs, data.problem.demands, data.problem.capacities) : FacilityKnapsackInfo(data.problem.costs, data.problem.demands[scen_idx], data.problem.capacities)
         
-        new(oracle_param, solver_param, model, fix_x, facility_knapsack_info, gbc, manual_warm, bnb, prev_y)
+        new(oracle_param, solver_param, model, fix_x, facility_knapsack_info, gbc, bnb, manual_warm, warm_root_sol, prev_y, prev_dual)
     end
     
     CFLKnapsackOracle() = new()
 end
 
 function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
+    # sub_exact_solved = false # for PDHG
     s_time = time()
     set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
@@ -89,8 +94,9 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
         for (v, p_val) in zip(vars, vcat(x_value, oracle.prev_y))
             MOI.set(oracle.model, Gurobi.VariableAttribute("PStart"), v, p_val)
         end
-        for c in constrs
-            MOI.set(oracle.model, Gurobi.ConstraintAttribute("DStart"), c, 0.0)
+
+        for (c, d_val) in zip(constrs, oracle.prev_dual)
+            MOI.set(oracle.model, Gurobi.ConstraintAttribute("DStart"), c, d_val)
         end
     end
 
@@ -100,7 +106,17 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
         throw(TimeLimitException("Time limit reached during cut generation"))
     end
 
-    oracle.manual_warm && !oracle.bnb && (oracle.prev_y = vec(value.(oracle.model[:y])))        
+    # Solve subproblem exactly
+    sub_obj_val = objective_value(oracle.model)
+    if oracle.bnb && (sub_obj_val < t_value[1] * (1 + oracle.oracle_param.rtol / tol_normalize))
+        println("Subproblem solved exactly")
+        # set_optimizer_attribute(oracle.model, "Method", -1) # for PDHG
+        println("prev_sub_obj: $sub_obj_val")
+        optimize!(oracle.model)
+        println("exact_sub_obj: $(objective_value(oracle.model))")
+        sub_exact_solved = true
+    end
+
     status = dual_status(oracle.model)
 
     if status == FEASIBLE_POINT
@@ -121,7 +137,11 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
 
         a_x = KP_values # Vector{Float64}
         a_0 = sum(μ) 
-        
+
+        # Collect primal/dual warm start value
+        oracle.manual_warm && !oracle.warm_root_sol && (oracle.prev_y = vec(value.(oracle.model[:y])); oracle.prev_dual = vcat(dual.(oracle.model[:fix_x]), μ, dual.(oracle.model[:capacity])))
+
+        # sub_exact_solved && set_optimizer_attribute(oracle.model, "Method", 6) # for PDHG
         if sub_obj_val >= t_value[1] * (1 + oracle.oracle_param.rtol / tol_normalize)
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
