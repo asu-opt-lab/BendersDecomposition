@@ -68,7 +68,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
             end
         end
     else
-        throw(UnexpectedModelStatusException("ClassicalOracle: $(status)"))
+        throw(UnexpectedModelStatusException("ClassicalOracle: $(status). This is likely a numerical issue. Please try using other oracles, such as unified oracle or pareto oracle."))
     end
 end
 
