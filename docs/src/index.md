@@ -67,7 +67,7 @@ log = solve!(env)
     | [`ClassicalOracle`](@ref)  | Standard Benders cut generation based on classical dual information | 
     | `UnifiedOracle`    | Unified treatment of feasibility and optimality cuts | 
     | `ParetoOracle`     | Generates Pareto-optimal Benders cuts | 
-    | [`SeparableOracle`](@ref)  | Specialized oracle for facility location and knapsack-type subproblems | 
+    | [`SeparableOracle`](@ref)  | Wrapper oracle for separable subproblems | 
     | [`UFLKnapsackOracle`](@ref)  | Knapsack-based specialized oracle for uncapacitated facility location problems |
     | [`CFLKnapsackOracle`](@ref)  | Knapsack-based specialized oracle for capacitated facility location problems |
     | [`SplitOracle`](@ref)      | Produces split cuts to strengthen the master relaxation |

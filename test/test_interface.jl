@@ -1,8 +1,7 @@
 using Test
-# using BendersBase
 using JuMP
 
-@testset "BendersBase copy_variables!" begin
+@testset "copy_variables!" begin
     @testset "VariableRef" begin
         master_model = Model()
         @variable(master_model, u[1:10])
@@ -170,7 +169,7 @@ using JuMP
     end
 end
 
-@testset "BendersBase customize model functions" begin
+@testset "customize model functions" begin
     struct EmptyData <: AbstractData end
     data = EmptyData()
 

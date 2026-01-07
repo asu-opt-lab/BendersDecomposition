@@ -1,7 +1,6 @@
 using Test
-# using BendersBase
 
-@testset "BendersBase Types" begin
+@testset "Types" begin
     
 
     @testset "Abstract Types" begin
