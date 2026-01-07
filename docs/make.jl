@@ -25,8 +25,7 @@ makedocs(
             "Examples" => "tutorials/examples.md"
         ],
         "User Guide" => "user_guide.md",
-        "API" => "api.md",
-        edit_link = "https://github.com/asu-opt-lab/BendersX.jl/blob/documentation/%s#L%d"
+        "API" => "api.md"
     ],
     # sitelogo = "assets/logo.svg",
 )
