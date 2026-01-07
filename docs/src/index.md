@@ -12,7 +12,7 @@ Welcome to the documentation for **BendersX.jl** — a modular, plug-and-play fr
 
 **BendersX.jl** is a modular and extensible framework for Benders decomposition algorithms in Julia. It is designed to support **both standard implementations and experimental extensions** in a unified, principled manner.
 
-The name **BendersX** reflects the package philosophy: **“X” denotes both new application domains and extensions beyond classical Benders decomposition**, including alternative cut-generation strategies, stabilization mechanisms, and execution logic. The framework is designed to enable such extensions to be implemented, combined, and evaluated with minimal friction through a plug-and-play architecture.
+The name **BendersX** reflects the package philosophy: **“X” denotes both new application domains and extensions beyond classical Benders decomposition**, including alternative cut-generation strategies, stabilization mechanisms, and execution logic. The framework is designed to enable such applications and extensions to be implemented, combined, and evaluated with minimal friction through a plug-and-play architecture.
 
 ---
 
@@ -23,7 +23,7 @@ The name **BendersX** reflects the package philosophy: **“X” denotes both ne
 
 ---
 
-## Quick start
+## [Quick start](@id quick-start)
 ### Installation
 Install BendersX using Julia’s built-in package manager. Launch Julia and run the following commands at the `julia>` prompt:
 ```julia

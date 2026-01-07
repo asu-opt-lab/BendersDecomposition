@@ -188,9 +188,9 @@ Subproblems are specified by the user through:
 ```julia
 customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
 ```
-Here, `kwargs...`` contains the symbolic names of the master variables that appear in the subproblem. This allows users to formulate the subproblem in JuMP **while referencing these master variables directly**, without explicitly adding them to the subproblem model.
+Here, `kwargs...` contains the symbolic names of the master variables that appear in the subproblem. This allows users to formulate the subproblem in JuMP **while referencing these master variables directly**, without explicitly adding them to the subproblem model.
 
-### Example
+### Example 1
 [The CFLP subproblem](@ref cflp-sub) can be implemented like this:
 ```julia
 function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x) 
@@ -208,12 +208,85 @@ function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
 end
 ```
 
+### Example 2
+Consider the following master and subproblem formulations:
+#### Master problem
+```math 
+    \begin{align}
+    \min \ & t \nonumber \\
+    \text{s.t.} \ 
+    & \sum_{i \in [10]} u_i \ge 2,\nonumber \\
+    &u_i \in \mathbb B, \ \forall i \in [10], \nonumber\\
+    &v_{i,j} \in \mathbb B, \ \forall i = 3, \cdots, 10, j \in \{A, B\}, \nonumber \\ 
+    &w_{i,j} \in \mathbb B, \ \forall i = 1, \cdots, 3, j = i, \cdots, 10, \nonumber \\ 
+    & t \ge -10^{6} \nonumber 
+    \end{align}
+```
+#### Subproblem
+```math 
+    \begin{align}
+    \min \ & \sum_{i \in [10]} y_i \nonumber \\
+    \text{s.t.} \ 
+    & y_i \le u_i, \ \forall i \in [10],\nonumber \\
+    & y_1 = v_{10,A},\nonumber \\
+    & y_2 = w_{3,10},\nonumber \\
+    &y_i \ge 0, \ \forall i \in [10]. \nonumber
+    \end{align}
+```
+
+These problems can be implemented as follows:
+```julia
+function customize_master_model!(model::Model, data::EmptyData)
+
+    optimizer = optimizer_with_attributes(
+        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
+    set_optimizer(model, optimizer)
+
+    @variable(model, u[1:10], Bin) # Array
+    @variable(model, v[3:10, [:A, :B]], Bin) # DenseAxisArray
+    @variable(model, w[i=1:3,j=i:10], Bin) # SparseAxisArray
+    @variable(model, t >= -1e6)
+    @constraint(model, sum(u) >= 2)
+    @objective(model, Min, 1.0 * t)
+    
+    return (u = u, v = v, w = w), t
+end
+
+function customize_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w) 
+
+    optimizer = optimizer_with_attributes(
+        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
+    set_optimizer(model, optimizer)
+
+    @variable(model, y[1:10] >= 0)
+    @objective(model, Min, sum(y))
+    @constraint(model, y .<= u)
+    @constraint(model, y[1] = v[10,:A])
+    @constraint(model, y[2] = w[3,10])
+end
+```
+
+!!! tip "Common Pitfalls"
+
+    When defining `customize_sub_model!`, keep the following points in mind:
+
+    * **Explicit keyword names**: The keyword argument names in `customize_sub_model!` must exactly match the names returned by `customize_master_model!`.
+    * **No redeclaration**: Do not redeclare master variables inside the subproblem; they should only be referenced via keyword arguments.
+    * **Indexing with symbolic sets**: When using `DenseAxisArray` or `SparseAxisArray`, ensure that symbolic indices (e.g., `:A`) are used consistently.
+    * **Scenario index usage**: If `scen_idx` is unused, it can be safely ignored, but it must still appear in the function signature.
+
+---
+
 ## 4. Running Benders
 
-Users can employ suitable subtypes of `AbstractOracle` (e.g., `UnifiedOracle`, `ParetoOracle`, `CFLKnapsackOracle` for the CFLP) and any subtype of `AbstractBendersEnv` provided by BendersX.jl (see Figures \ref{fig:env} and \ref{fig:oracle}).
+Users can run Benders decomposition by selecting appropriate combinations of an **oracle** and an **environment**. A summary of the built-in Oracle and Environment variants is provided in the *Plug-and-Play* tip in the [Quick Start](@ref quick-start).
 
-Furthermore, users can configure both the environment and the oracle through dedicated parameter objects or customizable sub-components.
+Both oracles and environments can be further customized using dedicated parameter objects or by composing alternative sub-components, allowing fine-grained control over algorithmic behavior.
 
-How to configure environment and oracles. 
+!!! info "Next steps"
+    - Refer to **Tutorials / Swapping Oracles and Adjusting Their Behaviors** for oracle configuration and customization.
+    - Refer to **Tutorials / Swapping Environments and Adjusting Their Behaviors** for execution logic customization.
+    - Refer to **Tutorials / Examples** for a collection of worked examples.
+
 
 

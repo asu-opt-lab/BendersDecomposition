@@ -70,7 +70,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         x = var_from_tuple(x_copy)
         @constraint(model, fix_x, x .== 0)
 
-        facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.costs, data.demands, data.capacities) : FacilityKnapsackInfo(data.costs, data.demands[scen_idx], data.capacities)
+        facility_knapsack_info = scen_idx == 0 ? FacilityKnapsackInfo(data.costs, data.demands, data.capacities) : FacilityKnapsackInfo(data.costs, data.demands[scen_idx], data.capacities)
 
         new(param, model, fix_x, facility_knapsack_info)
     end
