@@ -24,7 +24,13 @@ jobs:
           version: "1.9"
 
       - name: Install dependencies for docs
-        run: julia --project=docs -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
+        run: |
+          julia --project=docs -e '
+            using Pkg
+            Pkg.develop(PackageSpec(path=pwd()))
+            Pkg.instantiate()
+            Pkg.precompile()
+          '
 
       - name: Build docs
         run: julia --project=docs docs/make.jl
