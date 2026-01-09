@@ -10,7 +10,6 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
     fixed_x_constraints::Vector{ConstraintRef}
 
     gbc_y::Vector{VariableRef}
-    gbc_x::Vector{VariableRef}
     gbc_x_idx::Vector{Int} 
 
 
@@ -49,7 +48,7 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
             else
                 gbc_x_idx = Int[]
             end
-            new(param, model, fix_x, gbc_y, gbc_x, gbc_x_idx)
+            new(param, model, fix_x, gbc_y, gbc_x_idx)
     end
 
     ClassicalOracle() = new()

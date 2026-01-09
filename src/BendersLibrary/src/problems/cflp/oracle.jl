@@ -14,7 +14,6 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     facility_knapsack_info::FacilityKnapsackInfo
 
     gbc_y::Vector{VariableRef}
-    gbc_x::Vector{VariableRef}
     gbc_x_idx::Vector{Int} 
     function CFLKnapsackOracle(data::AbstractData, master::Master; 
                             customize = customize_sub_model!,
@@ -51,7 +50,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         else
             gbc_x_idx = Int[]
         end
-        new(param, model, fix_x, facility_knapsack_info, gbc_y, gbc_x, gbc_x_idx)
+        new(param, model, fix_x, facility_knapsack_info, gbc_y, gbc_x_idx)
     end
     
     CFLKnapsackOracle() = new()
