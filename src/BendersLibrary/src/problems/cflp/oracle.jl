@@ -29,6 +29,13 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         result = customize(model, data, scen_idx; x_copy...)
         if result isa Tuple && length(result) == 2
             gbc_y, gbc_x = result
+            if length(gbc_y) != length(gbc_x)
+                throw(DimensionMismatch(
+                    "gbc_y and gbc_x returned by customize function must have the same length. " *
+                    "Got length(gbc_y) = $(length(gbc_y)), length(gbc_x) = $(length(gbc_x)). " *
+                    "Each gbc_y[i] should correspond to gbc_x[i] for the Generalized Bound Constraints."
+                ))
+            end
         else
             gbc_y = VariableRef[]
             gbc_x = VariableRef[]
