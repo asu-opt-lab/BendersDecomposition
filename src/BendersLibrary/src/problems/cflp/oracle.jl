@@ -13,10 +13,9 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     fixed_x_constraints::Vector{ConstraintRef}
     facility_knapsack_info::FacilityKnapsackInfo
 
-    gbc_y::Vector{VariableRef}
-    gbc_x_indices::Vector{Vector{Int}}
-    gbc_coefficients::Vector{Vector{Float64}}
-    gbc_bound_type::Vector{GBCBoundType}
+    gbc_lhs::Vector{VariableRef}
+    gbc_rhs::Vector{AffExpr}
+    gbc_sense::Vector{GBCBoundType}
     
     function CFLKnapsackOracle(data::AbstractData, master::Master; 
                             customize = customize_sub_model!,
@@ -32,22 +31,15 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         x = var_from_tuple(x_copy)
         @constraint(model, fix_x, x .== 0)
 
-        # Build mapping from variable index to x vector position
-        idx_to_pos = Dict{Int,Int}()
-        for (pos, v) in enumerate(x)
-            vi = JuMP.index(v)
-            idx_to_pos[vi.value] = pos
-        end
-
         # Build the submodel using user-defined customization, passing the copied variables
         result = customize(model, data, scen_idx; x_copy...)
         
         # Parse the result to extract GBC information using shared helper
-        gbc_y, gbc_x_indices, gbc_coefficients, gbc_bound_type = _parse_gbc_result(result, idx_to_pos)
+        gbc_lhs, gbc_rhs, gbc_sense = _parse_gbc_result(result)
 
         facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.costs, data.demands, data.capacities) : FacilityKnapsackInfo(data.costs, data.demands[scen_idx], data.capacities)
 
-        new(param, model, fix_x, facility_knapsack_info, gbc_y, gbc_x_indices, gbc_coefficients, gbc_bound_type)
+        new(param, model, fix_x, facility_knapsack_info, gbc_lhs, gbc_rhs, gbc_sense)
     end
     
     CFLKnapsackOracle() = new()
@@ -59,9 +51,8 @@ using BendersBase: _parse_gbc_result, _set_gbc_bounds!, _accumulate_gbc_duals!
 function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
     
-    # Set GBC bounds based on affine combination and bound type
-    _set_gbc_bounds!(oracle.gbc_y, oracle.gbc_x_indices, oracle.gbc_coefficients, 
-                     oracle.gbc_bound_type, x_value)
+    # Set GBC bounds based on expression evaluation
+    _set_gbc_bounds!(oracle.gbc_lhs, oracle.gbc_rhs, oracle.gbc_sense, x_value)
     
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     optimize!(oracle.model)
@@ -104,8 +95,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
             a_x = dual.(oracle.fixed_x_constraints)
             
             # Accumulate GBC dual values
-            _accumulate_gbc_duals!(a_x, oracle.gbc_y, oracle.gbc_x_indices, 
-                                  oracle.gbc_coefficients, oracle.gbc_bound_type)
+            _accumulate_gbc_duals!(a_x, oracle.gbc_lhs, oracle.gbc_rhs, oracle.gbc_sense)
             
             a_t = [0.0]
             a_0 = dual_sub_obj_val - a_x' * x_value 

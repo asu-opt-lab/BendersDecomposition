@@ -38,9 +38,10 @@ using CPLEX
                 @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
                 @constraint(model, capacity[i in 1:I], sum(data.demands[:] .* y[i,:]) <= data.capacities[i] * x[i])
                 
-                gbc_y = vec(y)
-                gbc_x = repeat(vec(x), J)
-                return gbc_y, gbc_x
+                gbc_lhs = vec(y)
+                gbc_rhs = [1.0 * x[i] for j in 1:J for i in 1:I]  # j outer, i inner to match vec(y)
+                gbc_sense = fill(UpperBound, I*J)
+                return gbc_lhs, gbc_rhs, gbc_sense
             end
 
             @testset "Classic oracle" begin

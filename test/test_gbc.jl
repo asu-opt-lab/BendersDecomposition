@@ -3,12 +3,13 @@ GBC (Generalized Bound Constraints) Test Suite
 
 Tests various scenarios for GBC support:
 1. Basic upper bound constraint: y <= x
-2. Lower bound constraint: y >= x
+2. Lower bound constraint: y >= 0.1*x
 3. Fixed bound constraint: y == x
 4. Scaled single variable: y <= 2*x
-5. Multi-variable affine combination: y <= x[1] + x[2]
+5. Multi-variable affine combination: y <= 0.5*x[1] + 0.5*x[2]
 6. Partial y constraints: only subset of y has GBC
 7. Mixed bound types: some upper, some lower, some fixed
+8. No GBC (nothing return)
 
 Uses a simple transportation-like problem for testing.
 """
@@ -77,12 +78,12 @@ end
 
 @testset verbose = true "GBC Test Suite" begin
     
-    @testset "Scenario 1: Basic Upper Bound (Legacy Format)" begin
-        # Tests backward compatibility with (gbc_y, gbc_x) format
+    @testset "Scenario 1: Basic Upper Bound" begin
+        # Tests basic upper bound constraint y <= x
         data = create_test_data()
         mip_opt = solve_mip_reference(data)
         
-        function customize_sub_upper_legacy!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function customize_sub_upper!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -93,15 +94,17 @@ end
             @objective(model, Min, sum(data.costs .* y))
             @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
             
-            # Legacy format: one-to-one mapping
-            gbc_y = vec(y)
-            gbc_x = repeat(vec(x), J)
-            return gbc_y, gbc_x
+            # Unified format: gbc_rhs is Vector{AffExpr}
+            gbc_lhs = vec(y)
+            gbc_rhs = [AffExpr(0.0, x[i] => 1.0) for i in 1:I for j in 1:J]
+            gbc_sense = fill(UpperBound, I*J)
+            
+            return gbc_lhs, gbc_rhs, gbc_sense
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
         master = Master(data; customize = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_upper_legacy!)
+        oracle = ClassicalOracle(data, master; customize = customize_sub_upper!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
         
@@ -109,42 +112,7 @@ end
         @test isapprox(mip_opt, env.obj_value, atol=1e-4)
     end
     
-    @testset "Scenario 2: Upper Bound (New Format)" begin
-        # Tests new format with explicit UpperBound type
-        data = create_test_data()
-        mip_opt = solve_mip_reference(data)
-        
-        function customize_sub_upper_new!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
-            optimizer = optimizer_with_attributes(
-                CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
-            set_optimizer(model, optimizer)
-            
-            I, J = data.n_facilities, data.n_customers
-            @variable(model, y[1:I, 1:J] >= 0)
-            
-            @objective(model, Min, sum(data.costs .* y))
-            @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
-            
-            # New format with explicit types
-            gbc_y = vec(y)
-            gbc_x_indices = [[i] for i in 1:I for j in 1:J]
-            gbc_coefficients = [[1.0] for _ in 1:I*J]
-            gbc_bound_type = fill(UpperBound, I*J)
-            
-            return gbc_y, gbc_x_indices, gbc_coefficients, gbc_bound_type
-        end
-        
-        benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; customize = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_upper_new!)
-        env = BendersSeq(master, oracle; param = benders_param)
-        solve!(env)
-        
-        @test env.termination_status == Optimal()
-        @test isapprox(mip_opt, env.obj_value, atol=1e-4)
-    end
-    
-    @testset "Scenario 3: Lower Bound Constraint" begin
+    @testset "Scenario 2: Lower Bound Constraint" begin
         # Tests y >= x constraint (facility must serve if open)
         # Modified problem: if facility is open, it must serve at least some amount
         data = create_test_data()
@@ -188,12 +156,11 @@ end
             @constraint(model, total_service[i in 1:I], z[i] == sum(y[i,:]))
             
             # Lower bound GBC: z[i] >= 0.1 * x[i] (if open, serve at least 10%)
-            gbc_y = z
-            gbc_x_indices = [[i] for i in 1:I]
-            gbc_coefficients = [[0.1] for _ in 1:I]
-            gbc_bound_type = fill(LowerBound, I)
+            gbc_lhs = collect(z)
+            gbc_rhs = [0.1 * x[i] for i in 1:I]
+            gbc_sense = fill(LowerBound, I)
             
-            return gbc_y, gbc_x_indices, gbc_coefficients, gbc_bound_type
+            return gbc_lhs, gbc_rhs, gbc_sense
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
@@ -206,7 +173,7 @@ end
         @test isapprox(mip_opt, env.obj_value, atol=1e-4)
     end
 
-    @testset "Scenario 4: Fixed Bound Constraint" begin
+    @testset "Scenario 3: Fixed Bound Constraint" begin
         # Tests y == x constraint
         data = create_test_data()
 
@@ -247,12 +214,11 @@ end
             @constraint(model, facility_open[i in 1:I, j in 1:J], y[i,j] <= w[i])
             
             # Fixed bound GBC: w[i] == x[i]
-            gbc_y = w
-            gbc_x_indices = [[i] for i in 1:I]
-            gbc_coefficients = [[1.0] for _ in 1:I]
-            gbc_bound_type = fill(FixedBound, I)
+            gbc_lhs = collect(w)
+            gbc_rhs = [1.0 * x[i] for i in 1:I]
+            gbc_sense = fill(FixedBound, I)
             
-            return gbc_y, gbc_x_indices, gbc_coefficients, gbc_bound_type
+            return gbc_lhs, gbc_rhs, gbc_sense
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
@@ -265,7 +231,7 @@ end
         @test isapprox(mip_opt, env.obj_value, atol=1e-4)
     end
 
-    @testset "Scenario 5: Scaled Single Variable" begin
+    @testset "Scenario 4: Scaled Single Variable" begin
         # Tests y <= 2*x constraint
         data = create_test_data()
 
@@ -302,12 +268,11 @@ end
             @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
             
             # Scaled GBC: y[i,j] <= 2*x[i] (allow up to 2 units per facility)
-            gbc_y = vec(y)
-            gbc_x_indices = [[i] for i in 1:I for j in 1:J]
-            gbc_coefficients = [[2.0] for _ in 1:I*J]
-            gbc_bound_type = fill(UpperBound, I*J)
+            gbc_lhs = vec(y)
+            gbc_rhs = [2.0 * x[i] for i in 1:I for j in 1:J]
+            gbc_sense = fill(UpperBound, I*J)
             
-            return gbc_y, gbc_x_indices, gbc_coefficients, gbc_bound_type
+            return gbc_lhs, gbc_rhs, gbc_sense
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
@@ -320,7 +285,7 @@ end
         @test isapprox(mip_opt, env.obj_value, atol=1e-4)
     end
 
-    @testset "Scenario 6: Multi-Variable Affine Combination" begin
+    @testset "Scenario 5: Multi-Variable Affine Combination" begin
         # Tests y <= x[1] + x[2] constraint (depends on multiple x)
         data = create_test_data(4, 3)  # 4 facilities, 3 customers
 
@@ -373,12 +338,11 @@ end
             
             # Affine GBC: y[j] <= x[1] + x[2] for each customer j
             # This means customer j can be served only if facilities 1 OR 2 are open
-            gbc_y = y
-            gbc_x_indices = [[1, 2] for _ in 1:J]  # Each y depends on x[1] and x[2]
-            gbc_coefficients = [[0.5, 0.5] for _ in 1:J]  # y[j] <= 0.5*x[1] + 0.5*x[2]
-            gbc_bound_type = fill(UpperBound, J)
+            gbc_lhs = collect(y)
+            gbc_rhs = [0.5*x[1] + 0.5*x[2] for _ in 1:J]  # y[j] <= 0.5*x[1] + 0.5*x[2]
+            gbc_sense = fill(UpperBound, J)
             
-            return gbc_y, gbc_x_indices, gbc_coefficients, gbc_bound_type
+            return gbc_lhs, gbc_rhs, gbc_sense
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
@@ -391,7 +355,7 @@ end
         @test isapprox(mip_opt, env.obj_value, atol=1e-4)
     end
 
-    @testset "Scenario 7: Partial Y Constraints" begin
+    @testset "Scenario 6: Partial Y Constraints" begin
         # Tests case where only subset of y has GBC constraints
         data = create_test_data()
 
@@ -431,12 +395,11 @@ end
             
             # Only first facility has GBC constraint
             # y[1,j] <= x[1] for all j
-            gbc_y = [y[1,j] for j in 1:J]
-            gbc_x_indices = [[1] for _ in 1:J]
-            gbc_coefficients = [[1.0] for _ in 1:J]
-            gbc_bound_type = fill(UpperBound, J)
+            gbc_lhs = [y[1,j] for j in 1:J]
+            gbc_rhs = [1.0 * x[1] for _ in 1:J]
+            gbc_sense = fill(UpperBound, J)
             
-            return gbc_y, gbc_x_indices, gbc_coefficients, gbc_bound_type
+            return gbc_lhs, gbc_rhs, gbc_sense
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
@@ -449,7 +412,7 @@ end
         @test isapprox(mip_opt, env.obj_value, atol=1e-4)
     end
 
-    @testset "Scenario 8: Mixed Bound Types" begin
+    @testset "Scenario 7: Mixed Bound Types" begin
         # Tests case with different bound types for different variables
         data = create_test_data()
 
@@ -498,12 +461,11 @@ end
             # Mixed GBC:
             # - w[i] == x[i] (Fixed)
             # - z[i] >= 0.01*x[i] (Lower, if open serve at least 1%)
-            gbc_y = vcat(w, z)
-            gbc_x_indices = vcat([[i] for i in 1:I], [[i] for i in 1:I])
-            gbc_coefficients = vcat([[1.0] for _ in 1:I], [[0.01] for _ in 1:I])
-            gbc_bound_type = vcat(fill(FixedBound, I), fill(LowerBound, I))
+            gbc_lhs = vcat(collect(w), collect(z))
+            gbc_rhs = vcat([1.0 * x[i] for i in 1:I], [0.01 * x[i] for i in 1:I])
+            gbc_sense = vcat(fill(FixedBound, I), fill(LowerBound, I))
             
-            return gbc_y, gbc_x_indices, gbc_coefficients, gbc_bound_type
+            return gbc_lhs, gbc_rhs, gbc_sense
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
@@ -516,7 +478,7 @@ end
         @test isapprox(mip_opt, env.obj_value, atol=1e-4)
     end
 
-    @testset "Scenario 9: No GBC (Nothing Return)" begin
+    @testset "Scenario 8: No GBC (Nothing Return)" begin
         # Tests that code works when customize returns nothing
         data = create_test_data()
         mip_opt = solve_mip_reference(data)
