@@ -1,5 +1,19 @@
 export UFLPData, read_uflp_benchmark_data, read_Simple_data
 
+# Artifact path resolution - uses local data during development
+function _get_uflp_artifact_path(artifact_name::String, fallback_subdir::String)
+    local_path = joinpath(@__DIR__, "data", fallback_subdir)
+    if isdir(local_path)
+        return local_path
+    end
+    try
+        @eval using LazyArtifacts
+        return @eval @artifact_str($artifact_name)
+    catch
+        error("Data not found. Either restore local data or configure Artifacts.toml")
+    end
+end
+
 struct UFLPData <: AbstractData
     n_facilities::Int
     n_customers::Int
@@ -8,7 +22,7 @@ struct UFLPData <: AbstractData
     costs::Matrix{Float64}
 end
 
-function read_uflp_benchmark_data(filename::AbstractString;filepath=joinpath(@__DIR__, "data", "locssall")::AbstractString)
+function read_uflp_benchmark_data(filename::AbstractString;filepath=_get_uflp_artifact_path("uflp_locssall", "locssall")::AbstractString)
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
 
@@ -60,7 +74,7 @@ function read_uflp_benchmark_data(filename::AbstractString;filepath=joinpath(@__
     return UFLPData(n_facilities, n_customers, demands, fixed_costs, costs)
 end
 
-function read_Simple_data(filename::AbstractString;filepath=joinpath(@__DIR__, "data", "AllKoerkelGhosh")::AbstractString)
+function read_Simple_data(filename::AbstractString;filepath=_get_uflp_artifact_path("uflp_allkoerkelghosh", "AllKoerkelGhosh")::AbstractString)
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
 

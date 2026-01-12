@@ -1,6 +1,20 @@
 export SNIPData, read_snip_data
 using JSON
 
+# Artifact path resolution - uses local data during development
+function _get_snip_artifact_path(artifact_name::String, fallback_subdir::String)
+    local_path = joinpath(@__DIR__, "data", fallback_subdir)
+    if isdir(local_path)
+        return local_path
+    end
+    try
+        @eval using LazyArtifacts
+        return @eval @artifact_str($artifact_name)
+    catch
+        error("Data not found. Either restore local data or configure Artifacts.toml")
+    end
+end
+
 struct SNIPData <: AbstractData
     num_nodes::Int
     num_scenarios::Int
@@ -37,7 +51,7 @@ function create_node_mapping(D, A_minus_D, S)
     return node_mapping
 end
 
-function read_snip_data(instance_no::Int, snip_no::Int, budget::Float64; base_dir::String=joinpath(@__DIR__, "data", "SNIP")::AbstractString)
+function read_snip_data(instance_no::Int, snip_no::Int, budget::Float64; base_dir::String=_get_snip_artifact_path("snip", "SNIP")::AbstractString)
     # Define file paths
     intd_arc = joinpath(base_dir, "intd_arc$(instance_no).txt")
     arcgain = joinpath(base_dir, "arcgain$(instance_no).txt")

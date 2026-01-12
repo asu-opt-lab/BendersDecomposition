@@ -1,5 +1,19 @@
 using JSON
 
+# Artifact path resolution - uses local data during development
+function _get_mcndp_artifact_path(artifact_name::String, fallback_subdir::String)
+    local_path = joinpath(@__DIR__, "data", fallback_subdir)
+    if isdir(local_path)
+        return local_path
+    end
+    try
+        @eval using LazyArtifacts
+        return @eval @artifact_str($artifact_name)
+    catch
+        error("Data not found. Either restore local data or configure Artifacts.toml")
+    end
+end
+
 struct MCNDPData <: AbstractData
     num_nodes::Int      # Number of nodes
     num_arcs::Int       # Number of arcs
@@ -11,7 +25,7 @@ struct MCNDPData <: AbstractData
     demands::Vector{Tuple{Int,Int,Float64}} # Demands (origin, destination, quantity)
 end
 
-function read_mcndp_instance(filename::String;filepath=joinpath(@__DIR__, "data", "NDR")::AbstractString)
+function read_mcndp_instance(filename::String;filepath=_get_mcndp_artifact_path("mcndp", "NDR")::AbstractString)
     fullpath = joinpath(filepath, filename)
     open(fullpath, "r") do f
         # Skip the filename line

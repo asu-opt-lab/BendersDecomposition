@@ -1,6 +1,20 @@
 export SCFLPData, read_stochastic_capacited_facility_location_problem
 using JSON
 
+# Artifact path resolution - uses local data during development
+function _get_scflp_artifact_path(artifact_name::String, fallback_subdir::String)
+    local_path = joinpath(@__DIR__, "data", fallback_subdir)
+    if isdir(local_path)
+        return local_path
+    end
+    try
+        @eval using LazyArtifacts
+        return @eval @artifact_str($artifact_name)
+    catch
+        error("Data not found. Either restore local data or configure Artifacts.toml")
+    end
+end
+
 struct SCFLPData <: AbstractData
     n_facilities::Int
     n_customers::Int
@@ -11,7 +25,7 @@ struct SCFLPData <: AbstractData
     costs::Matrix{Float64}
 end
 
-function read_stochastic_capacited_facility_location_problem(filename::String;filepath=joinpath(@__DIR__, "data", "SCFLP")::AbstractString)
+function read_stochastic_capacited_facility_location_problem(filename::String;filepath=_get_scflp_artifact_path("scflp", "SCFLP")::AbstractString)
     fullpath = joinpath(filepath, join([filename, ".json"]))
     loaded_json = open(fullpath, "r") do file
         read(file, String)

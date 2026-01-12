@@ -1,0 +1,72 @@
+# Artifacts.toml - Dataset artifacts for BendersLibrary
+# These artifacts will be populated after running scripts/prepare_artifacts.jl
+# and uploading datasets to GitHub Releases.
+
+# CFLP Problem Datasets
+[cflp_random_data]
+git-tree-sha1 = "0000000000000000000000000000000000000000"  # Placeholder - update after creation
+lazy = true
+
+    [[cflp_random_data.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/cflp_random_data.tar.gz"
+    sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+
+[cflp_locssall]
+git-tree-sha1 = "0000000000000000000000000000000000000000"
+lazy = true
+
+    [[cflp_locssall.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/cflp_locssall.tar.gz"
+    sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+
+[cflp_output]
+git-tree-sha1 = "0000000000000000000000000000000000000000"
+lazy = true
+
+    [[cflp_output.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/cflp_output.tar.gz"
+    sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+
+# UFLP Problem Datasets
+[uflp_locssall]
+git-tree-sha1 = "0000000000000000000000000000000000000000"
+lazy = true
+
+    [[uflp_locssall.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/uflp_locssall.tar.gz"
+    sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+
+[uflp_allkoerkelghosh]
+git-tree-sha1 = "0000000000000000000000000000000000000000"
+lazy = true
+
+    [[uflp_allkoerkelghosh.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/uflp_allkoerkelghosh.tar.gz"
+    sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+
+# SCFLP Problem Datasets
+[scflp]
+git-tree-sha1 = "0000000000000000000000000000000000000000"
+lazy = true
+
+    [[scflp.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/scflp.tar.gz"
+    sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+
+# SNIP Problem Datasets
+[snip]
+git-tree-sha1 = "0000000000000000000000000000000000000000"
+lazy = true
+
+    [[snip.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/snip.tar.gz"
+    sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+
+# MCNDP Problem Datasets
+[mcndp]
+git-tree-sha1 = "0000000000000000000000000000000000000000"
+lazy = true
+
+    [[mcndp.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/mcndp.tar.gz"
+    sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
