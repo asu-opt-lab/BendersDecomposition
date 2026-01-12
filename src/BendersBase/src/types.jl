@@ -1,3 +1,11 @@
+# ============================================================================
+# GBC (Generalized Bound Constraints) Bound Type
+# ============================================================================
+@enum GBCBoundType begin
+    UpperBound   # y ≤ f(x)
+    LowerBound   # y ≥ f(x)
+    FixedBound   # y = f(x)
+end
 
 abstract type AbstractBendersEnv end
 abstract type AbstractMaster end
