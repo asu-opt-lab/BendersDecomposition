@@ -7,6 +7,7 @@
 # 2. Computes git-tree-sha1 and sha256 hashes
 # 3. Outputs updated Artifacts.toml entries
 
+using Pkg
 using Pkg.Artifacts
 using SHA
 using Tar
@@ -50,9 +51,10 @@ function create_artifact_archive(name::String, source_dir::String, output_dir::S
         bytes2hex(sha256(io))
     end
     
-    # Compute git-tree-sha1 using Pkg.Artifacts
-    tree_hash = Pkg.Artifacts.tree_hash(source_dir)
-    git_tree_sha1 = bytes2hex(tree_hash.bytes)
+    # Compute git-tree-sha1
+    # Note: Pkg.GitTools is not exported by default, we access it via Pkg
+    tree_hash = Pkg.GitTools.tree_hash(source_dir)
+    git_tree_sha1 = bytes2hex(tree_hash)
     
     return (
         name = name,

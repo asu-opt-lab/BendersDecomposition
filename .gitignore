@@ -3,3 +3,9 @@ Manifest.toml
 **/.DS_Store
 job_scripts/
 test/results/
+
+# Experiment data (managed via Julia Artifacts)
+src/BendersLibrary/src/problems/*/data/
+
+# Generated artifact archives
+artifacts_output/

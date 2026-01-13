@@ -12,6 +12,7 @@ import BendersBase: solve!, generate_cuts, update_upper_bound_and_gap!, is_termi
 include("types.jl")
 include("utils/utils.jl")
 include("modules/modules.jl") 
+include("artifact_utils.jl")
 include("problems/problems.jl")
 
 export AbstractNorm, StandardNorm, LpNorm

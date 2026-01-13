@@ -3,22 +3,11 @@ export CFLPData, read_GK_data, read_cflp_benchmark_data, read_cfl_file
 using JSON
 using LinearAlgebra
 
-# Artifact path resolution - uses local data during development
-# Once Artifacts.toml is configured, uncomment and use @artifact_str
-function _get_cflp_artifact_path(artifact_name::String, fallback_subdir::String)
-    # Try to use Artifacts if available and configured
-    local_path = joinpath(@__DIR__, "data", fallback_subdir)
-    if isdir(local_path)
-        return local_path
-    end
-    # Lazy artifact loading when local data is removed
-    try
-        @eval using LazyArtifacts
-        return @eval @artifact_str($artifact_name)
-    catch
-        error("Data not found. Either restore local data or configure Artifacts.toml")
-    end
-end
+# Artifact path helpers using shared utility
+_cflp_random_data_path() = get_artifact_path("cflp_random_data", "random_data", @__DIR__)
+_cflp_locssall_path() = get_artifact_path("cflp_locssall", "locssall", @__DIR__)
+_cflp_output_path() = get_artifact_path("cflp_output", "output", @__DIR__)
+
 struct CFLPData <: AbstractData
     n_facilities::Int
     n_customers::Int
@@ -28,7 +17,7 @@ struct CFLPData <: AbstractData
     costs::Matrix{Float64}
 end
 
-function read_GK_data(filename::AbstractString;filepath=_get_cflp_artifact_path("cflp_random_data", "random_data")::AbstractString)
+function read_GK_data(filename::AbstractString; filepath=_cflp_random_data_path())
     fullpath = joinpath(filepath, join([filename, ".json"]))
     # fullpath = joinpath(filepath, filename)
     loaded_json = open(fullpath, "r") do file
@@ -45,7 +34,7 @@ function read_GK_data(filename::AbstractString;filepath=_get_cflp_artifact_path(
     return CFLPData(n_facilities, n_customers, capacities, demands, fixed_costs, costs)
 end
 
-function read_cflp_benchmark_data(filename::AbstractString;filepath=_get_cflp_artifact_path("cflp_locssall", "locssall")::AbstractString)
+function read_cflp_benchmark_data(filename::AbstractString; filepath=_cflp_locssall_path())
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
 
@@ -97,7 +86,7 @@ function read_cflp_benchmark_data(filename::AbstractString;filepath=_get_cflp_ar
     return CFLPData(n_facilities, n_customers, capacities, demands, fixed_costs, costs)
 end
 
-function read_cfl_file(filename::AbstractString; filepath=_get_cflp_artifact_path("cflp_output", "output")::AbstractString)
+function read_cfl_file(filename::AbstractString; filepath=_cflp_output_path())
     fullpath = joinpath(filepath, join([filename, ".cfl"]))
     f = open(fullpath)
     
@@ -212,15 +201,6 @@ function read_cfl_file(filename::AbstractString; filepath=_get_cflp_artifact_pat
             costs[i, j] = parse(Float64, vals[j]) / demands[j]
         end
     end
-    
-    # costs2 = zeros(Float64, n_customers, n_facilities)
-    # for i in 1:n_facilities
-    #     for j in 1:n_customers
-    #         costs2[i, j] = round(norm(facility_coords[i, :] - customer_coords[j, :],2) * 0.01 * demands[j], digits=4)
-    #     end
-    #     println("facility $i: ", costs2[i, :])
-    # end
-    
 
     close(f)
     
