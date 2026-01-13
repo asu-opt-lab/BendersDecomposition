@@ -1,0 +1,72 @@
+# Artifacts.toml - Dataset artifacts for BendersLibrary
+# These artifacts will be populated after running scripts/prepare_artifacts.jl
+# and uploading datasets to GitHub Releases.
+
+# CFLP Problem Datasets
+[cflp_random_data]
+git-tree-sha1 = "347696a51f71e637c3c416d99b6a80f60d989c3e"
+lazy = true
+
+    [[cflp_random_data.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/cflp_random_data.tar.gz"
+    sha256 = "3ca33cbb5587ca79b6f480bb9909bd68dd5c27c35dda43c280ab20fe9862bcf2"
+
+[cflp_locssall]
+git-tree-sha1 = "9ead8fe3b6fffb9a9aa4e75b018cbdeb9d3681fc"
+lazy = true
+
+    [[cflp_locssall.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/cflp_locssall.tar.gz"
+    sha256 = "ed40da8a7e8518a8234dc0d6abf768dace434766139756d9962598d020fd425f"
+
+[cflp_output]
+git-tree-sha1 = "e7cb21849f082c23a3821c4315ba16bde4f25e2d"
+lazy = true
+
+    [[cflp_output.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/cflp_output.tar.gz"
+    sha256 = "fded916126db3bda7d185165fe2bf847338388f09fce362fd90615f3652573e5"
+
+# UFLP Problem Datasets
+[uflp_locssall]
+git-tree-sha1 = "f6a245fb1792dabf4734a8878a1a03f87810372d"
+lazy = true
+
+    [[uflp_locssall.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/uflp_locssall.tar.gz"
+    sha256 = "8adf8d66d73be45ad39257f4abffe054f38c2b4e5ec8886709b0d09049193733"
+
+[uflp_allkoerkelghosh]
+git-tree-sha1 = "0738f8f57df5a896ff4ded722d327c9f060bd95b"
+lazy = true
+
+    [[uflp_allkoerkelghosh.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/uflp_allkoerkelghosh.tar.gz"
+    sha256 = "5005f5e3b0f2d643b1cf40cc1e3b9c414619070cbf6a60ffa2add16703c45215"
+
+# SCFLP Problem Datasets
+[scflp]
+git-tree-sha1 = "7148403f109bf02f6d142e7d93c8a45dd52f3a77"
+lazy = true
+
+    [[scflp.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/scflp.tar.gz"
+    sha256 = "b0d9845fd432ba44fa74f695f345db01d872bb76e73b7e8474b95950edfadff7"
+
+# SNIP Problem Datasets
+[snip]
+git-tree-sha1 = "6816219fc59946df86f82938e30e5cf48dc7c5eb"
+lazy = true
+
+    [[snip.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/snip.tar.gz"
+    sha256 = "c92163aa7639f7289f7d2dfddbd8b48a18adc6a6857a2aa5d5cba70f472ec831"
+
+# MCNDP Problem Datasets
+[mcndp]
+git-tree-sha1 = "d6e616763b814a879b2072ab349d482fd9e7b45e"
+lazy = true
+
+    [[mcndp.download]]
+    url = "https://github.com/asu-opt-lab/BendersX.jl/releases/download/data-v1/mcndp.tar.gz"
+    sha256 = "bdf0d26e40c8691ebd772bc113c2f2e63e93e1deff9671b246bab43cdc2f3cab"
