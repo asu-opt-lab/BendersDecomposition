@@ -39,7 +39,7 @@ using CPLEX
                 @constraint(model, capacity[i in 1:I], sum(data.demands[:] .* y[i,:]) <= data.capacities[i] * x[i])
                 
                 gbc_lhs = vec(y)
-                gbc_rhs = [1.0 * x[i] for j in 1:J for i in 1:I]  # j outer, i inner to match vec(y)
+                gbc_rhs = [x[i] for j in 1:J for i in 1:I]  # j outer, i inner to match vec(y)
                 gbc_sense = fill(UpperBound, I*J)
                 return gbc_lhs, gbc_rhs, gbc_sense
             end

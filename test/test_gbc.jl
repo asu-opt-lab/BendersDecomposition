@@ -10,6 +10,8 @@ Tests various scenarios for GBC support:
 6. Partial y constraints: only subset of y has GBC
 7. Mixed bound types: some upper, some lower, some fixed
 8. No GBC (nothing return)
+9. Mixed RHS types: mixing VariableRef and AffExpr for optimization testing
+10. Error handling: DimensionMismatch, ArgumentError, Warning on empty LHS
 
 Uses a simple transportation-like problem for testing.
 """
@@ -507,6 +509,87 @@ end
 
         @test env.termination_status == Optimal()
         @test isapprox(mip_opt, env.obj_value, atol=1e-4)
+    end
+
+    @testset "Scenario 9: Mixed RHS Types (VariableRef + AffExpr)" begin
+        # Tests mixing VariableRef and AffExpr in gbc_rhs
+        data = create_test_data()
+        mip_opt = solve_mip_reference(data)
+        
+        function customize_sub_union!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(
+                CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+            
+            I, J = data.n_facilities, data.n_customers
+            @variable(model, y[1:I, 1:J] >= 0)
+            
+            @objective(model, Min, sum(data.costs .* y))
+            @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
+            
+            # Use mixed Vector{Union{VariableRef, AffExpr}}
+            # First half: use VariableRef
+            # Second half: use AffExpr (1.0 * x)
+            gbc_lhs = vec(y)
+            gbc_rhs = Vector{Union{VariableRef, AffExpr}}(undef, length(y))
+            
+            idx = 1
+            mid = length(y) ÷ 2
+            for i in 1:I, j in 1:J
+                if idx <= mid
+                     gbc_rhs[idx] = x[i]  # VariableRef
+                else
+                     gbc_rhs[idx] = 1.0 * x[i] + 0.0  # AffExpr
+                end
+                idx += 1
+            end
+            
+            gbc_sense = fill(UpperBound, I*J)
+            return gbc_lhs, gbc_rhs, gbc_sense
+        end
+        
+        benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
+        master = Master(data; customize = customize_master_simple!)
+        oracle = ClassicalOracle(data, master; customize = customize_sub_union!)
+        env = BendersSeq(master, oracle; param = benders_param)
+        solve!(env)
+        
+        @test env.termination_status == Optimal()
+        @test isapprox(mip_opt, env.obj_value, atol=1e-4)
+    end
+    
+    @testset "Scenario 10: Error Handling" begin
+        data = create_test_data()
+        
+        # 1. Test DimensionMismatch
+        function customize_sub_dim_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+            gbc_lhs = [VariableRef(model, MOI.VariableIndex(1))]
+            gbc_rhs = union_type([x[1], x[1]]) # Length 2
+            gbc_sense = [UpperBound]
+            return gbc_lhs, gbc_rhs, gbc_sense
+        end
+        
+        master = Master(data; customize = customize_master_simple!)
+        # Helper function to supply Union type
+        union_type(v) = Vector{Union{VariableRef, AffExpr}}(v)
+
+        @test_throws DimensionMismatch ClassicalOracle(data, master; customize = customize_sub_dim_error!)
+        
+        # 2. Test ArgumentError (Invalid tuple length)
+        function customize_sub_arg_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+            return ([x[1]], [x[1]]) # Length 2, expected 3
+        end
+        @test_throws ArgumentError ClassicalOracle(data, master; customize = customize_sub_arg_error!)
+
+         # 3. Test Empty LHS Warning
+        function customize_sub_empty_warn!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+            return VariableRef[], Union{VariableRef, AffExpr}[], GBCBoundType[]
+        end
+        
+        # Capture warning
+        @test_logs (:warn, "GBC tuple returned but gbc_lhs is empty. No GBC constraints will be applied.") begin
+            ClassicalOracle(data, master; customize = customize_sub_empty_warn!)
+        end
     end
 
 end

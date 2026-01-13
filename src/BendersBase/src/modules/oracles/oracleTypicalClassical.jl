@@ -10,7 +10,7 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
     fixed_x_constraints::Vector{ConstraintRef}
 
     gbc_lhs::Vector{VariableRef}
-    gbc_rhs::Vector{AffExpr}
+    gbc_rhs::Vector{Union{VariableRef, AffExpr}}
     gbc_sense::Vector{GBCBoundType}
 
 
@@ -49,12 +49,12 @@ Returns LHS variables, RHS expressions (AffExpr), and bound sense.
 
 Supported formats:
 - `nothing` or no tuple: No GBC constraints
-- `(gbc_lhs, gbc_rhs, gbc_sense)`: gbc_rhs is Vector{AffExpr} with x variables
+- `(gbc_lhs, gbc_rhs, gbc_sense)`: gbc_rhs is Vector{Union{VariableRef, AffExpr}}
 """
 function _parse_gbc_result(result)
     # No GBC
     if result === nothing || !(result isa Tuple)
-        return VariableRef[], AffExpr[], GBCBoundType[]
+        return VariableRef[], Union{VariableRef, AffExpr}[], GBCBoundType[]
     end
     
     # Format: (gbc_lhs, gbc_rhs, gbc_sense)
@@ -73,10 +73,10 @@ function _parse_gbc_result(result)
         
         if isempty(gbc_lhs)
             @warn "GBC tuple returned but gbc_lhs is empty. No GBC constraints will be applied."
-            return VariableRef[], AffExpr[], GBCBoundType[]
+            return VariableRef[], Union{VariableRef, AffExpr}[], GBCBoundType[]
         end
         
-        return Vector{VariableRef}(gbc_lhs), Vector{AffExpr}(gbc_rhs), Vector{GBCBoundType}(gbc_sense)
+        return Vector{VariableRef}(gbc_lhs), Vector{Union{VariableRef, AffExpr}}(gbc_rhs), Vector{GBCBoundType}(gbc_sense)
     end
     
     throw(ArgumentError(
@@ -141,14 +141,22 @@ end
     _set_gbc_bounds!(gbc_lhs, gbc_rhs, gbc_sense, x_value)
 
 Set the bounds for GBC LHS variables by evaluating RHS expressions with given x values.
+Optimized to handle VariableRef directly without AffExpr overhead.
 """
 function _set_gbc_bounds!(gbc_lhs::Vector{VariableRef}, 
-                          gbc_rhs::Vector{AffExpr},
+                          gbc_rhs::Vector{Union{VariableRef, AffExpr}},
                           gbc_sense::Vector{GBCBoundType},
                           x_value::Vector{Float64})
     for i in 1:length(gbc_lhs)
-        # Evaluate RHS expression using direct index access (x variables are copied first)
-        bound_value = value(v -> x_value[v.index.value], gbc_rhs[i])
+        rhs = gbc_rhs[i]
+        # Evaluate RHS expression
+        if rhs isa VariableRef
+            # Fast path for simple variable bounds
+            bound_value = x_value[rhs.index.value]
+        else
+            # General path for affine expressions
+            bound_value = value(v -> x_value[v.index.value], rhs)
+        end
         
         # Set bound based on sense
         if gbc_sense[i] == UpperBound
@@ -165,11 +173,11 @@ end
     _accumulate_gbc_duals!(a_x, gbc_lhs, gbc_rhs, gbc_sense)
 
 Accumulate dual values from GBC constraints into the cut coefficients.
-For each GBC entry, iterates over terms in gbc_rhs expression.
+Optimized to handle VariableRef directly without AffExpr overhead.
 """
 function _accumulate_gbc_duals!(a_x::Vector{Float64},
                                 gbc_lhs::Vector{VariableRef},
-                                gbc_rhs::Vector{AffExpr},
+                                gbc_rhs::Vector{Union{VariableRef, AffExpr}},
                                 gbc_sense::Vector{GBCBoundType})
     for i in 1:length(gbc_lhs)
         # Get dual value based on bound sense
@@ -181,9 +189,16 @@ function _accumulate_gbc_duals!(a_x::Vector{Float64},
             dual_val = dual(FixRef(gbc_lhs[i]))
         end
         
-        # Accumulate to corresponding x positions (x variables have indices 1:n)
-        for (var, coef) in gbc_rhs[i].terms
-            a_x[var.index.value] += coef * dual_val
+        # Accumulate to corresponding x positions
+        rhs = gbc_rhs[i]
+        if rhs isa VariableRef
+            # Fast path for simple variable bounds
+            a_x[rhs.index.value] += dual_val
+        else
+            # General path for affine expressions
+            for (var, coef) in rhs.terms
+                a_x[var.index.value] += coef * dual_val
+            end
         end
     end
 end

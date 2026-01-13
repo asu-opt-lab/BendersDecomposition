@@ -14,7 +14,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     facility_knapsack_info::FacilityKnapsackInfo
 
     gbc_lhs::Vector{VariableRef}
-    gbc_rhs::Vector{AffExpr}
+    gbc_rhs::Vector{Union{VariableRef, AffExpr}}
     gbc_sense::Vector{GBCBoundType}
     
     function CFLKnapsackOracle(data::AbstractData, master::Master; 
