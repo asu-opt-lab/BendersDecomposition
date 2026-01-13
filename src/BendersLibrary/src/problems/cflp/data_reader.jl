@@ -3,11 +3,6 @@ export CFLPData, read_GK_data, read_cflp_benchmark_data, read_cfl_file
 using JSON
 using LinearAlgebra
 
-# Artifact path helpers using shared utility
-_cflp_random_data_path() = get_artifact_path("cflp_random_data", "random_data", @__DIR__)
-_cflp_locssall_path() = get_artifact_path("cflp_locssall", "locssall", @__DIR__)
-_cflp_output_path() = get_artifact_path("cflp_output", "output", @__DIR__)
-
 struct CFLPData <: AbstractData
     n_facilities::Int
     n_customers::Int
@@ -17,24 +12,16 @@ struct CFLPData <: AbstractData
     costs::Matrix{Float64}
 end
 
-function read_GK_data(filename::AbstractString; filepath=_cflp_random_data_path())
-    fullpath = joinpath(filepath, join([filename, ".json"]))
-    # fullpath = joinpath(filepath, filename)
-    loaded_json = open(fullpath, "r") do file
-       read(file, String)
-    end
-    loaded_data_string = JSON.parse(loaded_json)
-    n_facilities = loaded_data_string["n_facilities"]
-    n_customers = loaded_data_string["n_customers"]
-    capacities = loaded_data_string["capacities"]
-    demands = loaded_data_string["demands"]
-    fixed_costs = loaded_data_string["fixed_costs"]
-    costs = loaded_data_string["costs"]
-    costs = reduce(hcat,costs)'
-    return CFLPData(n_facilities, n_customers, capacities, demands, fixed_costs, costs)
+function read_GK_data(filename::AbstractString; filepath=get_artifact_path("cflp_random_data"))
+    fullpath = joinpath(filepath, "$(filename).json")
+    loaded_json = read(fullpath, String)
+    data = JSON.parse(loaded_json)
+    costs = reduce(hcat, data["costs"])'
+    return CFLPData(data["n_facilities"], data["n_customers"], 
+                    data["capacities"], data["demands"], data["fixed_costs"], costs)
 end
 
-function read_cflp_benchmark_data(filename::AbstractString; filepath=_cflp_locssall_path())
+function read_cflp_benchmark_data(filename::AbstractString; filepath=get_artifact_path("cflp_locssall"))
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
 
@@ -43,8 +30,8 @@ function read_cflp_benchmark_data(filename::AbstractString; filepath=_cflp_locss
     n_facilities = parse(Int, vals1[1])
     n_customers = parse(Int, vals1[2])
 
-    capacities = zeros(Float64,n_facilities)
-    fixed_costs = zeros(Float64,n_facilities)
+    capacities = zeros(Float64, n_facilities)
+    fixed_costs = zeros(Float64, n_facilities)
     for i in 1:n_facilities
         line = readline(f)
         vals = split(line)
@@ -52,7 +39,7 @@ function read_cflp_benchmark_data(filename::AbstractString; filepath=_cflp_locss
         fixed_costs[i] = parse(Float64, vals[2])
     end
 
-    demands = zeros(Float64,n_customers)
+    demands = zeros(Float64, n_customers)
     for i in 1:Int(n_customers/10)
         line = readline(f)
         vals = split(line)
@@ -61,147 +48,74 @@ function read_cflp_benchmark_data(filename::AbstractString; filepath=_cflp_locss
         end
     end
 
-    costs = zeros(Float64,n_facilities,n_customers)
+    costs = zeros(Float64, n_facilities, n_customers)
     line_facility = Int(n_customers/10)
-
-
     nline = 0
     fth = 1
     while !eof(f)
-        
         line = readline(f)
         vals = split(line)
         nline += 1
         for j in 1:10
-            costs[fth,10*(nline-1)+j] = parse(Float64, vals[j])
+            costs[fth, 10*(nline-1)+j] = parse(Float64, vals[j])
         end
-        
         if nline == line_facility
             fth += 1
             nline = 0
         end
-        
     end
+    close(f)
     
     return CFLPData(n_facilities, n_customers, capacities, demands, fixed_costs, costs)
 end
 
-function read_cfl_file(filename::AbstractString; filepath=_cflp_output_path())
-    fullpath = joinpath(filepath, join([filename, ".cfl"]))
+function read_cfl_file(filename::AbstractString; filepath=get_artifact_path("cflp_output"))
+    fullpath = joinpath(filepath, "$(filename).cfl")
     f = open(fullpath)
     
-    # Skip the header line [CFLP-PROBLEMFILE]
     line = readline(f)
-    if !startswith(line, "[CFLP-PROBLEMFILE]")
-        close(f)
-        error("File format not recognized as CFLP format")
-    end
+    startswith(line, "[CFLP-PROBLEMFILE]") || error("File format not recognized")
+    readline(f)  # timestamp
     
-    # Skip the timestamp line
-    readline(f)
-    
-    # Read problem dimensions and ratio
     line = readline(f)
-    m_str = match(r"#customers:\s*(\d+)", line)
-    n_str = match(r"#depot sites:\s*(\d+)", line)
+    n_customers = parse(Int, match(r"#customers:\s*(\d+)", line).captures[1])
+    n_facilities = parse(Int, match(r"#depot sites:\s*(\d+)", line).captures[1])
     
-    n_customers = parse(Int, m_str.captures[1])
-    n_facilities = parse(Int, n_str.captures[1])
+    readline(f)  # blank
+    readline(f)  # [DEPOTS]
+    readline(f)  # headers
     
-    # Skip blank line
-    readline(f)
-    
-    # Skip [DEPOTS] header
-    line = readline(f)
-    if !startswith(line, "[DEPOTS]")
-        close(f)
-        error("Expected [DEPOTS] section not found")
-    end
-    
-    # Skip column headers
-    readline(f)
-    
-    # Read facility data
     capacities = zeros(Float64, n_facilities)
     fixed_costs = zeros(Float64, n_facilities)
-    facility_coords = zeros(Float64, n_facilities, 2)
-    
     for i in 1:n_facilities
-        line = readline(f)
-        vals = split(line)
-        @assert length(vals) == 6
+        vals = split(readline(f))
         capacities[i] = parse(Float64, vals[1])
         fixed_costs[i] = parse(Float64, vals[2])
-        facility_coords[i, 1] = parse(Float64, vals[4])
-        facility_coords[i, 2] = parse(Float64, vals[5])
     end
     
-    # Skip blank line
-    readline(f)
+    readline(f)  # blank
+    readline(f)  # [CUSTOMERS]
+    readline(f)  # headers
     
-    # Skip [CUSTOMERS] header
-    line = readline(f)
-    if !startswith(line, "[CUSTOMERS]")
-        close(f)
-        error("Expected [CUSTOMERS] section not found")
-    end
-    
-    # Skip column headers
-    readline(f)
-    
-    # Read customer data
     demands = zeros(Float64, n_customers)
-    customer_coords = zeros(Float64, n_customers, 2)
-    
     for i in 1:n_customers
-        line = readline(f)
-        vals = split(line)
-        @assert length(vals) == 4
+        vals = split(readline(f))
         demands[i] = parse(Float64, vals[1])
-        customer_coords[i, 1] = parse(Float64, vals[2])
-        customer_coords[i, 2] = parse(Float64, vals[3])
     end
     
-    # Skip blank line
-    readline(f)
+    readline(f)  # blank
+    readline(f)  # [COSTMATRIX]
+    readline(f)  # formula
+    readline(f)  # [MATRIX]
+    readline(f)  # Dim line
     
-    # Skip [COSTMATRIX] header and formula line
-    line = readline(f)
-    if !startswith(line, "[COSTMATRIX]")
-        close(f)
-        error("Expected [COSTMATRIX] section not found")
-    end
-    readline(f)
-    
-    # Skip [MATRIX] header
-    line = readline(f)
-    if !startswith(line, "[MATRIX]")
-        close(f)
-        error("Expected [MATRIX] section not found")
-    end
-    
-    # Read dimension line and verify dimensions
-    line = readline(f)
-    dim_match = match(r"Dim\s+(\d+)\s+(\d+)", line)
-    if dim_match === nothing || 
-       parse(Int, dim_match.captures[1]) != n_facilities || 
-       parse(Int, dim_match.captures[2]) != n_customers
-        close(f)
-        error("Matrix dimensions in file do not match expected dimensions")
-    end
-    
-    # Read cost matrix
     costs = zeros(Float64, n_facilities, n_customers)
-    
     for i in 1:n_facilities
-        line = readline(f)
-        vals = split(line)
-        @assert length(vals) == n_customers
+        vals = split(readline(f))
         for j in 1:n_customers
             costs[i, j] = parse(Float64, vals[j]) / demands[j]
         end
     end
-
     close(f)
     
     return CFLPData(n_facilities, n_customers, capacities, demands, fixed_costs, costs)
