@@ -98,7 +98,7 @@ end
             
             # Unified format: gbc_rhs is Vector{AffExpr}
             gbc_lhs = vec(y)
-            gbc_rhs = [AffExpr(0.0, x[i] => 1.0) for i in 1:I for j in 1:J]
+            gbc_rhs = [x[i] for i in 1:I for j in 1:J]
             gbc_sense = fill(UpperBound, I*J)
             
             return gbc_lhs, gbc_rhs, gbc_sense
@@ -159,7 +159,7 @@ end
             
             # Lower bound GBC: z[i] >= 0.1 * x[i] (if open, serve at least 10%)
             gbc_lhs = collect(z)
-            gbc_rhs = [0.1 * x[i] for i in 1:I]
+            gbc_rhs = [x[i] for i in 1:I]
             gbc_sense = fill(LowerBound, I)
             
             return gbc_lhs, gbc_rhs, gbc_sense
@@ -217,7 +217,7 @@ end
             
             # Fixed bound GBC: w[i] == x[i]
             gbc_lhs = collect(w)
-            gbc_rhs = [1.0 * x[i] for i in 1:I]
+            gbc_rhs = [x[i] for i in 1:I]
             gbc_sense = fill(FixedBound, I)
             
             return gbc_lhs, gbc_rhs, gbc_sense
@@ -398,7 +398,7 @@ end
             # Only first facility has GBC constraint
             # y[1,j] <= x[1] for all j
             gbc_lhs = [y[1,j] for j in 1:J]
-            gbc_rhs = [1.0 * x[1] for _ in 1:J]
+            gbc_rhs = [x[1] for _ in 1:J]
             gbc_sense = fill(UpperBound, J)
             
             return gbc_lhs, gbc_rhs, gbc_sense
@@ -464,7 +464,7 @@ end
             # - w[i] == x[i] (Fixed)
             # - z[i] >= 0.01*x[i] (Lower, if open serve at least 1%)
             gbc_lhs = vcat(collect(w), collect(z))
-            gbc_rhs = vcat([1.0 * x[i] for i in 1:I], [0.01 * x[i] for i in 1:I])
+            gbc_rhs = vcat([x[i] for i in 1:I], [0.01 * x[i] for i in 1:I])
             gbc_sense = vcat(fill(FixedBound, I), fill(LowerBound, I))
             
             return gbc_lhs, gbc_rhs, gbc_sense
@@ -590,6 +590,43 @@ end
         @test_logs (:warn, "GBC tuple returned but gbc_lhs is empty. No GBC constraints will be applied.") begin
             ClassicalOracle(data, master; customize = customize_sub_empty_warn!)
         end
+
+        # 4. Test ArgumentError: gbc_lhs contains a master variable (from x)
+        function customize_sub_lhs_master_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(
+                CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+            
+            I, J = data.n_facilities, data.n_customers
+            @variable(model, y[1:I, 1:J] >= 0)
+            @objective(model, Min, sum(data.costs .* y))
+            
+            # ERROR: gbc_lhs contains x[1] (a master variable), should contain subproblem var
+            gbc_lhs = [x[1]]
+            gbc_rhs = [1.0 * x[1]]
+            gbc_sense = [UpperBound]
+            return gbc_lhs, gbc_rhs, gbc_sense
+        end
+        @test_throws ArgumentError ClassicalOracle(data, master; customize = customize_sub_lhs_master_error!)
+
+        # 5. Test ArgumentError: gbc_rhs contains a non-master variable (subproblem variable)
+        function customize_sub_rhs_nonmaster_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(
+                CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+            
+            I, J = data.n_facilities, data.n_customers
+            @variable(model, y[1:I, 1:J] >= 0)
+            @variable(model, w[1:I] >= 0)
+            @objective(model, Min, sum(data.costs .* y))
+            
+            # ERROR: gbc_rhs contains y[1,1] (a subproblem variable), should contain master var
+            gbc_lhs = [w[1]]
+            gbc_rhs = [y[1, 1]]  # y is a subproblem variable, not a master variable!
+            gbc_sense = [UpperBound]
+            return gbc_lhs, gbc_rhs, gbc_sense
+        end
+        @test_throws ArgumentError ClassicalOracle(data, master; customize = customize_sub_rhs_nonmaster_error!)
     end
 
 end

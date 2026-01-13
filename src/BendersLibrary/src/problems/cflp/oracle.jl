@@ -35,7 +35,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         result = customize(model, data, scen_idx; x_copy...)
         
         # Parse the result to extract GBC information using shared helper
-        gbc_lhs, gbc_rhs, gbc_sense = _parse_gbc_result(result)
+        gbc_lhs, gbc_rhs, gbc_sense = _parse_gbc_result(result, x)
 
         facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.costs, data.demands, data.capacities) : FacilityKnapsackInfo(data.costs, data.demands[scen_idx], data.capacities)
 
