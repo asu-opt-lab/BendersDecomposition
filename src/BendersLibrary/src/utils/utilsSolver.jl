@@ -1,28 +1,7 @@
-# export assign_attributes!
+# Solver utilities for BendersLibrary
+# Note: Solver-specific implementations are provided by extensions (ext/)
+# This file contains solver-agnostic utilities
 
-# const GRB_ENV = Ref{Gurobi.Env}()
-# function __init__()
-#     GRB_ENV[] = Gurobi.Env()
-#     return
-# end
-
-# function assign_attributes!(model::Model, config::Dict{String,Any})
-#     # Set solver based on config
-#     if config["solver"] == "Gurobi"
-#         set_optimizer(model, () -> Gurobi.Optimizer(GRB_ENV[]))
-#     elseif config["solver"] == "CPLEX"
-#         set_optimizer(model, CPLEX.Optimizer)
-#     else
-#         error("Unsupported solver: $(config["solver"])")
-#     end
-
-#     # Set solver attributes from config
-#     for (param, value) in config
-#         if param != "solver"
-#             set_optimizer_attribute(model, param, value)
-#         end
-#     end
-
-#     set_optimizer_attribute(model, MOI.Silent(), true)
-# end
-
+# The actual optimizer factory functions (get_cplex_optimizer, get_gurobi_optimizer, etc.)
+# are defined in the main BendersLibrary.jl file as stubs,
+# and are overridden by extensions when CPLEX.jl or Gurobi.jl are loaded.

@@ -9,10 +9,16 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-CPLEX = "a076750e-1247-5638-91d2-ce28b192dca0"
-Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+
+[weakdeps]
+CPLEX = "a076750e-1247-5638-91d2-ce28b192dca0"
+Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
+
+[extensions]
+BendersBaseCPLEXExt = "CPLEX"
+BendersBaseGurobiExt = "Gurobi"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

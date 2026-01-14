@@ -2,8 +2,6 @@ module BendersLibrary
 
 using JuMP
 using BendersBase
-using Gurobi
-using CPLEX
 using Printf
 using SparseArrays
 
@@ -18,5 +16,10 @@ include("problems/problems.jl")
 export AbstractNorm, StandardNorm, LpNorm
 export SplitIndexSelectionRule, RandomFractional, MostFractional, LargestFractional
 export DisjunctiveCutsAppendRule, NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
+
+# Re-export solver utilities from BendersBase
+export get_cplex_optimizer, get_cplex_lp_optimizer
+export get_gurobi_optimizer, get_gurobi_lp_optimizer
+export get_available_solvers, is_solver_available
 
 end

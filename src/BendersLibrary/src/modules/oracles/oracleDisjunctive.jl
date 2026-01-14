@@ -26,7 +26,13 @@ This structure contains all the parameters needed to control the behavior of the
 # Examples
 ```julia
 # Create with default optimal parameters
-dcglp_optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
+# First, load your solver: `using CPLEX` or `using Gurobi`
+# Then create the optimizer:
+# dcglp_optimizer = get_cplex_lp_optimizer()  # or get_gurobi_lp_optimizer()
+# 
+# Or manually:
+# dcglp_optimizer = optimizer_with_attributes(YourSolver.Optimizer, MOI.Silent() => true)
+
 dcglp_param = DcglpParam(dcglp_optimizer;
                         time_limit = 1000.0, 
                         gap_tolerance = 1e-3, 

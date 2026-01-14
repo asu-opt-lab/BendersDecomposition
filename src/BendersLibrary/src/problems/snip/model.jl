@@ -1,10 +1,14 @@
 export customize_master_model!, customize_sub_model!, customize_mip_model!
 
-function customize_mip_model!(model::Model, data::SNIPData)
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
+"""
+    customize_mip_model!(model::Model, data::SNIPData; optimizer=nothing)
 
-    set_optimizer(model, optimizer)
+Customize the MIP model for SNIP. If no optimizer is provided, the model will not have an optimizer set.
+"""
+function customize_mip_model!(model::Model, data::SNIPData; optimizer=nothing)
+    if optimizer !== nothing
+        set_optimizer(model, optimizer)
+    end
     
     K = data.num_scenarios
     @variable(model, x[1:length(data.D)], Bin)
@@ -27,11 +31,15 @@ function customize_mip_model!(model::Model, data::SNIPData)
     @constraint(model, sum(x) <= data.budget)
 end
 
-function customize_master_model!(model::Model, data::SNIPData)
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
+"""
+    customize_master_model!(model::Model, data::SNIPData; optimizer=nothing)
 
-    set_optimizer(model, optimizer)
+Customize the master model for SNIP Benders decomposition.
+"""
+function customize_master_model!(model::Model, data::SNIPData; optimizer=nothing)
+    if optimizer !== nothing
+        set_optimizer(model, optimizer)
+    end
     
     K = data.num_scenarios
     @variable(model, x[1:length(data.D)], Bin)
@@ -44,11 +52,15 @@ function customize_master_model!(model::Model, data::SNIPData)
     return (x = x, ), t
 end
 
-function customize_sub_model!(model::Model, data::SNIPData, scen_idx::Int; x)
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
+"""
+    customize_sub_model!(model::Model, data::SNIPData, scen_idx::Int; x, optimizer=nothing)
 
-    set_optimizer(model, optimizer)
+Customize the subproblem model for SNIP Benders decomposition.
+"""
+function customize_sub_model!(model::Model, data::SNIPData, scen_idx::Int; x, optimizer=nothing)
+    if optimizer !== nothing
+        set_optimizer(model, optimizer)
+    end
 
     @variable(model, y[1:data.num_nodes] >= 0)
     

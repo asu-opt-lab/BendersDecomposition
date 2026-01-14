@@ -1,11 +1,17 @@
 export customize_master_model!, customize_sub_model!, customize_mip_model!
 
-function customize_mip_model!(model::Model, data::UFLPData)
-    
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
+"""
+    customize_mip_model!(model::Model, data::UFLPData; optimizer=nothing)
 
-    set_optimizer(model, optimizer)
+Customize the MIP model for UFLP. If no optimizer is provided, the model will not have an optimizer set.
+Users must provide their own optimizer using `using CPLEX` or `using Gurobi` and then calling
+`get_cplex_optimizer()` or `get_gurobi_optimizer()`.
+"""
+function customize_mip_model!(model::Model, data::UFLPData; optimizer=nothing)
+    
+    if optimizer !== nothing
+        set_optimizer(model, optimizer)
+    end
         
     I, J = data.n_facilities, data.n_customers
     @variable(model, x[1:I], Bin)
@@ -20,12 +26,16 @@ function customize_mip_model!(model::Model, data::UFLPData)
     @constraint(model, facility_open, y .<= x)
 end
 
-function customize_master_model!(model::Model, data::UFLPData)
+"""
+    customize_master_model!(model::Model, data::UFLPData; optimizer=nothing)
 
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
+Customize the master model for UFLP Benders decomposition.
+"""
+function customize_master_model!(model::Model, data::UFLPData; optimizer=nothing)
 
-    set_optimizer(model, optimizer)
+    if optimizer !== nothing
+        set_optimizer(model, optimizer)
+    end
 
     @variable(model, x[1:data.n_facilities], Bin)
     @variable(model, t >= -1e6)
@@ -37,12 +47,16 @@ function customize_master_model!(model::Model, data::UFLPData)
     return (x = x, ), t
 end
 
-function customize_sub_model!(model::Model, data::UFLPData, scen_idx::Int; x) 
+"""
+    customize_sub_model!(model::Model, data::UFLPData, scen_idx::Int; x, optimizer=nothing)
 
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
+Customize the subproblem model for UFLP Benders decomposition.
+"""
+function customize_sub_model!(model::Model, data::UFLPData, scen_idx::Int; x, optimizer=nothing) 
 
-    set_optimizer(model, optimizer)
+    if optimizer !== nothing
+        set_optimizer(model, optimizer)
+    end
 
     I, J = data.n_facilities, data.n_customers
     

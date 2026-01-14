@@ -1,11 +1,15 @@
 export customize_master_model!, customize_sub_model!, customize_mip_model!
 
-function customize_mip_model!(model::Model, data::SCFLPData)
-    
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
+"""
+    customize_mip_model!(model::Model, data::SCFLPData; optimizer=nothing)
 
-    set_optimizer(model, optimizer)
+Customize the MIP model for SCFLP. If no optimizer is provided, the model will not have an optimizer set.
+"""
+function customize_mip_model!(model::Model, data::SCFLPData; optimizer=nothing)
+    
+    if optimizer !== nothing
+        set_optimizer(model, optimizer)
+    end
     
     # Extract dimensions
     I, J, N = data.n_facilities, data.n_customers, data.n_scenarios
@@ -25,11 +29,15 @@ function customize_mip_model!(model::Model, data::SCFLPData)
     @constraint(model, capacity[i in 1:I, s in 1:N], sum(data.demands[s][j] * y[i,j,s] for j in 1:J) <= data.capacities[i] * x[i])
 end
 
-function customize_master_model!(model::Model, data::SCFLPData)
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
+"""
+    customize_master_model!(model::Model, data::SCFLPData; optimizer=nothing)
 
-    set_optimizer(model, optimizer)
+Customize the master model for SCFLP Benders decomposition.
+"""
+function customize_master_model!(model::Model, data::SCFLPData; optimizer=nothing)
+    if optimizer !== nothing
+        set_optimizer(model, optimizer)
+    end
 
     I, N = data.n_facilities, data.n_scenarios
     @variable(model, x[1:I], Bin)
@@ -43,11 +51,15 @@ function customize_master_model!(model::Model, data::SCFLPData)
     return (x = x, ), t
 end
 
-function customize_sub_model!(model::Model, data::SCFLPData, scen_idx::Int; x) 
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
+"""
+    customize_sub_model!(model::Model, data::SCFLPData, scen_idx::Int; x, optimizer=nothing)
 
-    set_optimizer(model, optimizer)
+Customize the subproblem model for SCFLP Benders decomposition.
+"""
+function customize_sub_model!(model::Model, data::SCFLPData, scen_idx::Int; x, optimizer=nothing) 
+    if optimizer !== nothing
+        set_optimizer(model, optimizer)
+    end
 
     I, J = data.n_facilities, data.n_customers
     @variable(model, y[1:I, 1:J] >= 0)
