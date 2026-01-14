@@ -3,4 +3,3 @@ Manifest.toml
 **/.DS_Store
 job_scripts/
 test/results/
-docs/build
