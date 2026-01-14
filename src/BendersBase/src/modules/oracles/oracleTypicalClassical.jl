@@ -90,7 +90,7 @@ See the test suite for representative `result` shapes and the exact exception
 types.
 """
 function _parse_gbc_result(result, x_vars::Vector{VariableRef})
-    # No GBC
+    # No GBC - must explicitly return nothing
     if result === nothing
         return VariableRef[], Union{VariableRef, AffExpr}[], GBCBoundType[]
     end

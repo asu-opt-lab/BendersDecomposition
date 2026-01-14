@@ -646,7 +646,7 @@ end
         @test occursin("not a copied master variable", err.msg)
 
 
-        # 6. Test ArgumentError: gbc_lhs contains a non VaraibleRef element.
+        # 6. Test ArgumentError: gbc_lhs contains a non-VariableRef element.
         function customize_sub_lhs_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
@@ -657,7 +657,7 @@ end
             @variable(model, w[1:I] >= 0)
             @objective(model, Min, sum(data.costs .* y))
             
-            # ERROR: gbc_lhs contains y[1,1] + y[1,2], should only contain VariableRef
+            # ERROR: gbc_lhs contains an AffExpr (y[1,1] + y[1,2]), should only contain VariableRef
             gbc_lhs = [y[1,1] + y[1,2]; y[1]]
             gbc_rhs = [x[1]; x[2]]
             gbc_sense = [UpperBound; Fixed]
@@ -685,7 +685,7 @@ end
             @variable(model, w[1:I] >= 0)
             @objective(model, Min, sum(data.costs .* y))
             
-            # ERROR: gbc_lhs contains y[1,1] + y[1,2], should only contain VariableRef
+            # ERROR: gbc_rhs contains x[1]^2 + x[2] (a quadratic expression), should only contain affine expressions
             gbc_lhs = [y[1,1]; y[1,2]]
             gbc_rhs = [x[1]^2 + x[2]; x[2]]
             gbc_sense = [UpperBound; Fixed]
@@ -713,7 +713,7 @@ end
             @variable(model, w[1:I] >= 0)
             @objective(model, Min, sum(data.costs .* y))
             
-            # ERROR: gbc_lhs contains y[1,1] + y[1,2], should only contain VariableRef
+            # ERROR: gbc_sense contains strings "U" and "F", should only contain GBCBoundType values
             gbc_lhs = [y[1,1]; y[1,2]]
             gbc_rhs = [x[1] + x[2]; x[2]]
             gbc_sense = ["U"; "F"]
