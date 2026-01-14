@@ -4,12 +4,12 @@ GBC (Generalized Bound Constraints) Test Suite
 Tests various scenarios for GBC support:
 1. Basic upper bound constraint: y <= x
 2. Lower bound constraint: y >= 0.1*x
-3. Fixed bound constraint: y == x
+3. Fixing constraint: y == x
 4. Scaled single variable: y <= 2*x
 5. Multi-variable affine combination: y <= 0.5*x[1] + 0.5*x[2]
 6. Partial y constraints: only subset of y has GBC
 7. Mixed bound types: some upper, some lower, some fixed
-8. No GBC (nothing return)
+8. No GBC (`nothing` returned)
 9. Mixed RHS types: mixing VariableRef and AffExpr for optimization testing
 10. Error handling: DimensionMismatch, ArgumentError, Warning on empty LHS
 
@@ -96,7 +96,6 @@ end
             @objective(model, Min, sum(data.costs .* y))
             @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
             
-            # Unified format: gbc_rhs is Vector{AffExpr}
             gbc_lhs = vec(y)
             gbc_rhs = [x[i] for i in 1:I for j in 1:J]
             gbc_sense = fill(UpperBound, I*J)
@@ -175,7 +174,7 @@ end
         @test isapprox(mip_opt, env.obj_value, atol=1e-4)
     end
 
-    @testset "Scenario 3: Fixed Bound Constraint" begin
+    @testset "Scenario 3: Fixing Constraint" begin
         # Tests y == x constraint
         data = create_test_data()
 
@@ -218,7 +217,7 @@ end
             # Fixed bound GBC: w[i] == x[i]
             gbc_lhs = collect(w)
             gbc_rhs = [x[i] for i in 1:I]
-            gbc_sense = fill(FixedBound, I)
+            gbc_sense = fill(Fixed, I)
             
             return gbc_lhs, gbc_rhs, gbc_sense
         end
@@ -465,7 +464,7 @@ end
             # - z[i] >= 0.01*x[i] (Lower, if open serve at least 1%)
             gbc_lhs = vcat(collect(w), collect(z))
             gbc_rhs = vcat([x[i] for i in 1:I], [0.01 * x[i] for i in 1:I])
-            gbc_sense = vcat(fill(FixedBound, I), fill(LowerBound, I))
+            gbc_sense = vcat(fill(Fixed, I), fill(LowerBound, I))
             
             return gbc_lhs, gbc_rhs, gbc_sense
         end
@@ -480,7 +479,7 @@ end
         @test isapprox(mip_opt, env.obj_value, atol=1e-4)
     end
 
-    @testset "Scenario 8: No GBC (Nothing Return)" begin
+    @testset "Scenario 8: No GBC (Nothing Returned)" begin
         # Tests that code works when customize returns nothing
         data = create_test_data()
         mip_opt = solve_mip_reference(data)
@@ -581,7 +580,7 @@ end
         end
         @test_throws ArgumentError ClassicalOracle(data, master; customize = customize_sub_arg_error!)
 
-         # 3. Test Empty LHS Warning
+        # 3. Test Empty LHS Warning
         function customize_sub_empty_warn!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             return VariableRef[], Union{VariableRef, AffExpr}[], GBCBoundType[]
         end
@@ -603,11 +602,20 @@ end
             
             # ERROR: gbc_lhs contains x[1] (a master variable), should contain subproblem var
             gbc_lhs = [x[1]]
-            gbc_rhs = [1.0 * x[1]]
+            gbc_rhs = [x[1]]
             gbc_sense = [UpperBound]
             return gbc_lhs, gbc_rhs, gbc_sense
         end
-        @test_throws ArgumentError ClassicalOracle(data, master; customize = customize_sub_lhs_master_error!)
+
+        err = try
+            ClassicalOracle(data, master; customize = customize_sub_lhs_master_error!)
+            nothing
+        catch e
+            e
+        end
+
+        @test err isa ArgumentError
+        @test occursin("should only contain a single subproblem variable", err.msg)
 
         # 5. Test ArgumentError: gbc_rhs contains a non-master variable (subproblem variable)
         function customize_sub_rhs_nonmaster_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
@@ -626,8 +634,101 @@ end
             gbc_sense = [UpperBound]
             return gbc_lhs, gbc_rhs, gbc_sense
         end
-        @test_throws ArgumentError ClassicalOracle(data, master; customize = customize_sub_rhs_nonmaster_error!)
-    end
 
+        err = try
+            ClassicalOracle(data, master; customize = customize_sub_rhs_nonmaster_error!)
+            nothing
+        catch e
+            e
+        end
+
+        @test err isa ArgumentError
+        @test occursin("not a copied master variable", err.msg)
+
+
+        # 6. Test ArgumentError: gbc_lhs contains a non VaraibleRef element.
+        function customize_sub_lhs_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(
+                CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+            
+            I, J = data.n_facilities, data.n_customers
+            @variable(model, y[1:I, 1:J] >= 0)
+            @variable(model, w[1:I] >= 0)
+            @objective(model, Min, sum(data.costs .* y))
+            
+            # ERROR: gbc_lhs contains y[1,1] + y[1,2], should only contain VariableRef
+            gbc_lhs = [y[1,1] + y[1,2]; y[1]]
+            gbc_rhs = [x[1]; x[2]]
+            gbc_sense = [UpperBound; Fixed]
+            return gbc_lhs, gbc_rhs, gbc_sense
+        end
+        
+        err = try
+            ClassicalOracle(data, master; customize = customize_sub_lhs_error!)
+            nothing
+        catch e
+            e
+        end
+
+        @test err isa ArgumentError
+        @test occursin("not a VariableRef", err.msg)
+
+        # 7. Test ArgumentError: gbc_rhs contains a non-affine expression.
+        function customize_sub_rhs_nonaffine_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(
+                CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+            
+            I, J = data.n_facilities, data.n_customers
+            @variable(model, y[1:I, 1:J] >= 0)
+            @variable(model, w[1:I] >= 0)
+            @objective(model, Min, sum(data.costs .* y))
+            
+            # ERROR: gbc_lhs contains y[1,1] + y[1,2], should only contain VariableRef
+            gbc_lhs = [y[1,1]; y[1,2]]
+            gbc_rhs = [x[1]^2 + x[2]; x[2]]
+            gbc_sense = [UpperBound; Fixed]
+            return gbc_lhs, gbc_rhs, gbc_sense
+        end
+        
+        err = try
+            ClassicalOracle(data, master; customize = customize_sub_rhs_nonaffine_error!)
+            nothing
+        catch e
+            e
+        end
+
+        @test err isa ArgumentError
+        @test occursin("contains a non-affine expression", err.msg)
+
+        # 8. Test ArgumentError: gbc_sense contains not acceptable value
+        function customize_sub_sense_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(
+                CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+            
+            I, J = data.n_facilities, data.n_customers
+            @variable(model, y[1:I, 1:J] >= 0)
+            @variable(model, w[1:I] >= 0)
+            @objective(model, Min, sum(data.costs .* y))
+            
+            # ERROR: gbc_lhs contains y[1,1] + y[1,2], should only contain VariableRef
+            gbc_lhs = [y[1,1]; y[1,2]]
+            gbc_rhs = [x[1] + x[2]; x[2]]
+            gbc_sense = ["U"; "F"]
+            return gbc_lhs, gbc_rhs, gbc_sense
+        end
+        
+        err = try
+            ClassicalOracle(data, master; customize = customize_sub_sense_error!)
+            nothing
+        catch e
+            e
+        end
+
+        @test err isa ArgumentError
+        @test occursin("is not a GBCBoundType", err.msg)
+    end
 end
 

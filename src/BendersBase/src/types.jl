@@ -4,7 +4,7 @@
 @enum GBCBoundType begin
     UpperBound   # y ≤ f(x)
     LowerBound   # y ≥ f(x)
-    FixedBound   # y = f(x)
+    Fixed   # y = f(x)
 end
 
 abstract type AbstractBendersEnv end

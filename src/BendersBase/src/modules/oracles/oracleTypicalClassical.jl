@@ -44,24 +44,54 @@ end
 """
     _parse_gbc_result(result, x_vars) -> (gbc_lhs, gbc_rhs, gbc_sense)
 
-Parse the result returned by customize function and convert to internal GBC representation.
-Returns LHS variables, RHS expressions (AffExpr), and bound sense.
+Parse and validate the value returned by a user `customize` function and
+convert it into the internal GBC representation.
 
-Supported formats:
-- `nothing` or no tuple: No GBC constraints
-- `(gbc_lhs, gbc_rhs, gbc_sense)`: gbc_rhs is Vector{Union{VariableRef, AffExpr}}
+# Returns
+(gbc_lhs, gbc_rhs, gbc_sense)
+- `gbc_lhs :: Vector{VariableRef}`  
+  Left-hand-side variables for the generalized bound constraint. Every item
+  must be a `VariableRef` that is **not** one of the copied master variables
+  supplied in `x_vars`.
+- `gbc_rhs :: Vector{Union{VariableRef, AffExpr}}`  
+  Right-hand-side expressions. Each item must be either
+  - a `VariableRef` drawn from `x_vars` (i.e., a *copied* master variable), or
+  - an `AffExpr` expressed only in terms of variables from `x_vars` (and
+    numeric constants).
+- `gbc_sense :: Vector{GBCBoundType}`  
+  A vector of bound senses for each constraint (for example `UpperBound`,
+  `LowerBound`, or `Fixed`).
 
 # Arguments
-- `result`: The return value from the customize function
-- `x_vars`: Vector of master variables (copied into submodel) for validation
+- `result` :: Any
+  The raw return value from the user `customize` function. This function must
+  parse and normalize `result` into the three-tuple described above.
+- `x_vars` :: Vector{VariableRef}  
+  A vector of submodel variables that are *copies* of the coupling master
+  variables. Used only for validation.
 
 # Validation
-- gbc_lhs must contain subproblem variables (NOT master variables from x)
-- gbc_rhs must contain only master variables (from x)
+1. `gbc_lhs` must be a `Vector{VariableRef}`. None of the entries in `gbc_lhs`
+   may be any of the `VariableRef`s listed in `x_vars`.
+2. `gbc_rhs` must be a `Vector{Union{VariableRef, AffExpr}}`. Every `VariableRef`
+   appearing in `gbc_rhs` must be one of the `VariableRef`s in `x_vars`.
+3. `gbc_sense` must be a `Vector{GBCBoundType}` with the same length as `gbc_lhs`
+   and `gbc_rhs`.
+
+# Errors
+If any validation rule is violated, raise a descriptive exception (for example
+`ArgumentError`). Error messages should identify:
+- which part (`gbc_lhs` / `gbc_rhs` / `gbc_sense`) failed validation, and
+- the offending element(s) and why (e.g., "lhs contains copied master variable `x[3]`",
+  or "rhs contains variable `y` not in `x_vars`").
+
+# Examples
+See the test suite for representative `result` shapes and the exact exception
+types.
 """
 function _parse_gbc_result(result, x_vars::Vector{VariableRef})
     # No GBC
-    if result === nothing || !(result isa Tuple)
+    if result === nothing
         return VariableRef[], Union{VariableRef, AffExpr}[], GBCBoundType[]
     end
     
@@ -87,37 +117,50 @@ function _parse_gbc_result(result, x_vars::Vector{VariableRef})
         # Build set of valid master variable indices for fast lookup
         x_indices = Set(v.index for v in x_vars)
         
-        # Validate gbc_lhs: must NOT contain master variables (should be subproblem variables)
+        # Validate gbc_lhs: must be a vector of VariableRef and must NOT contain copied master variables (should be subproblem variables)
         for (i, lhs_var) in enumerate(gbc_lhs)
+            if !(lhs_var isa VariableRef)
+                throw(ArgumentError("gbc_lhs[$i] is not a VariableRef (got $(typeof(lhs_var))). Each lhs entry must be a VariableRef."))
+            end
             if lhs_var.index in x_indices
                 throw(ArgumentError(
-                    "gbc_lhs[$i] contains a master variable. " *
-                    "gbc_lhs should only contain subproblem variables. " *
-                    "The GBC relation should be: subproblem_var <=/>=/== f(master_vars)."
+                    "gbc_lhs[$i] contains a copied master variable $lhs_var. " *
+                    "Each item of gbc_lhs should only contain a single subproblem variable. " *
+                    "The GBC relation should be: subproblem_var <=/>=/== affine_func(master_vars)."
                 ))
             end
         end
         
-        # Validate gbc_rhs: must ONLY contain master variables
+        # Validate gbc_rhs: must ONLY contain copied master variables in affine form
         for (i, rhs) in enumerate(gbc_rhs)
             if rhs isa VariableRef
                 if !(rhs.index in x_indices)
                     throw(ArgumentError(
-                        "gbc_rhs[$i] contains a variable that is not a registered master variable. " *
-                        "gbc_rhs should only reference master variables passed to customize(). " *
-                        "Got variable with index $(rhs.index.value), but valid master indices are: $(sort([v.value for v in x_indices]))."
+                        "gbc_rhs[$i] contains a variable $(rhs) that is not a copied master variable. " *
+                        "gbc_rhs should only reference copied master variables passed to customize(). "
                     ))
                 end
-            else  # AffExpr
+            elseif rhs isa AffExpr  # AffExpr
                 for (var, _) in rhs.terms
                     if !(var.index in x_indices)
                         throw(ArgumentError(
-                            "gbc_rhs[$i] contains an AffExpr with a variable that is not a registered master variable (x). " *
-                            "gbc_rhs should only reference master variables passed to customize(). " *
-                            "Got variable with index $(var.index.value), but valid master indices are: $(sort([v.value for v in x_indices]))."
+                            "gbc_rhs[$i] contains an AffExpr with a variable $(var) that is not a copied master variable. " *
+                            "gbc_rhs should only reference copied master variables passed to customize(). "
                         ))
                     end
                 end
+            else
+                throw(ArgumentError(
+                            "gbc_rhs[$i] contains a non-affine expression $rhs. " *
+                            "we currently only support affine `gbc_rhs`. "
+                        ))
+            end
+        end
+
+        # Validate gbc_sense: must be a vector of GBCBoundType
+        for (i, sense) in enumerate(gbc_sense)
+            if !(sense isa GBCBoundType)
+                throw(ArgumentError("gbc_sense[$i] is not a GBCBoundType (got $(sense)). Each entry must be among `UpperBound`, `LowerBound`, and `Fixed`."))
             end
         end
         
@@ -125,11 +168,10 @@ function _parse_gbc_result(result, x_vars::Vector{VariableRef})
     end
     
     throw(ArgumentError(
-        "Invalid GBC result format. Expected nothing or (gbc_lhs, gbc_rhs, gbc_sense). " *
-        "Got tuple of length $(length(result))."
+        "Invalid return format of `customize` function. Expected nothing or (gbc_lhs, gbc_rhs, gbc_sense). " *
+        "Got $(length(result))."
     ))
 end
-
 
 function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
@@ -208,7 +250,7 @@ function _set_gbc_bounds!(gbc_lhs::Vector{VariableRef},
             set_upper_bound(gbc_lhs[i], bound_value)
         elseif gbc_sense[i] == LowerBound
             set_lower_bound(gbc_lhs[i], bound_value)
-        else  # FixedBound
+        else  # Fixed
             fix(gbc_lhs[i], bound_value; force=true)
         end
     end
@@ -230,7 +272,7 @@ function _accumulate_gbc_duals!(a_x::Vector{Float64},
             dual_val = dual(UpperBoundRef(gbc_lhs[i]))
         elseif gbc_sense[i] == LowerBound
             dual_val = dual(LowerBoundRef(gbc_lhs[i]))
-        else  # FixedBound
+        else  # Fixed
             dual_val = dual(FixRef(gbc_lhs[i]))
         end
         
