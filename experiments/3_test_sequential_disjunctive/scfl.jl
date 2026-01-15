@@ -6,6 +6,22 @@ using CPLEX
 @testset verbose = true "Stochastic CFLP Sequential Benders Tests" begin
     instances = 1:5
 
+    # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
+    function customize_sub_model_gbc!(model::Model, data::SCFLPData, scen_idx::Int; x) 
+        optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
+        set_optimizer(model, optimizer)
+        I, J = data.n_facilities, data.n_customers
+        @variable(model, y[1:I, 1:J] >= 0)
+        cost_demands = data.costs .* data.demands[scen_idx]'
+        @objective(model, Min, sum(cost_demands .* y))
+        @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
+        @constraint(model, capacity[i in 1:I], sum(data.demands[scen_idx][:] .* y[i,:]) <= data.capacities[i] * x[i])
+        gbc_lhs = vec(y)
+        gbc_rhs = [x[i] for j in 1:J for i in 1:I]
+        gbc_sense = fill(UpperBound, I*J)
+        return gbc_lhs, gbc_rhs, gbc_sense
+    end
+
     for i in instances
         @testset "Instance: f25-c50-s64-r10-$i" begin
             # Load problem data
@@ -98,6 +114,46 @@ using CPLEX
                             # if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             #     infeasibility_report(master, x_opt, t_opt)
                             # end
+                        end
+                    end
+                end
+            end
+
+            @testset "Classic oracle with GBC" begin
+                @testset "Seq" begin        
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
+                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical with GBC - seq"
+                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
+                            oracle_param = SplitOracleParam(dcglp_param; norm = LpNorm(p), split_index_selection_rule = RandomFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 1.0, reuse_dcglp = reuse_dcglp, lift = lift)
+                            master = Master(data; customize = customize_master_model!)
+                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model_gbc!)
+                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model_gbc!)
+                            typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            env = BendersSeq(master, disjunctive_oracle; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
+                    end
+                end
+            end
+            
+            @testset "Knapsack oracle with GBC" begin
+                @testset "Seq" begin        
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
+                        @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/knapsack with GBC - seq"
+                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
+                            oracle_param = SplitOracleParam(dcglp_param; norm = LpNorm(p), split_index_selection_rule = RandomFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 1.0, reuse_dcglp = reuse_dcglp, lift = lift)
+                            master = Master(data; customize = customize_master_model!)
+                            typical_oracle_kappa = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model_gbc!)
+                            typical_oracle_nu = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model_gbc!)
+                            typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            env = BendersSeq(master, disjunctive_oracle; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                         end
                     end
                 end

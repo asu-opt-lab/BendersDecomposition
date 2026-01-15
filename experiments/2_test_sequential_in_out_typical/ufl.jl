@@ -6,6 +6,26 @@ using CPLEX
 @testset verbose = true "UFLP Sequential In/Out Benders Tests" begin
     instances = setdiff(1:71, [67])
 
+    # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
+    function customize_sub_model_gbc!(model::Model, data::UFLPData, scen_idx::Int; x) 
+        optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
+        set_optimizer(model, optimizer)
+
+        I, J = data.n_facilities, data.n_customers
+        @variable(model, y[1:I, 1:J] >= 0)
+
+        cost_demands = data.costs .* data.demands'
+        @objective(model, Min, sum(cost_demands .* y))
+
+        @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
+        
+        # Return GBC tuple: y[i,j] <= x[i] for each j
+        gbc_lhs = vec(y)
+        gbc_rhs = [x[i] for j in 1:J for i in 1:I]
+        gbc_sense = fill(UpperBound, I*J)
+        return gbc_lhs, gbc_rhs, gbc_sense
+    end
+
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data
@@ -32,6 +52,16 @@ using CPLEX
                 @info "solving UFLP p$i - classical oracle - seqInOut..."
                 master = Master(data; customize = customize_master_model!)
                 oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+                env = BendersSeqInOut(master, oracle; param = benders_inout_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end
+
+            @testset "Classic oracle with GBC" begin
+                @info "solving UFLP p$i - classical oracle with GBC - seqInOut..."
+                master = Master(data; customize = customize_master_model!)
+                oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()

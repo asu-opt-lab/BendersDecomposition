@@ -64,4 +64,5 @@ function customize_sub_model!(model::Model, data::SNIPData, scen_idx::Int; x)
     for (from, to, r) in data.A_minus_D
         @constraint(model, y[from] - r * y[to] >= 0)
     end
+    return nothing
 end

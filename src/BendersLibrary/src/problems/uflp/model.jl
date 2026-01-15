@@ -53,4 +53,5 @@ function customize_sub_model!(model::Model, data::UFLPData, scen_idx::Int; x)
 
     @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
     @constraint(model, facility_open[j in 1:J], y[:, j] .<= x)
+    return nothing
 end

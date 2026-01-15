@@ -13,6 +13,10 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     fixed_x_constraints::Vector{ConstraintRef}
     facility_knapsack_info::FacilityKnapsackInfo
 
+    gbc_lhs::Vector{VariableRef}
+    gbc_rhs::Vector{Union{VariableRef, AffExpr}}
+    gbc_sense::Vector{GBCBoundType}
+    
     function CFLKnapsackOracle(data::AbstractData, master::Master; 
                             customize = customize_sub_model!,
                             scen_idx::Int=-1, 
@@ -20,26 +24,36 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         @debug "Building knapsack oracle for CFLP"
         model = Model()
 
-        # Copy the master’s coupling variables into the submodel (with identical axes and symbols)
+        # Copy the master's coupling variables into the submodel (with identical axes and symbols)
         x_copy = copy_variables!(model, master.x_tuple)
-
-        # Build the submodel using user-defined customization, passing the copied variables
-        customize(model, data, scen_idx; x_copy...)
 
         # Collect all copied master variables and add linking constraint
         x = var_from_tuple(x_copy)
         @constraint(model, fix_x, x .== 0)
 
+        # Build the submodel using user-defined customization, passing the copied variables
+        result = customize(model, data, scen_idx; x_copy...)
+        
+        # Parse the result to extract GBC information using shared helper
+        gbc_lhs, gbc_rhs, gbc_sense = _parse_gbc_result(result, x)
+
         facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.costs, data.demands, data.capacities) : FacilityKnapsackInfo(data.costs, data.demands[scen_idx], data.capacities)
 
-        new(param, model, fix_x, facility_knapsack_info)
+        new(param, model, fix_x, facility_knapsack_info, gbc_lhs, gbc_rhs, gbc_sense)
     end
     
     CFLKnapsackOracle() = new()
 end
 
+# Import shared GBC helper functions from BendersBase
+using BendersBase: _parse_gbc_result, _set_gbc_bounds!, _accumulate_gbc_duals!
+
 function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
+    
+    # Set GBC bounds based on expression evaluation
+    _set_gbc_bounds!(oracle.gbc_lhs, oracle.gbc_rhs, oracle.gbc_sense, x_value)
+    
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     optimize!(oracle.model)
     if termination_status(oracle.model) == TIME_LIMIT
@@ -79,6 +93,10 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
             @info "dual_sub_obj_val = $dual_sub_obj_val"
             
             a_x = dual.(oracle.fixed_x_constraints)
+            
+            # Accumulate GBC dual values
+            _accumulate_gbc_duals!(a_x, oracle.gbc_lhs, oracle.gbc_rhs, oracle.gbc_sense)
+            
             a_t = [0.0]
             a_0 = dual_sub_obj_val - a_x' * x_value 
             if dual_sub_obj_val >= oracle.param.zero_tol/tol_normalize
@@ -89,7 +107,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
         end
         
     else
-        throw(UnexpectedModelStatusException("ClassicalOracle: $(status)"))
+        throw(UnexpectedModelStatusException("CFLKnapsackOracle: $(status)"))
     end
 end
 

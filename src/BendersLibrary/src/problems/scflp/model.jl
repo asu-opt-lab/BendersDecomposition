@@ -58,4 +58,5 @@ function customize_sub_model!(model::Model, data::SCFLPData, scen_idx::Int; x)
     @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
     @constraint(model, facility_open, y .<= x)
     @constraint(model, capacity[i in 1:I], sum(data.demands[scen_idx][:] .* y[i,:]) <= data.capacities[i] * x[i])
+    return nothing
 end
