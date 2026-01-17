@@ -84,6 +84,16 @@ using CPLEX
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
             end
+
+            @testset "Unified oracle" begin
+                @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - seqInOut..."
+                master = Master(data; customize = customize_master_model!)
+                oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; customize = customize_sub_model!)
+                env = BendersSeqInOut(master, oracle; param = benders_inout_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end 
         end
     end
 end

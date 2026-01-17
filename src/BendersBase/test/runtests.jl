@@ -4,5 +4,6 @@ using BendersBase
 @testset "BendersBase.jl" begin
     
     include("test_types.jl")
+    include("test_model_reformulation.jl")
     
 end

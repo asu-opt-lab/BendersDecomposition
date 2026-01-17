@@ -70,3 +70,5 @@ end
 
 include("oracleTypicalClassical.jl")
 include("oracleTypicalSeparable.jl")
+# include("oracleTypicalUnified1.jl")
+include("oracleTypicalUnified2.jl")
