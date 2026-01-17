@@ -136,6 +136,7 @@ function solve!(env::BendersBnB)
     
     # Print summary if verbose mode is enabled
     if param.verbose 
+        @info "Termination Status: $(termination_status(env.master.model))"
         @info "Node count: $(JuMP.node_count(env.master.model))"
         @info "Root processing time: $(root_node_time) "
         @info "Elapsed time: $(elapsed_time)"

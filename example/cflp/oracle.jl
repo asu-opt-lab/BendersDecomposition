@@ -44,8 +44,8 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
 
         if manual_warm
             optimizer = optimizer_with_attributes(Gurobi.Optimizer, "Method" => 6, "PDHGGPU" => 1,
-            "Crossover" => 1, "Threads" => 7, "LPWarmStart" => 2, "Presolve" => 2, "OutputFlag" => 1,
-            "PDHGAbsTol" => 1e-4, "PDHGConvTol" => 1e-4, "PDHGRelTol" => 1e-4)
+            "Crossover" => 1, "Threads" => 7, "LPWarmStart" => 0, "Presolve" => 0, "OutputFlag" => 1,
+            "PDHGAbsTol" => 1e-2, "PDHGConvTol" => 1e-2, "PDHGRelTol" => 1e-2)
             model = direct_model(optimizer)
         else
             model = Model()
@@ -138,8 +138,17 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
         a_x = KP_values # Vector{Float64}
         a_0 = sum(μ) 
 
-        # Collect primal/dual warm start value
+        # Collect primal/dual warm start value (if wamr_root_sol true then no warm start, the following is not executed)
         oracle.manual_warm && !oracle.warm_root_sol && (oracle.prev_y = vec(value.(oracle.model[:y])); oracle.prev_dual = vcat(dual.(oracle.model[:fix_x]), μ, dual.(oracle.model[:capacity])))
+        
+        # Need to divide the case because of above issue
+        # if oracle.manual_warm
+        #     if oracle.warm_root_sol & oracle.bnb
+        #     elseif oracle.warm_root_sol & !oracle.bnb
+        #         oracle.prev_y = vec(value.(oracle.model[:y]))
+        #         oracle.prev_dual = vcat(dual.(oracle.model[:fix_x]), μ, dual.(oracle.model[:capacity]))
+        #     end
+        # end
 
         # sub_exact_solved && set_optimizer_attribute(oracle.model, "Method", 6) # for PDHG
         if sub_obj_val >= t_value[1] * (1 + oracle.oracle_param.rtol / tol_normalize)
