@@ -70,7 +70,8 @@ include("oracleTypicalClassical_original.jl")
 
 include("oracleTypicalSeparable.jl")
 include("oracleDisjunctive.jl")
-include("oracleTypicalUnified.jl")
+# include("oracleTypicalUnified1.jl")
+include("oracleTypicalUnified2.jl")
 include("oracleTypicalPareto.jl")
 
 include("oracleDualDecomposition.jl")

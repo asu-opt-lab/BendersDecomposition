@@ -23,9 +23,9 @@ include("$(dirname(dirname(@__DIR__)))/example/mcndp/model.jl")
                         )
 
             # solver parameters
-            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 7)
-            master_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-9, "CPXPARAM_Threads" => 7, "CPX_PARAM_SCRIND" => 0)
-            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_SCRIND" => 0, "CPX_PARAM_PREIND" => 0)
+            mip_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPXPARAM_Threads" => 7, "CPX_PARAM_SCRIND" => 0)
+            master_solver_param = Dict("solver" => "CPLEX", "CPXPARAM_Threads" => 7, "CPX_PARAM_SCRIND" => 0)
+            typical_oracle_solver_param = Dict("solver" => "CPLEX", "CPX_PARAM_SCRIND" => 0)
                         
             # oracle parameters & corepoint
             rtol, atol = 1e-9, 1e-9
@@ -40,15 +40,34 @@ include("$(dirname(dirname(@__DIR__)))/example/mcndp/model.jl")
             mip_opt_val = objective_value(mip.model)
             @info mip_opt_val
 
-            @testset "Classic oracle" begin
-                # @info "solving CFLP p$i - classical oracle - seq..."
+            # @testset "Classic oracle" begin
+            #     # @info "solving CFLP p$i - classical oracle - seq..."
+            #     master = Master(data; solver_param = master_solver_param)
+            #     update_model!(master, data)
+
+            #     # Construct oracle and set parameters
+            #     classical_param = ClassicalOracleParam(rtol = rtol, atol = atol)
+            #     oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
+            #     update_model!(oracle, data)
+
+            #     env = BendersSeq(data, master, oracle; param = benders_param)
+            #     log = solve!(env)
+            #     @test env.termination_status == Optimal()
+            #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            # end 
+
+            @testset "Unified oracle" begin
+                # @info "solving CFLP p$i - unified oracle - seq..."
                 master = Master(data; solver_param = master_solver_param)
                 update_model!(master, data)
 
                 # Construct oracle and set parameters
-                classical_param = ClassicalOracleParam(rtol = rtol, atol = atol)
-                oracle = ClassicalOracle(data; solver_param = typical_oracle_solver_param, oracle_param = classical_param)
+                unified_param = UnifiedOracleParam(rtol = rtol, atol = atol)
+
+                # way to use oracleTypicalUnified1.jl
+                oracle = UnifiedOracle(data; solver_param = typical_oracle_solver_param, oracle_param = unified_param)
                 update_model!(oracle, data)
+                model_reformulation!(oracle.model, 1.0; x=oracle.model[:x])
 
                 env = BendersSeq(data, master, oracle; param = benders_param)
                 log = solve!(env)
