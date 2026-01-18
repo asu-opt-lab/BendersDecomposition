@@ -46,6 +46,9 @@ end
 struct UndefError <: Exception 
     msg::String
 end
+struct UnsupportedModelException <: Exception 
+    msg::String
+end
 
 
 

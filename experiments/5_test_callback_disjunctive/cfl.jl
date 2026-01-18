@@ -215,6 +215,39 @@ using CPLEX
                 end
             end
 
+            @testset "Unified oracle" begin  
+                for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
+                        oracle_param = SplitOracleParam(dcglp_param;
+                                                                norm = LpNorm(p), 
+                                                                split_index_selection_rule = RandomFractional(),
+                                                                disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
+                                                                strengthened = strengthened, 
+                                                                add_benders_cuts_to_master = add_benders_cuts_to_master, 
+                                                                fraction_of_benders_cuts_to_master = 0.5, 
+                                                                reuse_dcglp = reuse_dcglp,
+                                                                lift = lift)
+
+                        @testset "NoSeq" begin
+                            @info "solving CFLP p$i - disjunctive oracle/unified/no seq"
+                            master = Master(data; customize = customize_master_model!)
+                            lazy_oracle = UnifiedOracle(data, master; customize = customize_sub_model!)
+                            typical_oracles = [UnifiedOracle(data, master; customize = customize_sub_model!), UnifiedOracle(data, master; customize = customize_sub_model!)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
+
+                            root_preprocessing = NoRootNodePreprocessing()
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
+                            
+                            env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
+                    end
+                end
+            end
+
             @testset "Classic oracle with GBC" begin  
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
