@@ -54,13 +54,7 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data)
         end
     end
     @constraint(model, capacity[e in 1:E], sum(y[e,k] for k in 1:K) <= data.problem.capacities[e] * x[e])
-
-    # @constraint(model, gbc, y .<= x) # currently makes master infeasible
 end
 
-
-# function update_model!(oracle::DisjunctiveOracle, data::Data)
-#     dcglp = oracle.dcglp 
-
-#     @constraint(dcglp, [i=1:2], sum(data.problem.capacities[j] * dcglp[:omega_x][i,j] for j in 1:data.problem.n_facilities) >= sum(data.problem.demands) * dcglp[:omega_0][i])
-# end
+function update_model!(oracle::DisjunctiveOracle, data::Data)
+end
