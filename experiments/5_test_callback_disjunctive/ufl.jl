@@ -169,6 +169,42 @@ using CPLEX
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                         end
+
+                        @testset "Seq" begin
+                            @info "solving UFLP p$i - disjunctive oracle/unified/seq"
+                            master = Master(data; customize = customize_master_model!)
+                            set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
+                            lazy_oracle = UnifiedOracle(data, master; customize = customize_sub_model!)
+                            typical_oracles = [UnifiedOracle(data, master; customize = customize_sub_model!); UnifiedOracle(data, master; customize = customize_sub_model!)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+
+                            env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
+
+                        @testset "SeqInOut" begin
+                            @info "solving UFLP p$i - disjunctive oracle/unified/seqinout"
+                            master = Master(data; customize = customize_master_model!)
+                            set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
+                            lazy_oracle = UnifiedOracle(data, master; customize = customize_sub_model!)
+                            typical_oracles = [UnifiedOracle(data, master; customize = customize_sub_model!); UnifiedOracle(data, master; customize = customize_sub_model!)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+
+                            env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
                     end
                 end
             end
@@ -258,6 +294,38 @@ using CPLEX
                             typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model_gbc!); ClassicalOracle(data, master; customize = customize_sub_model_gbc!)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
                             root_preprocessing = NoRootNodePreprocessing()
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                            env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
+
+                        @testset "Seq" begin
+                            @info "solving UFLP p$i - disjunctive oracle/classical with GBC/seq"
+                            master = Master(data; customize = customize_master_model!)
+                            set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
+                            lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!)
+                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model_gbc!); ClassicalOracle(data, master; customize = customize_sub_model_gbc!)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
+                            env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
+
+                        @testset "SeqInOut" begin
+                            @info "solving UFLP p$i - disjunctive oracle/classical with GBC/seqinout"
+                            master = Master(data; customize = customize_master_model!)
+                            set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
+                            lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!)
+                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model_gbc!); ClassicalOracle(data, master; customize = customize_sub_model_gbc!)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=10))
                             env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)

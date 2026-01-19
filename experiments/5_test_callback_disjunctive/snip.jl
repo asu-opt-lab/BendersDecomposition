@@ -209,6 +209,95 @@ using CPLEX
                 end
             end
 
+            @testset "Unified oracle" begin
+                for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
+                    @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
+
+                        oracle_param = SplitOracleParam(dcglp_param;
+                                                            norm = LpNorm(p),
+                                                            split_index_selection_rule = LargestFractional(),
+                                                            disjunctive_cut_append_rule = disjunctive_cut_append_rule,
+                                                            strengthened = strengthened,
+                                                            add_benders_cuts_to_master = add_benders_cuts_to_master,
+                                                            fraction_of_benders_cuts_to_master = 1.0,
+                                                            reuse_dcglp = reuse_dcglp,
+                                                            lift = lift)
+
+                        @testset "NoSeq" begin
+                            @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/unified/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            master = Master(data; customize = customize_master_model!)
+                            unified_param = UnifiedOracleParam()
+                            lazy_oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param)
+                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param)
+                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param)
+                            typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+
+                            root_preprocessing = NoRootNodePreprocessing()
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
+
+                            env = BendersBnB( master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            if benders_param.verbose
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                            end
+                        end
+
+                        @testset "Seq" begin
+                            @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/unified/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            master = Master(data; customize = customize_master_model!)
+                            unified_param = UnifiedOracleParam()
+                            lazy_oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param)
+                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param)
+                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param)
+                            typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
+
+                            env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            if benders_param.verbose
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                            end
+                        end
+
+                        @testset "SeqInOut" begin
+                            @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/unified/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
+                            master = Master(data; customize = customize_master_model!)
+                            unified_param = UnifiedOracleParam()
+                            lazy_oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param)
+                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param)
+                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param)
+                            typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+
+                            root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(length(data.D)), α = 0.9, λ = 0.1, verbose = false))
+                            lazy_callback = LazyCallback(lazy_oracle)
+                            user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
+
+                            env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                            if benders_param.verbose
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                            end
+                        end
+                    end
+                end
+            end
+
         end
     end
 end

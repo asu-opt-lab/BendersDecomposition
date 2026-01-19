@@ -95,6 +95,38 @@ using CPLEX
                 end
             end
 
+            @testset "Unified oracle" begin
+                @testset "Seq" begin
+                    for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
+                        @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/unified - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
+                        @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
+
+                            oracle_param = SplitOracleParam(dcglp_param;
+                                                                norm = LpNorm(p),
+                                                                split_index_selection_rule = LargestFractional(),
+                                                                disjunctive_cut_append_rule = disjunctive_cut_append_rule,
+                                                                strengthened = strengthened,
+                                                                add_benders_cuts_to_master = add_benders_cuts_to_master,
+                                                                fraction_of_benders_cuts_to_master = 1.0,
+                                                                reuse_dcglp = reuse_dcglp,
+                                                                lift = lift)
+
+                            master = Master(data; customize = customize_master_model!)
+                            unified_param = UnifiedOracleParam()
+                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param)
+                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param)
+                            typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            env = BendersSeq(master, disjunctive_oracle; param = benders_param)
+
+                            log = solve!(env)
+                            @test env.termination_status == Optimal()
+                            @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                        end
+                    end
+                end
+            end
+
         end
     end
 end

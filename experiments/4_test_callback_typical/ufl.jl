@@ -185,6 +185,55 @@ using CPLEX
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                 end
+
+                @testset "Seq" begin
+                    @info "solving UFLP p$i - classical oracle with GBC - seq..."
+                    master = Master(data; customize = customize_master_model!)
+                    set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
+                    oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!)
+
+                    root_seq_type = BendersSeq
+                    root_param = BendersSeqParam(;
+                                time_limit = 200.0,
+                                gap_tolerance = 1e-9,
+                                verbose = false
+                            )
+
+                    root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
+                    lazy_callback = LazyCallback(oracle)
+                    user_callback = NoUserCallback()
+
+                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    log = solve!(env)
+                    @test env.termination_status == Optimal()
+                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                end
+
+                @testset "SeqInOut" begin
+                    @info "solving UFLP p$i - classical oracle with GBC - seqinout..."
+                    master = Master(data; customize = customize_master_model!)
+                    set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
+                    oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!)
+
+                    root_seq_type = BendersSeqInOut
+                    root_param = BendersSeqInOutParam(
+                                time_limit = 300.0,
+                                gap_tolerance = 1e-9,
+                                stabilizing_x = ones(data.n_facilities),
+                                α = 0.9,
+                                λ = 0.1,
+                                verbose = false
+                            )
+
+                    root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
+                    lazy_callback = LazyCallback(oracle)
+                    user_callback = NoUserCallback()
+
+                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    log = solve!(env)
+                    @test env.termination_status == Optimal()
+                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                end
             end
 
             @testset "Pareto oracle" begin
