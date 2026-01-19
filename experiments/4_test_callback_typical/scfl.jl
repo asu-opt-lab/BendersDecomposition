@@ -172,7 +172,7 @@ using CPLEX
                 @testset "NoSeq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - no seq..."
                     master = Master(data; customize = customize_master_model!)
-                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; customize = customize_sub_model!)
+                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = UnifiedOracleParam())
 
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
@@ -187,7 +187,7 @@ using CPLEX
                 @testset "Seq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - seq..."
                     master = Master(data; customize = customize_master_model!)
-                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; customize = customize_sub_model!)
+                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = UnifiedOracleParam())
                     
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -209,7 +209,7 @@ using CPLEX
                 @testset "SeqInOut" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - seqinout..."
                     master = Master(data; customize = customize_master_model!)
-                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; customize = customize_sub_model!)
+                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = UnifiedOracleParam())
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -247,6 +247,73 @@ using CPLEX
                 end
             end
             
+            @testset "Pareto oracle" begin
+                @testset "NoSeq" begin
+                    @info "solving SCFLP f25-c50-s64-r10-$i - pareto oracle - no seq..."
+                    master = Master(data; customize = customize_master_model!)
+                    pareto_param = ParetoOracleParam(ones(data.n_facilities))
+                    oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = pareto_param)
+
+                    root_preprocessing = NoRootNodePreprocessing()
+                    lazy_callback = LazyCallback(oracle)
+                    user_callback = NoUserCallback()
+
+                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    log = solve!(env)
+                    @test env.termination_status == Optimal()
+                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                end
+
+                @testset "Seq" begin
+                    @info "solving SCFLP f25-c50-s64-r10-$i - pareto oracle - seq..."
+                    master = Master(data; customize = customize_master_model!)
+                    pareto_param = ParetoOracleParam(ones(data.n_facilities))
+                    oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = pareto_param)
+
+                    root_seq_type = BendersSeq
+                    root_param = BendersSeqParam(;
+                                time_limit = 200.0,
+                                gap_tolerance = 1e-9,
+                                verbose = false
+                            )
+
+                    root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
+                    lazy_callback = LazyCallback(oracle)
+                    user_callback = NoUserCallback()
+
+                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    log = solve!(env)
+                    @test env.termination_status == Optimal()
+                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                end
+
+                @testset "SeqInOut" begin
+                    @info "solving SCFLP f25-c50-s64-r10-$i - pareto oracle - seqinout..."
+                    master = Master(data; customize = customize_master_model!)
+                    pareto_param = ParetoOracleParam(ones(data.n_facilities))
+                    oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = pareto_param)
+
+                    root_seq_type = BendersSeqInOut
+                    root_param = BendersSeqInOutParam(
+                                time_limit = 300.0,
+                                gap_tolerance = 1e-9,
+                                stabilizing_x = ones(data.n_facilities),
+                                α = 0.9,
+                                λ = 0.1,
+                                verbose = false
+                            )
+
+                    root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
+                    lazy_callback = LazyCallback(oracle)
+                    user_callback = NoUserCallback()
+
+                    env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+                    log = solve!(env)
+                    @test env.termination_status == Optimal()
+                    @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                end
+            end
+
             @testset "Knapsack oracle with GBC" begin
                 @testset "NoSeq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle with GBC - no seq..."

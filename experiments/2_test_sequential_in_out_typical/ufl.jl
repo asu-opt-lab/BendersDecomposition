@@ -104,6 +104,17 @@ using CPLEX
 
                 # To test slim version, users can use # set_parameter!(oracle, "slim", true)
             end
+
+            @testset "Pareto oracle" begin
+                @info "solving UFLP p$i - pareto oracle - seqInOut..."
+                master = Master(data; customize = customize_master_model!)
+                param = ParetoOracleParam(fill(1.0, data.n_facilities))
+                oracle = ParetoOracle(data, master, param; customize = customize_sub_model!)
+                env = BendersSeqInOut(master, oracle; param = benders_inout_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end
         end
     end
 end
