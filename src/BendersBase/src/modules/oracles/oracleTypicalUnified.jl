@@ -88,6 +88,9 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
         # Build the submodel using user-defined customization, passing the copied variables
         customize(model, data, scen_idx; x_copy...)
 
+        # Validate that all constraints are supported types (LP)
+        _validate_constraint_types(model)
+
         # Create oracle instance
         oracle = new()
         oracle.param = param
@@ -176,19 +179,17 @@ end
 
 Check if a constraint contains any of the decision variables.
 Returns true if the constraint's function references any variable in the decision set.
+
+Note: Constraint function type validation is performed by _validate_constraint_types() 
+before this function is called, so we only handle VariableRef and AffExpr.
 """
 function _contains_decision_vars(con::ConstraintRef, decision_vars_set::Set{VariableRef})
     func = constraint_object(con).func
     
     if func isa VariableRef
         return func in decision_vars_set
-    elseif func isa AffExpr
+    else  # AffExpr (validated by _validate_constraint_types)
         return any(var in decision_vars_set for (var, _) in func.terms)
-    else
-        throw(UnsupportedModelException(
-            "Unsupported constraint function type: $(typeof(func)). " *
-            "UnifiedOracle only supports VariableRef and AffExpr constraints."
-        ))
     end
 end
 
@@ -220,8 +221,8 @@ Rewrite a single constraint to include σ relaxation.
 - `MOI.LessThan`: f(x) <= rhs  -->  f(x) - σ <= rhs  
 - `MOI.EqualTo`: f(x) == rhs  -->  f(x) + σ >= rhs AND f(x) - σ <= rhs
 
-# Throws
-- `UnsupportedModelException` if constraint set type is not supported
+Note: Constraint type validation is performed by _validate_constraint_types() 
+before this function is called.
 """
 function _rewrite_single_constraint!(model::Model, con::ConstraintRef, σ::VariableRef)
     
@@ -240,7 +241,7 @@ function _rewrite_single_constraint!(model::Model, con::ConstraintRef, σ::Varia
         # Original: f(x) <= rhs  -->  f(x) - σ <= rhs
         set_normalized_coefficient(con, σ, -1.0)
         
-    elseif set isa MOI.EqualTo
+    else  # MOI.EqualTo (validated by _validate_constraint_types)
         # == constraint: split into >= and <= with σ
         rhs = set.value
         original_name = name(con)
@@ -261,12 +262,6 @@ function _rewrite_single_constraint!(model::Model, con::ConstraintRef, σ::Varia
         
         # Delete original equality constraint
         delete(model, con)
-    else
-        throw(UnsupportedModelException(
-            "Unsupported constraint set type: $(typeof(set)). " *
-            "UnifiedOracle only supports GreaterThan (>=), LessThan (<=), and EqualTo (==) constraints. " *
-            "If you have interval or other constraint types, please reformulate them."
-        ))
     end
 end
 

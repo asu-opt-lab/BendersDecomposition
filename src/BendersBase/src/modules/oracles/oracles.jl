@@ -68,6 +68,62 @@ function set_parameter!(oracle::AbstractTypicalOracle, param::String, value::Any
   end
 end
 
+"""
+    _validate_constraint_types(model::Model)
+
+Validate that all constraints in the model are supported types for typical oracles.
+Only GreaterThan (>=), LessThan (<=), and EqualTo (==) constraints are supported.
+Throws UnsupportedModelException if unsupported constraint types are found.
+
+This validation is shared by ClassicalOracle, UnifiedOracle, and ParetoOracle.
+"""
+function _validate_constraint_types(model::Model)
+    # 1. Check for Integer/Binary variables (Mixed-Integer terms)
+    for (F, S) in list_of_constraint_types(model)
+        if S <: Union{MOI.Integer, MOI.ZeroOne, MOI.Semicontinuous, MOI.Semiinteger}
+            throw(UnsupportedModelException(
+                "Unsupported constraint type: $S. " *
+                "Typical oracles require a continuous Linear Programming (LP) subproblem. " *
+                "Integer or binary variables are not allowed."
+            ))
+        end
+    end
+
+    # 2. Check Objective Function (must be linear)
+    obj_type = objective_function_type(model)
+    if obj_type != Nothing && !(obj_type <: Union{VariableRef, AffExpr, Real})
+        throw(UnsupportedModelException(
+            "Unsupported objective function type: $obj_type. " *
+            "Typical oracles only support Linear Programming (LP) with linear objectives."
+        ))
+    end
+
+    # 3. Check Structural Constraints (Linearity and Supported Sets)
+    for con in all_constraints(model, include_variable_in_set_constraints=false)
+        con_obj = constraint_object(con)
+        set = con_obj.set
+        func = con_obj.func
+        
+        # Check constraint set type (EqualTo, GreaterThan, LessThan)
+        if !(set isa MOI.GreaterThan || set isa MOI.LessThan || set isa MOI.EqualTo)
+            throw(UnsupportedModelException(
+                "Unsupported constraint set type: $(typeof(set)). " *
+                "Typical oracles only support GreaterThan (>=), LessThan (<=), and EqualTo (==) constraints. " *
+                "If you have interval or other constraint types, please reformulate them."
+            ))
+        end
+
+        # Check constraint function type (must be linear: AffExpr or VariableRef)
+        if !(func isa AffExpr || func isa VariableRef)
+            throw(UnsupportedModelException(
+                "Unsupported constraint function type: $(typeof(func)). " *
+                "Typical oracles only support linear constraints (LP). " *
+                "Quadratic or other non-linear constraints are not supported."
+            ))
+        end
+    end
+end
+
 include("oracleTypicalClassical.jl")
 include("oracleTypicalSeparable.jl")
 include("oracleTypicalUnified.jl")

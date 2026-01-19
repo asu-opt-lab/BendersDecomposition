@@ -32,6 +32,9 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
             # Build the submodel using user-defined customization, passing the copied variables
             result = customize(model, data, scen_idx; x_copy...)
             
+            # Validate that all constraints are supported types (LP)
+            _validate_constraint_types(model)
+            
             # Parse the result to extract GBC information
             gbc_lhs, gbc_rhs, gbc_sense = _parse_gbc_result(result, x)
 
