@@ -154,7 +154,6 @@ Returns: (pareto_variable, pareto_fixing_constraints)
 function _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{VariableRef})
     
     # Step 1: Add σ variable (the z in Magnanti-Wong formulation)
-    # We add a large but finite bound to σ to improve numerical stability
     σ = @variable(pareto_model, σ)
     
     # Step 2: Add b*σ term to all problem constraints
@@ -231,26 +230,22 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
     end
     
     status = dual_status(oracle.model)
-    
+
     if status == FEASIBLE_POINT
         # Get optimal objective value ξ* from standard model
         sub_obj_val = objective_value(oracle.model)
-        
+
         # Step 3: Set up pareto_model for Magnanti-Wong problem
         # Set objective coefficient of σ to ξ*
         set_objective_coefficient(oracle.pareto_model, oracle.pareto_variable, sub_obj_val)
         
         # Set σ coefficient in fixing constraints to x*
         # Constraint: x + x*·σ = x_0
-        # We filter small coefficients to improve numerical scaling
-        for i in 1:length(x_value)
-            coef = abs(x_value[i]) > oracle.param.zero_tol ? x_value[i] : 0.0
-            set_normalized_coefficient(oracle.pareto_fixing_constraints[i], oracle.pareto_variable, coef)
-        end
+        set_normalized_coefficient.(oracle.pareto_fixing_constraints, oracle.pareto_variable, x_value)
 
         # Set RHS to core_point x_0 
         set_normalized_rhs.(oracle.pareto_fixing_constraints, oracle.param.core_point)
-        
+
         # Step 4: Solve pareto_model
         optimize!(oracle.pareto_model)
         
@@ -260,7 +255,7 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
         
         pareto_status = dual_status(oracle.pareto_model)
         
-        if pareto_status == FEASIBLE_POINT || pareto_status == MOI.NEARLY_FEASIBLE_POINT
+        if pareto_status == FEASIBLE_POINT 
             # Get cut coefficients from pareto_fixing_constraints duals
             a_x = dual.(oracle.pareto_fixing_constraints)
             
@@ -275,16 +270,7 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
                 return true, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
             end
         else
-            @warn "ParetoOracle: Unexpected dual status $(pareto_status). This is likely a numerical issue. Falling back to typical cut."
-            a_x = dual.(oracle.fixed_x_constraints)
-            a_t = [-1.0]
-            a_0 = sub_obj_val - dot(a_x, x_value)
-            
-            if sub_obj_val >= t_value[1] * (1 + oracle.param.rtol) + oracle.param.atol / tol_normalize
-                return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
-            else
-                return true, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
-            end
+            throw(UnexpectedModelStatusException("ParetoOracle: Unexpected dual status $(pareto_status). This is likely a numerical issue."))
         end
         
     elseif status == INFEASIBILITY_CERTIFICATE
