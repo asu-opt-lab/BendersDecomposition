@@ -95,6 +95,7 @@ end
         @test param.rtol == 1e-9
         @test param.atol == 0.0
         @test param.zero_tol == 1e-9
+        @test param.λ == 1.0  # Default λ
         
         # Test with custom tolerances
         param2 = ParetoOracleParam([0.3, 0.7]; rtol = 1e-8, atol = 1e-6, zero_tol = 1e-5)
@@ -102,6 +103,15 @@ end
         @test param2.rtol == 1e-8
         @test param2.atol == 1e-6
         @test param2.zero_tol == 1e-5
+        @test param2.λ == 1.0  # Default λ
+        
+        # Test with custom λ
+        param3 = ParetoOracleParam([0.5, 0.5]; λ = 0.8)
+        @test param3.λ == 0.8
+        
+        # Test λ must be in [0, 1]
+        @test_throws ArgumentError ParetoOracleParam([0.5]; λ = -0.1)
+        @test_throws ArgumentError ParetoOracleParam([0.5]; λ = 1.5)
     end
     
     @testset "Basic ParetoOracle Construction" begin
@@ -248,5 +258,94 @@ end
         # Hyperplane should have correct dimensions
         @test length(hyperplanes[1].a_x) == data.n_facilities
         @test length(hyperplanes[1].a_t) == 1
+    end
+    
+    @testset "ParetoOracle Dynamic Core Point Update (λ parameter)" begin
+        # Test that λ < 1 updates core_point after each generate_cuts call
+        data = create_pareto_test_data()
+        master = Master(data; customize = customize_master_pareto!)
+        
+        # Test with λ = 0.5 (core_point should move towards x_value)
+        initial_core = fill(0.5, data.n_facilities)
+        param = ParetoOracleParam(copy(initial_core); λ = 0.5)
+        oracle = ParetoOracle(data, master, param; customize = customize_sub_pareto!)
+        
+        # Verify initial core_point
+        @test oracle.param.core_point == initial_core
+        
+        # First call to generate_cuts
+        x_value_1 = [1.0, 0.0, 0.0]
+        t_value = [0.0]
+        generate_cuts(oracle, x_value_1, t_value)
+        
+        # core_point should now be: 0.5 * [0.5,0.5,0.5] + 0.5 * [1.0,0.0,0.0] = [0.75, 0.25, 0.25]
+        expected_core_1 = 0.5 .* initial_core .+ 0.5 .* x_value_1
+        @test isapprox(oracle.param.core_point, expected_core_1, atol=1e-10)
+        
+        # Second call with different x_value
+        x_value_2 = [0.0, 1.0, 0.0]
+        generate_cuts(oracle, x_value_2, t_value)
+        
+        # core_point should now be: 0.5 * [0.75,0.25,0.25] + 0.5 * [0.0,1.0,0.0] = [0.375, 0.625, 0.125]
+        expected_core_2 = 0.5 .* expected_core_1 .+ 0.5 .* x_value_2
+        @test isapprox(oracle.param.core_point, expected_core_2, atol=1e-10)
+    end
+    
+    @testset "ParetoOracle with λ = 1.0 (no update)" begin
+        # Test that λ = 1.0 keeps core_point unchanged (classical behavior)
+        data = create_pareto_test_data()
+        master = Master(data; customize = customize_master_pareto!)
+        
+        initial_core = fill(0.5, data.n_facilities)
+        param = ParetoOracleParam(copy(initial_core); λ = 1.0)  # Default: no update
+        oracle = ParetoOracle(data, master, param; customize = customize_sub_pareto!)
+        
+        # Verify initial core_point
+        @test oracle.param.core_point == initial_core
+        
+        # Call generate_cuts multiple times
+        x_value = [1.0, 0.0, 0.0]
+        t_value = [0.0]
+        generate_cuts(oracle, x_value, t_value)
+        generate_cuts(oracle, x_value, t_value)
+        
+        # core_point should remain unchanged with λ = 1.0
+        @test oracle.param.core_point == initial_core
+    end
+    
+    @testset "ParetoOracle with λ = 0.0 (full update)" begin
+        # Test that λ = 0.0 replaces core_point with x_value entirely
+        data = create_pareto_test_data()
+        master = Master(data; customize = customize_master_pareto!)
+        
+        initial_core = fill(0.5, data.n_facilities)
+        param = ParetoOracleParam(copy(initial_core); λ = 0.0)  # Full update
+        oracle = ParetoOracle(data, master, param; customize = customize_sub_pareto!)
+        
+        # Call generate_cuts
+        x_value = [1.0, 0.0, 0.0]
+        t_value = [0.0]
+        generate_cuts(oracle, x_value, t_value)
+        
+        # core_point should be exactly x_value
+        @test oracle.param.core_point == x_value
+    end
+    
+    @testset "ParetoOracle with Dynamic Core Point - Solution Quality" begin
+        # Verify that dynamic core point still produces correct solutions
+        data = create_pareto_test_data()
+        mip_opt = solve_mip_pareto_reference(data)
+        
+        benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
+        
+        # Test with λ = 0.8 (gradual update)
+        master = Master(data; customize = customize_master_pareto!)
+        param = ParetoOracleParam(fill(0.5, data.n_facilities); λ = 0.8)
+        oracle = ParetoOracle(data, master, param; customize = customize_sub_pareto!)
+        env = BendersSeq(master, oracle; param = benders_param)
+        solve!(env)
+        
+        @test env.termination_status == Optimal()
+        @test isapprox(mip_opt, env.obj_value, atol=1e-4)
     end
 end

@@ -9,17 +9,21 @@ Parameter structure for ParetoOracle implementing Magnanti-Wong Pareto-optimal c
 - `rtol::Float64`: Relative tolerance for cut violation detection (default: 1e-9)
 - `atol::Float64`: Absolute tolerance for cut violation detection (default: 0.0)
 - `zero_tol::Float64`: Threshold below which a value is considered zero (default: 1e-9)
-- `core_point::Vector{Float64}`: Core point x_0 for Magnanti-Wong problem (REQUIRED).
+- `core_point::Vector{Float64}`: Initial core point x_0 for Magnanti-Wong problem (REQUIRED).
+- `λ::Float64`: Weight for updating core point. After each cut generation, core_point is updated as:
+  `core_point = λ * core_point + (1 - λ) * x_value`. Default 1.0 means no update (classical behavior).
 """
 struct ParetoOracleParam <: AbstractOracleParam
     rtol::Float64
     atol::Float64
     zero_tol::Float64
     core_point::Vector{Float64}
+    λ::Float64
 
-    function ParetoOracleParam(core_point::Vector{Float64}; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9)
+    function ParetoOracleParam(core_point::Vector{Float64}; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9, λ = 0.8)
         isempty(core_point) && throw(ArgumentError("core_point must be provided and non-empty"))
-        new(rtol, atol, zero_tol, core_point)
+        (λ < 0.0 || λ > 1.0) && throw(ArgumentError("λ must be in [0, 1], got $λ"))
+        new(rtol, atol, zero_tol, core_point, λ)
     end
 end
 
@@ -46,11 +50,11 @@ The Pareto oracle maintains two models:
 Where:
 - `ξ*` is the optimal objective value from the standard subproblem
 - `x*` is the current master solution
-- `x_0` is the core point (parameter)
+- `x_0` is the core point (dynamically updated if λ < 1.0)
 - The cut coefficients come from π_1* (duals of pareto_fixing_constraints)
 
 # Fields
-- `param::ParetoOracleParam`: Oracle parameters including core_point
+- `param::ParetoOracleParam`: Oracle parameters including core_point and λ
 - `model::Model`: Standard subproblem model
 - `fixed_x_constraints::Vector{ConstraintRef}`: Fixing constraints in standard model
 - `pareto_model::Model`: Magnanti-Wong primal problem model
@@ -196,7 +200,8 @@ end
 
 Generate Pareto-optimal Benders cuts using the Magnanti-Wong technique.
 
-## Algorithm (from ref/cuts.jl):
+## Algorithm:
+0. Update core_point: `core_point = λ * core_point + (1 - λ) * x_value`
 1. Set x = x* in standard model and solve to get ξ*
 2. If feasible:
    - Set objective coefficient of σ to ξ*
@@ -214,6 +219,10 @@ Generate Pareto-optimal Benders cuts using the Magnanti-Wong technique.
 """
 function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
                        tol_normalize = 1.0, time_limit = 3600)
+    
+    # Update core_point in-place: core_point = λ * core_point + (1-λ) * x_value
+    λ = oracle.param.λ
+    oracle.param.core_point .= λ .* oracle.param.core_point .+ (1 - λ) .* x_value
     
     # Set time limits
     set_time_limit_sec(oracle.model, time_limit)
@@ -243,10 +252,11 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
         # Constraint: x + x*·σ = x_0
         set_normalized_coefficient.(oracle.pareto_fixing_constraints, oracle.pareto_variable, x_value)
 
-        # Set RHS to core_point x_0 
+        # Set RHS to core_point x_0 (updated in-place above)
         set_normalized_rhs.(oracle.pareto_fixing_constraints, oracle.param.core_point)
 
         # Step 4: Solve pareto_model
+
         optimize!(oracle.pareto_model)
         
         if termination_status(oracle.pareto_model) == TIME_LIMIT
@@ -254,7 +264,6 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
         end
         
         pareto_status = dual_status(oracle.pareto_model)
-        
         if pareto_status == FEASIBLE_POINT 
             # Get cut coefficients from pareto_fixing_constraints duals
             a_x = dual.(oracle.pareto_fixing_constraints)
@@ -270,7 +279,7 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
                 return true, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
             end
         else
-            throw(UnexpectedModelStatusException("ParetoOracle: Unexpected dual status $(pareto_status). This is likely a numerical issue."))
+            throw(UnexpectedModelStatusException("ParetoOracle: Unexpected dual status $(pareto_status) for pareto_model. This is likely a numerical issue."))
         end
         
     elseif status == INFEASIBILITY_CERTIFICATE
@@ -289,6 +298,6 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
             end
         end
     else
-        throw(UnexpectedModelStatusException("ParetoOracle: Unexpected dual status $(status). This is likely a numerical issue."))
+        throw(UnexpectedModelStatusException("ParetoOracle: Unexpected dual status $(status) for standard model. This is likely a numerical issue."))
     end
 end
