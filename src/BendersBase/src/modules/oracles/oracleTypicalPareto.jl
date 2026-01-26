@@ -158,7 +158,7 @@ Returns: (pareto_variable, pareto_fixing_constraints)
 function _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{VariableRef})
     
     # Step 1: Add σ variable (the z in Magnanti-Wong formulation)
-    σ = @variable(pareto_model, σ)
+    σ = @variable(pareto_model, σ <= 0)
     
     # Step 2: Add b*σ term to all problem constraints
     # Note: Constraint types are validated by _validate_constraint_types on the base model
@@ -246,7 +246,7 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
 
         # Step 3: Set up pareto_model for Magnanti-Wong problem
         # Set objective coefficient of σ to ξ*
-        set_objective_coefficient(oracle.pareto_model, oracle.pareto_variable, sub_obj_val)
+        set_objective_coefficient(oracle.pareto_model, oracle.pareto_variable, sub_obj_val - 1e-6)
         
         # Set σ coefficient in fixing constraints to x*
         # Constraint: x + x*·σ = x_0
