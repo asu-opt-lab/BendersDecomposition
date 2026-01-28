@@ -90,7 +90,7 @@ mutable struct L1NormOracle <: AbstractTypicalOracle
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
 
-    # GBC (Generalized Bound Constraints) - NOT included in normalization
+    # GBC (Generalized Bound Constraints) for standard model
     gbc_lhs::Vector{VariableRef}
     gbc_rhs::Vector{Union{VariableRef, AffExpr}}
     gbc_sense::Vector{GBCBoundType}
@@ -99,6 +99,11 @@ mutable struct L1NormOracle <: AbstractTypicalOracle
     norm_model::Model
     norm_fixed_x_constraints::Vector{ConstraintRef}
     norm_z0::VariableRef
+    
+    # GBC for normalized model (NOT included in z0 normalization, but still need bounds/duals)
+    norm_gbc_lhs::Vector{VariableRef}
+    norm_gbc_rhs::Vector{Union{VariableRef, AffExpr}}
+    norm_gbc_sense::Vector{GBCBoundType}
     
     # Track if original objective is zero (d=0 case)
     has_objective::Bool
@@ -148,7 +153,10 @@ mutable struct L1NormOracle <: AbstractTypicalOracle
         @constraint(norm_model, norm_fix_x, norm_x .== 0)
         
         # Build normalized submodel structure
-        customize(norm_model, data, scen_idx; norm_x_copy...)
+        norm_result = customize(norm_model, data, scen_idx; norm_x_copy...)
+        
+        # Parse GBC result for normalized model
+        norm_gbc_lhs, norm_gbc_rhs, norm_gbc_sense = _parse_gbc_result(norm_result, norm_x)
         
         # Get set of fixing constraint indices to exclude from normalization
         fix_x_indices = Set(c.index for c in norm_fix_x)
@@ -157,7 +165,9 @@ mutable struct L1NormOracle <: AbstractTypicalOracle
         norm_z0 = _apply_l1_normalization!(norm_model, norm_x, fix_x_indices)
 
         new(param, model, fix_x, gbc_lhs, gbc_rhs, gbc_sense,
-            norm_model, norm_fix_x, norm_z0, has_objective)
+            norm_model, norm_fix_x, norm_z0, 
+            norm_gbc_lhs, norm_gbc_rhs, norm_gbc_sense,
+            has_objective)
     end
 
     L1NormOracle() = new()
@@ -386,6 +396,11 @@ This solves the normalized problem:
          y, z0 >= 0
 
 And extracts the cut from the dual multipliers.
+
+Note: GBC bounds are NOT set in the normalized model. GBC are excluded from normalization
+per the paper, meaning they don't participate in the z0 penalty. This allows the normalized
+model to remain feasible even when GBC would make it infeasible. However, GBC duals are NOT
+accumulated since the bounds aren't set.
 """
 function _generate_l1_normalized_feasibility_cut(oracle::L1NormOracle, 
                                                   x_value::Vector{Float64}, 
@@ -396,7 +411,10 @@ function _generate_l1_normalized_feasibility_cut(oracle::L1NormOracle,
     set_time_limit_sec(oracle.norm_model, time_limit)
     set_normalized_rhs.(oracle.norm_fixed_x_constraints, x_value)
     
-    # Note: GBC bounds are NOT set in normalized model (excluded from normalization per paper)
+    # Note: GBC bounds are NOT set in normalized model.
+    # GBC constraints are excluded from normalization per paper - they don't get z0 penalty.
+    # Setting GBC bounds here would make the problem infeasible when standard subproblem is infeasible.
+    # The feasibility cut from the normalized model doesn't include GBC contributions.
     
     optimize!(oracle.norm_model)
     
@@ -413,6 +431,8 @@ function _generate_l1_normalized_feasibility_cut(oracle::L1NormOracle,
         
         # Extract duals from fixing constraints
         a_x = dual.(oracle.norm_fixed_x_constraints)
+        
+        # Note: GBC duals are NOT accumulated since GBC bounds are not set in normalized model
         
         # For feasibility cuts: a_t = 0 (no epigraph term)
         a_t = [0.0]

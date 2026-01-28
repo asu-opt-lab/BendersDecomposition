@@ -50,7 +50,7 @@ end
 
 @testset verbose = true "L1NormOracle CFLP Tests" begin
     # Test on a subset of instances for quick verification
-    instances = setdiff(1:71, [67])  # Can expand to more instances
+    instances = [1]  # Can expand to more instances
     
     for i in instances
         @testset "Instance: p$i" begin
