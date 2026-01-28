@@ -95,15 +95,15 @@ end
         @test param.rtol == 1e-9
         @test param.atol == 0.0
         @test param.zero_tol == 1e-9
-        @test param.λ == 1.0  # Default λ
-        
+        @test param.λ == 0.8  # Default λ
+
         # Test with custom tolerances
         param2 = ParetoOracleParam([0.3, 0.7]; rtol = 1e-8, atol = 1e-6, zero_tol = 1e-5)
         @test param2.core_point == [0.3, 0.7]
         @test param2.rtol == 1e-8
         @test param2.atol == 1e-6
         @test param2.zero_tol == 1e-5
-        @test param2.λ == 1.0  # Default λ
+        @test param2.λ == 0.8  # Default λ
         
         # Test with custom λ
         param3 = ParetoOracleParam([0.5, 0.5]; λ = 0.8)
@@ -335,17 +335,248 @@ end
         # Verify that dynamic core point still produces correct solutions
         data = create_pareto_test_data()
         mip_opt = solve_mip_pareto_reference(data)
-        
+
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        
+
         # Test with λ = 0.8 (gradual update)
         master = Master(data; customize = customize_master_pareto!)
         param = ParetoOracleParam(fill(0.5, data.n_facilities); λ = 0.8)
         oracle = ParetoOracle(data, master, param; customize = customize_sub_pareto!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
-        
+
         @test env.termination_status == Optimal()
         @test isapprox(mip_opt, env.obj_value, atol=1e-4)
+    end
+
+    @testset "Reformulation Verification" begin
+        # Test that the pareto reformulation produces the correct model structure
+
+        # Simple test problem with known structure
+        struct ParetoReformTestData <: AbstractData
+            n::Int  # number of decision variables
+        end
+
+        function customize_master_pareto_reform!(model::Model, data::ParetoReformTestData)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+
+            @variable(model, x[1:data.n], Bin)
+            @variable(model, t >= -1e6)
+            @objective(model, Min, t)
+            @constraint(model, sum(x) >= 1)
+
+            return (x = x, ), t
+        end
+
+        @testset "σ variable structure in pareto_model" begin
+            # Test that σ variable is added with correct bounds (σ <= 0)
+            data = ParetoReformTestData(2)
+
+            function customize_sub_sigma!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, y)
+                @constraint(model, con1, y >= x[1] + x[2])
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_pareto_reform!)
+            param = ParetoOracleParam(fill(0.5, data.n))
+            oracle = ParetoOracle(data, master, param; customize = customize_sub_sigma!)
+
+            # σ is stored as oracle.pareto_variable
+            σ = oracle.pareto_variable
+            @test σ !== nothing
+            @test has_upper_bound(σ)
+            @test upper_bound(σ) == 0.0
+        end
+
+        @testset "pareto_fixing_constraints structure" begin
+            # Verify fixing constraints: x + x*·σ = x_0 exist for each decision variable
+            data = ParetoReformTestData(2)
+
+            function customize_sub_fix!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, y)
+                @constraint(model, con1, y >= x[1] + x[2])
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_pareto_reform!)
+            param = ParetoOracleParam(fill(0.5, data.n))
+            oracle = ParetoOracle(data, master, param; customize = customize_sub_fix!)
+
+            # Should have one fixing constraint per decision variable
+            @test length(oracle.pareto_fixing_constraints) == data.n
+
+            σ = oracle.pareto_variable
+
+            # Verify fixing constraints are equality constraints
+            for con in oracle.pareto_fixing_constraints
+                con_obj = constraint_object(con)
+                @test con_obj.set isa MOI.EqualTo
+                # Initial σ coefficient is 0 (set in generate_cuts to x*)
+                @test normalized_coefficient(con, σ) == 0.0
+            end
+        end
+
+        @testset "b*σ term added to problem constraints" begin
+            # Test that problem constraints get b*σ added (where b is RHS)
+            data = ParetoReformTestData(2)
+
+            function customize_sub_bsigma!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, y)
+                # Constraint: y + x[1] >= 5.0, after transformation: y + x[1] + 5*σ >= 5.0
+                @constraint(model, geq_con, y + x[1] >= 5.0)
+                # Constraint: y + x[2] <= 10.0, after transformation: y + x[2] + 10*σ <= 10.0
+                @constraint(model, leq_con, y + x[2] <= 10.0)
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_pareto_reform!)
+            param = ParetoOracleParam(fill(0.5, data.n))
+            oracle = ParetoOracle(data, master, param; customize = customize_sub_bsigma!)
+
+            σ = oracle.pareto_variable
+
+            # Find >= constraint and verify σ coefficient equals RHS
+            geq_con = constraint_by_name(oracle.pareto_model, "geq_con")
+            @test geq_con !== nothing
+            @test normalized_coefficient(geq_con, σ) == 5.0  # b = 5.0
+
+            # Find <= constraint and verify σ coefficient equals RHS
+            leq_con = constraint_by_name(oracle.pareto_model, "leq_con")
+            @test leq_con !== nothing
+            @test normalized_coefficient(leq_con, σ) == 10.0  # b = 10.0
+        end
+
+        @testset "σ added to objective" begin
+            # Test that σ is added to objective (initially with 0 coefficient)
+            data = ParetoReformTestData(2)
+
+            function customize_sub_objsigma!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, 3.0 * y + 2.0)  # Original: 3y + 2
+                @constraint(model, con1, y >= x[1] + x[2])
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_pareto_reform!)
+            param = ParetoOracleParam(fill(0.5, data.n))
+            oracle = ParetoOracle(data, master, param; customize = customize_sub_objsigma!)
+
+            σ = oracle.pareto_variable
+            obj = objective_function(oracle.pareto_model)
+
+            # Objective should include σ (initially with coefficient 0, set to ξ* during generate_cuts)
+            # The coefficient should be 0 initially
+            @test coefficient(obj, σ) == 0.0
+
+            # Original objective terms should still be present
+            y = variable_by_name(oracle.pareto_model, "y")
+            @test coefficient(obj, y) == 3.0
+
+            @test objective_sense(oracle.pareto_model) == MOI.MIN_SENSE
+        end
+
+        @testset "Standard model has fixing constraints" begin
+            # Verify standard model has fix_x constraints
+            data = ParetoReformTestData(2)
+
+            function customize_sub_stdfix!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, y)
+                @constraint(model, con1, y >= x[1] + x[2])
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_pareto_reform!)
+            param = ParetoOracleParam(fill(0.5, data.n))
+            oracle = ParetoOracle(data, master, param; customize = customize_sub_stdfix!)
+
+            # Standard model should have fixing constraints
+            @test length(oracle.fixed_x_constraints) == data.n
+
+            # Verify they are equality constraints
+            for con in oracle.fixed_x_constraints
+                con_obj = constraint_object(con)
+                @test con_obj.set isa MOI.EqualTo
+            end
+        end
+
+        @testset "Equality constraints get b*σ" begin
+            # Test that == constraints also get b*σ term
+            data = ParetoReformTestData(2)
+
+            function customize_sub_eq!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, y)
+                @constraint(model, eq_con, y + x[1] == 7.0)
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_pareto_reform!)
+            param = ParetoOracleParam(fill(0.5, data.n))
+            oracle = ParetoOracle(data, master, param; customize = customize_sub_eq!)
+
+            σ = oracle.pareto_variable
+
+            # Find == constraint and verify σ coefficient equals RHS
+            eq_con = constraint_by_name(oracle.pareto_model, "eq_con")
+            @test eq_con !== nothing
+            @test normalized_coefficient(eq_con, σ) == 7.0
+        end
+
+        @testset "Zero RHS constraint" begin
+            # Test constraint with RHS = 0 gets σ coefficient = 0
+            data = ParetoReformTestData(2)
+
+            function customize_sub_zero!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, y)
+                @constraint(model, zero_con, y + x[1] >= 0.0)
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_pareto_reform!)
+            param = ParetoOracleParam(fill(0.5, data.n))
+            oracle = ParetoOracle(data, master, param; customize = customize_sub_zero!)
+
+            σ = oracle.pareto_variable
+
+            # Constraint with RHS = 0 should have σ coefficient = 0
+            zero_con = constraint_by_name(oracle.pareto_model, "zero_con")
+            @test zero_con !== nothing
+            @test normalized_coefficient(zero_con, σ) == 0.0
+        end
     end
 end

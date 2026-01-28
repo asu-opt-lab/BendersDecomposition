@@ -261,6 +261,8 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
         
         if termination_status(oracle.pareto_model) == TIME_LIMIT
             throw(TimeLimitException("Time limit reached during Pareto cut generation (pareto model)"))
+        elseif termination_status(oracle.pareto_model) !== OPTIMAL
+            throw(UnexpectedModelStatusException("ParetoOracle: Unexpected termination status $(termination_status(oracle.pareto_model))."))
         end
         
         pareto_status = dual_status(oracle.pareto_model)

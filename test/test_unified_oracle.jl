@@ -214,37 +214,285 @@ end
     
     @testset "Error Handling" begin
         data = create_unified_test_data()
-        
-        # Note: QuadExpr constraint test is skipped because HiGHS doesn't support quadratic 
+
+        # Note: QuadExpr constraint test is skipped because HiGHS doesn't support quadratic
         # constraints, so JuMP throws ErrorException before our code can process it.
         # This test would require a QP-capable solver like CPLEX or Gurobi.
-        
+
         # Test 1: UnsupportedModelException for unsupported constraint set type (Interval)
         @testset "Interval constraint throws UnsupportedModelException" begin
             function customize_sub_interval_error!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
-                
+
                 I, J = data.n_facilities, data.n_customers
                 @variable(model, y[1:I, 1:J] >= 0)
-                
+
                 @objective(model, Min, sum(data.costs .* y))
                 @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
                 # Interval constraint - should trigger UnsupportedModelException
                 @constraint(model, interval_con, 0 <= y[1,1] + x[1] <= 2)
-                
+
                 return nothing
             end
-            
+
             master = Master(data; customize = customize_master_unified!)
             @test_throws UnsupportedModelException UnifiedOracle(data, master; customize = customize_sub_interval_error!)
         end
-        
+
         # Test 2: ArgumentError for invalid w0
         @testset "Invalid w0 throws ArgumentError" begin
             @test_throws ArgumentError UnifiedOracleParam(w0 = 0.0)
             @test_throws ArgumentError UnifiedOracleParam(w0 = -1.0)
             @test_throws ArgumentError UnifiedOracleParam(w0 = -100.0)
+        end
+    end
+
+    @testset "Reformulation Verification" begin
+        # Test that the unified reformulation produces the correct model structure
+
+        # Simple test problem with known structure
+        struct ReformTestData <: AbstractData
+            n::Int  # number of decision variables
+        end
+
+        function customize_master_reform!(model::Model, data::ReformTestData)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+
+            @variable(model, x[1:data.n], Bin)
+            @variable(model, t >= -1e6)
+            @objective(model, Min, t)
+            @constraint(model, sum(x) >= 1)
+
+            return (x = x, ), t
+        end
+
+        @testset "σ variable structure" begin
+            # Test that σ variable is added with correct bounds (σ >= 0)
+            data = ReformTestData(2)
+
+            function customize_sub_sigma!(model::Model, data::ReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, y)
+                @constraint(model, con1, y >= x[1] + x[2])
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; customize = customize_sub_sigma!)
+
+            # Find σ variable by name
+            σ = variable_by_name(oracle.model, "σ")
+            @test σ !== nothing
+            @test has_lower_bound(σ)
+            @test lower_bound(σ) == 0.0
+            @test !has_upper_bound(σ)
+        end
+
+        @testset "Objective becomes min σ" begin
+            data = ReformTestData(2)
+
+            function customize_sub_obj!(model::Model, data::ReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, 3.0 * y + 5.0)  # Original objective
+                @constraint(model, con1, y >= x[1] + x[2])
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; customize = customize_sub_obj!)
+
+            # New objective should be just σ
+            σ = variable_by_name(oracle.model, "σ")
+            obj = objective_function(oracle.model)
+            @test obj == σ
+            @test objective_sense(oracle.model) == MOI.MIN_SENSE
+        end
+
+        @testset "Fixing constraints structure" begin
+            # Verify lb (x + σ >= value) and ub (x - σ <= value) constraints
+            data = ReformTestData(2)
+
+            function customize_sub_fix!(model::Model, data::ReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, y)
+                @constraint(model, con1, y >= x[1] + x[2])
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; customize = customize_sub_fix!)
+
+            # Should have one lb and one ub constraint per decision variable
+            @test length(oracle.fixing_lb_constraints) == data.n
+            @test length(oracle.fixing_ub_constraints) == data.n
+
+            σ = variable_by_name(oracle.model, "σ")
+
+            # Verify lb constraints: x + σ >= 0 (initial RHS)
+            for con in oracle.fixing_lb_constraints
+                con_obj = constraint_object(con)
+                @test con_obj.set isa MOI.GreaterThan
+                # σ coefficient should be +1
+                @test normalized_coefficient(con, σ) == 1.0
+            end
+
+            # Verify ub constraints: x - σ <= 0 (initial RHS)
+            for con in oracle.fixing_ub_constraints
+                con_obj = constraint_object(con)
+                @test con_obj.set isa MOI.LessThan
+                # σ coefficient should be -1
+                @test normalized_coefficient(con, σ) == -1.0
+            end
+        end
+
+        @testset "Objective constraint structure" begin
+            # Verify original objective becomes constraint: -obj + w0*σ >= -t
+            data = ReformTestData(2)
+            w0 = 2.5
+
+            function customize_sub_objcon!(model::Model, data::ReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, 3.0 * y)  # Original objective
+                @constraint(model, con1, y >= x[1] + x[2])
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_reform!)
+            param = UnifiedOracleParam(w0 = w0)
+            oracle = UnifiedOracle(data, master; customize = customize_sub_objcon!, param = param)
+
+            σ = variable_by_name(oracle.model, "σ")
+
+            # objective_constraint: -original_obj + w0*σ >= -t
+            con_obj = constraint_object(oracle.objective_constraint)
+            @test con_obj.set isa MOI.GreaterThan
+
+            # σ coefficient should be w0
+            @test normalized_coefficient(oracle.objective_constraint, σ) == w0
+        end
+
+        @testset "Problem constraints with σ relaxation" begin
+            # Test that problem constraints are correctly modified with ±σ
+            data = ReformTestData(2)
+
+            function customize_sub_relax!(model::Model, data::ReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, y)
+                # >= constraint should get +σ
+                @constraint(model, geq_con, y + x[1] >= 5.0)
+                # <= constraint should get -σ
+                @constraint(model, leq_con, y + x[2] <= 10.0)
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; customize = customize_sub_relax!)
+
+            σ = variable_by_name(oracle.model, "σ")
+
+            # Find >= constraint and verify σ coefficient is +1
+            geq_con = constraint_by_name(oracle.model, "geq_con")
+            @test geq_con !== nothing
+            @test normalized_coefficient(geq_con, σ) == 1.0
+
+            # Find <= constraint and verify σ coefficient is -1
+            leq_con = constraint_by_name(oracle.model, "leq_con")
+            @test leq_con !== nothing
+            @test normalized_coefficient(leq_con, σ) == -1.0
+        end
+
+        @testset "Equality constraints split into lb/ub" begin
+            # Test that == constraints are split into >= and <= with ±σ
+            data = ReformTestData(2)
+
+            function customize_sub_eq!(model::Model, data::ReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @objective(model, Min, y)
+                # == constraint should be split
+                @constraint(model, eq_con, y + x[1] == 5.0)
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; customize = customize_sub_eq!)
+
+            σ = variable_by_name(oracle.model, "σ")
+
+            # Original eq_con should be deleted, replaced by eq_con_lb and eq_con_ub
+            @test constraint_by_name(oracle.model, "eq_con") === nothing
+
+            # lb version should exist with σ coefficient +1
+            eq_con_lb = constraint_by_name(oracle.model, "eq_con_lb")
+            @test eq_con_lb !== nothing
+            con_obj_lb = constraint_object(eq_con_lb)
+            @test con_obj_lb.set isa MOI.GreaterThan
+            @test normalized_coefficient(eq_con_lb, σ) == 1.0
+
+            # ub version should exist with σ coefficient -1
+            eq_con_ub = constraint_by_name(oracle.model, "eq_con_ub")
+            @test eq_con_ub !== nothing
+            con_obj_ub = constraint_object(eq_con_ub)
+            @test con_obj_ub.set isa MOI.LessThan
+            @test normalized_coefficient(eq_con_ub, σ) == -1.0
+        end
+
+        @testset "Constraints without decision variables not relaxed" begin
+            # Constraints not containing x should NOT have σ added
+            data = ReformTestData(2)
+
+            function customize_sub_nox!(model::Model, data::ReformTestData, scen_idx::Int; x)
+                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+                set_optimizer(model, optimizer)
+
+                @variable(model, y >= 0)
+                @variable(model, z >= 0)
+                @objective(model, Min, y + z)
+                # Constraint with x - should be relaxed
+                @constraint(model, with_x, y + x[1] >= 1.0)
+                # Constraint without x - should NOT be relaxed
+                @constraint(model, without_x, y + z >= 2.0)
+
+                return nothing
+            end
+
+            master = Master(data; customize = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; customize = customize_sub_nox!)
+
+            σ = variable_by_name(oracle.model, "σ")
+
+            # Constraint with x should have σ
+            with_x_con = constraint_by_name(oracle.model, "with_x")
+            @test normalized_coefficient(with_x_con, σ) == 1.0
+
+            # Constraint without x should NOT have σ
+            without_x_con = constraint_by_name(oracle.model, "without_x")
+            @test normalized_coefficient(without_x_con, σ) == 0.0
         end
     end
 end

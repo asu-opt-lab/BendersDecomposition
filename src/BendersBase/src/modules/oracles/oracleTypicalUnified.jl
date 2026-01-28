@@ -28,7 +28,7 @@ end
     UnifiedOracle <: AbstractTypicalOracle
 
 A unified oracle for Benders decomposition that uses the σ-relaxation technique 
-to generate Pareto-optimal cuts.
+to generate unified cuts.
 
 The unified oracle transforms the classical subproblem into a unified form by:
 1. Adding a σ variable that measures constraint violation
@@ -303,6 +303,8 @@ function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value:
     
     if termination_status(oracle.model) == TIME_LIMIT
         throw(TimeLimitException("Time limit reached during unified cut generation"))
+    elseif termination_status(oracle.model) !== OPTIMAL
+        throw(UnexpectedModelStatusException("UnifiedOracle: Unexpected termination status $(termination_status(oracle.model))."))
     end
     
     status = dual_status(oracle.model)
@@ -310,11 +312,7 @@ function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value:
     if status == FEASIBLE_POINT
         # σ value = objective value (since we minimize σ)
         σ_val = objective_value(oracle.model)
-        
-        # If σ ≈ 0 (within tolerance), point is in L, no cut needed
-        if abs(σ_val) <= oracle.param.zero_tol
-            return true, [Hyperplane(length(x_value), length(t_value))], [t_value[1]]
-        end
+
         
         # Compute cut coefficients
         decision_coeffs = dual.(oracle.fixing_lb_constraints) .+ dual.(oracle.fixing_ub_constraints)
@@ -326,6 +324,10 @@ function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value:
         a_t = [-auxiliary_coeffs]
         a_0 = const_term
         
+        # If σ ≈ 0 (within tolerance), point is in L, no cut needed
+        if abs(σ_val) <= oracle.param.zero_tol
+            return true, [Hyperplane(a_x, a_t, a_0)], [t_value[1]]
+        end
         return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
     else
         throw(UnexpectedModelStatusException("UnifiedOracle: Unexpected dual status $(status)."))
