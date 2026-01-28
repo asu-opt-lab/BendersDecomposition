@@ -12,6 +12,7 @@ Parameter structure for ParetoOracle implementing Magnanti-Wong Pareto-optimal c
 - `core_point::Vector{Float64}`: Initial core point x_0 for Magnanti-Wong problem (REQUIRED).
 - `λ::Float64`: Weight for updating core point. After each cut generation, core_point is updated as:
   `core_point = λ * core_point + (1 - λ) * x_value`. Default 1.0 means no update (classical behavior).
+- `obj_perturbation::Float64`: Small perturbation subtracted from ξ* when setting σ objective coefficient (default: 1e-6)
 """
 struct ParetoOracleParam <: AbstractOracleParam
     rtol::Float64
@@ -19,11 +20,12 @@ struct ParetoOracleParam <: AbstractOracleParam
     zero_tol::Float64
     core_point::Vector{Float64}
     λ::Float64
+    obj_perturbation::Float64
 
-    function ParetoOracleParam(core_point::Vector{Float64}; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9, λ = 0.8)
+    function ParetoOracleParam(core_point::Vector{Float64}; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9, λ = 0.8, obj_perturbation = 1e-6)
         isempty(core_point) && throw(ArgumentError("core_point must be provided and non-empty"))
         (λ < 0.0 || λ > 1.0) && throw(ArgumentError("λ must be in [0, 1], got $λ"))
-        new(rtol, atol, zero_tol, core_point, λ)
+        new(rtol, atol, zero_tol, core_point, λ, obj_perturbation)
     end
 end
 
@@ -246,7 +248,7 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
 
         # Step 3: Set up pareto_model for Magnanti-Wong problem
         # Set objective coefficient of σ to ξ*
-        set_objective_coefficient(oracle.pareto_model, oracle.pareto_variable, sub_obj_val - 1e-6)
+        set_objective_coefficient(oracle.pareto_model, oracle.pareto_variable, sub_obj_val - oracle.param.obj_perturbation)
         
         # Set σ coefficient in fixing constraints to x*
         # Constraint: x + x*·σ = x_0
