@@ -246,6 +246,10 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
         # Get optimal objective value ξ* from standard model
         sub_obj_val = objective_value(oracle.model)
 
+        if sub_obj_val < t_value[1] * (1 + oracle.param.rtol) + oracle.param.atol / tol_normalize
+            return true, [Hyperplane(length(x_value), length(t_value))], [sub_obj_val]
+        end
+
         # Step 3: Set up pareto_model for Magnanti-Wong problem
         # Set objective coefficient of σ to ξ*
         set_objective_coefficient(oracle.pareto_model, oracle.pareto_variable, sub_obj_val - oracle.param.obj_perturbation)
@@ -276,12 +280,7 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
             a_t = [-1.0]
             a_0 = sub_obj_val - dot(a_x, x_value)
             
-            # Check if cut is violated
-            if sub_obj_val >= t_value[1] * (1 + oracle.param.rtol) + oracle.param.atol / tol_normalize
-                return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
-            else
-                return true, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
-            end
+            return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
             throw(UnexpectedModelStatusException("ParetoOracle: Unexpected dual status $(pareto_status) for pareto_model. This is likely a numerical issue."))
         end
