@@ -67,6 +67,16 @@ using CPLEX
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
             end
 
+            @testset "Unified oracle" begin     
+                @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - seq..."
+                master = Master(data; customize = customize_master_model!)
+                oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = UnifiedOracleParam())
+                env = BendersSeq(master, oracle; param = benders_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end
+
             @testset "Classic oracle with GBC" begin     
                 @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle with GBC - seq..."
                 master = Master(data; customize = customize_master_model!)
@@ -81,6 +91,17 @@ using CPLEX
                 @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle with GBC - seq..."
                 master = Master(data; customize = customize_master_model!)
                 oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model_gbc!)
+                env = BendersSeq(master, oracle; param = benders_param)
+                log = solve!(env)
+                @test env.termination_status == Optimal()
+                @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+            end
+
+            @testset "Pareto oracle" begin
+                @info "solving SCFLP f25-c50-s64-r10-$i - pareto oracle - seq..."
+                master = Master(data; customize = customize_master_model!)
+                param = ParetoOracleParam(fill(1.0, data.n_facilities))
+                oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = param)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
