@@ -19,7 +19,7 @@ struct UnifiedOracleParam <: AbstractOracleParam
     w0::Float64
 
     function UnifiedOracleParam(; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9, w0 = 1.0)
-        w0 > 0 || throw(ArgumentError("w0 must be positive, got $w0"))
+        w0 > 0 || throw(ArgumentError("UnifiedOracleParam: w0 must be positive, got $w0"))
         new(rtol, atol, zero_tol, w0)
     end
 end
@@ -27,24 +27,23 @@ end
 """
     UnifiedOracle <: AbstractTypicalOracle
 
-A unified oracle for Benders decomposition that uses the σ-relaxation technique 
-to generate unified cuts.
+An oracle that generates unified Benders cuts via a sigma-relaxation reformulation.
 
-The unified oracle transforms the classical subproblem into a unified form by:
-1. Adding a σ variable that measures constraint violation
-2. Relaxing problem constraints with ±σ based on constraint sense
-3. Creating fixing constraints as Lb (x + σ >= value) and Ub (x - σ <= value)
-4. Converting the original objective into a constraint with weight w0
+UnifiedOracle reformulates the classical subproblem by:
+1. Adding a nonnegative slack variable 
+2. Relaxing constraints that involve master variables based on constraint sense
+3. Replacing each fixing equality with lower- and upper-bound fixing constraints
+4. Converting the original objective bound into a constraint with weight `w0`
 
 This approach generates stronger cuts and can handle both feasible and infeasible 
 subproblems in a unified manner.
 
 # Fields
 - `param::UnifiedOracleParam`: Oracle parameters (includes w0 weight)
-- `model::Model`: The underlying JuMP optimization model
-- `fixing_lb_constraints::Vector{ConstraintRef}`: Lower bound fixing constraints (x + σ >= value)
-- `fixing_ub_constraints::Vector{ConstraintRef}`: Upper bound fixing constraints (x - σ <= value)
-- `objective_constraint::ConstraintRef`: Constraint representing the original objective (-obj + w0*σ >= -t)
+- `model::Model`: JuMP model in unified form
+- `fixing_lb_constraints::Vector{ConstraintRef}`: Lower-bound fixing constraints in `model`
+- `fixing_ub_constraints::Vector{ConstraintRef}`: Upper-bound fixing constraints in `model`
+- `objective_constraint::ConstraintRef`: Objective-bound constraint in `model`
 
 # Constructor
 ```julia
@@ -99,7 +98,7 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
         oracle.fixing_ub_constraints = ConstraintRef[]
         
         # Transform to unified form (x is passed for decision variable detection)
-        _unify!(oracle, x)
+        _apply_unified_transformations!(oracle, x)
         
         return oracle
     end
@@ -108,33 +107,25 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
 end
 
 """
-    _unify!(oracle::UnifiedOracle, fixed_x_vars::Vector{VariableRef})
+    _apply_unified_transformations!(oracle::UnifiedOracle, fixed_x_vars::Vector{VariableRef})
 
-Transform the classical subproblem model into the unified form with σ relaxation.
-
-This function:
-1. Gets the original objective function
-2. Adds the σ variable (σ >= 0)
-3. Rewrites problem constraints with σ
-4. Creates unified fixing constraints with σ (Lb and Ub)
-5. Converts the original objective to a constraint with w0 weight
-6. Sets the new objective to minimize σ
+Transform the classical subproblem model into the unified form with a sigma relaxation variable.
 """
-function _unify!(oracle::UnifiedOracle, fixed_x_vars::Vector{VariableRef})
+function _apply_unified_transformations!(oracle::UnifiedOracle, fixed_x_vars::Vector{VariableRef})
     model = oracle.model
     w0 = oracle.param.w0
     
     # Step 1: Get original objective function (must be done before constraint changes)
     original_objective = objective_function(model)
     
-    # Step 2: Add σ variable (σ >= 0)
+    # Step 2: Add nonnegative sigma variable
     σ = @variable(model, σ >= 0)
     
-    # Step 3: Rewrite problem constraints with σ BEFORE creating new constraints
+    # Step 3: Rewrite problem constraints with sigma BEFORE creating new constraints
     # This eliminates the need to track which constraints to skip
     _rewrite_problem_constraints_with_sigma!(model, σ, fixed_x_vars)
     
-    # Step 4: Create unified fixing constraints (after rewriting, so they won't be processed)
+    # Step 4: Create unified fixing constraints 
     # Original: x == value  -->  x + σ >= value AND x - σ <= value
     for x_var in fixed_x_vars
         lb_con = @constraint(model, x_var + σ >= 0)
@@ -155,12 +146,8 @@ end
 """
     _rewrite_problem_constraints_with_sigma!(model::Model, σ::VariableRef, fixed_x_vars::Vector{VariableRef})
 
-Rewrite problem constraints to include ±σ based on their constraint sense.
+Rewrite problem constraints to include sigma (`σ`) based on constraint sense.
 Only constraints that contain decision variables (fixed_x_vars) are relaxed.
-
-- For >= constraints: add +σ to LHS (relaxes the constraint)
-- For <= constraints: add -σ to LHS (relaxes the constraint)
-- For == constraints: split into two constraints with ±σ
 """
 function _rewrite_problem_constraints_with_sigma!(model::Model, σ::VariableRef, fixed_x_vars::Vector{VariableRef})
     # Build set of decision variables for fast lookup
@@ -214,15 +201,7 @@ end
 """
     _rewrite_single_constraint!(model::Model, con::ConstraintRef, σ::VariableRef)
 
-Rewrite a single constraint to include σ relaxation.
-
-# Supported constraint types
-- `MOI.GreaterThan`: f(x) >= rhs  -->  f(x) + σ >= rhs
-- `MOI.LessThan`: f(x) <= rhs  -->  f(x) - σ <= rhs  
-- `MOI.EqualTo`: f(x) == rhs  -->  f(x) + σ >= rhs AND f(x) - σ <= rhs
-
-Note: Constraint type validation is performed by _validate_constraint_types() 
-before this function is called.
+Relax the constraints by adding slack variable.
 """
 function _rewrite_single_constraint!(model::Model, con::ConstraintRef, σ::VariableRef)
     
@@ -237,7 +216,7 @@ function _rewrite_single_constraint!(model::Model, con::ConstraintRef, σ::Varia
         set_normalized_coefficient(con, σ, 1.0)
         
     elseif set isa MOI.LessThan
-        # <= constraint: add -σ coefficient  
+        # <= constraint: add -σ coefficient
         # Original: f(x) <= rhs  -->  f(x) - σ <= rhs
         set_normalized_coefficient(con, σ, -1.0)
         
@@ -270,35 +249,15 @@ end
                   tol_normalize = 1.0, time_limit = 3600)
 
 Generate Benders cuts using the unified oracle.
-
-Logic follows the reference implementation exactly:
-1. Update constraint RHSs
-2. Solve min σ
-3. If σ = 0, point is in L (no cut needed)
-4. Otherwise, compute cut from duals
-
-# Arguments
-- `oracle::UnifiedOracle`: The unified oracle
-- `x_value::Vector{Float64}`: Current x solution from master
-- `t_value::Vector{Float64}`: Current t solution from master
-- `tol_normalize::Float64`: Normalization factor for tolerance (default: 1.0)
-- `time_limit::Float64`: Maximum time for optimization (default: 3600)
-
-# Returns
-- `is_in_L::Bool`: Whether the point is in the feasible region L
-- `hyperplanes::Vector{Hyperplane}`: Generated cuts
-- `sub_obj_vals::Vector{Float64}`: Subproblem objective values
 """
 function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
                        tol_normalize = 1.0, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
     
-    # Update RHSs (same order as reference: objective first, then fixing)
     set_normalized_rhs(oracle.objective_constraint, -t_value[1])
     set_normalized_rhs.(oracle.fixing_lb_constraints, x_value)
     set_normalized_rhs.(oracle.fixing_ub_constraints, x_value)
     
-    # Solve
     optimize!(oracle.model)
     
     if termination_status(oracle.model) == TIME_LIMIT
@@ -310,21 +269,17 @@ function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value:
     status = dual_status(oracle.model)
     
     if status == FEASIBLE_POINT
-        # σ value = objective value (since we minimize σ)
+
         σ_val = objective_value(oracle.model)
 
-        
-        # Compute cut coefficients
         decision_coeffs = dual.(oracle.fixing_lb_constraints) .+ dual.(oracle.fixing_ub_constraints)
         auxiliary_coeffs = dual(oracle.objective_constraint)
         const_term = σ_val + auxiliary_coeffs * t_value[1] - dot(decision_coeffs, x_value)
         
-        # Build Hyperplane: decision_coeffs * x + (-auxiliary_coeffs) * t + const_term >= 0
         a_x = decision_coeffs
         a_t = [-auxiliary_coeffs]
         a_0 = const_term
         
-        # If σ ≈ 0 (within tolerance), point is in L, no cut needed
         if abs(σ_val) <= oracle.param.zero_tol
             return true, [Hyperplane(a_x, a_t, a_0)], [t_value[1]]
         end

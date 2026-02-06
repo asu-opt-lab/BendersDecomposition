@@ -12,7 +12,7 @@ Parameter structure for ParetoOracle implementing Magnanti-Wong Pareto-optimal c
 - `core_point::Vector{Float64}`: Initial core point x_0 for Magnanti-Wong problem (REQUIRED).
 - `λ::Float64`: Weight for updating core point. After each cut generation, core_point is updated as:
   `core_point = λ * core_point + (1 - λ) * x_value`. Default 1.0 means no update (classical behavior).
-- `obj_perturbation::Float64`: Small perturbation subtracted from ξ* when setting σ objective coefficient (default: 1e-9)
+- `pareto_tol::Float64`: Absolute tolerance for enforcing the Pareto-optimality constraint (default: 1e-9)
 """
 struct ParetoOracleParam <: AbstractOracleParam
     rtol::Float64
@@ -20,48 +20,46 @@ struct ParetoOracleParam <: AbstractOracleParam
     zero_tol::Float64
     core_point::Vector{Float64}
     λ::Float64
-    obj_perturbation::Float64
+    pareto_tol::Float64
 
-    function ParetoOracleParam(core_point::Vector{Float64}; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9, λ = 0.8, obj_perturbation = 1e-9)
-        isempty(core_point) && throw(ArgumentError("core_point must be provided and non-empty"))
-        (λ < 0.0 || λ > 1.0) && throw(ArgumentError("λ must be in [0, 1], got $λ"))
-        new(rtol, atol, zero_tol, core_point, λ, obj_perturbation)
+    function ParetoOracleParam(core_point::Vector{Float64}; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9, λ = 0.8, pareto_tol = 1e-9)
+        isempty(core_point) && throw(ArgumentError("ParetoOracleParam: core_point must be provided and non-empty"))
+        (λ < 0.0 || λ > 1.0) && throw(ArgumentError("ParetoOracleParam: λ must be in [0, 1], got $λ"))
+        new(rtol, atol, zero_tol, core_point, λ, pareto_tol)
     end
 end
 
 """
     ParetoOracle <: AbstractTypicalOracle
 
-A Pareto oracle for Benders decomposition that generates Pareto-optimal cuts using 
-the Magnanti-Wong technique.
+An oracle that generates Pareto-optimal cuts using the Magnanti-Wong technique.
 
-The Pareto oracle maintains two models:
-1. `model`: Standard subproblem (same as ClassicalOracle)
-2. `pareto_model`: Magnanti-Wong primal problem for Pareto-optimal cuts
+ParetoOracle uses two models:
+1. `model`: Standard subproblem model (same as `ClassicalOracle`).
+2. `pareto_model`: Magnanti-Wong reformulation used to generate Pareto-optimal cuts.
 
 ## Magnanti-Wong Primal Problem
 ```math
 \\begin{align*}
-\\min \\quad & d^{\\top}y + \\xi^*z \\\\
-\\text{s.t.} \\quad & Ax + By + bz \\geq b \\quad (\\pi_0) \\\\
-& x + x^*z = x_0 \\quad (\\pi_1) \\\\
+\\min \\quad & d^{\\top}y + \\xi^*σ \\\\
+\\text{s.t.} \\quad & Ax + By + b*σ \\geq b \\quad (\\pi_0) \\\\
+& x + x^*σ = x_0 \\quad (\\pi_1) \\\\
 & y \\geq 0
 \\end{align*}
 ```
 
 Where:
-- `ξ*` is the optimal objective value from the standard subproblem
-- `x*` is the current master solution
+- `xi^*` is the optimal objective value from the standard subproblem
+- `x^*` is the current master solution
 - `x_0` is the core point (dynamically updated if λ < 1.0)
-- The cut coefficients come from π_1* (duals of pareto_fixing_constraints)
 
 # Fields
 - `param::ParetoOracleParam`: Oracle parameters including core_point and λ
 - `model::Model`: Standard subproblem model
-- `fixed_x_constraints::Vector{ConstraintRef}`: Fixing constraints in standard model
-- `pareto_model::Model`: Magnanti-Wong primal problem model
-- `pareto_variable::VariableRef`: The σ (z) variable in pareto_model
-- `pareto_fixing_constraints::Vector{ConstraintRef}`: Fixing constraints in pareto_model (x + x*σ = x_0)
+- `fixed_x_constraints::Vector{ConstraintRef}`: Constraints that fix master-variable values in `model`
+- `pareto_model::Model`: Magnanti-Wong reformulation model used to generate Pareto-optimal cuts
+- `pareto_variable::VariableRef`: Slack variable in `pareto_model`
+- `pareto_fixing_constraints::Vector{ConstraintRef}`: Constraints in `pareto_model` that link `x`, the current master solution, and the core point
 
 # Constructor
 ```julia
@@ -103,7 +101,6 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         end
 
         # Build the submodel using user-defined customization
-        # NOTE: Do NOT add fixing constraints yet
         customize(model, data, scen_idx; x_copy...)
 
         # Validate that all constraints are supported types (LP)
@@ -135,61 +132,48 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
     end
 
     ParetoOracle() = new()
-end
 
-# Add constructor for SeparableOracle compatibility
-function ParetoOracle(data::AbstractData, master::Master; 
-                      customize = customize_sub_model!,
-                      scen_idx::Int = 0,
-                      param::ParetoOracleParam)
-    return ParetoOracle(data, master, param; customize = customize, scen_idx = scen_idx)
+    function ParetoOracle(data::AbstractData, master::Master; 
+                          customize = customize_sub_model!,
+                          scen_idx::Int = 0,
+                          param::ParetoOracleParam)
+        return ParetoOracle(data, master, param; customize = customize, scen_idx = scen_idx)
+    end
 end
-
 
 """
     _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{VariableRef})
 
 Transform a standard subproblem model into a Magnanti-Wong primal problem.
-
-1. Adds σ variable
-2. Adds b*σ term to all problem constraints
-3. Creates fixing constraints: x + x*σ = x_0
-
-Returns: (pareto_variable, pareto_fixing_constraints)
 """
 function _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{VariableRef})
     
-    # Step 1: Add σ variable (the z in Magnanti-Wong formulation)
+
     σ = @variable(pareto_model, σ <= 0)
     
-    # Step 2: Add b*σ term to all problem constraints
-    # Note: Constraint types are validated by _validate_constraint_types on the base model
     for con in all_constraints(pareto_model, include_variable_in_set_constraints=false)
         con_obj = constraint_object(con)
         set = con_obj.set
         rhs = normalized_rhs(con)
         
         if set isa MOI.GreaterThan
-            # Ax + By >= b  -->  Ax + By + b*σ >= b
+            # Ax + By >= b  -->  Ax + By + b * σ >= b
             set_normalized_coefficient(con, σ, rhs)
         elseif set isa MOI.LessThan
-            # Ax + By <= b  -->  Ax + By + b*σ <= b
+            # Ax + By <= b  -->  Ax + By + b * σ <= b
             set_normalized_coefficient(con, σ, rhs)
         else  # MOI.EqualTo
-            # Ax + By = b  -->  Ax + By + b*σ = b
+            # Ax + By = b  -->  Ax + By + b * σ = b
             set_normalized_coefficient(con, σ, rhs)
         end
     end
     
-    # Step 3: Create fixing constraints for pareto_model: x + x*σ = x_0
     pareto_fixing_constraints = ConstraintRef[]
     for x_var in x_vars
-        # x_var is already the variable in pareto_model, no mapping needed!
         con = @constraint(pareto_model, x_var + 0.0 * σ == 0)
         push!(pareto_fixing_constraints, con)
     end
     
-    # Step 4: Add σ to objective (coefficient will be set to ξ* in generate_cuts)
     original_obj = objective_function(pareto_model)
     @objective(pareto_model, Min, original_obj + 0.0 * σ)
     
@@ -201,39 +185,18 @@ end
                   tol_normalize = 1.0, time_limit = 3600)
 
 Generate Pareto-optimal Benders cuts using the Magnanti-Wong technique.
-
-## Algorithm:
-0. Update core_point: `core_point = λ * core_point + (1 - λ) * x_value`
-1. Set x = x* in standard model and solve to get ξ*
-2. If feasible:
-   - Set objective coefficient of σ to ξ*
-   - Set σ coefficients in fixing constraints to x*
-   - Set RHS of fixing constraints to core_point x_0
-   - Solve pareto_model
-   - Get cut coefficients from duals of pareto_fixing_constraints
-3. If infeasibility certificate:
-   - Use classical feasibility cut from standard model duals
-
-## Returns
-- `is_in_L::Bool`: Whether the point is in the feasible region L
-- `hyperplanes::Vector{Hyperplane}`: Generated cuts
-- `sub_obj_vals::Vector{Float64}`: Subproblem objective values
 """
 function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
                        tol_normalize = 1.0, time_limit = 3600)
     
-    # Update core_point in-place: core_point = λ * core_point + (1-λ) * x_value
     λ = oracle.param.λ
     oracle.param.core_point .= λ .* oracle.param.core_point .+ (1 - λ) .* x_value
     
-    # Set time limits
     set_time_limit_sec(oracle.model, time_limit)
     set_time_limit_sec(oracle.pareto_model, time_limit)
     
-    # Step 1: Set x = x* in standard model 
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     
-    # Step 2: Solve standard model to get ξ*
     optimize!(oracle.model)
     
     if termination_status(oracle.model) == TIME_LIMIT
@@ -243,25 +206,18 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
     status = dual_status(oracle.model)
 
     if status == FEASIBLE_POINT
-        # Get optimal objective value ξ* from standard model
+
         sub_obj_val = objective_value(oracle.model)
 
         if sub_obj_val < t_value[1] * (1 + oracle.param.rtol) + oracle.param.atol / tol_normalize
             return true, [Hyperplane(length(x_value), length(t_value))], [sub_obj_val]
         end
 
-        # Step 3: Set up pareto_model for Magnanti-Wong problem
-        # Set objective coefficient of σ to ξ*
-        set_objective_coefficient(oracle.pareto_model, oracle.pareto_variable, sub_obj_val - oracle.param.obj_perturbation)
+        set_objective_coefficient(oracle.pareto_model, oracle.pareto_variable, sub_obj_val - oracle.param.pareto_tol)
         
-        # Set σ coefficient in fixing constraints to x*
-        # Constraint: x + x*·σ = x_0
         set_normalized_coefficient.(oracle.pareto_fixing_constraints, oracle.pareto_variable, x_value)
 
-        # Set RHS to core_point x_0 (updated in-place above)
         set_normalized_rhs.(oracle.pareto_fixing_constraints, oracle.param.core_point)
-
-        # Step 4: Solve pareto_model
 
         optimize!(oracle.pareto_model)
         
@@ -273,10 +229,8 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
         
         pareto_status = dual_status(oracle.pareto_model)
         if pareto_status == FEASIBLE_POINT 
-            # Get cut coefficients from pareto_fixing_constraints duals
             a_x = dual.(oracle.pareto_fixing_constraints)
             
-            # Cut: t >= ξ* - π_1*'x* + π_1*'x
             a_t = [-1.0]
             a_0 = sub_obj_val - dot(a_x, x_value)
             
