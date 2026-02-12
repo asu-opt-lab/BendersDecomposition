@@ -3,16 +3,16 @@ export ParetoOracle, ParetoOracleParam
 """
     ParetoOracleParam <: AbstractOracleParam
 
-Parameter structure for ParetoOracle implementing Magnanti-Wong Pareto-optimal cuts.
+Parameter type for [`ParetoOracle`](@ref).
 
 # Fields
-- `rtol::Float64`: Relative tolerance for cut violation detection (default: 1e-9)
-- `atol::Float64`: Absolute tolerance for cut violation detection (default: 0.0)
+- `rtol::Float64`: Relative tolerance for cut violation detection (default: 1e-9).
+- `atol::Float64`: Absolute tolerance for cut violation detection (default: 0.0).
 - `zero_tol::Float64`: Threshold below which a value is considered zero (default: 1e-9)
-- `core_point::Vector{Float64}`: Initial core point x_0 for Magnanti-Wong problem (REQUIRED).
-- `λ::Float64`: Weight for updating core point. After each cut generation, core_point is updated as:
+- `core_point::Vector{Float64}`: Initial core point for Magnanti-Wong problem (REQUIRED).
+- `λ::Float64`: Weight for updating the core point. After each cut generation, core_point is updated as:
   `core_point = λ * core_point + (1 - λ) * x_value`. Default 1.0 means no update (classical behavior).
-- `pareto_tol::Float64`: Absolute tolerance for enforcing the Pareto-optimality constraint (default: 1e-9)
+- `pareto_tol::Float64`: Absolute tolerance for enforcing the Pareto-optimality constraint (default: 1e-9).
 """
 struct ParetoOracleParam <: AbstractOracleParam
     rtol::Float64
@@ -32,34 +32,41 @@ end
 """
     ParetoOracle <: AbstractTypicalOracle
 
-An oracle that generates Pareto-optimal cuts using the Magnanti-Wong technique.
+Oracle that generates Pareto-optimal cuts using the Magnanti-Wong method proposed by 
+Magnanti, T. L., & Wong, R. T. (1981), *Accelerating Benders decomposition: Algorithmic 
+enhancement and model selection criteria*, Operations research, 29(3), 464-484.
 
 ParetoOracle uses two models:
-1. `model`: Standard subproblem model (same as `ClassicalOracle`).
-2. `pareto_model`: Magnanti-Wong reformulation used to generate Pareto-optimal cuts.
+1. `model`: Classic subproblem (same as `ClassicalOracle`).
+2. `pareto_model`: Primal formulation of Magnanti-Wong problem, obtained by reformulating `model`.
 
-## Magnanti-Wong Primal Problem
+## Magnanti-Wong Problem
 ```math
 \\begin{align*}
-\\min \\quad & d^{\\top}y + \\xi^*σ \\\\
-\\text{s.t.} \\quad & Ax + By + b*σ \\geq b \\quad (\\pi_0) \\\\
-& x + x^*σ = x_0 \\quad (\\pi_1) \\\\
-& y \\geq 0
+\\max \\quad & b^{\\top}\\pi_0 + x_0^{\\top}\\pi_1 \\\\
+\\text{s.t.} \\quad & A^{\\top}\\pi_0 + \\pi_1 = 0 \\quad (x) \\\\
+& B^{\\top}\\pi_0 \\le d \\quad (y) \\\\
+& b^{\\top}\\pi_0 + (x^*)^{\\top}\\pi_1 \\ge \\xi^* - \\epsilon \\quad (\\sigma) \\\\
+& \\pi_0 \\geq 0
 \\end{align*}
 ```
 
-Where:
-- `xi^*` is the optimal objective value from the standard subproblem
-- `x^*` is the current master solution
-- `x_0` is the core point (dynamically updated if λ < 1.0)
+where:
+- ​\$\\xi^*\$ is the optimal objective value from the classic subproblem.
+- ​\$x^*\$ is the current master solution.
+- ​\$\\epsilon\$ is `pareto_tol` defined in [`ParetoOracleParam`](@ref).
+- ​\$x_0\$ is the core point (dynamically updated if λ < 1.0).
+- ​\$\\sigma\$ is the primal variable associated with the Pareto-optimality constraint.
 
-# Fields
-- `param::ParetoOracleParam`: Oracle parameters including core_point and λ
-- `model::Model`: Standard subproblem model
-- `fixed_x_constraints::Vector{ConstraintRef}`: Constraints that fix master-variable values in `model`
-- `pareto_model::Model`: Magnanti-Wong reformulation model used to generate Pareto-optimal cuts
-- `pareto_variable::VariableRef`: Slack variable in `pareto_model`
-- `pareto_fixing_constraints::Vector{ConstraintRef}`: Constraints in `pareto_model` that link `x`, the current master solution, and the core point
+## Primal formulation of Magnanti-Wong Problem
+```math
+\\begin{align*}
+\\min \\quad & d^{\\top}y + (\\xi^*-\\epsilon)\\sigma \\\\
+\\text{s.t.} \\quad & Ax + By + b\\sigma \\geq b \\quad (\\pi_0) \\\\
+& x + x^*\\sigma = x_0 \\quad (\\pi_1) \\\\
+& y \\geq 0, \\sigma \\le 0
+\\end{align*}
+```
 
 # Constructor
 ```julia
@@ -67,6 +74,26 @@ ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
              customize = customize_sub_model!,
              scen_idx::Int = 0)
 ```
+The primal formulation of Magnanti-Wong problem is constructed inside the constructor.
+
+# Arguments
+`ParetoOracleParam` is not an alias of `BasicOracleParam`. Users must define own `ParetoOracleParam` and
+provide it to `ParetoOracle`, as the core point depends on the specific problem being solved.
+All other arguments are identical to those of [`ClassicalOracle`](@ref).
+
+# Example with a problem-specific param
+```julia
+param = ParetoOracleParam(fill(1.0, data.n_facilities)) # Core point of Capacitated Facility Location Problem
+oracle = ParetoOracle(data, master; param = param)
+```
+
+# Fields
+- `param::ParetoOracleParam`: [`ParetoOracleParam`](@ref) including necessary tolerances, λ and the core point.
+- `model::Model`: Classic subproblem.
+- `fixed_x_constraints::Vector{ConstraintRef}`: Linking constraints defined in `model`.
+- `pareto_model::Model`: The primal formulation of Magnanti-Wong problem that generates Pareto-optimal cuts.
+- `pareto_variable::VariableRef`: Auxiliary variable σ in `pareto_model`.
+- `pareto_fixing_constraints::Vector{ConstraintRef}`: Linking constraints of `pareto_model` (see [`ClassicalOracle`](@ref) for the purpose).
 """
 mutable struct ParetoOracle <: AbstractTypicalOracle
     
@@ -144,7 +171,7 @@ end
 """
     _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{VariableRef})
 
-Transform a standard subproblem model into a Magnanti-Wong primal problem.
+Reformulate Classic subproblem into Magnanti-Wong primal problem.
 """
 function _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{VariableRef})
     
@@ -184,7 +211,7 @@ end
     generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
                   tol_normalize = 1.0, time_limit = 3600)
 
-Generate Pareto-optimal Benders cuts using the Magnanti-Wong technique.
+Generate Pareto-optimal cuts using the Magnanti-Wong method.
 """
 function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
                        tol_normalize = 1.0, time_limit = 3600)

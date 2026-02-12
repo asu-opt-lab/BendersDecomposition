@@ -3,14 +3,13 @@ export UnifiedOracle, UnifiedOracleParam
 """
     UnifiedOracleParam <: AbstractOracleParam
 
-Parameter structure for UnifiedOracle.
+Parameter type for [`UnifiedOracle`](@ref).
 
 # Fields
-- `rtol::Float64`: Relative tolerance for cut violation detection (default: 1e-9)
-- `atol::Float64`: Absolute tolerance for cut violation detection (default: 0.0)
-- `zero_tol::Float64`: Threshold below which a value is considered zero (default: 1e-9)
-- `w0::Float64`: Weight for the epigraph constraint in the unified formulation (default: 1.0).
-  Controls the relative importance of objective violation vs constraint violation.
+- `rtol::Float64`: Relative tolerance for cut violation detection (default: 1e-9).
+- `atol::Float64`: Absolute tolerance for cut violation detection (default: 0.0).
+- `zero_tol::Float64`: Threshold below which a value is considered zero (default: 1e-9).
+- `w0::Float64`: Weight for the epigraph constraint in the subproblem of `UnifiedOracle` (default: 1.0).
 """
 struct UnifiedOracleParam <: AbstractOracleParam
     rtol::Float64
@@ -27,23 +26,40 @@ end
 """
     UnifiedOracle <: AbstractTypicalOracle
 
-An oracle that generates unified Benders cuts via a sigma-relaxation reformulation.
+Oracle that generates unified Benders cuts using the formulation proposed by 
+Fischetti, M., Salvagnin, D., & Zanette, A. (2010), *A note on the selection of Benders’ cuts*, Mathematical Programming, 124(1), 175-182.
 
-UnifiedOracle reformulates the classical subproblem by:
-1. Adding a nonnegative slack variable 
-2. Relaxing constraints that involve master variables based on constraint sense
-3. Replacing each fixing equality with lower- and upper-bound fixing constraints
-4. Converting the original objective bound into a constraint with weight `w0`
+## Dual Problem
+```math
+\\begin{align*}
+\\max \\quad & b^{\\top}\\pi - \\pi_0\\eta^* + (x^*)^{\\top}\\gamma_1 - (x^*)^{\\top}\\gamma_2 \\\\
+\\text{s.t.} \\quad & T^{\\top}\\pi + \\gamma_1 - \\gamma_2 = 0 \\quad (x) \\\\
+\\quad & Q^{\\top}\\pi \\leq d \\pi_0 \\quad (y) \\\\
+\\quad & \\sum_{i \\in I(T)} \\pi_i + w_0\\pi_0 + \\mathbf{1}^{\\top}\\gamma_1 + \\mathbf{1}^{\\top}\\gamma_2 = 1 \\quad (\\sigma) \\\\
+& \\pi_0, \\pi, \\gamma_1, \\gamma_2 \\geq 0
+\\end{align*}
+```
 
-This approach generates stronger cuts and can handle both feasible and infeasible 
-subproblems in a unified manner.
+where:
+- ​\$x^*\$ is the current master solution.
+- ​\$T\$ is the coefficient matrix of variable \$x\$ in the primal problem.
+- ​\$I(T)\$ is the indices of the nonzero rows of \$T\$.
+- ​\$\\sigma\$ is the primal variable associated with the normalization constraint.
 
-# Fields
-- `param::UnifiedOracleParam`: Oracle parameters (includes w0 weight)
-- `model::Model`: JuMP model in unified form
-- `fixing_lb_constraints::Vector{ConstraintRef}`: Lower-bound fixing constraints in `model`
-- `fixing_ub_constraints::Vector{ConstraintRef}`: Upper-bound fixing constraints in `model`
-- `objective_constraint::ConstraintRef`: Objective-bound constraint in `model`
+## Primal Problem
+```math
+\\begin{align*}
+\\min \\quad & \\sigma \\\\
+\\text{s.t.} \\quad & Tx + Qy + \\sigma \\geq b \\quad (\\pi) \\\\
+\\quad & -d^{\\top}y + w_0\\sigma \\geq -\\eta^* \\quad (\\pi_0) \\\\
+& x + \\sigma \\geq x^* \\quad (\\gamma_1) \\\\
+& -x + \\sigma \\geq -x^* \\quad (\\gamma_2) \\\\
+& y \\geq 0
+\\end{align*}
+```
+
+## Notes
+In the primal problem, some rows of \$T\$ may be null rows. In those constraints, \$\\sigma\$ does not appear; that is, its coefficient is zero.
 
 # Constructor
 ```julia
@@ -52,12 +68,25 @@ UnifiedOracle(data::AbstractData, master::Master;
               scen_idx::Int = 0, 
               param::UnifiedOracleParam = UnifiedOracleParam())
 ```
+Classic subproblem is reformulated to the primal problem of `UnifiedOracle` inside the constructor.
 
-# Example with custom w0
+# Arguments
+`UnifiedOracleParam` is not an alias of `BasicOracleParam`. A default `UnifiedOracleParam` is provided,
+so it does not need to be specified by the user; however, a custom `UnifiedOracleParam` can be defined as shown below.
+All other arguments are identical to those of [`ClassicalOracle`](@ref).
+
+# Example with custom \$w_0\$
 ```julia
 param = UnifiedOracleParam(w0 = 2.0)  # Higher weight for objective violation
 oracle = UnifiedOracle(data, master; param = param)
 ```
+
+# Fields
+- `param::UnifiedOracleParam`: [`UnifiedOracleParam`](@ref) including necessary tolerances and \$w_0\$.
+- `model::Model`: The primal problem of `UnifiedOracle` that generates unified Benders cuts.
+- `fixing_lb_constraints::Vector{ConstraintRef}`: Lower-bound linking constraints in `model`.
+- `fixing_ub_constraints::Vector{ConstraintRef}`: Upper-bound linking constraints in `model`.
+- `objective_constraint::ConstraintRef`: Epigraph constraint in `model`
 """
 mutable struct UnifiedOracle <: AbstractTypicalOracle
     
@@ -109,7 +138,7 @@ end
 """
     _apply_unified_transformations!(oracle::UnifiedOracle, fixed_x_vars::Vector{VariableRef})
 
-Transform the classical subproblem model into the unified form with a sigma relaxation variable.
+Reformulate Classic subproblem by replacing original constraints and objective function with auxiliary variable `σ`.
 """
 function _apply_unified_transformations!(oracle::UnifiedOracle, fixed_x_vars::Vector{VariableRef})
     model = oracle.model
@@ -118,8 +147,8 @@ function _apply_unified_transformations!(oracle::UnifiedOracle, fixed_x_vars::Ve
     # Step 1: Get original objective function (must be done before constraint changes)
     original_objective = objective_function(model)
     
-    # Step 2: Add nonnegative sigma variable
-    σ = @variable(model, σ >= 0)
+    # Step 2: Add auxiliary variable
+    σ = @variable(model, σ)
     
     # Step 3: Rewrite problem constraints with sigma BEFORE creating new constraints
     # This eliminates the need to track which constraints to skip
@@ -201,7 +230,7 @@ end
 """
     _rewrite_single_constraint!(model::Model, con::ConstraintRef, σ::VariableRef)
 
-Relax the constraints by adding slack variable.
+Relax the constraints by adding `σ`.
 """
 function _rewrite_single_constraint!(model::Model, con::ConstraintRef, σ::VariableRef)
     
@@ -248,7 +277,7 @@ end
     generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
                   tol_normalize = 1.0, time_limit = 3600)
 
-Generate Benders cuts using the unified oracle.
+Generate Benders cuts using the reformulated primal problem [`UnifiedOracle`](@ref).
 """
 function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
                        tol_normalize = 1.0, time_limit = 3600)
