@@ -179,30 +179,18 @@ function _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{Vari
     σ = @variable(pareto_model, σ <= 0)
     
     for con in all_constraints(pareto_model, include_variable_in_set_constraints=false)
-        con_obj = constraint_object(con)
-        set = con_obj.set
+        # `_validate_lp_compatibility` guarantees supported scalar sets
+        # (>=, <=, ==), and the same coefficient update applies to all of them.
         rhs = normalized_rhs(con)
-        
-        if set isa MOI.GreaterThan
-            # Ax + By >= b  -->  Ax + By + b * σ >= b
-            set_normalized_coefficient(con, σ, rhs)
-        elseif set isa MOI.LessThan
-            # Ax + By <= b  -->  Ax + By + b * σ <= b
-            set_normalized_coefficient(con, σ, rhs)
-        else  # MOI.EqualTo
-            # Ax + By = b  -->  Ax + By + b * σ = b
-            set_normalized_coefficient(con, σ, rhs)
-        end
+        # Ax + By (⋚/=) b  -->  Ax + By + b * σ (⋚/=) b
+        set_normalized_coefficient(con, σ, rhs)
     end
     
     pareto_fixing_constraints = ConstraintRef[]
     for x_var in x_vars
-        con = @constraint(pareto_model, x_var + 0.0 * σ == 0)
+        con = @constraint(pareto_model, x_var == 0)
         push!(pareto_fixing_constraints, con)
     end
-    
-    original_obj = objective_function(pareto_model)
-    @objective(pareto_model, Min, original_obj + 0.0 * σ)
     
     return σ, pareto_fixing_constraints
 end
