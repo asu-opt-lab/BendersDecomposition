@@ -206,9 +206,9 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
     
     λ = oracle.param.λ
     oracle.param.core_point .= λ .* oracle.param.core_point .+ (1 - λ) .* x_value
+    t0 = time()
     
     set_time_limit_sec(oracle.model, time_limit)
-    set_time_limit_sec(oracle.pareto_model, time_limit)
     
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     
@@ -233,6 +233,9 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
         set_normalized_coefficient.(oracle.pareto_fixing_constraints, oracle.pareto_variable, x_value)
 
         set_normalized_rhs.(oracle.pareto_fixing_constraints, oracle.param.core_point)
+        
+        remaining_time = max(time_limit - (time() - t0), 1)
+        set_time_limit_sec(oracle.pareto_model, remaining_time)
 
         optimize!(oracle.pareto_model)
         
