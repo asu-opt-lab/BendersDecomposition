@@ -20,7 +20,6 @@ export AbstractBendersEnv
 export AbstractData
 export AbstractMaster
 export AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, BasicOracleParam
-export ParetoOracle, ParetoOracleParam
 export AbstractBendersSeq, AbstractBendersBnB
 export AbstractRootNodePreprocessing, root_node_processing!
 export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
