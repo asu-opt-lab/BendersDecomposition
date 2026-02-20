@@ -92,8 +92,8 @@ oracle = ParetoOracle(data, master; param = param)
 - `model::Model`: Classic subproblem.
 - `fixed_x_constraints::Vector{ConstraintRef}`: Linking constraints defined in `model`.
 - `pareto_model::Model`: The primal formulation of Magnanti-Wong problem that generates Pareto-optimal cuts.
-- `pareto_variable::VariableRef`: Auxiliary variable σ in `pareto_model`.
-- `pareto_fixing_constraints::Vector{ConstraintRef}`: Linking constraints of `pareto_model` (see [`ClassicalOracle`](@ref) for the purpose).
+  The auxiliary variable and linking constraints for this model are stored in
+  `pareto_model[:σ]` and `pareto_model[:pareto_fixing_constraints]`.
 """
 mutable struct ParetoOracle <: AbstractTypicalOracle
     
@@ -105,8 +105,6 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
 
     # Magnanti-Wong pareto model
     pareto_model::Model
-    pareto_variable::VariableRef
-    pareto_fixing_constraints::Vector{ConstraintRef}
 
     function ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
                          customize = customize_sub_model!,
@@ -146,7 +144,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         customize(pareto_model, data, scen_idx; pareto_x_copy...)
         
         # Apply Magnanti-Wong transformations (add σ, etc.)
-        pareto_variable, pareto_fixing_constraints = _apply_pareto_transformations!(pareto_model, pareto_x)
+        _apply_pareto_transformations!(pareto_model, pareto_x)
 
         # ---------------------------------------------------------
         # Finalize Standard Model
@@ -154,8 +152,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         # NOW add fixing constraints to standard model
         @constraint(model, fix_x, x .== 0)
 
-        new(param, model, fix_x,
-            pareto_model, pareto_variable, pareto_fixing_constraints)
+        new(param, model, fix_x, pareto_model)
     end
 
     ParetoOracle() = new()
@@ -186,13 +183,7 @@ function _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{Vari
         set_normalized_coefficient(con, σ, rhs)
     end
     
-    pareto_fixing_constraints = ConstraintRef[]
-    for x_var in x_vars
-        con = @constraint(pareto_model, x_var == 0)
-        push!(pareto_fixing_constraints, con)
-    end
-    
-    return σ, pareto_fixing_constraints
+    @constraint(pareto_model, pareto_fixing_constraints[i in eachindex(x_vars)], x_vars[i] == 0)
 end
 
 """
@@ -228,11 +219,11 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
             return true, [Hyperplane(length(x_value), length(t_value))], [sub_obj_val]
         end
 
-        set_objective_coefficient(oracle.pareto_model, oracle.pareto_variable, sub_obj_val - oracle.param.pareto_tol)
+        set_objective_coefficient(oracle.pareto_model, oracle.pareto_model[:σ], sub_obj_val - oracle.param.pareto_tol)
         
-        set_normalized_coefficient.(oracle.pareto_fixing_constraints, oracle.pareto_variable, x_value)
+        set_normalized_coefficient.(oracle.pareto_model[:pareto_fixing_constraints], oracle.pareto_model[:σ], x_value)
 
-        set_normalized_rhs.(oracle.pareto_fixing_constraints, oracle.param.core_point)
+        set_normalized_rhs.(oracle.pareto_model[:pareto_fixing_constraints], oracle.param.core_point)
         
         remaining_time = max(time_limit - (time() - t0), 1)
         set_time_limit_sec(oracle.pareto_model, remaining_time)
@@ -247,7 +238,7 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
         
         pareto_status = dual_status(oracle.pareto_model)
         if pareto_status == FEASIBLE_POINT 
-            a_x = dual.(oracle.pareto_fixing_constraints)
+            a_x = dual.(oracle.pareto_model[:pareto_fixing_constraints])
             
             a_t = [-1.0]
             a_0 = sub_obj_val - dot(a_x, x_value)
