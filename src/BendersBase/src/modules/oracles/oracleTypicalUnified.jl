@@ -116,8 +116,8 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
         # Build the submodel using user-defined customization, passing the copied variables
         customize(model, data, scen_idx; x_copy...)
 
-        # Validate that all constraints are supported types (LP)
-        _validate_constraint_types(model)
+        # Validate that the subproblem is LP-compatible for typical oracles
+        _validate_lp_compatibility(model)
 
         # Create oracle instance
         oracle = new()
@@ -196,7 +196,7 @@ end
 Check if a constraint contains any of the decision variables.
 Returns true if the constraint's function references any variable in the decision set.
 
-Note: Constraint function type validation is performed by _validate_constraint_types() 
+Note: Constraint function type validation is performed by _validate_lp_compatibility() 
 before this function is called, so we only handle VariableRef and AffExpr.
 """
 function _contains_decision_vars(con::ConstraintRef, decision_vars_set::Set{VariableRef})
@@ -204,7 +204,7 @@ function _contains_decision_vars(con::ConstraintRef, decision_vars_set::Set{Vari
     
     if func isa VariableRef
         return func in decision_vars_set
-    else  # AffExpr (validated by _validate_constraint_types)
+    else  # AffExpr (validated by _validate_lp_compatibility)
         return any(var in decision_vars_set for (var, _) in func.terms)
     end
 end
@@ -249,7 +249,7 @@ function _rewrite_single_constraint!(model::Model, con::ConstraintRef, σ::Varia
         # Original: f(x) <= rhs  -->  f(x) - σ <= rhs
         set_normalized_coefficient(con, σ, -1.0)
         
-    else  # MOI.EqualTo (validated by _validate_constraint_types)
+    else  # MOI.EqualTo (validated by _validate_lp_compatibility)
         # == constraint: split into >= and <= with σ
         rhs = set.value
         original_name = name(con)

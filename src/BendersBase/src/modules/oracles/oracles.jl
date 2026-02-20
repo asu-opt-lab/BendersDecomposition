@@ -69,17 +69,23 @@ function set_parameter!(oracle::AbstractTypicalOracle, param::String, value::Any
 end
 
 """
-    _validate_constraint_types(model::Model)
+    _validate_lp_compatibility(model::Model)
 
-Validate that all constraints in the model are supported types for typical oracles.
-Only GreaterThan (>=), LessThan (<=), and EqualTo (==) constraints are supported.
-Throws UnsupportedModelException if unsupported constraint types are found.
+Validate that the model is compatible with typical oracles.
+Typical oracles require a continuous Linear Programming (LP) subproblem:
+- no integer/binary/semi-* variable-in-set constraints,
+- an explicit linear objective,
+- linear structural constraints with set type in {GreaterThan, LessThan, EqualTo},
+- variable-in-set constraints limited to continuous bounds/fixes
+  (GreaterThan, LessThan, EqualTo, Interval).
+
+Throws UnsupportedModelException when unsupported model components are found.
 
 This validation is shared by ClassicalOracle, UnifiedOracle, and ParetoOracle.
 """
-function _validate_constraint_types(model::Model)
+function _validate_lp_compatibility(model::Model)
     # 1. Check for Integer/Binary variables (Mixed-Integer terms)
-    for (F, S) in list_of_constraint_types(model)
+    for (_, S) in list_of_constraint_types(model)
         if S <: Union{MOI.Integer, MOI.ZeroOne, MOI.Semicontinuous, MOI.Semiinteger}
             throw(UnsupportedModelException(
                 "Unsupported constraint type: $S. " *
@@ -89,32 +95,46 @@ function _validate_constraint_types(model::Model)
         end
     end
 
-    # 2. Check Objective Function (must be linear)
+    # 2. Check Objective Function (must be explicitly defined and linear)
     obj_type = objective_function_type(model)
-    if obj_type != Nothing && !(obj_type <: Union{VariableRef, AffExpr, Real})
+    if obj_type === Nothing
+        throw(UnsupportedModelException(
+            "No objective function is defined. " *
+            "Typical oracles require an explicit linear objective. " *
+            "Use @objective(model, Min/Max, ...), e.g., @objective(model, Min, 0.0)."
+        ))
+    elseif !(obj_type <: Union{VariableRef, AffExpr, Real})
         throw(UnsupportedModelException(
             "Unsupported objective function type: $obj_type. " *
             "Typical oracles only support Linear Programming (LP) with linear objectives."
         ))
     end
 
-    # 3. Check Structural Constraints (Linearity and Supported Sets)
-    for con in all_constraints(model, include_variable_in_set_constraints=false)
+    # 3. Check constraints in one pass (structural + variable-in-set)
+    for con in all_constraints(model, include_variable_in_set_constraints=true)
         con_obj = constraint_object(con)
         set = con_obj.set
         func = con_obj.func
-        
-        # Check constraint set type (EqualTo, GreaterThan, LessThan)
-        if !(set isa MOI.GreaterThan || set isa MOI.LessThan || set isa MOI.EqualTo)
-            throw(UnsupportedModelException(
-                "Unsupported constraint set type: $(typeof(set)). " *
-                "Typical oracles only support GreaterThan (>=), LessThan (<=), and EqualTo (==) constraints. " *
-                "If you have interval or other constraint types, please reformulate them."
-            ))
-        end
 
-        # Check constraint function type (must be linear: AffExpr or VariableRef)
-        if !(func isa AffExpr || func isa VariableRef)
+        # Variable-in-set constraints: allow continuous bounds/fixes only
+        if func isa VariableRef
+            if !(set isa MOI.GreaterThan || set isa MOI.LessThan || set isa MOI.EqualTo || set isa MOI.Interval)
+                throw(UnsupportedModelException(
+                    "Unsupported variable-in-set constraint type: $(typeof(set)). " *
+                    "Typical oracles only support continuous variable bounds/fixes with " *
+                    "GreaterThan (>=), LessThan (<=), EqualTo (==), or Interval."
+                ))
+            end
+        # Structural constraints: linear function with supported scalar sets
+        elseif func isa AffExpr
+            if !(set isa MOI.GreaterThan || set isa MOI.LessThan || set isa MOI.EqualTo)
+                throw(UnsupportedModelException(
+                    "Unsupported constraint set type: $(typeof(set)). " *
+                    "Typical oracles only support GreaterThan (>=), LessThan (<=), and EqualTo (==) constraints " *
+                    "for affine structural constraints. If you have interval or other set types, please reformulate them."
+                ))
+            end
+        else
             throw(UnsupportedModelException(
                 "Unsupported constraint function type: $(typeof(func)). " *
                 "Typical oracles only support linear constraints (LP). " *

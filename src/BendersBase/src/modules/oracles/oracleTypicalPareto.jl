@@ -130,8 +130,8 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         # Build the submodel using user-defined customization
         customize(model, data, scen_idx; x_copy...)
 
-        # Validate that all constraints are supported types (LP)
-        _validate_constraint_types(model)
+        # Validate that the subproblem is LP-compatible for typical oracles
+        _validate_lp_compatibility(model)
 
         # ---------------------------------------------------------
         # Build Pareto Model (Re-run construction instead of copying)
