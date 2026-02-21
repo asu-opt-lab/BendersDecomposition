@@ -21,71 +21,75 @@ dcglp_param = DcglpParam(
 )
 user_cb_param = UserCallbackParam(frequency=500)
 
-# Create traditional data for MIP reference
-# model = read_from_file("MIBP_domain/leo1/leo1.mps.gz") # "MIBP_domain/leo1/leo1.mps.gz"
+# Full model test
+model = read_from_file("job_scripts/MIPLIB_data/map06/map06.mps.gz") 
 
-model = read_from_file("MIBP_bound/neos-2629914-sudost/neos-2629914-sudost.mps.gz") # "MIBP_domain/neos-2629914-sudost/neos-2629914-sudost.mps.gz"
+data, master, typical_oracle = auto_decompose_unified(
+    model;
+    master_solver_param = master_solver_param,
+    oracle_solver_param = oracle_solver_param
+)
 
-# @testset "Classical oracle" begin
-#     # @testset "NoSeq" begin
-#     #     data, master, typical_oracle = auto_decompose(
-#     #         model;
-#     #         master_solver_param = master_solver_param,
-#     #         oracle_solver_param = oracle_solver_param
-#     #     )
-#     #     root_preprocessing = NoRootNodePreprocessing()
-#     #     lazy_callback = LazyCallback(typical_oracle)
-#     #     user_callback = NoUserCallback()
-#     #     env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
-#     #     log = solve!(env)
-#     #     @test env.termination_status == Optimal()
-#     #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-#     # end
-#     # @testset "Seq" begin
-#     #     @info "solving CFLP p$i - classical oracle - seq..."
-#     #     data, master, typical_oracle = auto_decompose(
-#     #         model;
-#     #         master_solver_param = master_solver_param,
-#     #         oracle_solver_param = oracle_solver_param
-#     #     )
-#     #     root_seq_type = BendersSeq
-#     #     root_param = BendersSeqParam(;
-#     #         time_limit = 200.0,
-#     #         gap_tolerance = 1e-6,
-#     #         verbose = false
-#     #     )
-#     #     root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
-#     #     lazy_callback = LazyCallback(typical_oracle)
-#     #     user_callback = NoUserCallback()
-#     #     env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
-#     #     log = solve!(env)
-#     #     @test env.termination_status == Optimal()
-#     #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-#     # end
-#     # @testset "SeqInOut" begin
-#     #     data, master, typical_oracle = auto_decompose(
-#     #         model;
-#     #         master_solver_param = master_solver_param,
-#     #         oracle_solver_param = oracle_solver_param
-#     #     )
-#     #     root_seq_type = BendersSeqInOut
-#     #     root_param = BendersSeqInOutParam(
-#     #         time_limit = 10.0,
-#     #         gap_tolerance = 1e-6,
-#     #         stabilizing_x = ones(data.dim_x),
-#     #         α = 0.9,
-#     #         λ = 0.1,
-#     #         verbose = true
-#     #     )
-#     #     root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
-#     #     lazy_callback = LazyCallback(typical_oracle)
-#     #     user_callback = NoUserCallback()
-#     #     env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
-#     #     log = solve!(env)
-#     #     @test env.termination_status == Optimal()
-#     #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-#     # end
-# end
+@testset "Classical oracle" begin
+    @testset "NoSeq" begin
+        data, master, typical_oracle = auto_decompose(
+            model;
+            master_solver_param = master_solver_param,
+            oracle_solver_param = oracle_solver_param
+        )
+        root_preprocessing = NoRootNodePreprocessing()
+        lazy_callback = LazyCallback(typical_oracle)
+        user_callback = NoUserCallback()
+        env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+        log = solve!(env)
+        @test env.termination_status == Optimal()
+        @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+    end
+    @testset "Seq" begin
+        @info "solving CFLP p$i - classical oracle - seq..."
+        data, master, typical_oracle = auto_decompose(
+            model;
+            master_solver_param = master_solver_param,
+            oracle_solver_param = oracle_solver_param
+        )
+        root_seq_type = BendersSeq
+        root_param = BendersSeqParam(;
+            time_limit = 200.0,
+            gap_tolerance = 1e-6,
+            verbose = false
+        )
+        root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
+        lazy_callback = LazyCallback(typical_oracle)
+        user_callback = NoUserCallback()
+        env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+        log = solve!(env)
+        @test env.termination_status == Optimal()
+        @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+    end
+    @testset "SeqInOut" begin
+        data, master, typical_oracle = auto_decompose(
+            model;
+            master_solver_param = master_solver_param,
+            oracle_solver_param = oracle_solver_param
+        )
+        root_seq_type = BendersSeqInOut
+        root_param = BendersSeqInOutParam(
+            time_limit = 10.0,
+            gap_tolerance = 1e-6,
+            stabilizing_x = ones(data.dim_x),
+            α = 0.9,
+            λ = 0.1,
+            verbose = true
+        )
+        root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
+        lazy_callback = LazyCallback(typical_oracle)
+        user_callback = NoUserCallback()
+        env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+        log = solve!(env)
+        @test env.termination_status == Optimal()
+        @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+    end
+end
 
 @testset "Disjunctive oracle" begin
 
@@ -100,59 +104,59 @@ model = read_from_file("MIBP_bound/neos-2629914-sudost/neos-2629914-sudost.mps.g
         adjust_t_to_fx = false
     )
 
-    # @testset "NoSeq" begin
-    #     data, master, disjunctive_oracle = auto_decompose(
-    #         model,
-    #         :disjunctive;
-    #         master_solver_param = master_solver_param,
-    #         oracle_param = oracle_param,
-    #         typical_oracle_solver_param = oracle_solver_param,
-    #         dcglp_solver_param = dcglp_solver_param,
-    #         dcglp_param = dcglp_param
-    #     )
-    #     _, _, lazy_oracle = auto_decompose(
-    #         model;
-    #         master_solver_param = master_solver_param,
-    #         oracle_solver_param = oracle_solver_param
-    #     )
-    #     root_preprocessing = NoRootNodePreprocessing()
-    #     lazy_callback = LazyCallback(lazy_oracle)
-    #     user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-    #     env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
-    #     log = solve!(env)
-    #     @test env.termination_status == Optimal()
-    #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-    # end
-    # @testset "Seq" begin
-    #     @info "solving CFLP p$i - disjunctive oracle - seq..."
-    #     data, master, disjunctive_oracle = auto_decompose(
-    #         model,
-    #         :disjunctive;
-    #         master_solver_param = master_solver_param,
-    #         oracle_param = oracle_param,
-    #         typical_oracle_solver_param = oracle_solver_param,
-    #         dcglp_solver_param = dcglp_solver_param,
-    #         dcglp_param = dcglp_param
-    #     )
-    #     _, _, lazy_oracle = auto_decompose(
-    #         model;
-    #         master_solver_param = master_solver_param,
-    #         oracle_solver_param = oracle_solver_param
-    #     )
-    #     root_seq_type = BendersSeq
-    #     root_param = BendersSeqParam(;
-    #         time_limit = 200.0,
-    #         gap_tolerance = 1e-6,
-    #         verbose = false
-    #     )
-    #     root_preprocessing = RootNodePreprocessing(lazy_oracle, root_seq_type, root_param)
-    #     lazy_callback = LazyCallback(lazy_oracle)
-    #     user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-    #     env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
-    #     log = solve!(env)
-    #     @test env.termination_status == Optimal()
-    #     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-    # end
+    @testset "NoSeq" begin
+        data, master, disjunctive_oracle = auto_decompose(
+            model,
+            :disjunctive;
+            master_solver_param = master_solver_param,
+            oracle_param = oracle_param,
+            typical_oracle_solver_param = oracle_solver_param,
+            dcglp_solver_param = dcglp_solver_param,
+            dcglp_param = dcglp_param
+        )
+        _, _, lazy_oracle = auto_decompose(
+            model;
+            master_solver_param = master_solver_param,
+            oracle_solver_param = oracle_solver_param
+        )
+        root_preprocessing = NoRootNodePreprocessing()
+        lazy_callback = LazyCallback(lazy_oracle)
+        user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
+        env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+        log = solve!(env)
+        @test env.termination_status == Optimal()
+        @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+    end
+    @testset "Seq" begin
+        @info "solving CFLP p$i - disjunctive oracle - seq..."
+        data, master, disjunctive_oracle = auto_decompose(
+            model,
+            :disjunctive;
+            master_solver_param = master_solver_param,
+            oracle_param = oracle_param,
+            typical_oracle_solver_param = oracle_solver_param,
+            dcglp_solver_param = dcglp_solver_param,
+            dcglp_param = dcglp_param
+        )
+        _, _, lazy_oracle = auto_decompose(
+            model;
+            master_solver_param = master_solver_param,
+            oracle_solver_param = oracle_solver_param
+        )
+        root_seq_type = BendersSeq
+        root_param = BendersSeqParam(;
+            time_limit = 200.0,
+            gap_tolerance = 1e-6,
+            verbose = false
+        )
+        root_preprocessing = RootNodePreprocessing(lazy_oracle, root_seq_type, root_param)
+        lazy_callback = LazyCallback(lazy_oracle)
+        user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
+        env = BendersBnB(data, master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+        log = solve!(env)
+        @test env.termination_status == Optimal()
+        @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+    end
     @testset "SeqInOut" begin
         data, master, disjunctive_oracle = auto_decompose(
             model,
