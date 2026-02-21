@@ -1,4 +1,4 @@
-export auto_decompose, default_master_solver_params, default_oracle_solver_params
+export auto_decompose, auto_decompose_unified, default_master_solver_params, default_oracle_solver_params
 
 using JuMP
 using MathOptInterface
@@ -180,6 +180,10 @@ end
 Set bounds on new variable based on original variable bounds.
 """
 function set_variable_bounds!(new_var::VariableRef, original_var::VariableRef)
+    if is_fixed(original_var)
+        fix(new_var, fix_value(original_var); force=true)
+        return
+    end
     if has_lower_bound(original_var)
         set_lower_bound(new_var, lower_bound(original_var))
     end
@@ -344,7 +348,7 @@ function build_complete_master(master_vars::Vector{VariableRef}, master_constrai
     master_var_refs, var_map = copy_variables_to_model(master_vars, master_model)
     copy_constraints_to_model(master_constraints, master_model, var_map)
 
-    t = @variable(master_model, [1:1], base_name="t", lower_bound=0)
+    t = @variable(master_model, [1:1], base_name="t", lower_bound=-1e6)
 
     if !iszero(master_objective)
         substituted_obj = substitute_variables_in_expression(master_objective, var_map)
@@ -394,6 +398,47 @@ function build_complete_classical_oracle(oracle_vars::Vector{VariableRef}, maste
     end
 
     return ClassicalOracle(oracle_param, oracle_model, fixing_constraints)
+end
+
+function build_complete_unified_oracle(oracle_vars::Vector{VariableRef}, master_vars::Vector{VariableRef},
+                                       oracle_constraints::Vector{ConstraintRef}, coupling_constraints::Vector{ConstraintRef},
+                                       oracle_objective::AffExpr, original_model::Model,
+                                       oracle_solver_param::Dict{String,Any},
+                                       oracle_param::BasicOracleParam)
+
+    oracle_model = Model()
+    assign_attributes!(oracle_model, oracle_solver_param)
+    set_silent(oracle_model)
+
+    # 1) Copy oracle vars
+    _, var_map = copy_variables_to_model(oracle_vars, oracle_model)
+
+    # 2) Create oracle-side copies of master vars (x for reformulation)
+    x_oracle = VariableRef[]
+    for var in master_vars
+        v = @variable(oracle_model, base_name=name(var))
+        set_variable_bounds!(v, var)
+        var_map[var] = v
+        push!(x_oracle, v)
+    end
+
+    # 3) Copy constraints
+    copy_constraints_to_model(oracle_constraints, oracle_model, var_map)
+    copy_constraints_to_model(coupling_constraints, oracle_model, var_map)
+
+    # 4) Set oracle objective before reformulation
+    if !iszero(oracle_objective)
+        substituted_obj = substitute_variables_in_expression(oracle_objective, var_map)
+        @objective(oracle_model, objective_sense(original_model), substituted_obj)
+    else
+        @objective(oracle_model, objective_sense(original_model), 0.0)
+    end
+
+    # 5) Reformulate in-place (w0 is hard-coded to 1.0 inside)
+    model_reformulation!(oracle_model; x = x_oracle)
+
+    # 6) Return unified oracle
+    return UnifiedOracle(oracle_param, oracle_model)
 end
 
 """
@@ -470,4 +515,109 @@ function auto_decompose(model::Model;
                                             oracle_objective, model, oracle_solver_param, oracle_param)
 
     return data, master, oracle
+end
+
+function auto_decompose_unified(model::Model;
+                                decision_vars::Vector{Symbol} = Symbol[],
+                                master_solver_param::Dict{String,Any} = default_master_solver_params(),
+                                oracle_solver_param::Dict{String,Any} = default_oracle_solver_params(),
+                                oracle_param::BasicOracleParam = BasicOracleParam())
+
+    if num_variables(model) == 0
+        throw(ArgumentError("Cannot decompose empty model with no variables."))
+    end
+
+    obj = objective_function(model)
+    if isa(obj, QuadExpr) || isa(obj, NonlinearExpr)
+        throw(ArgumentError("Quadratic and nonlinear objectives are not supported."))
+    end
+
+    master_vars, oracle_vars = classify_variables_for_benders(model, decision_vars)
+
+    master_constraints, oracle_constraints, coupling_constraints =
+        partition_constraints_for_benders(model, master_vars, oracle_vars)
+
+    master_objective, oracle_objective =
+        decompose_objective_for_benders(model, master_vars, oracle_vars)
+
+    data = build_data_from_decomposition(master_vars, master_objective)
+
+    master = build_complete_master(master_vars, master_constraints, master_objective, model, master_solver_param)
+
+    oracle = build_complete_unified_oracle(oracle_vars, master_vars,
+                                           oracle_constraints, coupling_constraints,
+                                           oracle_objective, model,
+                                           oracle_solver_param, oracle_param)
+
+    return data, master, oracle
+end
+
+function model_reformulation!(model::Model; x)
+    w0 = 1.0
+
+    # Weight in dual problem
+    @variable(model, z)
+
+    # # Modify constraints for Unified cut
+    # expressions = Dict{Symbol, Vector{Any}}(
+    #     :leq => [], :geq => [], :eq2leq => [], :eq2geq => []
+    # )
+
+    # for (t1, t2) in list_of_constraint_types(model)
+    #     if t1 == AffExpr
+    #         if t2 == MOI.LessThan{Float64}
+    #             for con in all_constraints(model, t1, t2)
+    #                 lhs, rhs = JuMP.constraint_object(con).func, normalized_rhs(con)
+    #                 if any(v -> v in keys(lhs.terms), x)
+    #                     push!(expressions[:leq], @expression(model, z .+ rhs .- lhs))
+    #                 else
+    #                     push!(expressions[:leq], @expression(model, rhs .- lhs))
+    #                 end
+    #             end
+    #         elseif t2 == MOI.GreaterThan{Float64}
+    #             for con in all_constraints(model, t1, t2)
+    #                 lhs, rhs = JuMP.constraint_object(con).func, normalized_rhs(con)
+    #                 if any(v -> v in keys(lhs.terms), x)
+    #                     push!(expressions[:geq], @expression(model, z .+ lhs .- rhs))
+    #                 else
+    #                     push!(expressions[:geq], @expression(model, lhs .- rhs))
+    #                 end
+    #             end
+    #         elseif t2 == MOI.EqualTo{Float64}
+    #             for con in all_constraints(model, t1, t2)
+    #                 lhs, rhs = JuMP.constraint_object(con).func, normalized_rhs(con)
+    #                 if any(v -> v in keys(lhs.terms), x)
+    #                     push!(expressions[:eq2geq], @expression(model, z .+ lhs .- rhs))
+    #                     push!(expressions[:eq2leq], @expression(model, z .- lhs .+ rhs))
+    #                 else
+    #                     push!(expressions[:eq2geq], @expression(model, lhs .- rhs))
+    #                     push!(expressions[:eq2leq], @expression(model, -lhs .+ rhs))
+    #                 end
+    #             end
+    #         else
+    #             throw(ArgumentError("Unsupported constraint sense: $t2. Expected ≤, ≥, or =."))
+    #         end
+    #         delete.(model, all_constraints(model, t1, t2))
+    #     elseif t1 == VariableRef
+    #         continue
+    #     else
+    #         throw(ArgumentError("Constraint type of $t1 is neither AffExpr nor VariableRef."))
+    #     end
+    # end
+
+    # # Add the constraints that have a slack
+    # @constraint(model, geq, expressions[:geq] .>= 0)
+    # @constraint(model, leq, expressions[:leq] .>= 0)
+    # @constraint(model, eq2geq, expressions[:eq2geq] .>= 0)
+    # @constraint(model, eq2leq, expressions[:eq2leq] .>= 0)
+
+    # Add epigraph constraint
+    @constraint(model, epigraph, w0 * z .- objective_function(model) .>= 0)
+
+    # Change objective function
+    @objective(model, Min, z)
+
+    # Linking constraints
+    @constraint(model, fix_x_lb, z .+ x .>= 0)
+    @constraint(model, fix_x_ub, z .- x .>= 0)
 end
