@@ -81,6 +81,10 @@ function user_callback(cb_data, master::Master, log::BendersBnBLog, param::Bende
             end
             
             if process_node
+                node_depth = Ref{CPXINT}()
+                CPXcallbackgetinfoint(cb_data, CPXCALLBACKINFO_NODEDEPTH, node_depth)
+                println("node depth", node_depth[])
+
                 # Create state and get current variable values
                 state = BendersBnBState()
                 state.values[:x] = JuMP.callback_value.(cb_data, master.x)
