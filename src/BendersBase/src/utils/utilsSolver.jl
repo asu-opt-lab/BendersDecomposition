@@ -1,6 +1,7 @@
 export assign_attributes!
 using Gurobi
 using CPLEX
+using CuPDLPx
 
 const GRB_ENV = Ref{Gurobi.Env}()
 function __init__()
@@ -15,6 +16,8 @@ function assign_attributes!(model::Model, config::Dict{String,Any})
         set_optimizer(model, () -> Gurobi.Optimizer(GRB_ENV[]))
     elseif config["solver"] == "CPLEX"
         set_optimizer(model, CPLEX.Optimizer)
+    elseif config["solver"] == "CuPDLPx"
+        set_optimizer(model, CuPDLPx.Optimizer)
     else
         error("Unsupported solver: $(config["solver"])")
     end
@@ -26,6 +29,6 @@ function assign_attributes!(model::Model, config::Dict{String,Any})
         end
     end
 
-    set_optimizer_attribute(model, MOI.Silent(), true)
+    set_optimizer_attribute(model, MOI.Silent(), false)
 end
 
