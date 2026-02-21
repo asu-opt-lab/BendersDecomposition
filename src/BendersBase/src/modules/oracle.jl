@@ -41,9 +41,10 @@ struct BasicOracleParam <: AbstractOracleParam
     rtol::Float64
     atol::Float64
     zero_tol::Float64
+    unified_tol::Float64
 
-    function BasicOracleParam(; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9)
-        new(rtol, atol, zero_tol)
+    function BasicOracleParam(; rtol = 1e-6, atol = 0.0, zero_tol = 1e-9, unified_tol = 1e-4)
+        new(rtol, atol, zero_tol, unified_tol)
     end
 end
 
@@ -70,3 +71,4 @@ end
 
 include("oracleTypicalClassical.jl")
 include("oracleTypicalSeparable.jl")
+include("oracleTypicalUnified.jl")

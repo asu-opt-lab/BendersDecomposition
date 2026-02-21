@@ -6,7 +6,7 @@ import BendersBase: auto_decompose
 # Import internal helper functions from BendersBase
 import BendersBase: classify_variables_for_benders, partition_constraints_for_benders,
                      decompose_objective_for_benders, build_data_from_decomposition,
-                     build_complete_master, build_complete_classical_oracle,
+                     build_complete_master, build_complete_classical_oracle, build_complete_unified_oracle,
                      substitute_variables_in_expression, constraint_variables
 
 using JuMP
@@ -147,6 +147,14 @@ function build_complete_disjunctive_oracle(oracle_vars::Vector{VariableRef}, mas
         build_complete_classical_oracle(oracle_vars, master_vars, oracle_constraints, coupling_constraints,
                                        oracle_objective, original_model, typical_oracle_solver_param, BasicOracleParam()),
         build_complete_classical_oracle(oracle_vars, master_vars, oracle_constraints, coupling_constraints,
+                                       oracle_objective, original_model, typical_oracle_solver_param, BasicOracleParam())
+    ]
+
+    # Build two UnifiedOracles for kappa and nu
+    typical_oracles = [
+        build_complete_unified_oracle(oracle_vars, master_vars, oracle_constraints, coupling_constraints,
+                                       oracle_objective, original_model, typical_oracle_solver_param, BasicOracleParam()),
+        build_complete_unified_oracle(oracle_vars, master_vars, oracle_constraints, coupling_constraints,
                                        oracle_objective, original_model, typical_oracle_solver_param, BasicOracleParam())
     ]
 
