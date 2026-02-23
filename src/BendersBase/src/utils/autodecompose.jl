@@ -376,9 +376,12 @@ function build_complete_classical_oracle(oracle_vars::Vector{VariableRef}, maste
 
     _, var_map = copy_variables_to_model(oracle_vars, oracle_model)
 
-    for (i, var) in enumerate(master_vars)
-        new_var = @variable(oracle_model, base_name=name(var))
-        set_variable_bounds!(new_var, var)
+    # Do not move fixing constriants of master vars to sub
+    for var in master_vars
+        new_var = @variable(oracle_model, base_name = name(var))
+        if is_fixed(var)
+            fix(new_var, fix_value(var); force = true)
+        end
         var_map[var] = new_var
     end
 
@@ -416,8 +419,10 @@ function build_complete_unified_oracle(oracle_vars::Vector{VariableRef}, master_
     # 2) Create oracle-side copies of master vars (x for reformulation)
     x_oracle = VariableRef[]
     for var in master_vars
-        v = @variable(oracle_model, base_name=name(var))
-        set_variable_bounds!(v, var)
+        v = @variable(oracle_model, base_name = name(var))  # Do not move fixing constriants of master vars to sub
+        if is_fixed(var)
+            fix(v, fix_value(var); force = true)
+        end
         var_map[var] = v
         push!(x_oracle, v)
     end
@@ -557,59 +562,6 @@ function model_reformulation!(model::Model; x)
 
     # Weight in dual problem
     @variable(model, z)
-
-    # # Modify constraints for Unified cut
-    # expressions = Dict{Symbol, Vector{Any}}(
-    #     :leq => [], :geq => [], :eq2leq => [], :eq2geq => []
-    # )
-
-    # for (t1, t2) in list_of_constraint_types(model)
-    #     if t1 == AffExpr
-    #         if t2 == MOI.LessThan{Float64}
-    #             for con in all_constraints(model, t1, t2)
-    #                 lhs, rhs = JuMP.constraint_object(con).func, normalized_rhs(con)
-    #                 if any(v -> v in keys(lhs.terms), x)
-    #                     push!(expressions[:leq], @expression(model, z .+ rhs .- lhs))
-    #                 else
-    #                     push!(expressions[:leq], @expression(model, rhs .- lhs))
-    #                 end
-    #             end
-    #         elseif t2 == MOI.GreaterThan{Float64}
-    #             for con in all_constraints(model, t1, t2)
-    #                 lhs, rhs = JuMP.constraint_object(con).func, normalized_rhs(con)
-    #                 if any(v -> v in keys(lhs.terms), x)
-    #                     push!(expressions[:geq], @expression(model, z .+ lhs .- rhs))
-    #                 else
-    #                     push!(expressions[:geq], @expression(model, lhs .- rhs))
-    #                 end
-    #             end
-    #         elseif t2 == MOI.EqualTo{Float64}
-    #             for con in all_constraints(model, t1, t2)
-    #                 lhs, rhs = JuMP.constraint_object(con).func, normalized_rhs(con)
-    #                 if any(v -> v in keys(lhs.terms), x)
-    #                     push!(expressions[:eq2geq], @expression(model, z .+ lhs .- rhs))
-    #                     push!(expressions[:eq2leq], @expression(model, z .- lhs .+ rhs))
-    #                 else
-    #                     push!(expressions[:eq2geq], @expression(model, lhs .- rhs))
-    #                     push!(expressions[:eq2leq], @expression(model, -lhs .+ rhs))
-    #                 end
-    #             end
-    #         else
-    #             throw(ArgumentError("Unsupported constraint sense: $t2. Expected ≤, ≥, or =."))
-    #         end
-    #         delete.(model, all_constraints(model, t1, t2))
-    #     elseif t1 == VariableRef
-    #         continue
-    #     else
-    #         throw(ArgumentError("Constraint type of $t1 is neither AffExpr nor VariableRef."))
-    #     end
-    # end
-
-    # # Add the constraints that have a slack
-    # @constraint(model, geq, expressions[:geq] .>= 0)
-    # @constraint(model, leq, expressions[:leq] .>= 0)
-    # @constraint(model, eq2geq, expressions[:eq2geq] .>= 0)
-    # @constraint(model, eq2leq, expressions[:eq2leq] .>= 0)
 
     # Add epigraph constraint
     @constraint(model, epigraph, w0 * z .- objective_function(model) .>= 0)

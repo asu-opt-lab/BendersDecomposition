@@ -143,12 +143,12 @@ function build_complete_disjunctive_oracle(oracle_vars::Vector{VariableRef}, mas
                                           typical_oracle_solver_param::Dict{String,Any}, dcglp_solver_param::Dict{String,Any},
                                           oracle_param::DisjunctiveOracleParam, dcglp_param::DcglpParam)
     # Build two ClassicalOracles for kappa and nu
-    typical_oracles = [
-        build_complete_classical_oracle(oracle_vars, master_vars, oracle_constraints, coupling_constraints,
-                                       oracle_objective, original_model, typical_oracle_solver_param, BasicOracleParam()),
-        build_complete_classical_oracle(oracle_vars, master_vars, oracle_constraints, coupling_constraints,
-                                       oracle_objective, original_model, typical_oracle_solver_param, BasicOracleParam())
-    ]
+    # typical_oracles = [
+    #     build_complete_classical_oracle(oracle_vars, master_vars, oracle_constraints, coupling_constraints,
+    #                                    oracle_objective, original_model, typical_oracle_solver_param, BasicOracleParam()),
+    #     build_complete_classical_oracle(oracle_vars, master_vars, oracle_constraints, coupling_constraints,
+    #                                    oracle_objective, original_model, typical_oracle_solver_param, BasicOracleParam())
+    # ]
 
     # Build two UnifiedOracles for kappa and nu
     typical_oracles = [
