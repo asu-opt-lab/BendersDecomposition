@@ -126,6 +126,12 @@ function solve!(env::BendersSeq; iter_prefix = "")
 
             # Add generated cuts to master
             @constraint(env.master.model, 0.0 .>= cuts)
+
+            # Early termination
+            check_lb_improvement!(state, log; zero_tol = 1e-6, tol_imprv = 0.05)
+            if log.consecutive_no_improvement >= 5
+                return to_dataframe(log)
+            end
         end
         env.termination_status = Optimal()
         env.obj_value = log.iterations[end].LB
