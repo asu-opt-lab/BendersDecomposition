@@ -3,10 +3,9 @@ export UnifiedOracle
 mutable struct UnifiedOracle <: AbstractTypicalOracle
     oracle_param::BasicOracleParam
     model::Model
-    gpu_use::Bool
 
-    function UnifiedOracle(oracle_param::BasicOracleParam, model::Model; gpu_use=false)
-        new(oracle_param, model, gpu_use)
+    function UnifiedOracle(oracle_param::BasicOracleParam, model::Model)
+        new(oracle_param, model)
     end
 
     function UnifiedOracle(data::Data;
@@ -17,8 +16,7 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
                                "CPX_PARAM_NUMERICALEMPHASIS" => 1,
                                "CPX_PARAM_EPOPT" => 1e-9
                            ),
-                           oracle_param::BasicOracleParam=BasicOracleParam(),
-                           gpu_use::Bool=false)
+                           oracle_param::BasicOracleParam=BasicOracleParam())
 
         @debug "Building unified oracle"
         model = Model()
@@ -52,7 +50,7 @@ function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value:
     a_t = [-dual(oracle.model[:epigraph])]
     a_0 = objective_value(oracle.model) - a_x'*x_value + dual(oracle.model[:epigraph])*t_value[1]
 
-    return isapprox(abs(dual_objective_value(oracle.model)), 0, atol=oracle.oracle_param.unified_tol) ? (true, [Hyperplane(a_x, a_t, a_0)], [t_value[1]]) : (false, [Hyperplane(a_x, a_t, a_0)], [NaN])
+    return isapprox(dual_objective_value(oracle.model), 0, atol=oracle.oracle_param.zero_tol) ? (true, [Hyperplane(a_x, a_t, a_0)], [t_value[1]]) : (false, [Hyperplane(a_x, a_t, a_0)], [NaN])
 end
 
 
