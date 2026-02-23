@@ -97,6 +97,7 @@ function user_callback(cb_data, master::Master, log::BendersBnBLog, param::Bende
                         cuts = !state.is_in_L ? hyperplanes_to_expression(master.model, hyperplanes, master.x, master.t) : []
                         state.num_cuts += length(hyperplanes)
                     end
+                    println("user_time: $(state.oracle_time)")
 
                     # Add cuts
                     for cut in cuts

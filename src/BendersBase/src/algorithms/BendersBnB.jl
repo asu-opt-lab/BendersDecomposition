@@ -137,18 +137,13 @@ function solve!(env::BendersBnB)
     
     # Print summary if verbose mode is enabled
     if param.verbose 
-        @info "Node count: $(JuMP.node_count(env.master.model))"
-        @info "Root processing time: $(root_node_time) "
-        @info "Elapsed time: $(elapsed_time)"
-        @info "Objective bound: $(JuMP.objective_bound(env.master.model))"
-        @info "Objective value: $(env.obj_value)"
-        @info "Relative gap: $(JuMP.relative_gap(env.master.model))"
-        @info "Lazy cuts added: $(log.n_lazy_cuts)"
-        # comment out disjunctive cuts for now
-        # if typeof(env.user_callback.oracle) <: AbstractDisjunctiveOracle
-        #     @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
-        #     env.user_callback.oracle.oracle_param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts - length(env.user_callback.oracle.disjunctiveCuts))"
-        # end
+        println("Node count: $(JuMP.node_count(env.master.model))")
+        println("Elapsed time $(elapsed_time)")
+        println("Objective bound: $(JuMP.objective_bound(env.master.model))")
+        println("Objective value: $(env.obj_value)")
+        println("Relative gap: $(JuMP.relative_gap(env.master.model))")
+        println("Total cuts added as lazy: $(log.n_lazy_cuts)")
+        !(env.user_callback isa NoUserCallback) && println("Total cuts added as user: $(log.n_user_cuts)")
     end
     
     return deepcopy(env.obj_value), elapsed_time
