@@ -9,7 +9,9 @@ Parameter type for [`UnifiedOracle`](@ref).
 - `rtol::Float64`: Relative tolerance for cut violation detection (default: 1e-9).
 - `atol::Float64`: Absolute tolerance for cut violation detection (default: 0.0).
 - `zero_tol::Float64`: Threshold below which a value is considered zero (default: 1e-9).
-- `w0::Float64`: Weight for the epigraph constraint in the subproblem of `UnifiedOracle` (default: 1.0).
+- `w0::Float64`: Weight for the objective bound constraint in the subproblem of `UnifiedOracle` (default: 1.0).
+
+See also: [`UnifiedOracle`](@ref) for the definition of the objective bound constraint.
 """
 struct UnifiedOracleParam <: AbstractOracleParam
     rtol::Float64
@@ -71,6 +73,9 @@ In the primal problem, some rows of \$T\$ may be null rows. In those constraints
 \\end{align*}
 ```
 
+## Notes
+We denote \$-d^{\\top}y + w_0\\sigma \\geq -\\eta^*\$ as an objective bound constraint.
+
 # Constructor
 ```julia
 UnifiedOracle(data::AbstractData, master::Master; 
@@ -97,7 +102,7 @@ oracle = UnifiedOracle(data, master; param = param)
 - `model::Model`: The primal problem of `UnifiedOracle` that generates unified Benders cuts.
 - `fixing_lb_constraints::Vector{ConstraintRef}`: Lower-bound linking constraints in `model`.
 - `fixing_ub_constraints::Vector{ConstraintRef}`: Upper-bound linking constraints in `model`.
-- `objective_constraint::ConstraintRef`: Epigraph constraint in `model`
+- `objective_constraint::ConstraintRef`: Objective bound constraint in `model`
 """
 mutable struct UnifiedOracle <: AbstractTypicalOracle
     
