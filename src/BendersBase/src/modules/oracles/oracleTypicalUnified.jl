@@ -29,7 +29,26 @@ end
 Oracle that generates unified Benders cuts using the formulation proposed by 
 Fischetti, M., Salvagnin, D., & Zanette, A. (2010), *A note on the selection of Benders’ cuts*, Mathematical Programming, 124(1), 175-182.
 
-## Dual Problem
+## Dual Problem (Fischetti et al., 2010)
+```math
+\\begin{align*}
+\\max \\quad & (b-Tx^*)^{\\top}\\pi - \\pi_0\\eta^* \\\\
+\\quad & Q^{\\top}\\pi \\leq d \\pi_0 \\quad (y) \\\\
+\\quad & \\sum_{i \\in I(T)} \\pi_i + w_0\\pi_0  = 1 \\quad (\\sigma) \\\\
+& \\pi_0, \\pi \\geq 0
+\\end{align*}
+```
+
+where:
+- ​\$x^*\$ is the current master solution.
+- ​\$T\$ is the coefficient matrix of variable \$x\$ in the primal problem.
+- ​\$I(T)\$ is the indices of the nonzero rows of \$T\$.
+- ​\$\\sigma\$ is the primal variable associated with the normalization constraint.
+
+## Notes
+In the primal problem, some rows of \$T\$ may be null rows. In those constraints, \$\\sigma\$ does not appear; that is, its coefficient is zero.
+
+## Dual Problem considered in [`UnifiedOracle`](@ref)
 ```math
 \\begin{align*}
 \\max \\quad & b^{\\top}\\pi - \\pi_0\\eta^* + (x^*)^{\\top}\\gamma_1 - (x^*)^{\\top}\\gamma_2 \\\\
@@ -40,13 +59,7 @@ Fischetti, M., Salvagnin, D., & Zanette, A. (2010), *A note on the selection of 
 \\end{align*}
 ```
 
-where:
-- ​\$x^*\$ is the current master solution.
-- ​\$T\$ is the coefficient matrix of variable \$x\$ in the primal problem.
-- ​\$I(T)\$ is the indices of the nonzero rows of \$T\$.
-- ​\$\\sigma\$ is the primal variable associated with the normalization constraint.
-
-## Primal Problem
+## Primal Problem considered in [`UnifiedOracle`](@ref)
 ```math
 \\begin{align*}
 \\min \\quad & \\sigma \\\\
@@ -58,9 +71,6 @@ where:
 \\end{align*}
 ```
 
-## Notes
-In the primal problem, some rows of \$T\$ may be null rows. In those constraints, \$\\sigma\$ does not appear; that is, its coefficient is zero.
-
 # Constructor
 ```julia
 UnifiedOracle(data::AbstractData, master::Master; 
@@ -71,9 +81,10 @@ UnifiedOracle(data::AbstractData, master::Master;
 Classic subproblem is reformulated to the primal problem of `UnifiedOracle` inside the constructor.
 
 # Arguments
-`UnifiedOracleParam` is not an alias of `BasicOracleParam`. A default `UnifiedOracleParam` is provided,
-so it does not need to be specified by the user; however, a custom `UnifiedOracleParam` can be defined as shown below.
-All other arguments are identical to those of [`ClassicalOracle`](@ref).
+A default `UnifiedOracleParam` is used if none is provided; users may pass a custom instance.
+Fields match [`BasicOracleParam`](@ref) except for `w0`.
+
+See also: [`BasicOracleParam`](@ref)
 
 # Example with custom \$w_0\$
 ```julia

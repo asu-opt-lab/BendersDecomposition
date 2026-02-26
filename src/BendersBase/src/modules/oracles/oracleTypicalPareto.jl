@@ -22,7 +22,7 @@ struct ParetoOracleParam <: AbstractOracleParam
     λ::Float64
     pareto_tol::Float64
 
-    function ParetoOracleParam(core_point::Vector{Float64}; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9, λ = 0.8, pareto_tol = 1e-9)
+    function ParetoOracleParam(core_point::Vector{Float64}; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9, λ = 1.0, pareto_tol = 1e-9)
         isempty(core_point) && throw(ArgumentError("ParetoOracleParam: core_point must be provided and non-empty"))
         (λ < 0.0 || λ > 1.0) && throw(ArgumentError("ParetoOracleParam: λ must be in [0, 1], got $λ"))
         new(rtol, atol, zero_tol, core_point, λ, pareto_tol)
@@ -68,13 +68,20 @@ where:
 \\end{align*}
 ```
 
-# Constructor
+# Constructors
 ```julia
 ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
              customize = customize_sub_model!,
              scen_idx::Int = 0)
+
+ParetoOracle(data::AbstractData, master::Master; 
+            customize = customize_sub_model!,
+            scen_idx::Int = 0,
+            param::ParetoOracleParam)
 ```
-The primal formulation of Magnanti-Wong problem is constructed inside the constructor.
+The second constructor is for `SeparableOracle`. `ParetoOracleParam` should be provided as `sub_oracle_param` in `SeparableOracle`.
+
+See also [`SeparableOracle`](@ref)
 
 # Arguments
 `ParetoOracleParam` is not an alias of `BasicOracleParam`. Users must define own `ParetoOracleParam` and
@@ -83,7 +90,7 @@ All other arguments are identical to those of [`ClassicalOracle`](@ref).
 
 # Example with a problem-specific param
 ```julia
-param = ParetoOracleParam(fill(1.0, data.n_facilities)) # Core point of Capacitated Facility Location Problem
+param = ParetoOracleParam(fill(sum(data.demands)/sum(data.capacities)+1e-3, data.n_facilities)) # Core point of Capacitated Facility Location Problem
 oracle = ParetoOracle(data, master; param = param)
 ```
 
