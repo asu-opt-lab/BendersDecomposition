@@ -124,8 +124,8 @@ end
         
         # Verify oracle has all required fields
         @test !isempty(oracle.fixed_x_constraints)
-        @test !isempty(oracle.pareto_fixing_constraints)
-        @test oracle.pareto_variable isa VariableRef
+        @test !isempty(oracle.pareto_model[:pareto_fixing_constraints])
+        @test oracle.pareto_model[:σ] isa VariableRef
         @test oracle.model isa Model
         @test oracle.pareto_model isa Model
         @test oracle.param.core_point == fill(0.5, data.n_facilities)
@@ -388,8 +388,8 @@ end
             param = ParetoOracleParam(fill(0.5, data.n))
             oracle = ParetoOracle(data, master, param; customize = customize_sub_sigma!)
 
-            # σ is stored as oracle.pareto_variable
-            σ = oracle.pareto_variable
+            # σ is stored as oracle.pareto_model[:σ]
+            σ = oracle.pareto_model[:σ]
             @test σ !== nothing
             @test has_upper_bound(σ)
             @test upper_bound(σ) == 0.0
@@ -415,12 +415,12 @@ end
             oracle = ParetoOracle(data, master, param; customize = customize_sub_fix!)
 
             # Should have one fixing constraint per decision variable
-            @test length(oracle.pareto_fixing_constraints) == data.n
+            @test length(oracle.pareto_model[:pareto_fixing_constraints]) == data.n
 
-            σ = oracle.pareto_variable
+            σ = oracle.pareto_model[:σ]
 
             # Verify fixing constraints are equality constraints
-            for con in oracle.pareto_fixing_constraints
+            for con in oracle.pareto_model[:pareto_fixing_constraints]
                 con_obj = constraint_object(con)
                 @test con_obj.set isa MOI.EqualTo
                 # Initial σ coefficient is 0 (set in generate_cuts to x*)
@@ -450,7 +450,7 @@ end
             param = ParetoOracleParam(fill(0.5, data.n))
             oracle = ParetoOracle(data, master, param; customize = customize_sub_bsigma!)
 
-            σ = oracle.pareto_variable
+            σ = oracle.pareto_model[:σ]
 
             # Find >= constraint and verify σ coefficient equals RHS
             geq_con = constraint_by_name(oracle.pareto_model, "geq_con")
@@ -482,7 +482,7 @@ end
             param = ParetoOracleParam(fill(0.5, data.n))
             oracle = ParetoOracle(data, master, param; customize = customize_sub_objsigma!)
 
-            σ = oracle.pareto_variable
+            σ = oracle.pareto_model[:σ]
             obj = objective_function(oracle.pareto_model)
 
             # Objective should include σ (initially with coefficient 0, set to ξ* during generate_cuts)
@@ -544,7 +544,7 @@ end
             param = ParetoOracleParam(fill(0.5, data.n))
             oracle = ParetoOracle(data, master, param; customize = customize_sub_eq!)
 
-            σ = oracle.pareto_variable
+            σ = oracle.pareto_model[:σ]
 
             # Find == constraint and verify σ coefficient equals RHS
             eq_con = constraint_by_name(oracle.pareto_model, "eq_con")
@@ -571,7 +571,7 @@ end
             param = ParetoOracleParam(fill(0.5, data.n))
             oracle = ParetoOracle(data, master, param; customize = customize_sub_zero!)
 
-            σ = oracle.pareto_variable
+            σ = oracle.pareto_model[:σ]
 
             # Constraint with RHS = 0 should have σ coefficient = 0
             zero_con = constraint_by_name(oracle.pareto_model, "zero_con")

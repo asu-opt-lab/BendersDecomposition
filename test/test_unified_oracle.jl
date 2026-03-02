@@ -269,7 +269,7 @@ end
         end
 
         @testset "σ variable structure" begin
-            # Test that σ variable is added with correct bounds (σ >= 0)
+            # Test that σ variable is free (no lower/upper bound)
             data = ReformTestData(2)
 
             function customize_sub_sigma!(model::Model, data::ReformTestData, scen_idx::Int; x)
@@ -289,8 +289,7 @@ end
             # Find σ variable by name
             σ = variable_by_name(oracle.model, "σ")
             @test σ !== nothing
-            @test has_lower_bound(σ)
-            @test lower_bound(σ) == 0.0
+            @test !has_lower_bound(σ)
             @test !has_upper_bound(σ)
         end
 

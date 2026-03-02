@@ -9,7 +9,9 @@ Parameter type for [`UnifiedOracle`](@ref).
 - `rtol::Float64`: Relative tolerance for cut violation detection (default: 1e-9).
 - `atol::Float64`: Absolute tolerance for cut violation detection (default: 0.0).
 - `zero_tol::Float64`: Threshold below which a value is considered zero (default: 1e-9).
-- `w0::Float64`: Weight for the epigraph constraint in the subproblem of `UnifiedOracle` (default: 1.0).
+- `w0::Float64`: Weight for the objective bound constraint in the subproblem of `UnifiedOracle` (default: 1.0).
+
+See also: [`UnifiedOracle`](@ref) for the definition of the objective bound constraint.
 """
 struct UnifiedOracleParam <: AbstractOracleParam
     rtol::Float64
@@ -29,7 +31,26 @@ end
 Oracle that generates unified Benders cuts using the formulation proposed by 
 Fischetti, M., Salvagnin, D., & Zanette, A. (2010), *A note on the selection of Benders’ cuts*, Mathematical Programming, 124(1), 175-182.
 
-## Dual Problem
+## Dual Problem (Fischetti et al., 2010)
+```math
+\\begin{align*}
+\\max \\quad & (b-Tx^*)^{\\top}\\pi - \\pi_0\\eta^* \\\\
+\\quad & Q^{\\top}\\pi \\leq d \\pi_0 \\quad (y) \\\\
+\\quad & \\sum_{i \\in I(T)} \\pi_i + w_0\\pi_0  = 1 \\quad (\\sigma) \\\\
+& \\pi_0, \\pi \\geq 0
+\\end{align*}
+```
+
+where:
+- ​\$x^*\$ is the current master solution.
+- ​\$T\$ is the coefficient matrix of variable \$x\$ in the primal problem.
+- ​\$I(T)\$ is the indices of the nonzero rows of \$T\$.
+- ​\$\\sigma\$ is the primal variable associated with the normalization constraint.
+
+## Notes
+In the primal problem, some rows of \$T\$ may be null rows. In those constraints, \$\\sigma\$ does not appear; that is, its coefficient is zero.
+
+## Dual Problem considered in [`UnifiedOracle`](@ref)
 ```math
 \\begin{align*}
 \\max \\quad & b^{\\top}\\pi - \\pi_0\\eta^* + (x^*)^{\\top}\\gamma_1 - (x^*)^{\\top}\\gamma_2 \\\\
@@ -40,13 +61,7 @@ Fischetti, M., Salvagnin, D., & Zanette, A. (2010), *A note on the selection of 
 \\end{align*}
 ```
 
-where:
-- `x^*` is the current master solution.
-- `T` is the coefficient matrix of variable `x` in primal problem.
-- `I(T)` is indices of the nonzero rows of `T`.
-- `σ` is the primal variable associated with the normalization constraint.
-
-## Primal Problem
+## Primal Problem considered in [`UnifiedOracle`](@ref)
 ```math
 \\begin{align*}
 \\min \\quad & \\sigma \\\\
@@ -59,7 +74,7 @@ where:
 ```
 
 ## Notes
-In the primal problem, some rows of `T` may be null rows. In those constraints, `σ` does not appear; that is, its coefficient is zero.
+We denote \$-d^{\\top}y + w_0\\sigma \\geq -\\eta^*\$ as an objective bound constraint.
 
 # Constructor
 ```julia
@@ -68,22 +83,26 @@ UnifiedOracle(data::AbstractData, master::Master;
               scen_idx::Int = 0, 
               param::UnifiedOracleParam = UnifiedOracleParam())
 ```
+Classic subproblem is reformulated to the primal problem of `UnifiedOracle` inside the constructor.
 
-# Example with custom w0
+# Arguments
+A default `UnifiedOracleParam` is used if none is provided; users may pass a custom instance.
+Fields match [`BasicOracleParam`](@ref) except for `w0`.
+
+See also: [`BasicOracleParam`](@ref)
+
+# Example with custom \$w_0\$
 ```julia
 param = UnifiedOracleParam(w0 = 2.0)  # Higher weight for objective violation
 oracle = UnifiedOracle(data, master; param = param)
 ```
 
-# Arguments
-The arguments of UnifiedOracle are same with [`ClassicalOracle`](@ref), whereas `model` is reformulated inside the constructor.
-
 # Fields
-- `param::UnifiedOracleParam`: [`UnifiedOracleParam`](@ref) including necessary tolerances and w0 weight.
-- `model::Model`: The primal problem of UnifiedOracle that generates unified Benders cuts.
-- `fixing_lb_constraints::Vector{ConstraintRef}`: Lower-bound fixing constraints in `model`.
-- `fixing_ub_constraints::Vector{ConstraintRef}`: Upper-bound fixing constraints in `model`.
-- `objective_constraint::ConstraintRef`: Epigraph constraint in `model`
+- `param::UnifiedOracleParam`: [`UnifiedOracleParam`](@ref) including necessary tolerances and \$w_0\$.
+- `model::Model`: The primal problem of `UnifiedOracle` that generates unified Benders cuts.
+- `fixing_lb_constraints::Vector{ConstraintRef}`: Lower-bound linking constraints in `model`.
+- `fixing_ub_constraints::Vector{ConstraintRef}`: Upper-bound linking constraints in `model`.
+- `objective_constraint::ConstraintRef`: Objective bound constraint in `model`
 """
 mutable struct UnifiedOracle <: AbstractTypicalOracle
     
@@ -113,8 +132,8 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
         # Build the submodel using user-defined customization, passing the copied variables
         customize(model, data, scen_idx; x_copy...)
 
-        # Validate that all constraints are supported types (LP)
-        _validate_constraint_types(model)
+        # Validate that the subproblem is LP-compatible for typical oracles
+        _validate_lp_compatibility(model)
 
         # Create oracle instance
         oracle = new()
@@ -193,7 +212,7 @@ end
 Check if a constraint contains any of the decision variables.
 Returns true if the constraint's function references any variable in the decision set.
 
-Note: Constraint function type validation is performed by _validate_constraint_types() 
+Note: Constraint function type validation is performed by _validate_lp_compatibility() 
 before this function is called, so we only handle VariableRef and AffExpr.
 """
 function _contains_decision_vars(con::ConstraintRef, decision_vars_set::Set{VariableRef})
@@ -201,7 +220,7 @@ function _contains_decision_vars(con::ConstraintRef, decision_vars_set::Set{Vari
     
     if func isa VariableRef
         return func in decision_vars_set
-    else  # AffExpr (validated by _validate_constraint_types)
+    else  # AffExpr (validated by _validate_lp_compatibility)
         return any(var in decision_vars_set for (var, _) in func.terms)
     end
 end
@@ -246,7 +265,7 @@ function _rewrite_single_constraint!(model::Model, con::ConstraintRef, σ::Varia
         # Original: f(x) <= rhs  -->  f(x) - σ <= rhs
         set_normalized_coefficient(con, σ, -1.0)
         
-    else  # MOI.EqualTo (validated by _validate_constraint_types)
+    else  # MOI.EqualTo (validated by _validate_lp_compatibility)
         # == constraint: split into >= and <= with σ
         rhs = set.value
         original_name = name(con)
@@ -274,7 +293,7 @@ end
     generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
                   tol_normalize = 1.0, time_limit = 3600)
 
-Generate Benders cuts using the unified oracle.
+Generate Benders cuts using the reformulated primal problem [`UnifiedOracle`](@ref).
 """
 function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
                        tol_normalize = 1.0, time_limit = 3600)
