@@ -1,4 +1,4 @@
-export AbstractTypicalOracle, generate_cuts, set_parameter!, BasicOracleParam
+export AbstractTypicalOracle, generate_cuts, set_parameter!, BasicOracleParam, _validate_lp_compatibility
 """
 Abstract type for typical oracles used in Benders decomposition.
 """
@@ -73,15 +73,12 @@ end
 
 Validate that the model is compatible with typical oracles.
 Typical oracles require a continuous Linear Programming (LP) subproblem:
-- no integer/binary/semi-* variable-in-set constraints,
-- an explicit linear objective,
-- linear structural constraints with set type in {GreaterThan, LessThan, EqualTo},
-- variable-in-set constraints limited to continuous bounds/fixes
-  (GreaterThan, LessThan, EqualTo, Interval).
+- no discontinuous(e.g., integer/binary/semi-*) variables,
+- affine objective and constraints,
 
-Throws UnsupportedModelException when unsupported model components are found.
+Throws `UnsupportedModelException` when unsupported model components are found.
 
-This validation is shared by ClassicalOracle, UnifiedOracle, and ParetoOracle.
+This validation is shared by `ClassicalOracle`, `UnifiedOracle`, and `ParetoOracle`.
 """
 function _validate_lp_compatibility(model::Model)
     # 1. Check for Integer/Binary variables (Mixed-Integer terms)
@@ -95,50 +92,32 @@ function _validate_lp_compatibility(model::Model)
         end
     end
 
-    # 2. Check Objective Function (must be explicitly defined and linear)
+    # 2. Check Objective Function (must be affine)
     obj_type = objective_function_type(model)
-    if obj_type === Nothing
-        throw(UnsupportedModelException(
-            "No objective function is defined. " *
-            "Typical oracles require an explicit linear objective. " *
-            "Use @objective(model, Min/Max, ...), e.g., @objective(model, Min, 0.0)."
-        ))
-    elseif !(obj_type <: Union{VariableRef, AffExpr, Real})
+    if !(obj_type <: Union{VariableRef, AffExpr, Real})
         throw(UnsupportedModelException(
             "Unsupported objective function type: $obj_type. " *
             "Typical oracles only support Linear Programming (LP) with linear objectives."
         ))
     end
 
-    # 3. Check constraints in one pass (structural + variable-in-set)
+    # 3. Check constraints
     for con in all_constraints(model, include_variable_in_set_constraints=true)
         con_obj = constraint_object(con)
         set = con_obj.set
         func = con_obj.func
 
-        # Variable-in-set constraints: allow continuous bounds/fixes only
-        if func isa VariableRef
-            if !(set isa MOI.GreaterThan || set isa MOI.LessThan || set isa MOI.EqualTo || set isa MOI.Interval)
-                throw(UnsupportedModelException(
-                    "Unsupported variable-in-set constraint type: $(typeof(set)). " *
-                    "Typical oracles only support continuous variable bounds/fixes with " *
-                    "GreaterThan (>=), LessThan (<=), EqualTo (==), or Interval."
-                ))
-            end
-        # Structural constraints: linear function with supported scalar sets
-        elseif func isa AffExpr
-            if !(set isa MOI.GreaterThan || set isa MOI.LessThan || set isa MOI.EqualTo)
+        if func isa VariableRef || func isa AffExpr || (func isa AbstractVector && all(x -> x isa AffExpr || x isa VariableRef, func))
+            if !(set isa MOI.GreaterThan || set isa MOI.LessThan || set isa MOI.EqualTo || set isa MOI.Interval || set isa MOI.Zeros || set isa MOI.Nonpositives || set isa MOI.Nonnegatives)
                 throw(UnsupportedModelException(
                     "Unsupported constraint set type: $(typeof(set)). " *
-                    "Typical oracles only support GreaterThan (>=), LessThan (<=), and EqualTo (==) constraints " *
-                    "for affine structural constraints. If you have interval or other set types, please reformulate them."
+                    "Typical oracles only support affine constraints."
                 ))
             end
         else
             throw(UnsupportedModelException(
                 "Unsupported constraint function type: $(typeof(func)). " *
-                "Typical oracles only support linear constraints (LP). " *
-                "Quadratic or other non-linear constraints are not supported."
+                "Typical oracles only support affine constraints."
             ))
         end
     end
