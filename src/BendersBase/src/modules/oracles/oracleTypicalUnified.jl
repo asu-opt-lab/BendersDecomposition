@@ -197,7 +197,10 @@ Only constraints that contain decision variables (fixed_x_vars) are relaxed.
 function _rewrite_problem_constraints_with_sigma!(model::Model, σ::VariableRef, fixed_x_vars::Vector{VariableRef})
     # Build set of decision variables for fast lookup
     decision_vars_set = Set{VariableRef}(fixed_x_vars)
-    
+
+    # Normalize Interval/Zeros/Nonnegatives/Nonpositives into scalar GreaterThan/LessThan/EqualTo
+    _normalize_to_scalar_constraints!(model)
+
     # Process each constraint (excluding variable bounds)
     for con in all_constraints(model, include_variable_in_set_constraints=false)
         if _contains_decision_vars(con, decision_vars_set)
@@ -222,24 +225,6 @@ function _contains_decision_vars(con::ConstraintRef, decision_vars_set::Set{Vari
         return func in decision_vars_set
     else  # AffExpr (validated by _validate_lp_compatibility)
         return any(var in decision_vars_set for (var, _) in func.terms)
-    end
-end
-
-"""
-    _insert_suffix(name::String, suffix::String) -> String
-
-Insert suffix before the index brackets in a constraint name.
-Examples:
-- `demand[1]` + `_lb` -> `demand_lb[1]`
-- `flow[i,j]` + `_ub` -> `flow_ub[i,j]`
-- `simple` + `_lb` -> `simple_lb`
-"""
-function _insert_suffix(name::String, suffix::String)
-    bracket_pos = findfirst('[', name)
-    if bracket_pos === nothing
-        return name * suffix
-    else
-        return name[1:bracket_pos-1] * suffix * name[bracket_pos:end]
     end
 end
 

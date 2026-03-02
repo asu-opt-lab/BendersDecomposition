@@ -215,37 +215,183 @@ end
     @testset "Error Handling" begin
         data = create_unified_test_data()
 
-        # Note: QuadExpr constraint test is skipped because HiGHS doesn't support quadratic
-        # constraints, so JuMP throws ErrorException before our code can process it.
-        # This test would require a QP-capable solver like CPLEX or Gurobi.
-
-        # Test 1: UnsupportedModelException for unsupported constraint set type (Interval)
-        @testset "Interval constraint throws UnsupportedModelException" begin
-            function customize_sub_interval_error!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
-                optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
-                set_optimizer(model, optimizer)
-
-                I, J = data.n_facilities, data.n_customers
-                @variable(model, y[1:I, 1:J] >= 0)
-
-                @objective(model, Min, sum(data.costs .* y))
-                @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
-                # Interval constraint - should trigger UnsupportedModelException
-                @constraint(model, interval_con, 0 <= y[1,1] + x[1] <= 2)
-
-                return nothing
-            end
-
-            master = Master(data; customize = customize_master_unified!)
-            @test_throws UnsupportedModelException UnifiedOracle(data, master; customize = customize_sub_interval_error!)
-        end
-
-        # Test 2: ArgumentError for invalid w0
+        # Test: ArgumentError for invalid w0
         @testset "Invalid w0 throws ArgumentError" begin
             @test_throws ArgumentError UnifiedOracleParam(w0 = 0.0)
             @test_throws ArgumentError UnifiedOracleParam(w0 = -1.0)
             @test_throws ArgumentError UnifiedOracleParam(w0 = -100.0)
         end
+    end
+
+    @testset "Interval Constraint Accepted" begin
+        # Test that interval constraints are properly split and accepted
+        data = create_unified_test_data()
+
+        function customize_sub_interval_accept!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+
+            I, J = data.n_facilities, data.n_customers
+            @variable(model, y[1:I, 1:J] >= 0)
+
+            @objective(model, Min, sum(data.costs .* y))
+            @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
+            @constraint(model, facility_open[i in 1:I, j in 1:J], y[i,j] <= x[i])
+
+            # Interval constraint — should be accepted
+            @constraint(model, interval_con, 0.5 <= sum(y) <= 10.0)
+
+            return nothing
+        end
+
+        master = Master(data; customize = customize_master_unified!)
+        # Should NOT throw
+        oracle = UnifiedOracle(data, master; customize = customize_sub_interval_accept!)
+        @test oracle.model isa Model
+    end
+
+    @testset "Interval Constraint Reformulation" begin
+        # Verify that interval constraints are split and σ is correctly applied
+        struct UnifiedIntervalReformData <: AbstractData
+            n::Int
+        end
+
+        function customize_master_interval_reform!(model::Model, data::UnifiedIntervalReformData)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+            @variable(model, x[1:data.n], Bin)
+            @variable(model, t >= -1e6)
+            @objective(model, Min, t)
+            @constraint(model, sum(x) >= 1)
+            return (x = x,), t
+        end
+
+        data = UnifiedIntervalReformData(2)
+
+        function customize_sub_interval_reform!(model::Model, data::UnifiedIntervalReformData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+            @variable(model, y >= 0)
+            @objective(model, Min, y)
+            # Interval: 2.0 <= y + x[1] <= 8.0  (contains decision var x)
+            @constraint(model, iv_con, 2.0 <= y + x[1] <= 8.0)
+            return nothing
+        end
+
+        master = Master(data; customize = customize_master_interval_reform!)
+        oracle = UnifiedOracle(data, master; customize = customize_sub_interval_reform!)
+
+        σ = variable_by_name(oracle.model, "σ")
+
+        # Interval should be split into _lb (>= 2.0) and _ub (<= 8.0)
+        # Then unified transform adds +σ to >= and -σ to <=
+        lb_con = constraint_by_name(oracle.model, "iv_con_lb")
+        ub_con = constraint_by_name(oracle.model, "iv_con_ub")
+        @test lb_con !== nothing
+        @test ub_con !== nothing
+        @test normalized_coefficient(lb_con, σ) == 1.0   # >= gets +σ
+        @test normalized_coefficient(ub_con, σ) == -1.0   # <= gets -σ
+    end
+
+    @testset "Vectorized Constraints Accepted" begin
+        # Test that vectorized constraints (A*y == b form) are properly split and accepted
+        data = create_unified_test_data()
+
+        function customize_sub_vectorized!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+
+            I, J = data.n_facilities, data.n_customers
+            @variable(model, y[1:I, 1:J] >= 0)
+
+            @objective(model, Min, sum(data.costs .* y))
+            # Vectorized equality (VectorAffineFunction in Zeros)
+            A_demand = zeros(J, I * J)
+            for j in 1:J
+                for i in 1:I
+                    A_demand[j, (i-1)*J+j] = 1.0
+                end
+            end
+            y_vec = vec(y)
+            b_demand = ones(J)
+            @constraint(model, demand, A_demand * y_vec == b_demand)
+            # Broadcasted form
+            @constraint(model, facility_open[i in 1:I, j in 1:J], y[i,j] <= x[i])
+
+            return nothing
+        end
+
+        master = Master(data; customize = customize_master_unified!)
+        # Should NOT throw
+        oracle = UnifiedOracle(data, master; customize = customize_sub_vectorized!)
+        @test oracle.model isa Model
+    end
+
+    @testset "All Allowed Model Patterns" begin
+        # Test with ALL valid patterns from test_validate_LP.jl
+        data = create_unified_test_data()
+
+        function customize_sub_all_patterns!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+
+            I, J = data.n_facilities, data.n_customers
+            # Various variable forms
+            @variable(model, y[1:I, 1:J] >= 0)
+            @variable(model, 0.1 <= z[i=1:I] <= 10.0)  # double-bounded
+
+            @objective(model, Min, sum(data.costs .* y) + sum(z))
+
+            # Standard constraints
+            @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
+            @constraint(model, facility_open[i in 1:I, j in 1:J], y[i,j] <= x[i])
+
+            # Interval constraint
+            @constraint(model, iv, 1.0 <= sum(z) <= 30.0)
+
+            # Broadcasted vectorized form
+            @constraint(model, z .<= fill(10.0, I))
+            @constraint(model, z .>= fill(0.1, I))
+
+            return nothing
+        end
+
+        master = Master(data; customize = customize_master_unified!)
+        # Should NOT throw
+        oracle = UnifiedOracle(data, master; customize = customize_sub_all_patterns!)
+        @test oracle.model isa Model
+    end
+
+    @testset "UnifiedOracle Convergence with Interval Constraints" begin
+        # Verify Benders still converges correctly when subproblem has interval constraints
+        data = create_unified_test_data()
+        mip_opt = solve_mip_unified_reference(data)
+
+        function customize_sub_interval_converge!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+
+            I, J = data.n_facilities, data.n_customers
+            @variable(model, y[1:I, 1:J] >= 0)
+
+            @objective(model, Min, sum(data.costs .* y))
+            @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
+            @constraint(model, facility_open[i in 1:I, j in 1:J], y[i,j] <= x[i])
+            # Interval constraint that does NOT change optimal solution (loose bound)
+            @constraint(model, 0.0 <= sum(y) <= 100.0)
+
+            return nothing
+        end
+
+        benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
+
+        master = Master(data; customize = customize_master_unified!)
+        oracle = UnifiedOracle(data, master; customize = customize_sub_interval_converge!)
+        env = BendersSeq(master, oracle; param = benders_param)
+        solve!(env)
+
+        @test env.termination_status == Optimal()
+        @test isapprox(mip_opt, env.obj_value, atol = 1e-4)
     end
 
     @testset "Reformulation Verification" begin

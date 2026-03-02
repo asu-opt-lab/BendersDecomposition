@@ -95,7 +95,7 @@ end
         @test param.rtol == 1e-9
         @test param.atol == 0.0
         @test param.zero_tol == 1e-9
-        @test param.λ == 0.8  # Default λ
+        @test param.λ == 1.0  # Default λ
 
         # Test with custom tolerances
         param2 = ParetoOracleParam([0.3, 0.7]; rtol = 1e-8, atol = 1e-6, zero_tol = 1e-5)
@@ -103,7 +103,7 @@ end
         @test param2.rtol == 1e-8
         @test param2.atol == 1e-6
         @test param2.zero_tol == 1e-5
-        @test param2.λ == 0.8  # Default λ
+        @test param2.λ == 1.0  # Default λ
         
         # Test with custom λ
         param3 = ParetoOracleParam([0.5, 0.5]; λ = 0.8)
@@ -140,31 +140,182 @@ end
         @test_throws DimensionMismatch ParetoOracle(data, master, param_wrong; customize = customize_sub_pareto!)
     end
     
-    @testset "ParetoOracle Unsupported Constraint Type" begin
-        # Test that interval constraints throw UnsupportedModelException
+    @testset "Interval Constraint Accepted" begin
+        # Test that interval constraints are properly split and accepted
         data = create_pareto_test_data()
         master = Master(data; customize = customize_master_pareto!)
         param = ParetoOracleParam(fill(0.5, data.n_facilities))
-        
-        # Custom subproblem with interval constraint (unsupported)
+
         function customize_sub_with_interval!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
-            
+
             I, J = data.n_facilities, data.n_customers
             @variable(model, y[1:I, 1:J] >= 0)
-            
+
             @objective(model, Min, sum(data.costs .* y))
             @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
             @constraint(model, facility_open[i in 1:I, j in 1:J], y[i,j] <= x[i])
-            
-            # Add interval constraint (not supported by ParetoOracle)
-            @constraint(model, 0.5 <= sum(y) <= 10.0)
-            
+
+            # Add interval constraint — should be accepted, not rejected
+            @constraint(model, interval_con, 0.5 <= sum(y) <= 10.0)
+
             return nothing
         end
-        
-        @test_throws UnsupportedModelException ParetoOracle(data, master, param; customize = customize_sub_with_interval!)
+
+        # Should NOT throw
+        oracle = ParetoOracle(data, master, param; customize = customize_sub_with_interval!)
+        @test oracle.model isa Model
+        @test oracle.pareto_model isa Model
+    end
+
+    @testset "Interval Constraint Reformulation" begin
+        # Verify σ coefficients are correct after splitting interval constraints
+        struct ParetoIntervalReformData <: AbstractData
+            n::Int
+        end
+
+        function customize_master_interval_reform!(model::Model, data::ParetoIntervalReformData)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+            @variable(model, x[1:data.n], Bin)
+            @variable(model, t >= -1e6)
+            @objective(model, Min, t)
+            @constraint(model, sum(x) >= 1)
+            return (x = x,), t
+        end
+
+        data = ParetoIntervalReformData(2)
+
+        function customize_sub_interval_reform!(model::Model, data::ParetoIntervalReformData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+            @variable(model, y >= 0)
+            @objective(model, Min, y)
+            # Interval constraint: 2.0 <= y + x[1] <= 8.0
+            @constraint(model, iv_con, 2.0 <= y + x[1] <= 8.0)
+            return nothing
+        end
+
+        master = Master(data; customize = customize_master_interval_reform!)
+        param = ParetoOracleParam(fill(0.5, data.n))
+        oracle = ParetoOracle(data, master, param; customize = customize_sub_interval_reform!)
+
+        σ = oracle.pareto_model[:σ]
+
+        # Interval should be split into _lb (>= 2.0) and _ub (<= 8.0)
+        lb_con = constraint_by_name(oracle.pareto_model, "iv_con_lb")
+        ub_con = constraint_by_name(oracle.pareto_model, "iv_con_ub")
+        @test lb_con !== nothing
+        @test ub_con !== nothing
+        # σ coefficient should equal RHS for each split constraint
+        @test normalized_coefficient(lb_con, σ) == 2.0
+        @test normalized_coefficient(ub_con, σ) == 8.0
+    end
+
+    @testset "Vectorized Constraints Accepted" begin
+        # Test that vectorized constraints (A*y == b form) are properly split and accepted
+        data = create_pareto_test_data()
+        master = Master(data; customize = customize_master_pareto!)
+        param = ParetoOracleParam(fill(0.5, data.n_facilities))
+
+        function customize_sub_vectorized!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+
+            I, J = data.n_facilities, data.n_customers
+            @variable(model, y[1:I, 1:J] >= 0)
+
+            @objective(model, Min, sum(data.costs .* y))
+            # Vectorized equality (VectorAffineFunction in Zeros)
+            A_demand = zeros(J, I * J)
+            for j in 1:J
+                for i in 1:I
+                    A_demand[j, (i-1)*J+j] = 1.0
+                end
+            end
+            y_vec = vec(y)
+            b_demand = ones(J)
+            @constraint(model, demand, A_demand * y_vec == b_demand)
+            # Broadcasted form
+            @constraint(model, facility_open[i in 1:I, j in 1:J], y[i,j] <= x[i])
+
+            return nothing
+        end
+
+        # Should NOT throw
+        oracle = ParetoOracle(data, master, param; customize = customize_sub_vectorized!)
+        @test oracle.model isa Model
+    end
+
+    @testset "All Allowed Model Patterns" begin
+        # Test with ALL valid patterns from test_validate_LP.jl
+        data = create_pareto_test_data()
+        master = Master(data; customize = customize_master_pareto!)
+        param = ParetoOracleParam(fill(0.5, data.n_facilities))
+
+        function customize_sub_all_patterns!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+
+            I, J = data.n_facilities, data.n_customers
+            # Various variable container forms
+            @variable(model, y[1:I, 1:J] >= 0)
+            @variable(model, 0.1 <= z[i=1:I] <= 10.0)  # double-bounded
+
+            @objective(model, Min, sum(data.costs .* y) + sum(z))
+
+            # Standard constraints
+            @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
+            @constraint(model, facility_open[i in 1:I, j in 1:J], y[i,j] <= x[i])
+
+            # Interval constraint
+            @constraint(model, iv, 1.0 <= sum(z) <= 30.0)
+
+            # Broadcasted vectorized form
+            @constraint(model, z .<= fill(10.0, I))
+            @constraint(model, z .>= fill(0.1, I))
+
+            return nothing
+        end
+
+        # Should NOT throw
+        oracle = ParetoOracle(data, master, param; customize = customize_sub_all_patterns!)
+        @test oracle.model isa Model
+        @test oracle.pareto_model isa Model
+    end
+
+    @testset "ParetoOracle Convergence with Interval Constraints" begin
+        # Verify Benders still converges correctly when subproblem has interval constraints
+        data = create_pareto_test_data()
+        mip_opt = solve_mip_pareto_reference(data)
+
+        function customize_sub_interval_converge!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
+            optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+            set_optimizer(model, optimizer)
+
+            I, J = data.n_facilities, data.n_customers
+            @variable(model, y[1:I, 1:J] >= 0)
+
+            @objective(model, Min, sum(data.costs .* y))
+            @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
+            @constraint(model, facility_open[i in 1:I, j in 1:J], y[i,j] <= x[i])
+            # Interval constraint that does NOT change optimal solution (loose bound)
+            @constraint(model, 0.0 <= sum(y) <= 100.0)
+
+            return nothing
+        end
+
+        benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
+
+        master = Master(data; customize = customize_master_pareto!)
+        param = ParetoOracleParam(fill(0.5, data.n_facilities))
+        oracle = ParetoOracle(data, master, param; customize = customize_sub_interval_converge!)
+        env = BendersSeq(master, oracle; param = benders_param)
+        solve!(env)
+
+        @test env.termination_status == Optimal()
+        @test isapprox(mip_opt, env.obj_value, atol = 1e-4)
     end
     
     @testset "ParetoOracle vs ClassicalOracle - Basic Problem" begin

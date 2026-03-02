@@ -1,4 +1,4 @@
-export AbstractTypicalOracle, generate_cuts, set_parameter!, BasicOracleParam, _validate_lp_compatibility
+export AbstractTypicalOracle, generate_cuts, set_parameter!, BasicOracleParam, _validate_lp_compatibility, _normalize_to_scalar_constraints!
 """
 Abstract type for typical oracles used in Benders decomposition.
 """
@@ -120,6 +120,93 @@ function _validate_lp_compatibility(model::Model)
                 "Typical oracles only support affine constraints."
             ))
         end
+    end
+end
+
+"""
+    _insert_suffix(name::String, suffix::String) -> String
+
+Insert suffix before the index brackets in a constraint name.
+Examples:
+- `demand[1]` + `_lb` -> `demand_lb[1]`
+- `flow[i,j]` + `_ub` -> `flow_ub[i,j]`
+- `simple` + `_lb` -> `simple_lb`
+"""
+function _insert_suffix(name::String, suffix::String)
+    bracket_pos = findfirst('[', name)
+    if bracket_pos === nothing
+        return name * suffix
+    else
+        return name[1:bracket_pos-1] * suffix * name[bracket_pos:end]
+    end
+end
+
+"""
+    _normalize_to_scalar_constraints!(model::Model)
+
+Pre-process all non-scalar constraints into scalar form so that oracle
+transformations only encounter `GreaterThan`, `LessThan`, and `EqualTo`.
+
+Splits:
+- `MOI.Interval` → `GreaterThan(lower)` + `LessThan(upper)`
+- `MOI.Zeros` → individual `EqualTo(0)` per row
+- `MOI.Nonnegatives` → individual `GreaterThan(0)` per row
+- `MOI.Nonpositives` → individual `LessThan(0)` per row
+"""
+function _normalize_to_scalar_constraints!(model::Model)
+    # Collect constraints to split (avoid modifying during iteration)
+    cons_to_split = ConstraintRef[]
+    for con in all_constraints(model, include_variable_in_set_constraints=false)
+        set = constraint_object(con).set
+        if set isa MOI.Interval || set isa MOI.Zeros || set isa MOI.Nonnegatives || set isa MOI.Nonpositives
+            push!(cons_to_split, con)
+        end
+    end
+
+    for con in cons_to_split
+        con_obj = constraint_object(con)
+        set = con_obj.set
+        func = con_obj.func
+        original_name = name(con)
+
+        if set isa MOI.Interval
+            # lb <= expr <= ub  →  expr >= lb  AND  expr <= ub
+            lb_con = @constraint(model, func >= set.lower)
+            ub_con = @constraint(model, func <= set.upper)
+            if !isempty(original_name)
+                set_name(lb_con, _insert_suffix(original_name, "_lb"))
+                set_name(ub_con, _insert_suffix(original_name, "_ub"))
+            end
+
+        elseif set isa MOI.Zeros
+            # [f1; f2; ...] ∈ Zeros  →  f1 == 0, f2 == 0, ...
+            for (i, fi) in enumerate(func)
+                new_con = @constraint(model, fi == 0)
+                if !isempty(original_name)
+                    set_name(new_con, _insert_suffix(original_name, "_$i"))
+                end
+            end
+
+        elseif set isa MOI.Nonnegatives
+            # [f1; f2; ...] ∈ Nonneg  →  f1 >= 0, f2 >= 0, ...
+            for (i, fi) in enumerate(func)
+                new_con = @constraint(model, fi >= 0)
+                if !isempty(original_name)
+                    set_name(new_con, _insert_suffix(original_name, "_$i"))
+                end
+            end
+
+        elseif set isa MOI.Nonpositives
+            # [f1; f2; ...] ∈ Nonpos  →  f1 <= 0, f2 <= 0, ...
+            for (i, fi) in enumerate(func)
+                new_con = @constraint(model, fi <= 0)
+                if !isempty(original_name)
+                    set_name(new_con, _insert_suffix(original_name, "_$i"))
+                end
+            end
+        end
+
+        delete(model, con)
     end
 end
 
