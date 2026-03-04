@@ -141,7 +141,6 @@ function solve!(env::BendersBnB)
         println("Elapsed time $(elapsed_time)")
         println("Objective bound: $(JuMP.objective_bound(env.master.model))")
         println("Objective value: $(env.obj_value)")
-        println("Relative gap: $(JuMP.relative_gap(env.master.model))")
         println("Total cuts added as lazy: $(log.n_lazy_cuts)")
         !(env.user_callback isa NoUserCallback) && println("Total cuts added as user: $(log.n_user_cuts)")
     end
