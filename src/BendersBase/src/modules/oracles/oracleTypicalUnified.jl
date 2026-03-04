@@ -198,8 +198,8 @@ function _rewrite_problem_constraints_with_sigma!(model::Model, σ::VariableRef,
     # Build set of decision variables for fast lookup
     decision_vars_set = Set{VariableRef}(fixed_x_vars)
 
-    # Normalize Interval/Zeros/Nonnegatives/Nonpositives into scalar GreaterThan/LessThan/EqualTo
-    _normalize_to_scalar_constraints!(model)
+    # Scalarize Interval/Zeros/Nonnegatives/Nonpositives into scalar GreaterThan/LessThan/EqualTo
+    _scalarize_constraints!(model)
 
     # Process each constraint (excluding variable bounds)
     for con in all_constraints(model, include_variable_in_set_constraints=false)

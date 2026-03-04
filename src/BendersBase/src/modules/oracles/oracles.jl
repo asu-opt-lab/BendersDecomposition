@@ -1,4 +1,4 @@
-export AbstractTypicalOracle, generate_cuts, set_parameter!, BasicOracleParam, _validate_lp_compatibility, _normalize_to_scalar_constraints!
+export AbstractTypicalOracle, generate_cuts, set_parameter!, BasicOracleParam, _validate_lp_compatibility, _scalarize_constraints!
 """
 Abstract type for typical oracles used in Benders decomposition.
 """
@@ -142,7 +142,7 @@ function _insert_suffix(name::String, suffix::String)
 end
 
 """
-    _normalize_to_scalar_constraints!(model::Model)
+    _scalarize_constraints!(model::Model)
 
 Pre-process all non-scalar constraints into scalar form so that oracle
 transformations only encounter `GreaterThan`, `LessThan`, and `EqualTo`.
@@ -153,7 +153,7 @@ Splits:
 - `MOI.Nonnegatives` → individual `GreaterThan(0)` per row
 - `MOI.Nonpositives` → individual `LessThan(0)` per row
 """
-function _normalize_to_scalar_constraints!(model::Model)
+function _scalarize_constraints!(model::Model)
     # Collect constraints to split (avoid modifying during iteration)
     cons_to_split = ConstraintRef[]
     for con in all_constraints(model, include_variable_in_set_constraints=false)

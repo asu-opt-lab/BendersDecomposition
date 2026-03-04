@@ -182,8 +182,8 @@ function _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{Vari
 
     σ = @variable(pareto_model, σ <= 0)
 
-    # Normalize Interval/Zeros/Nonnegatives/Nonpositives into scalar GreaterThan/LessThan/EqualTo
-    _normalize_to_scalar_constraints!(pareto_model)
+    # Scalarize Interval/Zeros/Nonnegatives/Nonpositives into scalar GreaterThan/LessThan/EqualTo
+    _scalarize_constraints!(pareto_model)
 
     for con in all_constraints(pareto_model, include_variable_in_set_constraints=false)
         # `_validate_lp_compatibility` guarantees supported scalar sets
