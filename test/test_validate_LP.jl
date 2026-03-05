@@ -1,10 +1,11 @@
 using BendersX
+import BendersBase
 using Test
 using JuMP
 
 function err_msg_test(model)
     err = try
-        _validate_lp_compatibility(model)
+        BendersBase._validate_lp_compatibility(model)
         nothing
     catch e
         e

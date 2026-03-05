@@ -1,4 +1,4 @@
-export AbstractTypicalOracle, generate_cuts, set_parameter!, BasicOracleParam, _validate_lp_compatibility, _scalarize_constraints!
+export AbstractTypicalOracle, generate_cuts, set_parameter!, BasicOracleParam
 """
 Abstract type for typical oracles used in Benders decomposition.
 """
@@ -7,34 +7,32 @@ abstract type AbstractTypicalOracle <: AbstractOracle end
 """
 Prototype for the `generate_cuts` function.
 
-Must be implemented by any concrete subtype of `AbstractOracle`. Given a candidate solution `(x_value, t_value)`, this method should attempt to separate the point via
+Must be implemented by any concrete subtype of [`AbstractOracle`](@ref). Given a candidate solution `(x_value, t_value)`, this method should attempt to separate the point via
 valid inequalities.
 
 Arguments:
 - `x_value`: Given `x` solution.
 - `t_value`: Given `t` solution.
 - `tol_normalize`: Factor used to normalize the tolerance for cut generation (default: 1.0). This parameter is used only in the DCGLP procedure, and users typically do not need to modify it.
-- `time_limit`: Maximum time allowed for the oracle call (default: 3600 seconds).
+- `time_limit`: Maximum time allowed for the oracle call (default: 3,600 seconds).
 
 Returns (to be implemented by concrete oracles):
-- `is_in_L::Bool`: Whether the point is in the feasible region L (true if feasible, false if cuts were generated).
+- `is_in_L::Bool`: Whether the point is in the set of interest (the set L for typical oracles and the split-induced polyhedra for split oracles).
 - `hyperplanes::Vector{Hyperplane}`: List of valid inequalities to be added to the master.
 - `sub_obj_vals::Vector{Float64}`: Subproblem objective values for updating the upper bound. 
   Can be `NaN` if no meaningful objective was computed.
 
 Throws an error if not implemented for a specific oracle type.
 """
-function generate_cuts(oracle::AbstractTypicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
+function generate_cuts(oracle::AbstractOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     throw(UndefError("update generate_cuts for $(typeof(oracle))"))
 end
 
 
 """
-Basic parameter structure for oracles. Users can define oracle-specific parameter structures as subtypes of AbstractOracleParam. 
-If the oracle has no specific parameter fields, use BasicOracleParam.
-- `rtol` and `atol` determine the threshold for identifying a violation. Specifically, a violation is detected when
-`sub_obj_val` >= `t_value` * (1 + `rtol`) + `atol`
-in the finite-optimal subproblem case.
+Basic parameter structure for oracles. Users can define oracle-specific parameter structures as subtypes of [`AbstractOracleParam`](@ref). 
+If the oracle has no specific parameter fields, use `BasicOracleParam`.
+- `rtol` and `atol` determine the threshold for identifying a violation. Specifically, a violation is detected when `sub_obj_val` >= `t_value` * (1 + `rtol`) + `atol` in the finite-optimal subproblem case.
 - `zero_tol` specifies the threshold below which a value is considered zero.
 """
 struct BasicOracleParam <: AbstractOracleParam
@@ -48,7 +46,7 @@ struct BasicOracleParam <: AbstractOracleParam
 end
 
 # Common utility functions for managing oracle parameters
-
+# To-Do: consider removing it
 function set_parameter!(oracle::AbstractTypicalOracle, param::AbstractOracleParam)
   if :param ∉ fieldnames(typeof(oracle))
       throw(UndefError("$(typeof(oracle)) must have a field named `param`"))
@@ -72,36 +70,36 @@ end
     _validate_lp_compatibility(model::Model)
 
 Validate that the model is compatible with typical oracles.
-Typical oracles require a continuous Linear Programming (LP) subproblem:
-- no discontinuous(e.g., integer/binary/semi-*) variables,
-- affine objective and constraints,
+Typical oracles require a Linear Programming (LP) subproblem:
+- no discontinuous (e.g., integer/binary/semi-*) variables,
+- affine objective and constraints.
 
 Throws `UnsupportedModelException` when unsupported model components are found.
 
-This validation is shared by `ClassicalOracle`, `UnifiedOracle`, and `ParetoOracle`.
+This validation is shared by [`ClassicalOracle`](@ref), [`UnifiedOracle`](@ref), and [`ParetoOracle`](@ref).
 """
 function _validate_lp_compatibility(model::Model)
-    # 1. Check for Integer/Binary variables (Mixed-Integer terms)
+    # 1. Check for discontinuous variables
     for (_, S) in list_of_constraint_types(model)
         if S <: Union{MOI.Integer, MOI.ZeroOne, MOI.Semicontinuous, MOI.Semiinteger}
             throw(UnsupportedModelException(
-                "Unsupported constraint type: $S. " *
-                "Typical oracles require a continuous Linear Programming (LP) subproblem. " *
-                "Integer or binary variables are not allowed."
+                "Unsupported variable type: $S. " *
+                "Typical oracles require a Linear Programming (LP) subproblem. " *
+                "Discontinuous variables are not allowed."
             ))
         end
     end
 
-    # 2. Check Objective Function (must be affine)
+    # 2. Check for non-affine objective function
     obj_type = objective_function_type(model)
     if !(obj_type <: Union{VariableRef, AffExpr, Real})
         throw(UnsupportedModelException(
             "Unsupported objective function type: $obj_type. " *
-            "Typical oracles only support Linear Programming (LP) with linear objectives."
+            "Typical oracles require a Linear Programming (LP) subproblem. "
         ))
     end
 
-    # 3. Check constraints
+    # 3. Check for non-affine constraints
     for con in all_constraints(model, include_variable_in_set_constraints=true)
         con_obj = constraint_object(con)
         set = con_obj.set
@@ -144,19 +142,27 @@ end
 """
     _scalarize_constraints!(model::Model)
 
-Pre-process all non-scalar constraints into scalar form so that oracle
-transformations only encounter `GreaterThan`, `LessThan`, and `EqualTo`.
+Convert all non-scalar (e.g., vectorized) constraints in `model` into equivalent
+scalar constraints so the resulting model contains only MOI constraint
+types `GreaterThan`, `LessThan`, and `EqualTo`.
 
 Splits:
 - `MOI.Interval` → `GreaterThan(lower)` + `LessThan(upper)`
 - `MOI.Zeros` → individual `EqualTo(0)` per row
 - `MOI.Nonnegatives` → individual `GreaterThan(0)` per row
 - `MOI.Nonpositives` → individual `LessThan(0)` per row
+
+# Example
+```julia
+    # before: a single vector constraint `A * x >= b`
+    _scalarize_constraints!(model)
+    # after: N scalar constraints `A[i,:] * x >= b[i]` for i = 1:N
+```
 """
 function _scalarize_constraints!(model::Model)
     # Collect constraints to split (avoid modifying during iteration)
     cons_to_split = ConstraintRef[]
-    for con in all_constraints(model, include_variable_in_set_constraints=false)
+    for con in all_constraints(model, include_variable_in_set_constraints=true)
         set = constraint_object(con).set
         if set isa MOI.Interval || set isa MOI.Zeros || set isa MOI.Nonnegatives || set isa MOI.Nonpositives
             push!(cons_to_split, con)
