@@ -91,7 +91,7 @@ All other arguments are identical to those of [`ClassicalOracle`](@ref).
 # Example with a problem-specific param
 ```julia
 param = ParetoOracleParam(fill(sum(data.demands)/sum(data.capacities)+1e-3, data.n_facilities)) # Core point of Capacitated Facility Location Problem
-oracle = ParetoOracle(data, master; param = param)
+oracle = ParetoOracle(data, master, param)
 ```
 
 # Fields
@@ -182,11 +182,11 @@ function _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{Vari
 
     σ = @variable(pareto_model, σ <= 0)
 
-    # Scalarize Interval/Zeros/Nonnegatives/Nonpositives into scalar GreaterThan/LessThan/EqualTo
+    # `_validate_lp_compatibility` guarantees a LP model 
+    # scalarize vectorized linear constraints
     _scalarize_constraints!(pareto_model)
 
-    for con in all_constraints(pareto_model, include_variable_in_set_constraints=false)
-        # `_validate_lp_compatibility` guarantees supported scalar sets
+    for con in all_constraints(pareto_model, include_variable_in_set_constraints=true)
         # (>=, <=, ==), and the same coefficient update applies to all of them.
         rhs = normalized_rhs(con)
         # Ax + By (⋚/=) b  -->  Ax + By + b * σ (⋚/=) b
@@ -216,7 +216,7 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
     optimize!(oracle.model)
     
     if termination_status(oracle.model) == TIME_LIMIT
-        throw(TimeLimitException("Time limit reached during Pareto cut generation (standard model)"))
+        throw(TimeLimitException("ParetoOracle: Time limit reached while solving standard model"))
     end
     
     status = dual_status(oracle.model)
@@ -235,21 +235,20 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
 
         set_normalized_rhs.(oracle.pareto_model[:pareto_fixing_constraints], oracle.param.core_point)
         
-        remaining_time = max(time_limit - (time() - t0), 1)
+        remaining_time = max(time_limit - (time() - t0), 0.0)
         set_time_limit_sec(oracle.pareto_model, remaining_time)
 
         optimize!(oracle.pareto_model)
         
         if termination_status(oracle.pareto_model) == TIME_LIMIT
-            throw(TimeLimitException("Time limit reached during Pareto cut generation (pareto model)"))
+            throw(TimeLimitException("ParetoOracle: Time limit reached while solving pareto model"))
         elseif termination_status(oracle.pareto_model) !== OPTIMAL
             throw(UnexpectedModelStatusException("ParetoOracle: Unexpected termination status $(termination_status(oracle.pareto_model))."))
         end
         
         pareto_status = dual_status(oracle.pareto_model)
         if pareto_status == FEASIBLE_POINT 
-            a_x = dual.(oracle.pareto_model[:pareto_fixing_constraints])
-            
+            a_x = dual.(oracle.pareto_model[:pareto_fixing_constraints])    
             a_t = [-1.0]
             a_0 = sub_obj_val - dot(a_x, x_value)
             

@@ -291,7 +291,7 @@ function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value:
     optimize!(oracle.model)
     
     if termination_status(oracle.model) == TIME_LIMIT
-        throw(TimeLimitException("Time limit reached during unified cut generation"))
+        throw(TimeLimitException("UnifiedOracle: Time limit reached while solving unified subproblem"))
     elseif termination_status(oracle.model) !== OPTIMAL
         throw(UnexpectedModelStatusException("UnifiedOracle: Unexpected termination status $(termination_status(oracle.model))."))
     end
