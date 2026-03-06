@@ -103,7 +103,7 @@ oracle = ParetoOracle(data, master, param)
   `pareto_model[:σ]` and `pareto_model[:pareto_fixing_constraints]`.
 """
 mutable struct ParetoOracle <: AbstractTypicalOracle
-    
+
     param::ParetoOracleParam
 
     # Standard subproblem model
@@ -116,7 +116,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
     function ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
                          customize = customize_sub_model!,
                          scen_idx::Int = 0)
-    
+
         @debug "Building Pareto oracle"
         model = Model()
 
@@ -142,14 +142,14 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         # Build Pareto Model (Re-run construction instead of copying)
         # ---------------------------------------------------------
         pareto_model = Model()
-        
+
         # Copy master variables for pareto model
         pareto_x_copy = copy_variables!(pareto_model, master.x_tuple)
         pareto_x = var_from_tuple(pareto_x_copy)
-        
+
         # Build pareto model structure
         customize(pareto_model, data, scen_idx; pareto_x_copy...)
-        
+
         # Apply Magnanti-Wong transformations (add σ, etc.)
         _apply_pareto_transformations!(pareto_model, pareto_x)
 
@@ -164,10 +164,10 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
 
     ParetoOracle() = new()
 
-    function ParetoOracle(data::AbstractData, master::Master; 
+    function ParetoOracle(data::AbstractData, master::Master;
                           customize = customize_sub_model!,
                           scen_idx::Int = 0,
-                          param::ParetoOracleParam)
+        param::ParetoOracleParam)
         return ParetoOracle(data, master, param; customize = customize, scen_idx = scen_idx)
     end
 end
@@ -178,7 +178,7 @@ end
 Reformulate Classic subproblem into Magnanti-Wong primal problem.
 """
 function _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{VariableRef})
-    
+
 
     σ = @variable(pareto_model, σ <= 0)
 
@@ -186,13 +186,13 @@ function _apply_pareto_transformations!(pareto_model::Model, x_vars::Vector{Vari
     # scalarize vectorized linear constraints
     _scalarize_constraints!(pareto_model)
 
-    for con in all_constraints(pareto_model, include_variable_in_set_constraints=true)
+    for con in all_constraints(pareto_model, include_variable_in_set_constraints=false)
         # (>=, <=, ==), and the same coefficient update applies to all of them.
         rhs = normalized_rhs(con)
         # Ax + By (⋚/=) b  -->  Ax + By + b * σ (⋚/=) b
         set_normalized_coefficient(con, σ, rhs)
     end
-    
+
     @constraint(pareto_model, pareto_fixing_constraints[i in eachindex(x_vars)], x_vars[i] == 0)
 end
 
@@ -202,23 +202,23 @@ end
 
 Generate Pareto-optimal cuts using the Magnanti-Wong method.
 """
-function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
+function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::Vector{Float64};
                        tol_normalize = 1.0, time_limit = 3600)
-    
+
     λ = oracle.param.λ
     oracle.param.core_point .= λ .* oracle.param.core_point .+ (1 - λ) .* x_value
     t0 = time()
-    
+
     set_time_limit_sec(oracle.model, time_limit)
-    
+
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
-    
+
     optimize!(oracle.model)
-    
+
     if termination_status(oracle.model) == TIME_LIMIT
         throw(TimeLimitException("ParetoOracle: Time limit reached while solving standard model"))
     end
-    
+
     status = dual_status(oracle.model)
 
     if status == FEASIBLE_POINT
@@ -230,42 +230,45 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
         end
 
         set_objective_coefficient(oracle.pareto_model, oracle.pareto_model[:σ], sub_obj_val - oracle.param.pareto_tol)
-        
+
         set_normalized_coefficient.(oracle.pareto_model[:pareto_fixing_constraints], oracle.pareto_model[:σ], x_value)
 
         set_normalized_rhs.(oracle.pareto_model[:pareto_fixing_constraints], oracle.param.core_point)
-        
+
         remaining_time = max(time_limit - (time() - t0), 0.0)
         set_time_limit_sec(oracle.pareto_model, remaining_time)
 
         optimize!(oracle.pareto_model)
-        
+
         if termination_status(oracle.pareto_model) == TIME_LIMIT
             throw(TimeLimitException("ParetoOracle: Time limit reached while solving pareto model"))
         elseif termination_status(oracle.pareto_model) !== OPTIMAL
             throw(UnexpectedModelStatusException("ParetoOracle: Unexpected termination status $(termination_status(oracle.pareto_model))."))
         end
-        
+
         pareto_status = dual_status(oracle.pareto_model)
-        if pareto_status == FEASIBLE_POINT 
-            a_x = dual.(oracle.pareto_model[:pareto_fixing_constraints])    
+        if pareto_status == FEASIBLE_POINT
+            a_x = dual.(oracle.pareto_model[:pareto_fixing_constraints])
             a_t = [-1.0]
             a_0 = sub_obj_val - dot(a_x, x_value)
-            
-            return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
+            if sub_obj_val >= t_value[1] * (1 + oracle.param.rtol) + oracle.param.atol / tol_normalize
+                return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
+            else
+                return true, [Hyperplane(length(x_value), length(t_value))], [sub_obj_val]
+            end
         else
             throw(UnexpectedModelStatusException("ParetoOracle: Unexpected dual status $(pareto_status) for pareto_model. This is likely a numerical issue."))
         end
-        
+
     elseif status == INFEASIBILITY_CERTIFICATE
         if has_duals(oracle.model)
             dual_sub_obj_val = dual_objective_value(oracle.model)
             @debug "dual_sub_obj_val = $dual_sub_obj_val"
-            
+
             a_x = dual.(oracle.fixed_x_constraints)
             a_t = [0.0]
             a_0 = dual_sub_obj_val - dot(a_x, x_value)
-            
+
             if dual_sub_obj_val >= oracle.param.zero_tol / tol_normalize
                 return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
             else
