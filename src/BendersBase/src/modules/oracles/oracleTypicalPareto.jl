@@ -12,7 +12,9 @@ Parameter type for [`ParetoOracle`](@ref).
 - `core_point::Vector{Float64}`: Initial core point for Magnanti-Wong problem (REQUIRED).
 - `λ::Float64`: Weight for updating the core point. After each cut generation, core_point is updated as:
   `core_point = λ * core_point + (1 - λ) * x_value`. Default 1.0 means no update (classical behavior).
-- `pareto_tol::Float64`: Absolute tolerance for enforcing the Pareto-optimality constraint (default: 1e-9).
+- `pareto_tol::Float64`: Absolute tolerance for enforcing the Pareto-optimality constraint (default: 1e-7).
+  Rule of thumb: choose `pareto_tol` about 10x-100x larger than the solver feasibility/optimality
+  tolerances, but still about 10x-100x smaller than the acceptable final objective error.
 """
 struct ParetoOracleParam <: AbstractOracleParam
     rtol::Float64
@@ -22,7 +24,7 @@ struct ParetoOracleParam <: AbstractOracleParam
     λ::Float64
     pareto_tol::Float64
 
-    function ParetoOracleParam(core_point::Vector{Float64}; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9, λ = 1.0, pareto_tol = 1e-9)
+    function ParetoOracleParam(core_point::Vector{Float64}; rtol = 1e-9, atol = 0.0, zero_tol = 1e-9, λ = 1.0, pareto_tol = 1e-7)
         isempty(core_point) && throw(ArgumentError("ParetoOracleParam: core_point must be provided and non-empty"))
         (λ < 0.0 || λ > 1.0) && throw(ArgumentError("ParetoOracleParam: λ must be in [0, 1], got $λ"))
         new(rtol, atol, zero_tol, core_point, λ, pareto_tol)
