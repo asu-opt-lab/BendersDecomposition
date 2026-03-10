@@ -34,29 +34,29 @@ Fischetti, M., Salvagnin, D., & Zanette, A. (2010), *A note on the selection of 
 ## Dual Problem (Fischetti et al., 2010)
 ```math
 \\begin{align*}
-\\max \\quad & (b-Tx^*)^{\\top}\\pi - \\pi_0\\eta^* \\\\
-\\quad & Q^{\\top}\\pi \\leq d \\pi_0 \\quad (y) \\\\
-\\quad & \\sum_{i \\in I(T)} \\pi_i + w_0\\pi_0  = 1 \\quad (\\sigma) \\\\
+\\max \\quad & (b-Ax^*)^{\\top}\\pi - \\pi_0\\eta^* \\\\
+\\quad & B^{\\top}\\pi \\leq d \\pi_0 \\quad (y) \\\\
+\\quad & \\sum_{i \\in I(A)} \\pi_i + w_0\\pi_0  = 1 \\quad (\\sigma) \\\\
 & \\pi_0, \\pi \\geq 0
 \\end{align*}
 ```
 
 where:
 - ​\$x^*\$ is the current master solution.
-- ​\$T\$ is the coefficient matrix of variable \$x\$ in the primal problem.
-- ​\$I(T)\$ is the indices of the nonzero rows of \$T\$.
+- ​\$A\$ is the coefficient matrix of variable \$x\$ in the primal problem.
+- ​\$I(A)\$ is the indices of the nonzero rows of \$A\$.
 - ​\$\\sigma\$ is the primal variable associated with the normalization constraint.
 
 ## Notes
-In the primal problem, some rows of \$T\$ may be null rows. In those constraints, \$\\sigma\$ does not appear; that is, its coefficient is zero.
+In the primal problem, some rows of \$A\$ may be null rows. In those constraints, \$\\sigma\$ does not appear; that is, its coefficient is zero.
 
 ## Dual Problem considered in [`UnifiedOracle`](@ref)
 ```math
 \\begin{align*}
 \\max \\quad & b^{\\top}\\pi - \\pi_0\\eta^* + (x^*)^{\\top}\\gamma_1 - (x^*)^{\\top}\\gamma_2 \\\\
-\\text{s.t.} \\quad & T^{\\top}\\pi + \\gamma_1 - \\gamma_2 = 0 \\quad (x) \\\\
-\\quad & Q^{\\top}\\pi \\leq d \\pi_0 \\quad (y) \\\\
-\\quad & \\sum_{i \\in I(T)} \\pi_i + w_0\\pi_0 + \\mathbf{1}^{\\top}\\gamma_1 + \\mathbf{1}^{\\top}\\gamma_2 = 1 \\quad (\\sigma) \\\\
+\\text{s.t.} \\quad & A^{\\top}\\pi + \\gamma_1 - \\gamma_2 = 0 \\quad (x) \\\\
+\\quad & B^{\\top}\\pi \\leq d \\pi_0 \\quad (y) \\\\
+\\quad & \\sum_{i \\in I(A)} \\pi_i + w_0\\pi_0 + \\mathbf{1}^{\\top}\\gamma_1 + \\mathbf{1}^{\\top}\\gamma_2 = 1 \\quad (\\sigma) \\\\
 & \\pi_0, \\pi, \\gamma_1, \\gamma_2 \\geq 0
 \\end{align*}
 ```
@@ -65,7 +65,7 @@ In the primal problem, some rows of \$T\$ may be null rows. In those constraints
 ```math
 \\begin{align*}
 \\min \\quad & \\sigma \\\\
-\\text{s.t.} \\quad & Tx + Qy + \\sigma \\geq b \\quad (\\pi) \\\\
+\\text{s.t.} \\quad & Ax + By + \\sigma \\geq b \\quad (\\pi) \\\\
 \\quad & -d^{\\top}y + w_0\\sigma \\geq -\\eta^* \\quad (\\pi_0) \\\\
 & x + \\sigma \\geq x^* \\quad (\\gamma_1) \\\\
 & -x + \\sigma \\geq -x^* \\quad (\\gamma_2) \\\\
