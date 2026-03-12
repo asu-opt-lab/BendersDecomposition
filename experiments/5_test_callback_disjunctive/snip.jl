@@ -1,9 +1,15 @@
 using BendersX
+using CSV
+using DataFrames
 using Test
 using JuMP
 using CPLEX
 
 @testset verbose = true "SNIP Sequential Benders Tests" begin
+    reference_path = normpath(joinpath(@__DIR__, "..", "reference_objectives", "snip.csv"))
+    reference_df = DataFrame(CSV.File(reference_path))
+    @assert nrow(reference_df) == length(unique(reference_df.instance_name)) "Duplicate SNIP reference objectives found in $(reference_path)"
+    reference_objectives = Dict(String(row.instance_name) => Float64(row.objective_value) for row in eachrow(reference_df))
     for instance in [0], snipno in [0], budget in [30.0]
         @testset "instance $instance; snipno $snipno budget $budget" begin
             # Load problem data
@@ -26,12 +32,9 @@ using CPLEX
 
             user_cb_param = UserCallbackParam(frequency=100)
 
-            # Solve MIP for reference
-            mip_model = Model()
-            customize_mip_model!(mip_model, data)
-            optimize!(mip_model)
-            @assert termination_status(mip_model) == OPTIMAL
-            mip_opt_val = objective_value(mip_model)
+            instance_name = "instance=$(instance);snipno=$(snipno);budget=$(budget)"
+            @assert haskey(reference_objectives, instance_name) "Missing SNIP reference objective for $(instance_name) in $(reference_path)"
+            mip_opt_val = reference_objectives[instance_name]
             
             @testset "Classic oracle" begin
                 # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
