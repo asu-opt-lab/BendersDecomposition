@@ -1,11 +1,11 @@
 using BendersX
-import BendersBase
+import BendersX
 using Test
 using JuMP
 
 function err_msg_test(model)
     err = try
-        BendersBase._validate_lp_compatibility(model)
+        BendersX._validate_lp_compatibility(model)
         nothing
     catch e
         e
@@ -32,7 +32,7 @@ end
         
         err = err_msg_test(model)
         @test err isa UnsupportedModelException
-        @test occursin("Integer or binary variables are not allowed.", err.msg)
+        @test occursin("Discontinuous variables are not allowed.", err.msg)
     end
     
     @testset "Integer variable" begin
@@ -42,7 +42,7 @@ end
         
         err = err_msg_test(model)
         @test err isa UnsupportedModelException
-        @test occursin("Integer or binary variables are not allowed.", err.msg)
+        @test occursin("Discontinuous variables are not allowed.", err.msg)
     end
 
     @testset "Semi-continuous variable" begin
@@ -51,7 +51,7 @@ end
         
         err = err_msg_test(model)
         @test err isa UnsupportedModelException
-        @test occursin("Integer or binary variables are not allowed.", err.msg)
+        @test occursin("Discontinuous variables are not allowed.", err.msg)
     end
 
     @testset "PSD variable" begin

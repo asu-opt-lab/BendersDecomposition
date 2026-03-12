@@ -45,9 +45,6 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     CFLKnapsackOracle() = new()
 end
 
-# Import shared GBC helper functions from BendersBase
-using BendersBase: _parse_gbc_result, _set_gbc_bounds!, _accumulate_gbc_duals!
-
 function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
     

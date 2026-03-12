@@ -5,6 +5,9 @@ include("utilsCuts.jl")
 include("utilsLoop.jl")
 include("utilsBnB.jl")
 include("utilsInterface.jl")
+include("utilsLoopDcglp.jl")
+include("utilsLoopSpecializedBendersSeq.jl")
+include("utilsLoopBendersSeqInOut.jl")
 
 """
     infeasibility_report(master::AbstractMaster, x_opt, t_opt)

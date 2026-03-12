@@ -1,4 +1,4 @@
-export customize_master_model!, customize_sub_model!, copy_variables!, var_from_tuple
+export customize_master_model!, customize_sub_model!, copy_variables!, var_from_tuple, transfer_scaled_linear_rows_and_bounds_with_types!
 
 """
     customize_master_model!(model::Model, data::AbstractData) -> NamedTuple, Vector{VariableRef}
@@ -198,4 +198,86 @@ function var_from_tuple(x_tuple::NamedTuple)
         end
     end
     return x
+end
+
+function transfer_scaled_linear_rows_and_bounds_with_types!(
+    master::Model,
+    x::Vector{VariableRef},
+    dcglp::Model,
+    omega::Vector{VariableRef},
+    omega0::VariableRef,
+)
+    pairs_present = JuMP.list_of_constraint_types(master)
+    for (F, S) in pairs_present
+        if F in [AffExpr; VariableRef]
+            if S in [MOI.GreaterThan{Float64}; MOI.LessThan{Float64}; MOI.EqualTo{Float64}; MOI.Interval{Float64}]
+                continue
+            end
+        end
+        if S in [MOI.Integer; MOI.ZeroOne]
+            continue
+        end
+        @warn "A master constraint of type ($F, $S) was not automatically incorporated into dcglp. If this constraint is linear, please add it manually."
+    end
+
+    idx_to_pos = Dict{Int,Int}()
+    for (pos, v) in enumerate(x)
+        vi = JuMP.index(v)
+        idx_to_pos[vi.value] = pos
+    end
+
+    length(x) == length(omega) || error("x and omega must have the same length/structure.")
+
+    backend = JuMP.backend(master)
+    pair_types = [
+        (MOI.VariableIndex, MOI.GreaterThan{Float64}),
+        (MOI.VariableIndex, MOI.LessThan{Float64}),
+        (MOI.VariableIndex, MOI.EqualTo{Float64}),
+        (MOI.VariableIndex, MOI.Interval{Float64}),
+        (MOI.ScalarAffineFunction{Float64}, MOI.GreaterThan{Float64}),
+        (MOI.ScalarAffineFunction{Float64}, MOI.LessThan{Float64}),
+        (MOI.ScalarAffineFunction{Float64}, MOI.EqualTo{Float64}),
+        (MOI.ScalarAffineFunction{Float64}, MOI.Interval{Float64}),
+    ]
+
+    for (F, S) in pair_types
+        for ci in MOI.get(backend, MOI.ListOfConstraintIndices{F,S}())
+            func = MOI.get(backend, MOI.ConstraintFunction(), ci)
+            set = MOI.get(backend, MOI.ConstraintSet(), ci)
+
+            terms = Tuple{Float64,Int}[]
+            constant = 0.0
+
+            if F == MOI.VariableIndex
+                vpos = get(idx_to_pos, func.value, 0)
+                vpos == 0 && continue
+                push!(terms, (1.0, vpos))
+            else
+                constant = func.constant
+                ok = true
+                for term in func.terms
+                    vpos = get(idx_to_pos, term.variable.value, 0)
+                    if vpos == 0
+                        ok = false
+                        break
+                    end
+                    push!(terms, (term.coefficient, vpos))
+                end
+                ok || continue
+            end
+
+            expr = sum(a * omega[j] for (a, j) in terms)
+
+            if S == MOI.GreaterThan{Float64}
+                @constraint(dcglp, set.lower * omega0 - expr >= constant * omega0)
+            elseif S == MOI.LessThan{Float64}
+                @constraint(dcglp, expr - set.upper * omega0 >= -constant * omega0)
+            elseif S == MOI.EqualTo{Float64}
+                @constraint(dcglp, expr - set.value * omega0 == -constant * omega0)
+            elseif S == MOI.Interval{Float64}
+                @constraint(dcglp, expr - set.upper * omega0 >= -constant * omega0)
+                @constraint(dcglp, set.lower * omega0 - expr >= constant * omega0)
+            end
+        end
+    end
 end

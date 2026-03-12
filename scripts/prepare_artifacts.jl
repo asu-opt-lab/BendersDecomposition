@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-# Script to prepare dataset artifacts for BendersLibrary
+# Script to prepare dataset artifacts for BendersX
 # Usage: julia --project=. scripts/prepare_artifacts.jl
 #
 # This script:
@@ -13,9 +13,9 @@ using SHA
 using Tar
 using CodecZlib
 
-const PROBLEMS_DIR = joinpath(@__DIR__, "..", "src", "BendersLibrary", "src", "problems")
+const PROBLEMS_DIR = joinpath(@__DIR__, "..", "src", "problems")
 const OUTPUT_DIR = joinpath(@__DIR__, "..", "artifacts_output")
-const ARTIFACTS_TOML = joinpath(@__DIR__, "..", "src", "BendersLibrary", "Artifacts.toml")
+const ARTIFACTS_TOML = joinpath(@__DIR__, "..", "Artifacts.toml")
 
 # Dataset definitions: (artifact_name, problem_type, subdirectory)
 const DATASETS = [
@@ -66,7 +66,7 @@ end
 
 function main()
     println("=" ^ 60)
-    println("BendersLibrary Artifact Preparation Script")
+    println("BendersX Artifact Preparation Script")
     println("=" ^ 60)
     println()
     
