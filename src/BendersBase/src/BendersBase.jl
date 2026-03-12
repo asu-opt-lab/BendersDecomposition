@@ -24,7 +24,7 @@ export AbstractBendersSeq, AbstractBendersBnB
 export AbstractRootNodePreprocessing, root_node_processing!
 export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
 export GBCBoundType, UpperBound, LowerBound, Fixed
-export TimeLimitException, UnexpectedModelStatusException, UndefError, AlgorithmException
+export TimeLimitException, UnexpectedModelStatusException, UndefError, AlgorithmException, UnsupportedModelException
 export AbstractLoopState, AbstractLoopLog, AbstractLoopParam
 export AbstractBendersSeqState, AbstractBendersSeqLog, AbstractBendersSeqParam
 export AbstractBendersBnBState, AbstractBendersBnBLog, AbstractBendersBnBParam
