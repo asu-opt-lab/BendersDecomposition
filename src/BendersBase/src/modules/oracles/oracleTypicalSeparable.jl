@@ -56,6 +56,7 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
                             sub_oracle_param::AbstractOracleParam = BasicOracleParam(),
                             param::SeparableOracleParam = SeparableOracleParam()) where {T<:AbstractTypicalOracle}
         @debug "Building classical separable oracle"
+        @info "SeparableOracle: N=$N subproblems, $(Threads.nthreads()) threads available for parallel execution"
         # assume each oracle is associated with a single t, that is dim_t = N
         oracles = [T(data, master; customize = customize, scen_idx=j, param = sub_oracle_param) for j=1:N] 
 
@@ -70,7 +71,7 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
     sub_obj_val = Vector{Vector{Float64}}(undef,N)
     hyperplanes = Vector{Vector{Hyperplane}}(undef,N)
 
-    for j=1:N
+    Threads.@threads for j=1:N
         is_in_L[j], hyperplanes[j], sub_obj_val[j] = generate_cuts(oracle.oracles[j], x_value, [t_value[j]], tol_normalize = tol_normalize; time_limit = get_sec_remaining(tic, time_limit))
 
         # correct dimension for t_j's
