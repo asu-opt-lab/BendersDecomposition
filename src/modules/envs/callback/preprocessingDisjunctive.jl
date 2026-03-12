@@ -28,7 +28,7 @@ preprocessing = DisjunctiveRootNodePreprocessing(typical_oracle, disj_oracle)
 # Use with BendersBnB
 env = BendersBnB(master, preprocessing, lazy_callback, user_callback)
 ```
-See also: [`RootNodePreprocessing`](@ref), [`DisjunctiveOracle`](@ref)
+See also: [`RootNodePreprocessing`](@ref), [`SplitOracle`](@ref)
 """
 mutable struct DisjunctiveRootNodePreprocessing <: AbstractRootNodePreprocessing
     typical_oracle::AbstractTypicalOracle

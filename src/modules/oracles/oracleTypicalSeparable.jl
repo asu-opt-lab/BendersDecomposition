@@ -42,6 +42,29 @@ mutable struct SeparableOracleParam <: AbstractOracleParam
     # may contain parameters for scenario handling.
 end
 
+"""
+    SeparableOracle <: AbstractTypicalOracle
+
+Wrapper oracle for problems with multiple independent recourse subproblems.
+
+`SeparableOracle` builds one typical oracle per scenario or block and evaluates
+them in parallel. Each sub-oracle is responsible for one component of the
+vector-valued recourse approximation `t`.
+
+# Constructor
+```julia
+SeparableOracle(data, master, oracle_template, N;
+                customize = customize_sub_model!,
+                sub_oracle_param = BasicOracleParam(),
+                param = SeparableOracleParam())
+```
+
+Here `oracle_template` is any instance whose type is a subtype of
+`AbstractTypicalOracle`; `SeparableOracle` uses that type to instantiate one
+sub-oracle per scenario. `N` is the number of subproblems.
+
+See also: [`ClassicalOracle`](@ref), [`ParetoOracle`](@ref), [`UnifiedOracle`](@ref)
+"""
 mutable struct SeparableOracle <: AbstractTypicalOracle
     param::SeparableOracleParam 
 
@@ -88,8 +111,6 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
         return true, [Hyperplane(length(x_value), length(t_value))], deepcopy(t_value)
     end
 end
-
-
 
 
 

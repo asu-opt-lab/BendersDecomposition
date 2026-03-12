@@ -77,22 +77,22 @@ When the subproblem is separable (for example, in a multi-scenario setting),
 users can employ [`SeparableOracle`](@ref) to manage multiple independent
 subproblems.
 
-With `SeparableOracle`, the subproblem oracle is specified as a **type
-parameter**, making it straightforward to swap different oracle
+With `SeparableOracle`, the subproblem oracle is specified through a
+**prototype instance**, making it straightforward to swap different oracle
 implementations:
 
 ```julia
 oracle = SeparableOracle(
     data,
     master,
-    ClassicalOracle,
+    ClassicalOracle(),
     N;
     sub_oracle_param = ClassicalOracleParam(rtol = 1e-6),
 )
 ```
 
-Any oracle type `T <: AbstractTypicalOracle` that implements the required
-constructor interface can be used.
+Any oracle subtype `T <: AbstractTypicalOracle` that implements the required
+constructor interface can be used by passing a prototype such as `T()`.
 
 ---
 

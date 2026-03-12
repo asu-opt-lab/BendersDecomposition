@@ -114,7 +114,7 @@ disj_oracle = SplitOracle(master, [oracle_kappa, oracle_nu]; param = disj_param)
 - The oracle maintains a history of all disjunctive cuts and splits
 - Disjunctive cuts can be organized by split variable index for specialized algorithms
 
-See also: [`SplitOracleParam`](@ref), [`generate_cuts`](@ref), [`solve_dcglp!`](@ref)
+See also: [`SplitOracleParam`](@ref), [`generate_cuts`](@ref), `solve_dcglp!`
 """
 mutable struct SplitOracle <: AbstractDisjunctiveOracle
     
@@ -205,7 +205,7 @@ A tuple `(is_in_L, hyperplanes, f_x)`:
 - The parameter `throw_typical_cuts_for_errors` must be set to `false` when using `SpecializedBendersSeq`
 - When `include_disjunctive_cuts_to_hyperplanes` is `false`, the disjunctive cut can be accessed via `oracle.disjunctiveCuts` or `oracle.disjunctiveCutsByIndex` for specialized algorithms
 
-See also: [`solve_dcglp!`](@ref), [`SplitOracle`](@ref)
+See also: `solve_dcglp!`, [`SplitOracle`](@ref)
 """
 function generate_cuts(oracle::SplitOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; time_limit = 3600.0, throw_typical_cuts_for_errors = true, include_disjunctive_cuts_to_hyperplanes = true)
 

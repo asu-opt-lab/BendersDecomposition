@@ -6,6 +6,18 @@ struct FacilityKnapsackInfo
     capacity::Vector{Float64}
 end
 
+"""
+    CFLKnapsackOracle <: AbstractTypicalOracle
+
+Specialized oracle for the capacitated facility location problem.
+
+This oracle solves the LP subproblem once to recover dual demand information
+and then computes facility-wise knapsack values to form a strengthened
+classical Benders cut for the CFLP structure.
+
+Like [`ClassicalOracle`](@ref), it also supports generalized bound constraints
+returned by the user customization function.
+"""
 mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     param::BasicOracleParam
 

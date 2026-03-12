@@ -1,5 +1,26 @@
 export BendersSeqInOutParam 
 
+"""
+    BendersSeqInOutParam(; time_limit = 7200.0, gap_tolerance = 1e-4,
+                           halt_limit = 10000, iter_limit = 1000000,
+                           verbose = true, stabilizing_x, α = 0.9, λ = 0.1)
+
+Parameter container for [`BendersSeqInOut`](@ref).
+
+In addition to the standard loop controls, this parameter set stores the
+initial stabilizing point and the weights used by the in-out stabilization
+updates.
+
+# Fields
+- `time_limit::Float64`: Global time limit in seconds.
+- `gap_tolerance::Float64`: Relative optimality gap tolerance in percent.
+- `halt_limit::Int`: Maximum number of consecutive iterations without progress.
+- `iter_limit::Int`: Hard iteration limit.
+- `verbose::Bool`: Whether to print iteration logs.
+- `stabilizing_x::Vector{Float64}`: Initial stabilization point in the master-variable space.
+- `α::Float64`: Weight used when updating the stabilization point.
+- `λ::Float64`: Weight used when forming the perturbed query point.
+"""
 mutable struct BendersSeqInOutParam <: AbstractBendersSeqParam
 
     time_limit::Float64

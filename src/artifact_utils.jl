@@ -1,4 +1,4 @@
-# Artifact utilities for BendersLibrary
+# Artifact utilities for BendersX benchmark data
 # Downloads data from GitHub Releases on first use
 
 using Pkg.Artifacts

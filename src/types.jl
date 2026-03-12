@@ -7,6 +7,16 @@
     Fixed   # y = f(x)
 end
 
+"""
+Supertype for all Benders execution environments.
+
+An environment owns the algorithmic control flow that orchestrates calls to
+the master problem and one or more oracles. Concrete subtypes implement
+different execution strategies, such as sequential cutting-plane loops or
+callback-driven branch-and-bound.
+
+See also: [`AbstractBendersSeq`](@ref), [`AbstractBendersBnB`](@ref)
+"""
 abstract type AbstractBendersEnv end
 abstract type AbstractMaster end
 """
@@ -16,10 +26,37 @@ The type of `param` can be BasicOracleParam when there is no oracle-specific adj
 Subtypes should implement `generate_cuts` to return separating hyperplanes based on the given candidate solutions.
 """
 abstract type AbstractOracle end
+"""
+Supertype for parameter containers attached to concrete oracle types.
+
+Oracle parameters collect the tolerance values and strategy switches that may
+be adjusted without rebuilding the oracle object itself. Concrete oracles
+typically store one field `param <: AbstractOracleParam`.
+
+See also: [`BasicOracleParam`](@ref), [`AbstractOracle`](@ref)
+"""
 abstract type AbstractOracleParam end
 abstract type AbstractData end
 
+"""
+Supertype for sequential Benders environments.
+
+Sequential environments repeatedly solve the master problem, query an oracle at
+the current candidate point, add cuts, and continue until a termination rule is
+met.
+
+See also: [`BendersSeq`](@ref), [`BendersSeqInOut`](@ref), [`SpecializedBendersSeq`](@ref)
+"""
 abstract type AbstractBendersSeq <: AbstractBendersEnv end
+"""
+Supertype for callback-based branch-and-bound Benders environments.
+
+These environments integrate Benders cut generation into the MIP solver's
+branch-and-bound process via lazy constraints, user cuts, and optional root
+preprocessing.
+
+See also: [`BendersBnB`](@ref)
+"""
 abstract type AbstractBendersBnB <: AbstractBendersEnv end
 
 # ============================================================================
@@ -55,6 +92,16 @@ end
 # ============================================================================
 abstract type AbstractNorm end
 struct StandardNorm <: AbstractNorm end
+"""
+    LpNorm(p::Float64)
+
+Lp normalization used by the disjunctive cut generating LP.
+
+The value `p` specifies the norm order used in normalization constraints for
+the DCGLP. Typical choices are `1.0`, `2.0`, and `Inf`.
+
+See also: [`SplitOracleParam`](@ref), `add_normalization_constraint`
+"""
 mutable struct LpNorm <: AbstractNorm
     p::Float64
     function LpNorm(p::Float64)
@@ -78,5 +125,3 @@ abstract type DisjunctiveCutsAppendRule end
 struct NoDisjunctiveCuts <: DisjunctiveCutsAppendRule end
 struct AllDisjunctiveCuts <: DisjunctiveCutsAppendRule end
 struct DisjunctiveCutsSmallerIndices <: DisjunctiveCutsAppendRule end
-
-

@@ -1,5 +1,16 @@
 export SpecializedBendersSeqParam 
 
+"""
+    SpecializedBendersSeqParam(; time_limit = 7200.0, lp_gap_tolerance = 1e-9,
+                                 integrality_tolerance = 1e-9,
+                                 halt_limit = Int(1e9), iter_limit = Int(1e9),
+                                 verbose = true)
+
+Parameter container for [`SpecializedBendersSeq`](@ref).
+
+This parameter set governs the LP solves, stopping rules, and integrality tests
+used by the specialized sequential algorithm for split-based disjunctive cuts.
+"""
 mutable struct SpecializedBendersSeqParam <: AbstractBendersSeqParam
 
     time_limit::Float64

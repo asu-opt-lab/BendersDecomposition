@@ -5,6 +5,18 @@ Abstract type for typical oracles used in Benders decomposition.
 abstract type AbstractTypicalOracle <: AbstractOracle end
 
 """
+Abstract type for disjunctive oracles used in Benders decomposition.
+
+Disjunctive oracles generate cuts from split-induced subproblems rather than
+from a single LP subproblem evaluation. They typically maintain additional
+state, such as a DCGLP model and a history of previously generated
+disjunctive cuts.
+
+See also: [`SplitOracle`](@ref)
+"""
+abstract type AbstractDisjunctiveOracle <: AbstractOracle end
+
+"""
 Prototype for the `generate_cuts` function.
 
 Must be implemented by any concrete subtype of [`AbstractOracle`](@ref). Given a candidate solution `(x_value, t_value)`, this method should attempt to separate the point via
@@ -222,10 +234,12 @@ include("oracleTypicalUnified.jl")
 include("oracleTypicalPareto.jl")
 
 """
-Abstract type for disjunctive oracles.
-"""
-abstract type AbstractDisjunctiveOracle <: AbstractOracle end
+Prototype for `generate_cuts` on disjunctive oracles.
 
+Concrete subtypes of `AbstractDisjunctiveOracle` should implement this
+method to generate disjunctive cuts or fall back to problem-specific typical
+cuts when appropriate.
+"""
 function generate_cuts(oracle::AbstractDisjunctiveOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; time_limit = 3600)
     throw(UndefError("update generate_cuts for $(typeof(oracle))"))
 end

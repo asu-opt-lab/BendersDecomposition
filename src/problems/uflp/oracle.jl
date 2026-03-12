@@ -8,6 +8,17 @@ mutable struct UFLKnapsackOracleParam <: AbstractOracleParam
         new(slim, add_only_violated_cuts, rtol)
     end
 end
+"""
+    UFLKnapsackOracle <: AbstractTypicalOracle
+
+Specialized oracle for the uncapacitated facility location problem.
+
+This oracle exploits the closed-form knapsack structure of the UFLP recourse
+function to generate cuts without solving a generic LP subproblem. It is most
+useful when the master variables correspond to facility-opening decisions.
+
+See also: [`SeparableOracle`](@ref), [`ClassicalOracle`](@ref)
+"""
 mutable struct UFLKnapsackOracle <: AbstractTypicalOracle
     
     param::UFLKnapsackOracleParam
