@@ -1,10 +1,23 @@
-export CFLKnapsackOracle, calculate_KP_value
+export CFLKnapsackOracleParam, CFLKnapsackOracle, calculate_KP_value
 
 struct FacilityKnapsackInfo
     costs::Matrix{Float64}
     demands::Vector{Float64}
     capacity::Vector{Float64}
 end
+
+"""
+    CFLKnapsackOracleParam
+
+Alias for [`BasicOracleParam`](@ref) used by [`CFLKnapsackOracle`](@ref).
+
+It controls numerical tolerances used during cut generation, including the
+relative and absolute thresholds applied when deciding whether a cut is
+violated.
+
+See also: [`CFLKnapsackOracle`](@ref), [`BasicOracleParam`](@ref)
+"""
+const CFLKnapsackOracleParam = BasicOracleParam
 
 """
     CFLKnapsackOracle <: AbstractTypicalOracle
@@ -19,7 +32,7 @@ Like [`ClassicalOracle`](@ref), it also supports generalized bound constraints
 returned by the user customization function.
 """
 mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
-    param::BasicOracleParam
+    param::CFLKnapsackOracleParam
 
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
@@ -32,7 +45,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     function CFLKnapsackOracle(data::AbstractData, master::Master; 
                             customize = customize_sub_model!,
                             scen_idx::Int=-1, 
-                            param::BasicOracleParam = BasicOracleParam())
+                            param::CFLKnapsackOracleParam = CFLKnapsackOracleParam())
         @debug "Building knapsack oracle for CFLP"
         model = Model()
 

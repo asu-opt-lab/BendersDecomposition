@@ -37,7 +37,16 @@ constructor.
         """
     ))
 
+"""
+    SeparableOracleParam <: AbstractOracleParam
 
+Parameter container for [`SeparableOracle`](@ref).
+
+The type is currently empty and acts as a placeholder for future controls over
+scenario aggregation, scheduling, or parallel evaluation.
+
+See also: [`SeparableOracle`](@ref), [`AbstractOracleParam`](@ref)
+"""
 mutable struct SeparableOracleParam <: AbstractOracleParam
     # may contain parameters for scenario handling.
 end
@@ -111,7 +120,6 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
         return true, [Hyperplane(length(x_value), length(t_value))], deepcopy(t_value)
     end
 end
-
 
 
 

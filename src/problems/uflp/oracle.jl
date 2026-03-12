@@ -1,4 +1,26 @@
-export UFLKnapsackOracle, generate_cuts, calculate_KP_value
+export UFLKnapsackOracleParam, UFLKnapsackOracle, generate_cuts, calculate_KP_value
+"""
+    UFLKnapsackOracleParam <: AbstractOracleParam
+
+Parameter type for [`UFLKnapsackOracle`](@ref).
+
+This type controls algorithmic and numerical aspects of the knapsack-based
+separation routine used for the uncapacitated facility location problem.
+
+# Fields
+- `slim::Bool`: If `true`, aggregate generated cuts into a single hyperplane.
+- `add_only_violated_cuts::Bool`: If `true`, skip non-violated per-customer cuts.
+- `rtol::Float64`: Relative tolerance used to decide whether a cut is violated.
+
+# Constructor
+```julia
+UFLKnapsackOracleParam(; slim = false,
+                         add_only_violated_cuts = false,
+                         rtol = 1e-9)
+```
+
+See also: [`UFLKnapsackOracle`](@ref)
+"""
 mutable struct UFLKnapsackOracleParam <: AbstractOracleParam
     slim::Bool
     add_only_violated_cuts::Bool

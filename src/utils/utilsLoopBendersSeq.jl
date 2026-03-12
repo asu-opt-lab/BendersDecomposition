@@ -60,6 +60,34 @@ mutable struct BendersSeqLog <: AbstractBendersSeqLog
     end
 end
 
+"""
+    BendersSeqParam <: AbstractBendersSeqParam
+
+Parameter container for the standard sequential Benders environment.
+
+`BendersSeqParam` controls global stopping criteria and iteration logging for
+[`BendersSeq`](@ref).
+
+# Constructor
+```julia
+BendersSeqParam(;
+    time_limit::Float64 = 7200.0,
+    gap_tolerance::Float64 = 1e-4,
+    halt_limit::Int = 10000,
+    iter_limit::Int = 1_000_000,
+    verbose::Bool = true,
+)
+```
+
+# Fields
+- `time_limit::Float64`: Maximum wall-clock time, in seconds.
+- `gap_tolerance::Float64`: Relative optimality gap tolerance for termination.
+- `halt_limit::Int`: Maximum number of consecutive non-improving iterations.
+- `iter_limit::Int`: Maximum number of Benders iterations.
+- `verbose::Bool`: Whether to print iteration-level logging information.
+
+See also: [`BendersSeq`](@ref), [`AbstractBendersSeqParam`](@ref)
+"""
 mutable struct BendersSeqParam <: AbstractBendersSeqParam
 
     time_limit::Float64
@@ -104,4 +132,3 @@ Returns a `Bool`.
 function is_terminated(state::BendersSeqState, log::BendersSeqLog, param::BendersSeqParam)
     return state.is_in_L || state.gap <= param.gap_tolerance || get_sec_remaining(log, param) <= 0.0
 end
-
