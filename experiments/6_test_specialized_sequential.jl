@@ -4,6 +4,8 @@
 # add a method for generating optimal vertex for SpecializedBendersSeq
 
 using BendersX
+using CSV
+using DataFrames
 using Test
 using JuMP
 using CPLEX
@@ -27,19 +29,20 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                         )
 
 @testset verbose = true "UFLP Specialized Sequential Benders Tests" begin
+    ufl_reference_path = normpath(joinpath(@__DIR__, "reference_objectives", "uflp.csv"))
+    ufl_reference_df = DataFrame(CSV.File(ufl_reference_path))
+    @assert nrow(ufl_reference_df) == length(unique(ufl_reference_df.instance_name)) "Duplicate UFLP reference objectives found in $(ufl_reference_path)"
+    ufl_reference_objectives = Dict(String(row.instance_name) => Float64(row.objective_value) for row in eachrow(ufl_reference_df))
     # instances = setdiff(1:71, [67])
     instances = [49] # only instance that uses SpecializedBendersSeq
     for i in instances
         @testset "Instance: p$i" begin
             # Load problem data if necessary
             data = read_uflp_benchmark_data("p$(i)")
-            
-            # Solve MIP for reference
-            mip_model = Model()
-            customize_mip_model!(mip_model, data)
-            optimize!(mip_model)
-            @assert termination_status(mip_model) == OPTIMAL
-            mip_opt_val = objective_value(mip_model)
+
+            instance_name = "p$i"
+            @assert haskey(ufl_reference_objectives, instance_name) "Missing UFLP reference objective for $(instance_name) in $(ufl_reference_path)"
+            mip_opt_val = ufl_reference_objectives[instance_name]
 
             @testset "Classical oracle" begin
                 # for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf]
@@ -117,6 +120,10 @@ dcglp_param = DcglpParam(dcglp_optimizer;
 end
 
 @testset verbose = true "CFLP Specialized Sequential Benders Tests" begin
+    cfl_reference_path = normpath(joinpath(@__DIR__, "reference_objectives", "cflp.csv"))
+    cfl_reference_df = DataFrame(CSV.File(cfl_reference_path))
+    @assert nrow(cfl_reference_df) == length(unique(cfl_reference_df.instance_name)) "Duplicate CFLP reference objectives found in $(cfl_reference_path)"
+    cfl_reference_objectives = Dict(String(row.instance_name) => Float64(row.objective_value) for row in eachrow(cfl_reference_df))
     # instances = setdiff(1:71, [67])
     instances = [25 32 34 36 49 51]
     # numerical issue: 29 30 31 35
@@ -127,17 +134,10 @@ end
             # Load problem data if necessary
             data = read_cflp_benchmark_data("p$i")
             # data = read_GK_data("f100-c100-r3-1")
-                            
-            # Solve MIP for reference
-            mip_model = Model()
-            customize_mip_model!(mip_model, data)
-            optimize!(mip_model)
-            @assert termination_status(mip_model) == OPTIMAL
-            mip_opt_val = objective_value(mip_model)
-            x_opt = value.(mip_model[:x])
-            t_opt = value.(mip_model[:t])
-            @info "MIP_opt_val: $mip_opt_val"
-            @info "MIP sol: $(x_opt)"
+
+            instance_name = "p$i"
+            @assert haskey(cfl_reference_objectives, instance_name) "Missing CFLP reference objective for $(instance_name) in $(cfl_reference_path)"
+            mip_opt_val = cfl_reference_objectives[instance_name]
 
             @testset "Classical oracle" begin 
                     # for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf]
@@ -159,29 +159,6 @@ end
                         env = SpecializedBendersSeq(master, disjunctive_oracle; param = specialized_benders_param)
                         
                         log = solve!(env)
-                        @test env.termination_status == Optimal()
-                        # if env.log.termination_status == Optimal()
-                        if !isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-                            t_opt_ = [sum(t_opt)]
-                            @error "Failed ***** mip_opt_val = $(mip_opt_val) vs BD_obj_val = $(env.obj_value)"
-                            # optimize!(master.model)
-                            opt_sol = Dict{VariableRef, Float64}()
-                            for i = 1:master.dim_x
-                                opt_sol[master.x[i]] = x_opt[i]
-                            end
-                            for i = 1:master.dim_t
-                                opt_sol[master.t[i]] = t_opt_[i]
-                            end
-
-                            @info primal_feasibility_report(env.master.model, opt_sol)
-                            @info master.c_x' * x_opt + master.c_t' * t_opt_
-                            
-                            for v in keys(opt_sol)
-                                fix(v, opt_sol[v]; force=true)
-                            end
-                            optimize!(env.master.model)
-                            @info objective_value(env.master.model)
-                        end
                         @test env.termination_status == Optimal() ? isapprox(mip_opt_val, env.obj_value, atol=1e-5) : false
                     end
                 end

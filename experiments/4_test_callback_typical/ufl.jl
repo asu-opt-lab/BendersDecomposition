@@ -1,9 +1,15 @@
 using BendersX
+using CSV
+using DataFrames
 using Test
 using JuMP
 using CPLEX
 
 @testset verbose = true "UFLP Callback Benders Tests" begin
+    reference_path = normpath(joinpath(@__DIR__, "..", "reference_objectives", "uflp.csv"))
+    reference_df = DataFrame(CSV.File(reference_path))
+    @assert nrow(reference_df) == length(unique(reference_df.instance_name)) "Duplicate UFLP reference objectives found in $(reference_path)"
+    reference_objectives = Dict(String(row.instance_name) => Float64(row.objective_value) for row in eachrow(reference_df))
     instances = setdiff(1:71, [67])
 
     # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
@@ -33,13 +39,9 @@ using CPLEX
                             verbose = false
                         )
 
-            # Solve MIP for reference
-            mip_model = Model()
-            customize_mip_model!(mip_model, data)
-            set_optimizer_attribute(mip_model, "CPX_PARAM_BRDIR", 1)
-            optimize!(mip_model)
-            @assert termination_status(mip_model) == OPTIMAL
-            mip_opt_val = objective_value(mip_model)
+            instance_name = "p$i"
+            @assert haskey(reference_objectives, instance_name) "Missing UFLP reference objective for $(instance_name) in $(reference_path)"
+            mip_opt_val = reference_objectives[instance_name]
             
             @testset "Classic oracle" begin
                 @testset "NoSeq" begin
