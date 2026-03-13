@@ -1,4 +1,3 @@
-export CFLKnapsackOracleParam, CFLKnapsackOracle, calculate_KP_value
 
 struct FacilityKnapsackInfo
     costs::Matrix{Float64}

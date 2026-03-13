@@ -1,4 +1,3 @@
-export CFLPData, read_GK_data, read_cflp_benchmark_data, read_cfl_file
 
 using JSON
 using LinearAlgebra

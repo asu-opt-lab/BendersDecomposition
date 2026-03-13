@@ -1,4 +1,3 @@
-export SpecializedBendersSeqParam 
 
 """
     SpecializedBendersSeqParam(; time_limit = 7200.0, lp_gap_tolerance = 1e-9,

@@ -1,5 +1,6 @@
 using BendersX
 import BendersX
+import BendersX: UnsupportedModelException
 using Test
 using JuMP
 

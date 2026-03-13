@@ -1,4 +1,3 @@
-export ClassicalOracle, ClassicalOracleParam
 
 const ClassicalOracleParam = BasicOracleParam
 

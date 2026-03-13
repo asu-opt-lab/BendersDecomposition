@@ -1,4 +1,3 @@
-export UnifiedOracle, UnifiedOracleParam
 
 """
     UnifiedOracleParam <: AbstractOracleParam

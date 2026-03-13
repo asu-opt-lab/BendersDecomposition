@@ -58,6 +58,7 @@ log = solve!(env)
     Users provide both the master and subproblem formulations through *customization functions* written in standard JuMP syntax.
     See the [Modeling Interface](@ref modeling-interface) for concrete examples.
     If you are unfamiliar with JuMP, please refer to the JuMP.jl documentation for an introduction: [Julia JuMP](https://jump.dev/JuMP.jl/stable/).
+    Built-in problem readers, problem-specific oracles, and advanced extension hooks remain public APIs, but may require `import BendersX: ...` or `BendersX.xxx`.
 
 !!! tip "Plug-and-Play"
     Oracle and Environment variants can be swapped freely, enabling rapid experimentation without changes to the formulation.

@@ -1,4 +1,3 @@
-export Master
 
 """
     Master <: AbstractMaster

@@ -1,5 +1,6 @@
 using JuMP, DataFrames, Logging, CSV
 using BendersX
+import BendersX: customize_master_model!, customize_sub_model!, CFLKnapsackOracle, read_cfl_file
 using Printf
 using Statistics
 using CPLEX

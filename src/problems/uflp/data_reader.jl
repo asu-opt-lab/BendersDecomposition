@@ -1,4 +1,3 @@
-export UFLPData, read_uflp_benchmark_data, read_Simple_data
 
 struct UFLPData <: AbstractData
     n_facilities::Int

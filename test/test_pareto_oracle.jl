@@ -8,6 +8,7 @@ Uses a simple assignment problem structure for testing.
 """
 
 using BendersX
+import BendersX: generate_cuts, Hyperplane
 using Test
 using JuMP
 using HiGHS

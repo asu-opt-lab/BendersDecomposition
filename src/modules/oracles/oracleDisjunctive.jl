@@ -1,4 +1,3 @@
-export SplitOracle, SplitOracleParam
 
 """
     SplitOracleParam <: AbstractOracleParam

@@ -34,7 +34,7 @@ makedocs(
     modules = [BendersX],
     sitename = "BendersX.jl",
     format = Documenter.HTML(prettyurls=false),
-    checkdocs = :exports,
+    checkdocs = :public,
     warnonly = [:cross_references],
     pages = [
         "Home" => "index.md",

@@ -1,4 +1,3 @@
-export DisjunctiveRootNodePreprocessing
 
 """
     DisjunctiveRootNodePreprocessing <: AbstractRootNodePreprocessing

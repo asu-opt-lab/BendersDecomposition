@@ -1,4 +1,3 @@
-export ParetoOracle, ParetoOracleParam
 
 """
     ParetoOracleParam <: AbstractOracleParam

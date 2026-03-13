@@ -1,4 +1,3 @@
-export LazyCallback
 
 """
     LazyCallback <: AbstractLazyCallback

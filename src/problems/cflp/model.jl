@@ -1,4 +1,3 @@
-export customize_master_model!, customize_sub_model!, customize_mip_model!
 
 function customize_mip_model!(model::Model, data::CFLPData)
 

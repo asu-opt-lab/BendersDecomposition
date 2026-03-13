@@ -144,7 +144,7 @@ Users are responsible for loading and preprocessing raw instance data into their
 ```julia
 read_data(path_to_raw_data) -> MyData
 ```
-For an example specific to CFLP, see `read_cflp_benchmark_data` in `./src/problems/cflp/data_reader.jl`.
+For an example specific to CFLP, see `BendersX.read_cflp_benchmark_data` in `./src/problems/cflp/data_reader.jl`.
 
 ## [3. Modeling Interface](@id modeling-interface)
 *Defining Master and Subproblem Models in BendersX.jl*
@@ -290,5 +290,4 @@ Both oracles and environments can be further customized using dedicated paramete
     - Refer to **Tutorials / Swapping Oracles and Adjusting Their Behaviors** for oracle configuration and customization.
     - Refer to **Tutorials / Swapping Environments and Adjusting Their Behaviors** for execution logic customization.
     - Refer to **Tutorials / Examples** for a collection of worked examples.
-
 

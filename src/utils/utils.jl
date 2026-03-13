@@ -1,4 +1,3 @@
-export infeasibility_report
 
 include("utilsSolver.jl")
 include("utilsCuts.jl")

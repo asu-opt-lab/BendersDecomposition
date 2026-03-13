@@ -1,4 +1,3 @@
-export assign_attributes!
 using Gurobi
 using CPLEX
 

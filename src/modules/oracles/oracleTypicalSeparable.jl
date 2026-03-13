@@ -1,4 +1,3 @@
-export SeparableOracle, SeparableOracleParam
 
 """
 Fallback constructor for subtypes of [`AbstractTypicalOracle`](@ref).

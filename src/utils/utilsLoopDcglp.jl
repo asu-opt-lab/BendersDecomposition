@@ -1,4 +1,3 @@
-export DcglpParam
 
 abstract type AbstractDcglpState <: AbstractLoopState end
 abstract type AbstractDcglpLog <: AbstractLoopLog end

@@ -1,4 +1,3 @@
-export BendersBnBParam
 
 """
 Abstract type for Benders Branch-and-Bound parameters.

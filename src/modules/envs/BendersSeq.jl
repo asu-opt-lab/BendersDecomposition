@@ -1,4 +1,3 @@
-export BendersSeq, solve!
 
 """
     BendersSeq <: AbstractBendersSeq

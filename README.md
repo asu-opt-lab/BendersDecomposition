@@ -1,6 +1,6 @@
 # BendersX.jl
 
-[![Julia](https://img.shields.io/badge/julia-v1.10.4-blue.svg)](https://julialang.org/)
+[![Julia](https://img.shields.io/badge/julia-v1.11%2B-blue.svg)](https://julialang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 A Julia framework for Benders decomposition research and experimentation, with modular Master, Oracle, and Environment components and built-in support for classical, unified, Pareto, separable, and disjunctive variants.
@@ -62,7 +62,9 @@ Pkg.add(url = "https://github.com/asu-opt-lab/BendersX.jl")
 
 ## Usage
 
-The package entry point is `using BendersX`. Tutorials and worked examples live under `docs/src/tutorials/`, and benchmark scripts live under `experiments/`.
+The package entry point is `using BendersX` for the core workflow (`Master`, the standard oracle/environment constructors, and `solve!`). Advanced extension hooks and problem-specific helpers remain public APIs, but may require either `import BendersX: ...` or explicit qualification such as `BendersX.read_cflp_benchmark_data`.
+
+Tutorials and worked examples live under `docs/src/tutorials/`, and benchmark scripts live under `experiments/`.
 
 ## Testing
 
@@ -108,7 +110,6 @@ This repository is actively under development and we welcome contributions! Feel
 
 Copyright © 2025 Arizona State University.
 Released under the MIT License (see [LICENSE](LICENSE) file for details).
-
 
 
 

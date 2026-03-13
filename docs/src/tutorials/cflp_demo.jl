@@ -4,6 +4,7 @@
 # using BendersX.jl with sequential Benders decomposition.
 
 using BendersX
+import BendersX: CFLPData, read_cflp_benchmark_data
 using JuMP, HiGHS
 
 # ## Define the Master Model

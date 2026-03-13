@@ -16,6 +16,11 @@ All Benders oracles in BendersX conform to the [`AbstractOracle`](@ref)
 interface and are therefore interchangeable, provided they are compatible with
 the underlying problem formulation (some oracles are problem-specific).
 
+Problem-specific oracles such as [`CFLKnapsackOracle`](@ref) and
+[`UFLKnapsackOracle`](@ref) are public APIs but are not imported by default.
+Use `import BendersX: CFLKnapsackOracle, UFLKnapsackOracle, UFLKnapsackOracleParam`
+or qualify them as `BendersX.CFLKnapsackOracle`, etc., when using them directly.
+
 For example, switching from a classical Benders oracle to a knapsack-based
 oracle for capacitated facility location problems requires only changing the oracle constructor:
 

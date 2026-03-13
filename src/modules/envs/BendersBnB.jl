@@ -1,4 +1,3 @@
-export BendersBnB
 
 include("callback/preprocessing.jl") # must be included first
 include("callback/callback.jl") # must be included first

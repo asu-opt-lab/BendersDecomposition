@@ -59,6 +59,8 @@ Each component follows a clear type hierarchy that supports specialization and r
 ## Adding New Oracles
 Advanced users can implement custom cut generators by defining a new oracle:
 ```julia
+import BendersX: AbstractOracle, generate_cuts
+
 struct MyOracle <: AbstractOracle
     # fields
 end
@@ -75,6 +77,8 @@ This interface-based design allows new algorithmic ideas to be prototyped direct
 ## Adding New Environments
 Custom execution logic can be implemented by defining a new Environment:
 ```julia
+import BendersX: AbstractBendersEnv
+
 struct MyEnv <: AbstractBendersEnv
     # fields
 end

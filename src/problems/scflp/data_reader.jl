@@ -1,4 +1,3 @@
-export SCFLPData, read_stochastic_capacited_facility_location_problem
 using JSON
 
 struct SCFLPData <: AbstractData

@@ -1,5 +1,6 @@
 using Test
 using BendersX
+import BendersX: copy_variables!, UndefError
 using JuMP
 
 @testset "BendersX copy_variables!" begin

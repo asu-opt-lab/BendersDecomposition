@@ -1,15 +1,14 @@
 # [API Reference](@id api)
 
-This page documents the public API of `BendersX`. The reference pages below are generated automatically from the docstrings in `src/`.
+This page documents the public API of `BendersX`. In Julia 1.11+, the package
+distinguishes between:
+
+- exported names: available after `using BendersX`
+- public names: supported APIs that may require `import BendersX: ...` or `BendersX.xxx`
+
+The reference below includes both exported and `public` bindings.
 
 ```@autodocs
 Modules = [BendersX]
-# You can add:
-# Order = [:type, :function]         # optional ordering hints
-Private = false                    # show only exported symbols
-# Filter = r"^MyPackage\."           # optional regex filter
+Private = false
 ```
-
-Notes:
-- The fenced block starting with ```` ```@autodocs ```` is a Documenter directive that auto-generates pages from docstrings.
-- You can add optional settings inside the block (examples shown in comments) to control ordering/filtering.

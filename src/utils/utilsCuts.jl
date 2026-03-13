@@ -1,4 +1,3 @@
-export Hyperplane, aggregate, hyperplanes_to_expression
 
 """
     Hyperplane
