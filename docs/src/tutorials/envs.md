@@ -1,233 +1,147 @@
-In BendersX, **environments** control *how* the Benders algorithm is executed.
-They orchestrate the interaction between the master object and the oracle(s),
-determine iteration order, and enforce algorithmic constraints.
-
-This design allows users to swap environments and adjust their behavior without
-modifying either the master or oracle objects.
-
-This section explains:
-
-* How to switch between different Benders environments
-* How environment parameters and subcomponents affect algorithm execution
-
----
-
-## Swapping Execution Environments
-
-All execution environments in BendersX are subtypes of
-[`AbstractBendersEnv`](@ref). The same master and oracle objects can therefore be
-reused across different environments.
-
-For example, switching from a sequential environment to a branch-and-bound
-environment only requires changing the environment constructor:
-
-```julia
-# Standard sequential Benders
-env = BendersSeq(master, oracle)
-
-# Branch-and-bound Benders
-env = BendersBnB(master, oracle)
+```@meta
+CurrentModule = BendersX
 ```
 
-The master and oracle objects remain unchanged.
+# [Environment Guide](@id environment-guide)
 
----
+Environments determine **how** a master and oracle interact. They own the solve
+loop, stopping rules, callback registration, and logging behavior.
 
-## Sequential vs. Branch-and-Bound Environments
+## Sequential environments
 
-BendersX provides two main classes of execution environments.
+### [`BendersSeq`](@ref)
 
-### Sequential Environments
+[`BendersSeq`](@ref) is the default cutting-plane environment:
 
-Sequential environments are subtypes of [`AbstractBendersSeq`](@ref) and execute
-the Benders algorithm in a serial, iteration-by-iteration fashion.
-
-Typical use cases include:
-
-* LP master problems
-* Continuous relaxations of MILP masters
-* Algorithm development and debugging
-
-Example:
+- one master solve per iteration;
+- one oracle call per iteration;
+- best for initial model validation and baseline comparisons.
 
 ```julia
-env = BendersSeq(master, oracle)
-```
-
-### Branch-and-Bound Environments
-
-Branch-and-bound environments are subtypes of
-[`AbstractBendersBnB`](@ref) and integrate Benders decomposition into a
-branch-and-bound framework.
-
-These environments are typically used for:
-
-* Integer or mixed-integer master problems
-* Disjunctive or logic-based Benders methods
-* Callback-based cut generation
-
-Example:
-
-```julia
-env = BendersBnB(master, oracle)
-```
-
----
-
-## Adjusting Environment Behavior via Parameters and Subcomponents
-
-Each environment owns a parameter object that controls stopping criteria,
-logging, and algorithmic options. In addition, some environments expose
-adjustable **subcomponents** that enable more advanced workflows.
-
-### Example: Sequential Environment Parameters
-
-```julia
-param = BendersSeqParam(
-    iter_limit = 500,
-    time_limit = 1800.0,
-    verbose = true,
-)
-
-env = BendersSeq(master, oracle; param = param)
-```
-
-Typical environment parameters include:
-
-* `iter_limit`: maximum number of iterations,
-* `halt_limit`: maximum number of iterations without significant improvement,
-* `time_limit`: global time limit,
-* `gap_tolerance`: convergence tolerance,
-* `verbose`: logging verbosity.
-
-See [`BendersSeqInOutParam`](@ref) and [`BendersBnBParam`](@ref) for parameters
-specific to `BendersSeqInOut` and `BendersBnB`, respectively.
-
----
-
-## Benders Branch-and-Bound with Root Preprocessing and Callbacks
-
-In addition to parameters defined in [`BendersBnBParam`](@ref),
-[`BendersBnB`](@ref) supports configurable **root-node preprocessing** and
-**callback-driven** workflows.
-
-### 1) Simple lazy-callback–based usage (typical oracle, no user callback)
-
-#### Using the default constructor
-
-The short form `BendersBnB(master, oracle; param = benders_param)` wires the
-oracle as a lazy callback and uses no root preprocessing:
-
-```julia
-master = Master(data; customize = customize_master_model!)
-oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
-
-env = BendersBnB(master, oracle; param = benders_param)
+seq_param = BendersSeqParam(time_limit = 600.0, gap_tolerance = 1e-4, verbose = true)
+env = BendersSeq(master, oracle; param = seq_param)
 log = solve!(env)
 ```
 
-#### Explicit form (NoSeq / Seq / SeqInOut)
+### [`BendersSeqInOut`](@ref)
 
-When finer control is needed, the environment can be constructed explicitly:
+[`BendersSeqInOut`](@ref) adds in-out stabilization. Use it when the plain
+sequential loop oscillates or progresses slowly and you can provide a sensible
+stabilizing point.
 
 ```julia
-# NoSeq: no root Benders run
-root_preprocessing = NoRootNodePreprocessing()
-lazy_callback = LazyCallback(oracle)
-user_callback = NoUserCallback()
-
-env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
-
-# Seq: sequential Benders at the root node
-root_preprocessing = RootNodePreprocessing(
-    oracle, BendersSeq,
-    BendersSeqParam(time_limit = 200.0, gap_tolerance = 1e-9),
+inout_param = BendersSeqInOutParam(
+    time_limit = 600.0,
+    gap_tolerance = 1e-4,
+    stabilizing_x = fill(0.5, master.dim_x),
+    α = 0.9,
+    λ = 0.1,
 )
-
-env = BendersBnB(master, root_preprocessing, LazyCallback(oracle), NoUserCallback(); param = benders_param)
-
-# SeqInOut: stabilized In–Out Benders at the root node
-root_preprocessing = RootNodePreprocessing(
-    oracle, BendersSeqInOut,
-    BendersSeqInOutParam(
-        time_limit = 300.0,
-        gap_tolerance = 1e-9,
-        stabilizing_x = ones(data.n_facilities),
-        α = 0.9,
-        λ = 0.1,
-    ),
-)
-
-env = BendersBnB(master, root_preprocessing, LazyCallback(oracle), NoUserCallback(); param = benders_param)
+env = BendersSeqInOut(master, oracle; param = inout_param)
 ```
 
-**When to use**
+## Callback-based branch and bound
 
-* `NoSeq`: no need for root tightening.
-* `Seq`: improved root bound via sequential Benders.
-* `SeqInOut`: stabilized root solve when a good `stabilizing_x` is available.
+[`BendersBnB`](@ref) integrates Benders cuts into a MIP solver through lazy and
+user callbacks.
 
----
+Use it when:
 
-### 2) User-callback–based usage (e.g., disjunctive separation)
-
-When stronger cuts are needed—such as separating fractional solutions—users can
-add a **user callback**, for example with a disjunctive oracle.
+- the master is mixed-integer;
+- your solver supports callbacks;
+- you want to add cuts at integer or fractional nodes instead of solving a
+  standalone sequential loop.
 
 ```julia
-# typical oracles (κ, ν)
-kappa = ClassicalOracle(data, master; customize = customize_sub_model!)
-nu    = ClassicalOracle(data, master; customize = customize_sub_model!)
-typical_oracles = [kappa, nu]
+bnb_param = BendersBnBParam(time_limit = 1800.0, gap_tolerance = 1e-4, verbose = true)
+env = BendersBnB(master, oracle; param = bnb_param)
+log = solve!(env)
+```
 
-# DCGLP and SplitOracle parameters
-dcglp_optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
-dcglp_param = DcglpParam(dcglp_optimizer; time_limit = 200.0)
+### Callback components
+
+- [`LazyCallback`](@ref) adds cuts at integer nodes and is the default callback
+  wrapper for typical oracles.
+- [`UserCallback`](@ref) adds cuts at fractional nodes, usually for stronger
+  disjunctive separation.
+- [`NoUserCallback`](@ref) disables user cuts.
+
+## Root preprocessing
+
+[`BendersBnB`](@ref) supports optional root-node preprocessing before callback
+search begins.
+
+### No preprocessing
+
+```julia
+root_preprocessing = NoRootNodePreprocessing()
+env = BendersBnB(master, root_preprocessing, LazyCallback(oracle), NoUserCallback(); param = bnb_param)
+```
+
+### Sequential preprocessing
+
+[`RootNodePreprocessing`](@ref) runs a sequential environment on the LP-relaxed
+master to add initial cuts:
+
+```julia
+root_preprocessing = RootNodePreprocessing(
+    oracle,
+    BendersSeq,
+    BendersSeqParam(time_limit = 120.0, gap_tolerance = 1e-6, verbose = false),
+)
+env = BendersBnB(master, root_preprocessing, LazyCallback(oracle), NoUserCallback(); param = bnb_param)
+```
+
+You can swap `BendersSeq` for [`BendersSeqInOut`](@ref) when stabilization at
+the root node is useful.
+
+### Disjunctive root preprocessing
+
+[`DisjunctiveRootNodePreprocessing`](@ref) runs a typical phase followed by a
+disjunctive phase. It is intended for split-cut workflows.
+
+## Combining lazy and user callbacks
+
+When you want both standard Benders cuts at integer nodes and stronger split
+cuts at fractional nodes, use a typical oracle in the lazy callback and a
+[`SplitOracle`](@ref) inside [`UserCallback`](@ref).
+
+```julia
+kappa = ClassicalOracle(data, master; customize = customize_sub_model!)
+nu = ClassicalOracle(data, master; customize = customize_sub_model!)
+dcglp_param = DcglpParam(optimizer_with_attributes(CPLEX.Optimizer, MOI.Silent() => true); verbose = false)
+split_param = SplitOracleParam(dcglp_param; strengthened = true, lift = true)
+
+lazy_callback = LazyCallback(kappa)
+user_callback = UserCallback(SplitOracle(master, [kappa, nu], split_param); params = UserCallbackParam(frequency = 1))
+
+env = BendersBnB(master, NoRootNodePreprocessing(), lazy_callback, user_callback; param = bnb_param)
+```
+
+## Specialized split-cut workflow
+
+[`SpecializedBendersSeq`](@ref) is a research-oriented sequential environment
+for split-cut workflows. It expects a [`SplitOracle`](@ref) configured with the
+rules required by the implementation:
+
+- `split_index_selection_rule = LargestFractional()`
+- `disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices()`
+
+```julia
 split_param = SplitOracleParam(
     dcglp_param;
-    norm = LpNorm(1.0),
-    strengthened = true,
-    lift = true,
-    add_benders_cuts_to_master = 1,
+    split_index_selection_rule = LargestFractional(),
+    disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
 )
-
-# disjunctive oracle and callbacks
-disjunctive_oracle = SplitOracle(master, typical_oracles, split_param)
-user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = 1))
-
-lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
-lazy_callback = LazyCallback(lazy_oracle)
-
-env = BendersBnB(
-    master,
-    NoRootNodePreprocessing(),
-    lazy_callback,
-    user_callback;
-    param = benders_param,
-)
-log = solve!(env)
+split_oracle = SplitOracle(master, [kappa, nu], split_param)
+env = SpecializedBendersSeq(master, split_oracle)
 ```
 
----
+## Choosing an environment
 
-## Choosing the Right Environment
-
-| Environment type            | Typical use case                     |
-| --------------------------- | ------------------------------------ |
-| `BendersSeq`                | Standard sequential Benders          |
-| `BendersSeqInOut`           | In–Out stabilized sequential Benders |
-| `BendersBnB`                | MILP master with callbacks           |
-| Custom `AbstractBendersEnv` | Research and algorithm prototyping   |
-
----
-
-## Summary
-
-* Environments define *how* Benders decomposition is executed
-* Swapping environments requires minimal code changes
-* Behavior is controlled via environment-specific parameters and subcomponents
-* Advanced workflows are enabled by combining root preprocessing and callbacks
-
-This separation between **modeling**, **oracles**, and **execution environments**
-allows BendersX to support a wide range of algorithms while maintaining a clean,
-extensible API.
+| Environment | Best first use |
+| --- | --- |
+| [`BendersSeq`](@ref) | Standard baseline and debugging |
+| [`BendersSeqInOut`](@ref) | Sequential runs that benefit from stabilization |
+| [`BendersBnB`](@ref) | Mixed-integer masters with callback-capable solvers |
+| [`SpecializedBendersSeq`](@ref) | Split-cut experiments and specialized research workflows |

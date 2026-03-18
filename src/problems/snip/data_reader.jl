@@ -1,5 +1,10 @@
 using JSON
 
+"""
+    SNIPData <: AbstractData
+
+Data container for the stochastic network interdiction problem.
+"""
 struct SNIPData <: AbstractData
     num_nodes::Int
     num_scenarios::Int
@@ -10,6 +15,14 @@ struct SNIPData <: AbstractData
     budget::Float64
 end
 
+"""
+    read_snip_data(instance_no, snip_no, budget; base_dir = get_artifact_path("snip")) -> SNIPData
+
+Read a stochastic network interdiction instance from the packaged SNIP dataset.
+
+`instance_no` selects the network, `snip_no` selects the interdiction setting,
+and `budget` fixes the master budget used in the returned data object.
+"""
 function read_snip_data(instance_no::Int, snip_no::Int, budget::Float64; base_dir::String=get_artifact_path("snip"))
     # Read sensor installation arcs (D)
     D = Tuple{Int,Int,Float64,Float64}[]

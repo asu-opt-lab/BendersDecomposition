@@ -1,178 +1,139 @@
-BendersX is designed to make **oracle selection and configuration modular**.
-Users can swap oracle implementations and adjust their behavior without
-changing the master problem or the execution environment.
-
-This section explains:
-
-1. How to replace one oracle with another
-2. How oracle parameters affect cut generation
-3. How disjunctive (`SplitOracle`) oracles fit into the workflow
-
----
-
-## Swapping Oracles
-
-All Benders oracles in BendersX conform to the [`AbstractOracle`](@ref)
-interface and are therefore interchangeable, provided they are compatible with
-the underlying problem formulation (some oracles are problem-specific).
-
-Problem-specific oracles such as [`CFLKnapsackOracle`](@ref) and
-[`UFLKnapsackOracle`](@ref) are public APIs but are not imported by default.
-Use `import BendersX: CFLKnapsackOracle, UFLKnapsackOracle, UFLKnapsackOracleParam`
-or qualify them as `BendersX.CFLKnapsackOracle`, etc., when using them directly.
-
-For example, switching from a classical Benders oracle to a knapsack-based
-oracle for capacitated facility location problems requires only changing the oracle constructor:
-
-```julia
-# Classical Benders oracle
-oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
-
-# Knapsack-based oracle (e.g., CFL)
-oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!)
+```@meta
+CurrentModule = BendersX
 ```
 
-The execution environment (`BendersSeq`, `BendersSeqInOut`, `BendersBnB`, or any variants)
-remains unchanged.
+# [Oracle Guide](@id oracle-guide)
 
----
+Oracles decide how a candidate master point is evaluated and how new cuts are
+generated. In BendersX, every oracle is a subtype of [`AbstractOracle`](@ref)
+and implements [`generate_cuts`](@ref).
 
-## Adjusting Oracle Parameters
+## Typical LP-based oracles
 
-Each oracle in BendersX owns a `param` field of type `<: AbstractOracleParam`,
-which controls numerical tolerances and cut-generation behavior. By convention,
-an oracle named `XOracle` uses a parameter type named `XOracleParam`. See
-[`API`](@ref api) for detailed descriptions of oracle-specific parameters.
+[`ClassicalOracle`](@ref), [`UnifiedOracle`](@ref), and
+[`ParetoOracle`](@ref) all assume that the subproblem built by
+[`customize_sub_model!`](@ref) is LP-compatible.
 
-Common parameters include:
+Use them when:
 
-* `rtol`: relative tolerance for cut violation
-* `atol`: absolute tolerance for cut violation
-* `zero_tol`: numerical tolerance for detecting zero values.
+- the recourse model is linear and continuous;
+- you want a general-purpose oracle that is independent of problem structure;
+- you want to compare classical, unified, and Pareto cuts on the same model.
 
-### Example: ClassicalOracle
+### Choosing among them
+
+| Oracle | When to prefer it |
+| --- | --- |
+| [`ClassicalOracle`](@ref) | Baseline implementation and most general starting point |
+| [`UnifiedOracle`](@ref) | Unified feasibility/optimality treatment following Fischetti et al. |
+| [`ParetoOracle`](@ref) | Stronger cuts when a meaningful core point is available |
+
+### Parameters
+
+- [`ClassicalOracleParam`](@ref) is an alias of [`BasicOracleParam`](@ref).
+- [`UnifiedOracleParam`](@ref) adds the `w0` weight for the unified objective
+  bound constraint.
+- [`ParetoOracleParam`](@ref) requires a problem-specific `core_point`.
 
 ```julia
 param = ClassicalOracleParam(rtol = 1e-6, atol = 1e-8)
 oracle = ClassicalOracle(data, master; customize = customize_sub_model!, param = param)
 ```
 
-Some oracles expose **behavioral parameters** in addition to numerical tolerances.
+## Problem-specific oracles
 
-### Example: UFLKnapsackOracle
+BendersX ships problem-specific separation routines for built-in facility
+location models.
+
+### [`CFLKnapsackOracle`](@ref)
+
+Use this oracle for capacitated facility location models when the subproblem
+matches the CFLP structure. It still builds a model-based subproblem, but it
+uses facility-wise knapsack calculations to strengthen the resulting cut.
 
 ```julia
-param = UFLKnapsackOracleParam(
-            slim = true,
-            add_only_violated_cuts = true,
-            rtol = 1e-8,
-        )
+oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!)
+```
+
+### [`UFLKnapsackOracle`](@ref)
+
+Use this oracle for uncapacitated facility location. Unlike the model-based
+typical oracles, it works directly from [`UFLPData`](@ref) and does not need a
+master object to recover a closed-form separation routine.
+
+```julia
+param = UFLKnapsackOracleParam(slim = true, add_only_violated_cuts = true)
 oracle = UFLKnapsackOracle(data; param = param)
 ```
-Key behavioral options:
-* `slim`: aggregate multiple cuts into a single hyperplane
-* `add_only_violated_cuts`: discard non-violated cuts
 
-These options can have a significant impact on performance and memory usage.
+## Multi-scenario and separable recourse
 
----
+[`SeparableOracle`](@ref) wraps a typical oracle prototype and instantiates one
+sub-oracle per scenario or block.
 
-## Oracles in Separable or Multi-Scenario Settings
-When the subproblem is separable (for example, in a multi-scenario setting),
-users can employ [`SeparableOracle`](@ref) to manage multiple independent
-subproblems.
+It is the standard choice when:
 
-With `SeparableOracle`, the subproblem oracle is specified through a
-**prototype instance**, making it straightforward to swap different oracle
-implementations:
+- `t` is vector-valued, one entry per scenario;
+- the recourse problem decomposes into independent LP subproblems;
+- you want to reuse an existing typical oracle across all scenarios.
 
 ```julia
 oracle = SeparableOracle(
     data,
     master,
     ClassicalOracle(),
-    N;
+    data.n_scenarios;
+    customize = customize_sub_model!,
     sub_oracle_param = ClassicalOracleParam(rtol = 1e-6),
 )
 ```
 
-Any oracle subtype `T <: AbstractTypicalOracle` that implements the required
-constructor interface can be used by passing a prototype such as `T()`.
+This pattern is especially useful for [`SCFLPData`](@ref) and
+[`SNIPData`](@ref), where scenario-specific subproblems are common.
 
----
+## Disjunctive separation with [`SplitOracle`](@ref)
 
-## Using Disjunctive Oracles (`SplitOracle`)
-For mixed-integer master problems, BendersX provides the
-[`SplitOracle`](@ref), which generates **disjunctive Benders cuts** by solving a
-Dual Cut Generating Linear Program (DCGLP).
+[`SplitOracle`](@ref) combines two typical oracles and a
+[`DcglpParam`](@ref) configuration to generate split cuts through a disjunctive
+cut-generating LP.
 
-A `SplitOracle` is constructed by combining two *typical* oracles (denoted by
-`κ` and `ν`) together with a [`SplitOracleParam`](@ref) object. The latter
-encapsulates a [`DcglpParam`](@ref), which controls the behavior of the DCGLP.
+Use it when:
+
+- the master problem is mixed-integer;
+- you want split cuts in addition to or instead of classical Benders cuts;
+- you are experimenting with callback-based or specialized split-cut workflows.
 
 ```julia
-oracle_kappa = ClassicalOracle(data, master)
-oracle_nu    = ClassicalOracle(data, master)
+oracle_kappa = ClassicalOracle(data, master; customize = customize_sub_model!)
+oracle_nu = ClassicalOracle(data, master; customize = customize_sub_model!)
 
-dcglp_optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, 
-        "CPX_PARAM_EPRHS" => 1e-9, 
-        "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
-        "CPX_PARAM_EPOPT" => 1e-9, 
-        MOI.Silent() => true
-    )
-dcglp_param = DcglpParam(dcglp_optimizer)
+dcglp_optimizer = optimizer_with_attributes(CPLEX.Optimizer, MOI.Silent() => true)
+dcglp_param = DcglpParam(dcglp_optimizer; verbose = false)
 split_param = SplitOracleParam(
-        dcglp_param;
-        split_index_selection_rule = MostFractional(),
-        strengthened = true,
-        lift = true,
-    )
+    dcglp_param;
+    strengthened = true,
+    lift = true,
+)
 
 oracle = SplitOracle(master, [oracle_kappa, oracle_nu], split_param)
 ```
-The component oracles `oracle_kappa` and `oracle_nu` can be any implementation of typical oracles compatible with the underlying problem.
 
-### Configuring `SplitOracle` Behavior
-The behavior of a `SplitOracle` is controlled entirely through
-[`SplitOracleParam`](@ref). Key options include:
-- Split selection
-    - `split_index_selection_rule`: determines which fractional master variable is selected to form the disjunction.
-- Cut management
-    - `disjunctive_cut_append_rule`: controls how previously generated disjunctive cuts are reused.
-    - `add_benders_cuts_to_master`: controls whether byproduct Benders cuts are added unconditionally, only when violated, or not at all.
-- Strengthening and lifting
-    - `strengthened`: enables strengthening of disjunctive cuts.
-    - `lift`: applies lifting based on variables fixed to 0 or 1.
-- DCGLP reuse and normalization
-    - `reuse_dcglp`: reuses the DCGLP model from previous cut generation.
-    - `norm`: normalization norm used in DCGLP.
-These options allow fine-grained control over performance and numerical
-robustness.
+Important `SplitOracleParam` controls include:
 
----
+- `split_index_selection_rule` for choosing the branching disjunction;
+- `disjunctive_cut_append_rule` for reusing previously generated split cuts;
+- `add_benders_cuts_to_master` for deciding how byproduct Benders cuts are
+  passed back to the master;
+- `norm`, `reuse_dcglp`, `lift`, and `strengthened` for DCGLP behavior.
 
+## Practical guidance
 
-
-## Choosing the Right Oracle
-
-| Oracle type                                   | When to use it                                                              |
-|----------------------------------------------|-----------------------------------------------------------------------------|
-| `ClassicalOracle`, `UnifiedOracle`, `ParetoOracle` | General-purpose Benders decomposition                                      |
-| `CFLKnapsackOracle`                           | Capacitated facility location problems                                      |
-| `UFLKnapsackOracle`                           | Uncapacitated facility location problems                                    |
-| `SplitOracle`                                | General-purpose Benders decomposition for problems with an MILP master      |
-| `SeparableOracle`                            | General-purpose Benders decomposition for problems with multi-scenario or separable recourse |
-| Custom `AbstractOracle` | Research and prototyping |
-
-
----
-
-## Summary
-
-* Oracles are fully modular and interchangeable
-* Behavior is controlled via dedicated parameter types
-* Swapping oracles requires minimal code changes
-
-This design enables rapid experimentation with different decomposition
-strategies while preserving a consistent modeling interface.
+- Start with [`ClassicalOracle`](@ref) unless you have a clear reason to use a
+  stronger or problem-specific oracle.
+- Prefer [`SeparableOracle`](@ref) whenever the recourse structure is naturally
+  scenario-wise and `t` is vector-valued.
+- Use [`CFLKnapsackOracle`](@ref) and [`UFLKnapsackOracle`](@ref) only when the
+  built-in facility-location structure matches your model.
+- Use [`SplitOracle`](@ref) together with
+  [Environment Guide](@ref environment-guide) when you need callback-based or
+  specialized split-cut workflows.

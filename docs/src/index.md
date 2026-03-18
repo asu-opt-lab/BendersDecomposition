@@ -1,95 +1,90 @@
-# BendersX.jl Documentation
+```@meta
+CurrentModule = BendersX
+```
 
-Welcome to the documentation for **BendersX.jl** — a modular, plug-and-play framework for Benders decomposition algorithms in Julia.
+# BendersX.jl
 
-[![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://github.com/asu-opt-lab/BendersX.jl/blob/main/LICENSE)
+**BendersX.jl** is a Julia framework for building, comparing, and extending
+Benders decomposition algorithms with interchangeable **masters**,
+**oracles**, and **execution environments**.
 
+The package is designed for two common workflows:
 
+- building a new decomposition model from JuMP components;
+- running built-in facility-location or network-interdiction benchmarks with
+  different oracle and environment combinations.
 
----
+## Core workflow
 
-## Introduction
+Every BendersX solve follows the same assembly pattern:
 
-**BendersX.jl** is a modular and extensible framework for Benders decomposition algorithms in Julia. It is designed to support **both standard implementations and experimental extensions** in a unified, principled manner.
+```julia
+using BendersX
 
-The name **BendersX** reflects the package philosophy: **“X” denotes both new application domains and extensions beyond classical Benders decomposition**, including alternative cut-generation strategies, stabilization mechanisms, and execution logic. The framework is designed to enable such applications and extensions to be implemented, combined, and evaluated with minimal friction through a plug-and-play architecture.
+data = MyData(...)
+master = Master(data; customize = customize_master_model!)
+oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+env = BendersSeq(master, oracle)
+log = solve!(env)
+```
 
----
+The modeling details come from user or problem-specific implementations of
+[`customize_master_model!`](@ref) and [`customize_sub_model!`](@ref). The
+algorithmic behavior comes from the selected oracle and environment.
 
-!!! tip "Quick overview"
-    - **Components**: Master · Oracle (cut generator) · Environment (execution controller)
-    - **Architecture**: JuMP-based modeling with a modular, hierarchical algorithmic framework
-    - **Design goal**: Plug-and-play extensibility for rapid prototyping and reproducible experimentation
+## Installation
 
----
+Install from GitHub:
 
-## [Quick start](@id quick-start)
-### Installation
-Install BendersX using Julia’s built-in package manager. Launch Julia and run the following commands at the `julia>` prompt:
 ```julia
 import Pkg
 Pkg.add(url = "https://github.com/asu-opt-lab/BendersX.jl")
 ```
 
-If you are working from a local clone of this repository, use `Pkg.develop(path = "/path/to/BendersDecomposition")` instead.
+For local development from a clone:
 
-### Workflow
-The following example illustrates a minimal workflow using BendersX:
 ```julia
-using BendersX, JuMP
-
-# 1. User-defined data
-data = MyData(...)
-
-# 2. Create master and provide master problem customization
-master = Master(data; customize = customize_master_model!)
-
-# 3. Select oracle and provide subproblem customization
-oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
-
-# 4. Choose environment
-env = BendersSeq(master, oracle)
-
-# 5. Solve
-log = solve!(env)
-
+import Pkg
+Pkg.develop(path = "/path/to/BendersDecomposition")
 ```
-!!! info "Modeling"
-    Users provide both the master and subproblem formulations through *customization functions* written in standard JuMP syntax.
-    See the [Modeling Interface](@ref modeling-interface) for concrete examples.
-    If you are unfamiliar with JuMP, please refer to the JuMP.jl documentation for an introduction: [Julia JuMP](https://jump.dev/JuMP.jl/stable/).
-    Built-in problem readers, problem-specific oracles, and advanced extension hooks remain public APIs, but may require `import BendersX: ...` or `BendersX.xxx`.
 
-!!! tip "Plug-and-Play"
-    Oracle and Environment variants can be swapped freely, enabling rapid experimentation without changes to the formulation.
+## Solver support
 
-    **Built-in Oracle variants**
+- Sequential workflows such as [`BendersSeq`](@ref) and
+  [`BendersSeqInOut`](@ref) can be demonstrated with open-source LP/MIP
+  solvers such as `HiGHS`.
+- Callback-based workflows such as [`BendersBnB`](@ref),
+  [`LazyCallback`](@ref), and [`UserCallback`](@ref) require a solver with
+  callback support.
+- The built-in problem helper methods in `src/problems/` currently configure
+  commercial solvers in source code. Treat them as reference implementations
+  and adapt the optimizer choice if your local setup differs.
 
-    | Oracle type        | Description |
-    |--------------------|-----------------------|
-    | [`ClassicalOracle`](@ref)  | Standard Benders cut generation based on classical dual information | 
-    | `UnifiedOracle`    | Unified treatment of feasibility and optimality cuts | 
-    | `ParetoOracle`     | Generates Pareto-optimal Benders cuts | 
-    | [`SeparableOracle`](@ref)  | Wrapper oracle for separable subproblems | 
-    | [`UFLKnapsackOracle`](@ref)  | Knapsack-based specialized oracle for uncapacitated facility location problems |
-    | [`CFLKnapsackOracle`](@ref)  | Knapsack-based specialized oracle for capacitated facility location problems |
-    | [`SplitOracle`](@ref)      | Produces split cuts to strengthen the master relaxation |
+## What is documented here
 
-    **Built-in Environment variants**
+- [Getting Started](@ref getting-started) gives the shortest sequential example that runs with
+  a small built-in data object and `HiGHS`.
+- [Architecture](@ref architecture) explains how masters, oracles, and
+  environments fit together.
+- [Modeling Guide](@ref modeling-guide) documents the user-facing model
+  customization contracts, including generalized bound constraints.
+- [Problem Library](@ref problem-library) covers the built-in data types,
+  readers, and artifact-backed benchmark sets.
+- [Oracle Guide](@ref oracle-guide) and [Environment Guide](@ref environment-guide)
+  explain when to use each algorithmic component.
+- [Extending BendersX](@ref extending-bendersx) covers custom oracle and
+  environment implementations.
+- [API Reference](@ref api) groups the public surface by workflow area.
 
-    | Environment type        | Execution strategy |
-    |-------------------------|--------------------|
-    | [`BendersSeq`](@ref)            | Classical sequential Benders decomposition |
-    | [`BendersSeqInOut`](@ref)       | Sequential Benders with in–out stabilization |
-    | [`BendersBnB`](@ref)            | Branch-and-bound integrated with Benders cuts |
+## Built-in algorithm families
 
-## Key features
-- **Plug-and-play architecture**: easily swap or extend Master, Oracle, and Environment components
-- **JuMP-native modeling**: master and subproblems are expressed entirely using standard JuMP syntax
-- **Built-in algorithmic variants**: classical, unified, Pareto, split cuts, in–out stabilization, branch-and-bound, and more
-- **Benchmark-ready**: facility location, network interdiction, and additional problems for reproducible comparisons
+| Family | Primary entry points | Typical use |
+| --- | --- | --- |
+| Sequential | [`BendersSeq`](@ref), [`BendersSeqInOut`](@ref) | Standard cutting-plane workflows and debugging |
+| Callback-based | [`BendersBnB`](@ref), [`LazyCallback`](@ref), [`UserCallback`](@ref) | Mixed-integer masters with solver callbacks |
+| Problem-specific oracles | [`CFLKnapsackOracle`](@ref), [`UFLKnapsackOracle`](@ref) | Specialized facility-location separation |
+| Disjunctive workflows | [`SplitOracle`](@ref), [`SpecializedBendersSeq`](@ref) | Split cuts and research variants |
 
-!!! info "Next steps"
-    - Explore **Tutorials** for worked examples and step-by-step guides
-    - See the **User Guide** for advanced usage patterns
-    - Consult the **API** for detailed documentation of Master, Oracle, and Environment interfaces
+!!! info "Complete example"
+    For a benchmark-backed example built from the shipped CFLP helpers, see
+    [CFLP Demo](@ref cflp-demo).

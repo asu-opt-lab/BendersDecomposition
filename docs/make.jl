@@ -33,19 +33,24 @@ end
 makedocs(
     modules = [BendersX],
     sitename = "BendersX.jl",
-    format = Documenter.HTML(prettyurls=false),
+    format = Documenter.HTML(prettyurls=false, size_threshold_warn=150 * 2^10),
     checkdocs = :public,
     warnonly = [:cross_references],
     pages = [
         "Home" => "index.md",
-        "Tutorials" => [
+        "Guides" => [
             "Getting Started" => "tutorials/getting_started.md",
-            "CFLP Demo" => "tutorials/cflp_demo.md",
-            "Swapping Oracles and Adjusting Their Behaviors" => "tutorials/oracles.md",
-            "Swapping Environments and Adjusting Their Behaviors" => "tutorials/envs.md",
-            "Examples" => "tutorials/examples.md"
+            "Architecture" => "user_guide.md",
+            "Modeling Guide" => "modeling_guide.md",
+            "Problem Library" => "problem_library.md",
+            "Oracle Guide" => "tutorials/oracles.md",
+            "Environment Guide" => "tutorials/envs.md",
+            "Extending BendersX" => "extending.md",
         ],
-        "User Guide" => "user_guide.md",
-        "API" => "api.md"
+        "Reference" => [
+            "CFLP Demo" => "tutorials/cflp_demo.md",
+            "Experiments and Reproducibility" => "tutorials/examples.md",
+            "API Reference" => "api.md",
+        ],
     ],
 )

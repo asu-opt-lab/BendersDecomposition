@@ -93,6 +93,23 @@ function customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; k
 end
 
 """
+    customize_mip_model!(model::Model, data::AbstractData)
+
+User-defined hook for constructing a direct monolithic MIP model.
+
+This interface is useful when you want a baseline full-space formulation in
+addition to a Benders decomposition workflow. Built-in problem libraries provide
+methods for their corresponding data types, and users may add their own
+specialized methods for custom problems.
+
+The function should fully define the optimization model in place, including the
+optimizer, variables, objective, and constraints.
+"""
+function customize_mip_model!(model::Model, data::AbstractData)
+    throw(UndefError("update customize_mip_model! for $(typeof(data))"))
+end
+
+"""
     copy_variables!(model::Model, x::NamedTuple) -> NamedTuple
 
 Create JuMP variables inside `model` that mirror the structure of the NamedTuple `x`.
@@ -199,6 +216,16 @@ function var_from_tuple(x_tuple::NamedTuple)
     return x
 end
 
+"""
+    transfer_scaled_linear_rows_and_bounds_with_types!(master, x, dcglp, omega, omega0)
+
+Copy linear rows and scalar bounds from a master model into the DCGLP
+formulation used by [`SplitOracle`](@ref).
+
+Only linear constraints whose variables all belong to the supplied vector `x`
+are transferred. Variable integrality restrictions are ignored, because the
+target DCGLP is a continuous lifting of the master model.
+"""
 function transfer_scaled_linear_rows_and_bounds_with_types!(
     master::Model,
     x::Vector{VariableRef},

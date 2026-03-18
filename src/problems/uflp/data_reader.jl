@@ -1,4 +1,9 @@
 
+"""
+    UFLPData <: AbstractData
+
+Data container for the uncapacitated facility location problem.
+"""
 struct UFLPData <: AbstractData
     n_facilities::Int
     n_customers::Int
@@ -7,6 +12,11 @@ struct UFLPData <: AbstractData
     costs::Matrix{Float64}
 end
 
+"""
+    read_uflp_benchmark_data(filename; filepath = get_artifact_path("uflp_locssall")) -> UFLPData
+
+Read a benchmark UFLP instance from the packaged LOCSSALL-style dataset.
+"""
 function read_uflp_benchmark_data(filename::AbstractString; filepath=get_artifact_path("uflp_locssall"))
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
@@ -49,6 +59,11 @@ function read_uflp_benchmark_data(filename::AbstractString; filepath=get_artifac
     return UFLPData(n_facilities, n_customers, demands, fixed_costs, costs)
 end
 
+"""
+    read_Simple_data(filename; filepath = get_artifact_path("uflp_allkoerkelghosh")) -> UFLPData
+
+Read a UFLP instance from the packaged "Simple" dataset.
+"""
 function read_Simple_data(filename::AbstractString; filepath=get_artifact_path("uflp_allkoerkelghosh"))
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)

@@ -1,48 +1,53 @@
-## Summary of Experiment Test Suites
-
-The `experiments/` directory contains a structured collection of runnable test
-suites. Each suite focuses on a specific **execution environment**, and within
-each suite, experiments are run on multiple benchmark problems:
-
-* Uncapacitated Facility Location Problem (UFLP)
-* Capacitated Facility Location Problem (CFLP)
-* Stochastic Capacitated Facility Location Problem (SCFLP)
-* Stochastic Network Interdiction Problem (SNIP)
-
-| Test suite                      | Folder                              | Oracles demonstrated                                                                                                        | Environments demonstrated                                                  |
-| ------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **Sequential (typical)**        | `1_test_sequential_typical/`        | Typical oracles, including `ClassicalOracle`, problem-specific knapsack oracles, and `SeparableOracle` (for SCFLP and SNIP) | `BendersSeq`                                                               |
-| **Sequential In–Out (typical)** | `2_test_sequential_in_out_typical/` | Typical oracles (same as above)                                                                                             | `BendersSeqInOut`                                                          |
-| **Sequential (disjunctive)**    | `3_test_sequential_disjunctive/`    | `SplitOracle` combined with typical oracles                                                                                 | `BendersSeq`                                            |
-| **Callback (typical)**          | `4_test_callback_typical/`          | Typical oracles (classical, knapsack-based, and separable)                                                                  | `BendersBnB` with lazy callbacks and varying root preprocessing via subtypes of `AbstractBendersSeq` | |
-| **Callback (disjunctive)**      | `5_test_callback_disjunctive/`      | `SplitOracle` combined with typical oracles                                                                                 | Same as above, additionally including user callbacks |
-
----
-
-
-## Structure of Each Test Suite
-
-Within each test-suite directory (e.g. `1_test_sequential_typical/`), the
-corresponding `runtest.jl` typically includes:
-
-```text
-ufl.jl    # Uncapacitated Facility Location
-cfl.jl    # Capacitated Facility Location
-scfl.jl   # Stochastic Capacitated Facility Location
-snip.jl   # Stochastic Network Interdiction
+```@meta
+CurrentModule = BendersX
 ```
 
-Each of these files:
+# Experiments and Reproducibility
 
-* loads problem-specific data, models, and oracles from `src/problems/...`,
-* constructs appropriate masters, oracles, and environments,
-* runs the algorithm and validates correctness (often against a reference MIP).
+The `experiments/` directory is the repository's reproducibility layer. It is
+not the primary user tutorial path; instead, it shows how the built-in problem
+helpers and algorithmic variants are exercised in benchmark runs.
 
----
+## Experiment suites
 
-## How to Run All Experiments
+| Suite | Folder or file | Main focus |
+| --- | --- | --- |
+| Sequential typical | `experiments/1_test_sequential_typical/` | [`BendersSeq`](@ref) with classical, knapsack, and separable oracles |
+| Sequential in-out | `experiments/2_test_sequential_in_out_typical/` | [`BendersSeqInOut`](@ref) on the same problem families |
+| Sequential disjunctive | `experiments/3_test_sequential_disjunctive/` | [`SplitOracle`](@ref) with sequential execution |
+| Callback typical | `experiments/4_test_callback_typical/` | [`BendersBnB`](@ref) with lazy callbacks and root preprocessing variants |
+| Callback disjunctive | `experiments/5_test_callback_disjunctive/` | [`BendersBnB`](@ref) with split cuts and user callbacks |
+| Specialized sequential | `experiments/6_test_specialized_sequential.jl` | [`SpecializedBendersSeq`](@ref) for split-cut workflows |
 
-To execute the full experimental test suite:
+Most suite directories contain one script per built-in problem family:
+
+- `ufl.jl`
+- `cfl.jl`
+- `scfl.jl`
+- `snip.jl`
+
+## Reference objectives
+
+`experiments/reference_objectives/` stores benchmark objective values used by
+the test suites. The companion script
+`experiments/reference_objectives/generate_reference_objectives.jl` regenerates
+those reference files.
+
+## Standalone experiment scripts
+
+`experiments/scripts/` contains more targeted experiment entry points, for
+example:
+
+- direct MIP baselines;
+- CFLP and UFLP benchmarking scripts;
+- callback experiments with different disjunctive settings.
+
+Use these files when you want a starting point for your own computational runs
+rather than a minimal package tutorial.
+
+## Running the full experiment set
+
+From the repository root:
 
 ```bash
 julia --project=. experiments/runtests.jl
@@ -51,10 +56,13 @@ julia --project=. experiments/runtests.jl
 Or from the Julia REPL:
 
 ```julia
-julia> include("experiments/runtests.jl")
+include("experiments/runtests.jl")
 ```
 
-You can also run an individual suite or problem by including the corresponding
-`runtest.jl` or problem file directly.
+## Notes on solver availability
 
----
+- Sequential experiment suites can often be adapted to open-source solvers.
+- Callback-based suites depend on callback-capable solvers.
+- Some scripts under `experiments/` are intentionally configured for the
+  authors' benchmarking environment and may require local solver or license
+  changes before reuse.

@@ -7,7 +7,16 @@ function __init__()
     return
 end
 
+"""
+    assign_attributes!(model::Model, config::Dict{String,Any})
 
+Assign a solver and solver attributes to `model` from a configuration
+dictionary.
+
+The dictionary must contain a `"solver"` entry with value `"Gurobi"` or
+`"CPLEX"`. All remaining entries are forwarded as optimizer attributes. The
+helper finishes by enabling silent solver output.
+"""
 function assign_attributes!(model::Model, config::Dict{String,Any})
     # Set solver based on config
     if config["solver"] == "Gurobi"
@@ -27,4 +36,3 @@ function assign_attributes!(model::Model, config::Dict{String,Any})
 
     set_optimizer_attribute(model, MOI.Silent(), true)
 end
-

@@ -1,4 +1,12 @@
 
+"""
+    ClassicalOracleParam
+
+Alias for [`BasicOracleParam`](@ref) used by [`ClassicalOracle`](@ref).
+
+It controls the numerical tolerances for cut violation detection in the
+classical oracle.
+"""
 const ClassicalOracleParam = BasicOracleParam
 
 """
@@ -306,5 +314,4 @@ function _accumulate_gbc_duals!(a_x::Vector{Float64},
         end
     end
 end
-
 

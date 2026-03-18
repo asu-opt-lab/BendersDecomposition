@@ -85,7 +85,7 @@ BendersSeqParam(;
 - `iter_limit::Int`: Maximum number of Benders iterations.
 - `verbose::Bool`: Whether to print iteration-level logging information.
 
-See also: [`BendersSeq`](@ref), [`AbstractBendersSeqParam`](@ref)
+See also: [`BendersSeq`](@ref)
 """
 mutable struct BendersSeqParam <: AbstractBendersSeqParam
 

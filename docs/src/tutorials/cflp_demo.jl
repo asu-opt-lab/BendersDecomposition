@@ -1,7 +1,12 @@
-# # CFLP Demo
+# ```@meta
+# CurrentModule = BendersX
+# ```
 #
-# This example demonstrates how to solve the Capacitated Facility Location Problem
-# using BendersX.jl with sequential Benders decomposition.
+# # [CFLP Demo](@id cflp-demo)
+#
+# This example demonstrates a complete sequential Benders workflow for the
+# built-in Capacitated Facility Location Problem helpers. It uses the packaged
+# benchmark reader and an open-source solver for the subproblem and master.
 
 using BendersX
 import BendersX: CFLPData, read_cflp_benchmark_data

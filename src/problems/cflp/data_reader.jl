@@ -2,6 +2,11 @@
 using JSON
 using LinearAlgebra
 
+"""
+    CFLPData <: AbstractData
+
+Data container for the capacitated facility location problem.
+"""
 struct CFLPData <: AbstractData
     n_facilities::Int
     n_customers::Int
@@ -11,6 +16,11 @@ struct CFLPData <: AbstractData
     costs::Matrix{Float64}
 end
 
+"""
+    read_GK_data(filename; filepath = get_artifact_path("cflp_random_data")) -> CFLPData
+
+Read a JSON-formatted random CFLP instance from the packaged GK dataset.
+"""
 function read_GK_data(filename::AbstractString; filepath=get_artifact_path("cflp_random_data"))
     fullpath = joinpath(filepath, "$(filename).json")
     loaded_json = read(fullpath, String)
@@ -20,6 +30,11 @@ function read_GK_data(filename::AbstractString; filepath=get_artifact_path("cflp
                     data["capacities"], data["demands"], data["fixed_costs"], costs)
 end
 
+"""
+    read_cflp_benchmark_data(filename; filepath = get_artifact_path("cflp_locssall")) -> CFLPData
+
+Read a benchmark CFLP instance from the packaged LOCSSALL-style dataset.
+"""
 function read_cflp_benchmark_data(filename::AbstractString; filepath=get_artifact_path("cflp_locssall"))
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
@@ -68,6 +83,11 @@ function read_cflp_benchmark_data(filename::AbstractString; filepath=get_artifac
     return CFLPData(n_facilities, n_customers, capacities, demands, fixed_costs, costs)
 end
 
+"""
+    read_cfl_file(filename; filepath = get_artifact_path("cflp_output")) -> CFLPData
+
+Read a `.cfl` formatted CFLP instance from the packaged output dataset.
+"""
 function read_cfl_file(filename::AbstractString; filepath=get_artifact_path("cflp_output"))
     fullpath = joinpath(filepath, "$(filename).cfl")
     f = open(fullpath)

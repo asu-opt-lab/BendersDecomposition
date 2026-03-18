@@ -1,5 +1,10 @@
 using JSON
 
+"""
+    SCFLPData <: AbstractData
+
+Data container for the stochastic capacitated facility location problem.
+"""
 struct SCFLPData <: AbstractData
     n_facilities::Int
     n_customers::Int
@@ -10,6 +15,11 @@ struct SCFLPData <: AbstractData
     costs::Matrix{Float64}
 end
 
+"""
+    read_stochastic_capacited_facility_location_problem(filename; filepath = get_artifact_path("scflp")) -> SCFLPData
+
+Read a stochastic CFLP instance from the packaged JSON dataset.
+"""
 function read_stochastic_capacited_facility_location_problem(filename::String; filepath=get_artifact_path("scflp"))
     fullpath = joinpath(filepath, "$(filename).json")
     data = JSON.parse(read(fullpath, String))

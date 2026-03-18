@@ -1,6 +1,16 @@
 # ============================================================================
 # GBC (Generalized Bound Constraints) Bound Type
 # ============================================================================
+"""
+    GBCBoundType
+
+Enumeration describing the sense of a generalized bound constraint returned by
+[`customize_sub_model!`](@ref).
+
+- `UpperBound`: interpret the relation as `lhs <= rhs`
+- `LowerBound`: interpret the relation as `lhs >= rhs`
+- `Fixed`: interpret the relation as `lhs == rhs`
+"""
 @enum GBCBoundType begin
     UpperBound   # y ≤ f(x)
     LowerBound   # y ≥ f(x)
@@ -83,10 +93,20 @@ abstract type AbstractBendersBnB <: AbstractBendersEnv end
 # ============================================================================
 # Termination Status of Benders Decomposition
 # ============================================================================
+"""
+    TerminationStatus
+
+Abstract supertype for high-level solve statuses returned by Benders
+environments.
+"""
 abstract type TerminationStatus end
+"""Solve has not completed yet."""
 struct NotSolved <: TerminationStatus end
+"""Solve terminated because the configured time limit was reached."""
 struct TimeLimit <: TerminationStatus end
+"""Solve terminated normally with an optimal solution or bound."""
 struct Optimal <: TerminationStatus end
+"""Solve terminated because of infeasibility or a numerical issue."""
 struct InfeasibleOrNumericalIssue <: TerminationStatus end
 
 # ============================================================================
@@ -133,16 +153,34 @@ end
 # ============================================================================
 # Rules for constructing a split set
 # ============================================================================
+"""
+    SplitIndexSelectionRule
+
+Abstract supertype for rules that choose which fractional master variable is
+used to form a split disjunction in [`SplitOracle`](@ref).
+"""
 abstract type SplitIndexSelectionRule end
 abstract type SimpleSplit <: SplitIndexSelectionRule end
+"""Select a fractional split index at random."""
 struct RandomFractional <: SimpleSplit end
+"""Select the split index with value closest to 0.5."""
 struct MostFractional <: SimpleSplit end
+"""Select the largest-index fractional master variable."""
 struct LargestFractional <: SimpleSplit end
 
 # ============================================================================
 # Rules for appending pre-found disjunctive cuts to dcglp
 # ============================================================================
+"""
+    DisjunctiveCutsAppendRule
+
+Abstract supertype for policies that decide how previously generated
+disjunctive cuts are reused inside the DCGLP solved by [`SplitOracle`](@ref).
+"""
 abstract type DisjunctiveCutsAppendRule end
+"""Do not reuse previously generated disjunctive cuts."""
 struct NoDisjunctiveCuts <: DisjunctiveCutsAppendRule end
+"""Reuse all previously generated disjunctive cuts."""
 struct AllDisjunctiveCuts <: DisjunctiveCutsAppendRule end
+"""Reuse only cuts associated with smaller split indices."""
 struct DisjunctiveCutsSmallerIndices <: DisjunctiveCutsAppendRule end
