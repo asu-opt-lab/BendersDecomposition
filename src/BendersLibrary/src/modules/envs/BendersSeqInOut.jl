@@ -99,14 +99,21 @@ function solve!(env::BendersSeqInOut)
                 state.master_time = @elapsed begin
                     set_time_limit_sec(env.master.model, get_sec_remaining(log, param))
                     optimize!(env.master.model)
-                    if is_solved_and_feasible(env.master.model; allow_local = false, dual = false)
+                    term = termination_status(env.master.model)
+                    if term == MOI.OPTIMAL
                         state.LB = JuMP.objective_value(env.master.model)
                         state.values[:x] = JuMP.value.(env.master.x)
                         state.values[:t] = JuMP.value.(env.master.t)
-                    elseif termination_status(env.master.model) == TIME_LIMIT
-                        throw(TimeLimitException("Time limit reached during master solving"))
-                    else
-                        throw(ErrorException("master termination status: $(termination_status(env.master.model))"))
+                    elseif term == MOI.ALMOST_INFEASIBLE
+                        pstat = primal_status(env.master.model)
+                        if pstat == MOI.FEASIBLE_POINT
+                            state.values[:x] = JuMP.value.(env.master.x)
+                            state.values[:t] = JuMP.value.(env.master.t)
+                        else
+                            throw(ErrorException("master termination status: $term and primal status: $pstat"))
+                        end
+                    else termination_status(env.master.model) == TIME_LIMIT
+                        throw(ErrorException("master termination status: $term"))
                     end
                 end
                 
