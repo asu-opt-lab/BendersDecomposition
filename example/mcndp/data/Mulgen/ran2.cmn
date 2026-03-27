@@ -1,3 +1,0 @@
-      integer ir(97),iy
-
-      common /rnd/ ir,iy
