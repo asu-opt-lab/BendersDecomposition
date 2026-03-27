@@ -405,9 +405,7 @@ end
 
 function build_complete_unified_oracle(oracle_vars::Vector{VariableRef}, master_vars::Vector{VariableRef},
                                        oracle_constraints::Vector{ConstraintRef}, coupling_constraints::Vector{ConstraintRef},
-                                       oracle_objective::AffExpr, original_model::Model,
-                                       oracle_solver_param::Dict{String,Any},
-                                       oracle_param::BasicOracleParam)
+                                       oracle_objective::AffExpr, original_model::Model, oracle_solver_param::Dict{String,Any}, oracle_param::BasicOracleParam)
 
     oracle_model = Model()
     assign_attributes!(oracle_model, oracle_solver_param)
@@ -419,7 +417,7 @@ function build_complete_unified_oracle(oracle_vars::Vector{VariableRef}, master_
     # 2) Create oracle-side copies of master vars (x for reformulation)
     x_oracle = VariableRef[]
     for var in master_vars
-        v = @variable(oracle_model, base_name = name(var))  # Do not move fixing constriants of master vars to sub
+        v = @variable(oracle_model, base_name = name(var))
         if is_fixed(var)
             fix(v, fix_value(var); force = true)
         end
@@ -528,31 +526,35 @@ function auto_decompose_unified(model::Model;
                                 oracle_solver_param::Dict{String,Any} = default_oracle_solver_params(),
                                 oracle_param::BasicOracleParam = BasicOracleParam())
 
+    # Check for empty model
     if num_variables(model) == 0
         throw(ArgumentError("Cannot decompose empty model with no variables."))
     end
 
+    # Check for unsupported objective types
     obj = objective_function(model)
     if isa(obj, QuadExpr) || isa(obj, NonlinearExpr)
         throw(ArgumentError("Quadratic and nonlinear objectives are not supported."))
     end
 
+    # Step 1: Classify variables
     master_vars, oracle_vars = classify_variables_for_benders(model, decision_vars)
 
-    master_constraints, oracle_constraints, coupling_constraints =
-        partition_constraints_for_benders(model, master_vars, oracle_vars)
+    # Step 2: Partition constraints
+    master_constraints, oracle_constraints, coupling_constraints = partition_constraints_for_benders(model, master_vars, oracle_vars)
 
-    master_objective, oracle_objective =
-        decompose_objective_for_benders(model, master_vars, oracle_vars)
+    # Step 3: Decompose objective function
+    master_objective, oracle_objective = decompose_objective_for_benders(model, master_vars, oracle_vars)
 
+    # Step 4: Build Data structure
     data = build_data_from_decomposition(master_vars, master_objective)
 
+    # Step 5: Build Master problem
     master = build_complete_master(master_vars, master_constraints, master_objective, model, master_solver_param)
 
-    oracle = build_complete_unified_oracle(oracle_vars, master_vars,
-                                           oracle_constraints, coupling_constraints,
-                                           oracle_objective, model,
-                                           oracle_solver_param, oracle_param)
+    # Step 6: Build UnifiedOracle
+    oracle = build_complete_unified_oracle(oracle_vars, master_vars, oracle_constraints, coupling_constraints,
+                                           oracle_objective, model, oracle_solver_param, oracle_param)
 
     return data, master, oracle
 end
