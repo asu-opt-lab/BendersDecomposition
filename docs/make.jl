@@ -1,20 +1,11 @@
 using Documenter
 using BendersX
 
-println("Module loaded. Exports:", names(BendersX, all=false))
-for n in names(BendersX, all=true)
-    if isdefined(BendersX, n)
-        obj = getfield(BendersX, n)
-        has = Base.Docs.doc(obj) !== nothing
-        if has
-            println("DOC: ", n)
-        end
-    end
-end
-
 makedocs(
+    modules = [BendersX],
     sitename = "BendersX.jl",
     format = Documenter.HTML(prettyurls=false),
+    checkdocs = :public,
     pages = [
         "Home" => "index.md",
         # "Tutorials" => "tutorial.md",

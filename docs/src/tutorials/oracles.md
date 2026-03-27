@@ -1,3 +1,7 @@
+```@meta
+CurrentModule = BendersX
+```
+
 BendersX is designed to make **oracle selection and configuration modular**.
 Users can swap oracle implementations and adjust their behavior without
 changing the master problem or the execution environment.
@@ -171,4 +175,3 @@ robustness.
 
 This design enables rapid experimentation with different decomposition
 strategies while preserving a consistent modeling interface.
-

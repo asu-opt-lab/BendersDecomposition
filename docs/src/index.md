@@ -1,3 +1,7 @@
+```@meta
+CurrentModule = BendersX
+```
+
 # BendersX.jl Documentation
 
 Welcome to the documentation for **BendersX.jl** — a modular, plug-and-play framework for Benders decomposition algorithms in Julia.
@@ -90,4 +94,3 @@ log = solve!(env)
     - Explore **Tutorials** for worked examples and step-by-step guides
     - See the **User Guide** for advanced usage patterns
     - Consult the **API** for detailed documentation of Master, Oracle, and Environment interfaces
-

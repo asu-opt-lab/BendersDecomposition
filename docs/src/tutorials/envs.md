@@ -1,3 +1,7 @@
+```@meta
+CurrentModule = BendersX
+```
+
 In BendersX, **environments** control *how* the Benders algorithm is executed.
 They orchestrate the interaction between the master object and the oracle(s),
 determine iteration order, and enforce algorithmic constraints.
