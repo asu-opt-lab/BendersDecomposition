@@ -1,13 +1,13 @@
-# Disjunctive Benders Decomposition
+# BendersX.jl
 
-[![Julia](https://img.shields.io/badge/julia-v1.10.4-blue.svg)](https://julialang.org/)
+[![Julia](https://img.shields.io/badge/julia-v1.11%2B-blue.svg)](https://julialang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-A Julia implementation of disjunctive Benders decomposition algorithms for solving mixed-integer programming problems, developed as part of research on "Disjunctive Benders Decomposition".
+A Julia framework for Benders decomposition research and experimentation, with modular Master, Oracle, and Environment components and built-in support for classical, unified, Pareto, separable, and disjunctive variants.
 
 ## Overview
 
-This repository contains the source code and computational experiments for disjunctive Benders decomposition methods. The implementation extends classical Benders decomposition by incorporating disjunctive cuts to improve convergence and solution quality for mixed-integer programming problems.
+This repository contains the source code, benchmark problem loaders, tutorials, and computational experiments for the `BendersX` package. The codebase is organized as a single Julia package rooted at `src/BendersX.jl`, with package internals grouped under `src/modules/`, `src/problems/`, and `src/utils/`.
 
 ## Key Features
 
@@ -28,44 +28,54 @@ This repository contains the source code and computational experiments for disju
 
 ### Oracle Types
 - `ClassicalOracle`: Traditional Benders subproblem oracle
+- `UnifiedOracle`: Unified treatment of feasibility and optimality cuts
+- `ParetoOracle`: Pareto-optimal cut generation
 - `KnapsackOracle`: Knapsack technique based oracle
 - `SplitOracle`: Disjunctive programming-based oracle
 - `SeparableOracle`: Oracle for separable subproblems
 
-## Problem Examples
+## Built-in Problem Loaders
 
-The `example/` directory contains implementations for several classic optimization problems featured in the paper:
+The `src/problems/` directory contains benchmark readers and helpers for:
 - **UFLP**: Uncapacitated Facility Location Problem
-- **SNIP**: Stochastic Network Interdiction Problem
-
-We are actively developing this repository into a professional package. The following implementations are currently in progress:
 - **CFLP**: Capacitated Facility Location Problem  
 - **SCFLP**: Stochastic Capacitated Facility Location Problem
 - **MCNDP**: Multi-Commodity Network Design Problem
+- **SNIP**: Stochastic Network Interdiction Problem
+
+The `experiments/` directory contains scripts used to benchmark these formulations under different oracle and environment choices.
 
 ## Installation
 
-To set up the project:
+To work from a local clone:
 ```julia
 using Pkg
 Pkg.activate(".")
 Pkg.instantiate()
 ```
 
+To add the package from GitHub:
+```julia
+using Pkg
+Pkg.add(url = "https://github.com/asu-opt-lab/BendersX.jl")
+```
+
 ## Usage
 
-We provide several scripts to run the algorithms on different problem instances. Please refer to the `scripts/` directory for more details.
+The package entry point is `using BendersX` for the core workflow (`Master`, the standard oracle/environment constructors, and `solve!`). Advanced extension hooks and problem-specific helpers remain public APIs, but may require either `import BendersX: ...` or explicit qualification such as `BendersX.read_cflp_benchmark_data`.
+
+Tutorials and worked examples live under `docs/src/tutorials/`, and benchmark scripts live under `experiments/`.
 
 ## Testing
 
 Run the test suite:
 ```bash
-julia test/runtests.jl
+julia --project=. test/runtests.jl
 ```
 
-Or run specific tests:
+Build the documentation locally:
 ```bash
-./test/runtests.sh
+julia --project=docs docs/make.jl
 ```
 
 The test suite includes:
@@ -80,17 +90,15 @@ The test suite includes:
 
 ```
 ├── src/
-│   ├── algorithms/          # Core decomposition algorithms
-│   ├── modules/            # Oracle implementations and components
-│   ├── utils/              # Utility functions and helpers
-│   └── types.jl            # Type definitions and exports
+│   ├── BendersX.jl         # Package entry point and exports
+│   ├── modules/            # Masters, environments, oracles, and callbacks
+│   ├── problems/           # Benchmark data readers and problem-specific helpers
+│   ├── utils/              # Modeling and algorithm utilities
+│   ├── artifact_utils.jl   # Artifact-backed data access helpers
+│   └── types.jl            # Core type definitions and parameters
+├── docs/                   # Standalone Documenter site and tutorials
+├── experiments/            # Experiment and benchmarking scripts
 ├── test/                   # Comprehensive test suite
-├── example/                # Problem-specific implementations
-│   ├── uflp/              # Uncapacitated facility location
-│   ├── cflp/              # Capacitated facility location
-│   ├── scflp/             # Stochastic capacitated facility location
-│   ├── mcndp/             # Multi-commodity network design
-│   └── snip/              # Stochastic network interdiction
 └── Project.toml           # Julia project configuration
 ```
 
@@ -102,9 +110,6 @@ This repository is actively under development and we welcome contributions! Feel
 
 Copyright © 2025 Arizona State University.
 Released under the MIT License (see [LICENSE](LICENSE) file for details).
-
-
-
 
 
 

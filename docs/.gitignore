@@ -1,0 +1,8 @@
+# Generated documentation output
+build/
+
+# Julia package manifest
+Manifest.toml
+
+# Literate.jl generated markdown from .jl source files
+src/tutorials/cflp_demo.md

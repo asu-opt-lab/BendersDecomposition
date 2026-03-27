@@ -4,15 +4,23 @@ authors = ["kfang <kfang11@asu.edu> and contributors"]
 version = "1.0.0-DEV"
 
 [deps]
-BendersBase = "5d493250-739e-4f20-9003-5efb7f1b28da"
-BendersLibrary = "c2345678-f90a-1234-5678-901234567890"
 CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
+CPLEX = "a076750e-1247-5638-91d2-ce28b192dca0"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
 HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 CodecZlib = "0.7.8"
+julia = "1.11"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

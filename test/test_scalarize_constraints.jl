@@ -1,5 +1,5 @@
 using BendersX
-import BendersBase
+import BendersX
 using Test
 using JuMP
 
@@ -10,16 +10,16 @@ using JuMP
     # ------------------------------------------------------------------ #
     @testset "_insert_suffix" begin
         # No brackets: suffix appended at end
-        @test BendersBase._insert_suffix("demand", "_lb") == "demand_lb"
+        @test BendersX._insert_suffix("demand", "_lb") == "demand_lb"
 
         # Single index bracket
-        @test BendersBase._insert_suffix("demand[1]", "_lb") == "demand_lb[1]"
+        @test BendersX._insert_suffix("demand[1]", "_lb") == "demand_lb[1]"
 
         # Multi-index bracket
-        @test BendersBase._insert_suffix("flow[i,j]", "_ub") == "flow_ub[i,j]"
+        @test BendersX._insert_suffix("flow[i,j]", "_ub") == "flow_ub[i,j]"
 
         # Name starts with bracket (no prefix text)
-        @test BendersBase._insert_suffix("[1]", "_lb") == "_lb[1]"
+        @test BendersX._insert_suffix("[1]", "_lb") == "_lb[1]"
     end
 
     # ------------------------------------------------------------------ #
@@ -32,7 +32,7 @@ using JuMP
         @constraint(model, c, 2.0 <= x + y <= 8.0)
 
         n_before = length(all_constraints(model, include_variable_in_set_constraints=true))
-        BendersBase._scalarize_constraints!(model)
+        BendersX._scalarize_constraints!(model)
         n_after = length(all_constraints(model, include_variable_in_set_constraints=true))
 
         @test n_after == n_before + 1
@@ -59,7 +59,7 @@ using JuMP
         c = @constraint(model, demand[i=1:3], i <= 2x <= i+1)
 
         n_before = length(all_constraints(model, include_variable_in_set_constraints=true))
-        BendersBase._scalarize_constraints!(model)
+        BendersX._scalarize_constraints!(model)
         n_after = length(all_constraints(model, include_variable_in_set_constraints=true))
 
         @test n_after == n_before + 3
@@ -79,7 +79,7 @@ using JuMP
         @constraint(model, [i=1:3, j=i:5], 1.0 <= x[i] + y[j] <= 5.0)   # no name given
 
         n_before = length(all_constraints(model, include_variable_in_set_constraints=true))
-        BendersBase._scalarize_constraints!(model)
+        BendersX._scalarize_constraints!(model)
         n_after = length(all_constraints(model, include_variable_in_set_constraints=true))
 
         @test n_after == n_before + 12
@@ -106,7 +106,7 @@ using JuMP
         @constraint(model, eq_con, A * x == b)
 
         n_before = length(all_constraints(model, include_variable_in_set_constraints=true))
-        BendersBase._scalarize_constraints!(model)
+        BendersX._scalarize_constraints!(model)
         n_after = length(all_constraints(model, include_variable_in_set_constraints=true))
         @test n_after == n_before + 1
 
@@ -133,7 +133,7 @@ using JuMP
         @constraint(model, eq_con, A * x .== b)
 
         n_before = length(all_constraints(model, include_variable_in_set_constraints=true))
-        BendersBase._scalarize_constraints!(model)
+        BendersX._scalarize_constraints!(model)
         n_after = length(all_constraints(model, include_variable_in_set_constraints=true))
         @test n_after == n_before
 
@@ -152,7 +152,7 @@ using JuMP
         b = [2.0, 3.0]
         @constraint(model, nn_con, A * x >= b)
 
-        BendersBase._scalarize_constraints!(model)
+        BendersX._scalarize_constraints!(model)
 
         con1 = constraint_by_name(model, "nn_con_1")
         con2 = constraint_by_name(model, "nn_con_2")
@@ -170,7 +170,7 @@ using JuMP
         @constraint(model, nn_con, A * x .>= b)
 
         n_before = length(all_constraints(model, include_variable_in_set_constraints=true))
-        BendersBase._scalarize_constraints!(model)
+        BendersX._scalarize_constraints!(model)
         n_after = length(all_constraints(model, include_variable_in_set_constraints=true))
         @test n_after == n_before
 
@@ -189,7 +189,7 @@ using JuMP
         b = [4.0, 5.0]
         @constraint(model, np_con, A * x <= b)
 
-        BendersBase._scalarize_constraints!(model)
+        BendersX._scalarize_constraints!(model)
 
         @test !is_valid(model, np_con)
 
@@ -213,7 +213,7 @@ using JuMP
         @constraint(model, c3, x + y == 3.0)
 
         n_before = length(all_constraints(model, include_variable_in_set_constraints=true))
-        BendersBase._scalarize_constraints!(model)
+        BendersX._scalarize_constraints!(model)
         n_after = length(all_constraints(model, include_variable_in_set_constraints=true))
         @test n_before == n_after
 
@@ -250,7 +250,7 @@ using JuMP
         @constraint(model, nonpos_c,  A * x <= b)
 
         n_before = length(all_constraints(model, include_variable_in_set_constraints=true))
-        BendersBase._scalarize_constraints!(model)
+        BendersX._scalarize_constraints!(model)
         n_after = length(all_constraints(model, include_variable_in_set_constraints=true))
         @test n_after == n_before + 5
 
@@ -278,7 +278,7 @@ using JuMP
     # ------------------------------------------------------------------ #
     @testset "Empty model: no error" begin
         model = JuMP.Model()
-        @test_nowarn BendersBase._scalarize_constraints!(model)
+        @test_nowarn BendersX._scalarize_constraints!(model)
     end
 
 end

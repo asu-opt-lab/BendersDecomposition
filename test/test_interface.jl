@@ -1,8 +1,9 @@
 using Test
-using BendersBase
+using BendersX
+import BendersX: copy_variables!, UndefError
 using JuMP
 
-@testset "BendersBase copy_variables!" begin
+@testset "BendersX copy_variables!" begin
     @testset "VariableRef" begin
         master_model = Model()
         @variable(master_model, u[1:10])
@@ -170,7 +171,7 @@ using JuMP
     end
 end
 
-@testset "BendersBase customize model functions" begin
+@testset "BendersX customize model functions" begin
     struct EmptyData <: AbstractData end
     data = EmptyData()
 
@@ -208,6 +209,7 @@ end
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
             @constraint(model, y .<= u)
+            return nothing
         end
 
         master = Master(data; customize = customize_master_model!)
@@ -233,6 +235,7 @@ end
             @objective(model, Min, sum(y))
             @constraint(model, sum(u) == 1)
             @constraint(model, y .<= u[:,1])
+            return nothing
         end
 
         master = Master(data; customize = customize_master_model!)
@@ -262,6 +265,7 @@ end
             @constraint(model, sum(v) == 1)
             @constraint(model, v[10,:A] == 1)
             @constraint(model, w[3,10] <= 1)
+            return nothing
         end
 
         master = Master(data; customize = customize_master_model!)
