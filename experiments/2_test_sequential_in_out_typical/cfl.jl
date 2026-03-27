@@ -1,5 +1,4 @@
 using BendersX
-import BendersX: customize_master_model!, customize_sub_model!, CFLPData, CFLKnapsackOracle, read_cflp_benchmark_data
 using CSV
 using DataFrames
 using Test

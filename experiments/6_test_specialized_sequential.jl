@@ -4,7 +4,6 @@
 # add a method for generating optimal vertex for SpecializedBendersSeq
 
 using BendersX
-import BendersX: customize_sub_model!, UFLPData, CFLKnapsackOracle, UFLKnapsackOracle, read_GK_data, read_cflp_benchmark_data, read_uflp_benchmark_data
 using CSV
 using DataFrames
 using Test

@@ -1,6 +1,5 @@
 using JuMP, DataFrames, Logging, CSV
 using BendersX
-import BendersX: customize_mip_model!, read_cfl_file
 using ArgParse
 using Printf
 using Statistics

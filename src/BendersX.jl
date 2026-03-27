@@ -39,15 +39,16 @@ export LpNorm
 export RandomFractional, MostFractional, LargestFractional
 export NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
 
-# Public but not auto-imported extension interfaces
+# Public extension interfaces
 public AbstractBendersEnv, AbstractBendersSeq, AbstractBendersBnB
 public AbstractMaster
 public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle
 public AbstractRootNodePreprocessing
 public AbstractNorm, StandardNorm
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
-public generate_cuts, set_parameter!
-public customize_master_model!, customize_sub_model!, customize_mip_model!
+public generate_cuts
+export set_parameter!
+export customize_master_model!, customize_sub_model!, customize_mip_model!
 
 # Public but not auto-imported advanced utilities and support types
 public Hyperplane, aggregate, evaluate_violation, select_top_fraction
@@ -57,12 +58,12 @@ public assign_attributes!, infeasibility_report
 public TimeLimitException, UnexpectedModelStatusException, UndefError
 public AlgorithmException, UnsupportedModelException
 
-# Public but not auto-imported problem-specific helpers
-public CFLPData, UFLPData, SCFLPData, SNIPData
-public CFLKnapsackOracle, CFLKnapsackOracleParam
-public UFLKnapsackOracle, UFLKnapsackOracleParam
-public read_GK_data, read_cfl_file, read_cflp_benchmark_data
-public read_uflp_benchmark_data, read_Simple_data
-public read_stochastic_capacited_facility_location_problem, read_snip_data
+# Problem-specific helpers available via `using BendersX`
+export CFLPData, UFLPData, SCFLPData, SNIPData
+export CFLKnapsackOracle, CFLKnapsackOracleParam
+export UFLKnapsackOracle, UFLKnapsackOracleParam
+export read_GK_data, read_cfl_file, read_cflp_benchmark_data
+export read_uflp_benchmark_data, read_Simple_data
+export read_stochastic_capacited_facility_location_problem, read_snip_data
 
 end # module BendersX
