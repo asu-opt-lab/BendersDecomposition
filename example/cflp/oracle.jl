@@ -107,7 +107,7 @@ end
 function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     # The subproblem is first solved with the default inexact configuration.
     sub_exact_solved = false
-    s_time = time()
+
     set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
 
