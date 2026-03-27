@@ -70,10 +70,6 @@ function solve!(env::BendersSeqInOut)
 
                     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.model[:x], env.master.model[:t]) : []
                 end
-                if typeof(env.oracle) == DualDecomposition
-                    println("t:$(state.values[:t][1]),f_dual:$(env.oracle.oracle_log.dual_obj), f_opt:$(state.f_x), vogel:$(env.oracle.oracle_param.obj_limit), vogel_time:$(env.oracle.oracle_log.vogel_time), seq_time:$(state.oracle_time)")
-                    !isnan(state.f_x[1]) && @assert env.oracle.oracle_param.obj_limit >= state.f_x[1] "vogel is smaller"
-                end
             
                 # Update state and record information
                 record_iteration!(log, state)
@@ -87,21 +83,17 @@ function solve!(env::BendersSeqInOut)
             # add generated cuts to master
             @constraint(env.master.model, 0 .>= cuts)
             
-            # # whether to switch kelley mode
-            # if !kelley_mode && log.n_iter != 0
-            #     check_lb_improvement!(state, log; zero_tol = 1e-8, tol_imprv = 0.05)
+            # whether to switch kelley mode
+            if !kelley_mode && log.n_iter != 0
+                check_lb_improvement!(state, log; zero_tol = 1e-8, tol_imprv = 0.05)
 
-            #     if log.consecutive_no_improvement >= 5
-            #         # Reset λ to 1 (switch to Kelley's cutting plane)
-            #         λ = 1.0
-            #         kelley_mode = true
-            #         param.verbose && println("Switching to Kelley's cutting plane method (λ = 1.0)")
-            #     end
-            # end
-
-            # Check improvement
-            check_lb_improvement!(state, log; zero_tol = 1e-8, tol_imprv = 1e-6)
-            log.consecutive_no_improvement >= 3 && break
+                if log.consecutive_no_improvement >= 5
+                    # Reset λ to 1 (switch to Kelley's cutting plane)
+                    λ = 1.0
+                    kelley_mode = true
+                    param.verbose && println("Switching to Kelley's cutting plane method (λ = 1.0)")
+                end
+            end
         end
         env.termination_status = Optimal()
         env.obj_value = log.iterations[end].LB

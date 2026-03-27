@@ -12,10 +12,9 @@ end
 mutable struct ClassicalOracle <: AbstractTypicalOracle
     
     oracle_param::ClassicalOracleParam
-    capa::Vector{Float64}
-    demand::Vector{Float64}
 
     model::Model
+    fixed_x_constraints::Vector{ConstraintRef}
 
     function ClassicalOracle(data::Data; 
                              scen_idx::Int=-1, 
@@ -24,10 +23,13 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
         @debug "Building classical oracle"
         model = Model()
 
-        capa, demand = data.problem.capacities, data.problem.demands
+        # Define coupling variables and constraints
+        @variable(model, x[1:data.dim_x])
+        @constraint(model, fix_x, x .== 0)
+
         assign_attributes!(model, solver_param)
         
-        new(oracle_param, capa, demand, model)
+        new(oracle_param, model, fix_x)
     end
 
     ClassicalOracle() = new()
@@ -35,32 +37,19 @@ end
 
 function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
-    
-    I, J = length(oracle.capa), length(oracle.demand)
-    # Update capacity constraint RHS
-    for i in 1:I
-        set_normalized_rhs(oracle.model[:capacity][i], oracle.capa[i] * x_value[i])
-    end
-
-    # Update variable upper bounds
-    for i in 1:I, j in 1:J
-        set_upper_bound(oracle.model[:y][i, j], x_value[i])
-    end
-
+    set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     optimize!(oracle.model)
     if termination_status(oracle.model) == TIME_LIMIT
         throw(TimeLimitException("Time limit reached during cut generation"))
     end
-
+    
     status = dual_status(oracle.model)
     if status == FEASIBLE_POINT
         sub_obj_val = objective_value(oracle.model)
 
-        w = dual.(UpperBoundRef.(oracle.model[:y]))
-        s = dual.(oracle.model[:capacity])
-        a_x = [s[i]*oracle.capa[i] + sum(w[i,:]) for i in 1:I]
+        a_x = dual.(oracle.fixed_x_constraints) 
         a_t = [-1.0] 
-        a_0 = sum(dual.(oracle.model[:demand]))
+        a_0 = sub_obj_val - a_x'*x_value 
         if sub_obj_val >= t_value[1] * (1 + oracle.oracle_param.rtol / tol_normalize) + oracle.oracle_param.atol
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else

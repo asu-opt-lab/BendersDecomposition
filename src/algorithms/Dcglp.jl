@@ -42,10 +42,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                     if throw_typical_cuts_for_errors
                         @warn "Returning typical Benders cuts due to unexpected error encountered when optimizing dcglp master: $e"
                         is_in_L, hyperplanes, f_x = generate_cuts(typical_oracles[1], x_value, t_value)
-                        if typical_oracles[1] == DualDecomposition
-                            println("t:$t_value,f_dual:$(typical_oracles[1].oracle_log.dual_obj), f_opt:$(f_x), vogel:$(typical_oracles[1].oracle_param.obj_limit)")
-                            !isnan(f_x[1]) && @assert typical_oracles[1].oracle_param.obj_limit >= f_x[1] "vogel is smaller"
-                        end
                         return is_in_L, hyperplanes, f_x
                     else
                         throw(UnexpectedModelStatusException("DCGLP master: unexpected error encountered when optimizing dcglp master: $e"))
@@ -64,10 +60,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                     if throw_typical_cuts_for_errors
                         @warn "Returning typical Benders cuts due to unexpected dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue"
                         is_in_L, hyperplanes, f_x = generate_cuts(typical_oracles[1], x_value, t_value)
-                        if typical_oracles[1] == DualDecomposition
-                            println("t:$t_value,f_dual:$(typical_oracles[1].oracle_log.dual_obj), f_opt:$(f_x), vogel:$(typical_oracles[1].oracle_param.obj_limit)")
-                            !isnan(f_x[1]) && @assert typical_oracles[1].oracle_param.obj_limit >= f_x[1] "vogel is smaller"
-                        end
                         return is_in_L, hyperplanes, f_x
                     else
                         throw(UnexpectedModelStatusException("DCGLP master: unexpected dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue"))
@@ -91,10 +83,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
                 state.oracle_times[i] = @elapsed begin
                     if ω_0[i] >= oracle.oracle_param.zero_tol
                         state.is_in_L[i], hyperplanes_a, state.f_x[i] = generate_cuts(typical_oracles[i], clamp.(ω_x[i] / ω_0[i], 0.0, 1.0), ω_t[i] / ω_0[i], tol_normalize = ω_0[i], time_limit = get_sec_remaining(log.start_time, time_limit))
-                        if typeof(typical_oracles[i]) == DualDecomposition
-                            println("t:$(ω_t[i] / ω_0[i]),f_dual:$(typical_oracles[i].oracle_log.dual_obj), f_opt:$(state.f_x[i])")
-                            !isnan(state.f_x[i][1]) && @assert typical_oracles[i].oracle_param.obj_limit >= state.f_x[i][1] "vogel is smaller"
-                        end
                         # adjust the tolerance with respect to dcglp: (sum(state.sub_obj_vals[i]) - sum(t_value)) * omega_value[:z][i] < zero_tol
                         if !state.is_in_L[i]
                             for k = 1:2 # add to both kappa and nu systems
@@ -114,7 +102,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
             end
 
             if !isnan(state.f_x[1][1]) && !isnan(state.f_x[2][1])
-                # update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], oracle.oracle_param.norm.p))
                 update_upper_bound_and_gap!(state, log, (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- f_x], oracle.oracle_param.norm.p))
             else
                 # Exact UB is diffcult to be obtained for UnifiedOracle
@@ -162,10 +149,6 @@ function solve_dcglp!(oracle::DisjunctiveOracle, x_value::Vector{Float64}, t_val
         return false, hyperplanes, fill(Inf, length(t_value))
     else
         is_in_L, hyperplanes, f_x = generate_cuts(typical_oracles[1], x_value, t_value)
-        if typical_oracles[1] == DualDecomposition
-            println("t:$t_value,f_dual:$(typical_oracles[1].oracle_log.dual_obj), f_opt:$(f_x), vogel:$(typical_oracles[1].oracle_param.obj_limit)")
-            !isnan(f_x[1]) && @assert typical_oracles[1].oracle_param.obj_limit >= f_x[1] "vogel is smaller"
-        end
         return is_in_L, hyperplanes, f_x
     end
     # statistics_of_disjunctive_cuts(env)
@@ -222,7 +205,6 @@ end
 
 function strengthening!(gamma_x, sigma, delta; zero_tol = 1e-9)
     @debug "dcglp strengthening - sigma values: [σ₁: $(sigma[1]), σ₂: $(sigma[2])]"
-    # @debug "dcglp strengthening - delta values: [δ₁: $(delta[1]), δ₂: $(delta[2])]"
 
     a₁ = gamma_x .- delta[1]
     a₂ = gamma_x .- delta[2]

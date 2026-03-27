@@ -5,6 +5,5 @@ experiments/
 job_scripts/
 test/results/
 local_experiments/
-scripts/
 example/
 *.sh

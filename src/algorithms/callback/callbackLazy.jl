@@ -50,18 +50,12 @@ function lazy_callback(cb_data, master_model::Model, log::BendersBnBLog, param::
         state.values[:x] = JuMP.callback_value.(cb_data, master_model[:x])
         state.values[:t] = JuMP.callback_value.(cb_data, master_model[:t])
 
-
         state.oracle_time = @elapsed begin
             state.is_in_L, hyperplanes, state.f_x = generate_cuts(callback.oracle, state.values[:x], state.values[:t]; time_limit = param.time_limit)
             cuts = !state.is_in_L ? hyperplanes_to_expression(master_model, hyperplanes, master_model[:x], master_model[:t]) : []
             state.num_cuts += length(hyperplanes)
         end
-        if typeof(callback.oracle) == DualDecomposition
-            println("t:$(state.values[:t][1]),f_dual:$(callback.oracle.oracle_log.dual_obj), f_opt:$(state.f_x), vogel:$(callback.oracle.oracle_param.obj_limit), vogel_time:$(callback.oracle.oracle_log.vogel_time), lazy_time:$(state.oracle_time)")
-            !isnan(state.f_x[1]) && @assert callback.oracle.oracle_param.obj_limit >= state.f_x[1] "vogel is smaller"
-        else
-            println("lazy_time:$(state.oracle_time)")
-        end
+
         # Add cuts 
         for cut in cuts
             cut_constraint = @build_constraint(0 >= cut)
