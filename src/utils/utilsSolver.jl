@@ -17,6 +17,8 @@ function assign_attributes!(model::Model, config::Dict{String,Any})
         set_optimizer(model, OSQP.Optimizer)
     elseif config["solver"] == "cuOpt"
         set_optimizer(model, cuOpt.Optimizer)
+    elseif config["solver"] == "CuPDLPx"
+        set_optimizer(model, CuPDLPx.Optimizer)
     else
         error("Unsupported solver: $(config["solver"])")
     end

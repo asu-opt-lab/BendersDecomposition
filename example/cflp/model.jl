@@ -36,7 +36,8 @@ function update_model!(oracle::AbstractTypicalOracle, data::Data)
     @objective(model, Min, sum(cost_demands .* y))
     # Add constraints
     @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
-    !oracle.gbc && @constraint(model, facility_open, y .<= x)
+    # @constraint(model, facility_open, y .<= x)
+    # !oracle.gbc && @constraint(model, facility_open, y .<= x)
     @constraint(model, capacity[i in 1:I], sum(data.problem.demands[:] .* y[i,:]) <= data.problem.capacities[i] * x[i])
 end
 

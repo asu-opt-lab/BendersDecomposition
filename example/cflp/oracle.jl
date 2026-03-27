@@ -1,5 +1,4 @@
 using Base.Threads: @threads
-using OSQP, CPLEX, Gurobi
 
 struct FacilityKnapsackInfo
     costs::Matrix{Float64}
@@ -18,103 +17,46 @@ end
 
 mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     oracle_param::CFLKnapsackOracleParam
-    solver_param::Dict{String,Any}
 
     model::Model
     fixed_x_constraints::Vector{ConstraintRef}
     facility_knapsack_info::FacilityKnapsackInfo
-    gbc::Bool
-    bnb::Bool
-    manual_warm::Bool
-    warm_root_sol::Bool
-    prev_y::Vector{Float64}
-    prev_dual::Vector{Float64}
 
     function CFLKnapsackOracle(data::Data; 
                                scen_idx=-1, 
                                solver_param::Dict{String,Any} = Dict("solver" => "CPLEX", "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9),
-                               oracle_param::CFLKnapsackOracleParam = CFLKnapsackOracleParam(),
-                               gbc::Bool = true,
-                               bnb::Bool = false,
-                               manual_warm::Bool = false,
-                               warm_root_sol::Bool = false,
-                               prev_y = zeros(data.problem.n_facilities*data.problem.n_customers),
-                               prev_dual = zeros(data.problem.n_customers + data.problem.n_facilities*2))
+                               oracle_param::CFLKnapsackOracleParam = CFLKnapsackOracleParam())
         @debug "Building classical oracle"
-
-        if manual_warm
-            optimizer = optimizer_with_attributes(Gurobi.Optimizer, "Method" => 6, "PDHGGPU" => 1,
-            "Crossover" => 1, "Threads" => 7, "LPWarmStart" => 0, "Presolve" => 0, "OutputFlag" => 1,
-            "PDHGAbsTol" => 1e-2, "PDHGConvTol" => 1e-2, "PDHGRelTol" => 1e-2)
-            model = direct_model(optimizer)
-        else
-            model = Model()
-            assign_attributes!(model, solver_param)
-        end
+        model = Model()
 
         # Define coupling variables and constraints
         @variable(model, 0 <= x[1:data.dim_x] <= 1)
         @constraint(model, fix_x, x .== 0)
 
         facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.problem.costs, data.problem.demands, data.problem.capacities) : FacilityKnapsackInfo(data.problem.costs, data.problem.demands[scen_idx], data.problem.capacities)
+
+        assign_attributes!(model, solver_param)
         
-        new(oracle_param, solver_param, model, fix_x, facility_knapsack_info, gbc, bnb, manual_warm, warm_root_sol, prev_y, prev_dual)
+        new(oracle_param, model, fix_x, facility_knapsack_info)
     end
     
     CFLKnapsackOracle() = new()
 end
 
 function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
-    # sub_exact_solved = false # for PDHG
     s_time = time()
     set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
 
     # GBC
-    if oracle.gbc
-        I, J = size(oracle.facility_knapsack_info.costs)
-        #Update variable upper bounds
-        for i in 1:I, j in 1:J
-            set_upper_bound(oracle.model[:y][i, j], x_value[i])
-        end
-    end
-
-    if oracle.manual_warm
-        # Warmstart
-        constrs = vcat(
-            JuMP.all_constraints(oracle.model, JuMP.AffExpr, MOI.EqualTo{Float64}),
-            JuMP.all_constraints(oracle.model, JuMP.AffExpr, MOI.LessThan{Float64}),
-            JuMP.all_constraints(oracle.model, JuMP.AffExpr, MOI.GreaterThan{Float64}),
-        )
-
-        grb = JuMP.unsafe_backend(oracle.model)
-        Gurobi.GRBupdatemodel(grb) 
-
-        vars = all_variables(oracle.model)
-        for (v, p_val) in zip(vars, vcat(x_value, oracle.prev_y))
-            MOI.set(oracle.model, Gurobi.VariableAttribute("PStart"), v, p_val)
-        end
-
-        for (c, d_val) in zip(constrs, oracle.prev_dual)
-            MOI.set(oracle.model, Gurobi.ConstraintAttribute("DStart"), c, d_val)
-        end
-    end
+    # I, J = size(oracle.facility_knapsack_info.costs)
+    # for i in 1:I, j in 1:J
+    #     set_upper_bound(oracle.model[:y][i, j], x_value[i])
+    # end
 
     optimize!(oracle.model)
-
     if termination_status(oracle.model) == TIME_LIMIT
         throw(TimeLimitException("Time limit reached during cut generation"))
-    end
-
-    # Solve subproblem exactly
-    sub_obj_val = objective_value(oracle.model)
-    if oracle.bnb && (sub_obj_val < t_value[1] * (1 + oracle.oracle_param.rtol / tol_normalize))
-        println("Subproblem solved exactly")
-        # set_optimizer_attribute(oracle.model, "Method", -1) # for PDHG
-        println("prev_sub_obj: $sub_obj_val")
-        optimize!(oracle.model)
-        println("exact_sub_obj: $(objective_value(oracle.model))")
-        sub_exact_solved = true
     end
 
     status = dual_status(oracle.model)
@@ -138,19 +80,6 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
         a_x = KP_values # Vector{Float64}
         a_0 = sum(μ) 
 
-        # Collect primal/dual warm start value (if wamr_root_sol true then no warm start, the following is not executed)
-        oracle.manual_warm && !oracle.warm_root_sol && (oracle.prev_y = vec(value.(oracle.model[:y])); oracle.prev_dual = vcat(dual.(oracle.model[:fix_x]), μ, dual.(oracle.model[:capacity])))
-        
-        # Need to divide the case because of above issue
-        # if oracle.manual_warm
-        #     if oracle.warm_root_sol & oracle.bnb
-        #     elseif oracle.warm_root_sol & !oracle.bnb
-        #         oracle.prev_y = vec(value.(oracle.model[:y]))
-        #         oracle.prev_dual = vcat(dual.(oracle.model[:fix_x]), μ, dual.(oracle.model[:capacity]))
-        #     end
-        # end
-
-        # sub_exact_solved && set_optimizer_attribute(oracle.model, "Method", 6) # for PDHG
         if sub_obj_val >= t_value[1] * (1 + oracle.oracle_param.rtol / tol_normalize)
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
@@ -173,7 +102,6 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
         end
         
     else
-        println(status)
         throw(UnexpectedModelStatusException("ClassicalOracle: $(status)"))
     end
 end
