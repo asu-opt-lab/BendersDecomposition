@@ -1,92 +1,93 @@
-```@meta
-CurrentModule = BendersX
-```
+# [User Guide](@id user-guide)
 
-# [Architecture](@id architecture)
+## BendersX Components
+**BendersX.jl** is built on the principle that Benders decomposition consists of **clearly defined, separable components**, each with a distinct role. By making these components explicit, the framework enables **composable and extensible algorithm design**.
 
-BendersX is organized around three replaceable components:
-
-- a **master** that stores the JuMP model seen by the algorithm;
-- an **oracle** that evaluates a candidate point and produces cuts;
-- an **environment** that controls the solve loop or callback workflow.
-
-This separation keeps modeling decisions, cut-generation logic, and execution
-strategy independent.
-
-## Component boundaries
+BendersX.jl decomposes the Benders decomposition algorithm into three core components: the **Master**, the **Oracle**, and the **Environment**.
+Each component has a well-defined responsibility and can be independently replaced or extended.
 
 ### Master
+The **Master** represents the master problem in a Benders decomposition and is responsible for proposing candidate solutions.
 
-[`Master`](@ref) stores the JuMP model, the flattened coupling variables `x`,
-the auxiliary approximation variables `t`, and the objective coefficients used
-to evaluate bounds.
+Conceptually, the Master:
+- represents the current relaxation of the Benders reformulation
+- refines this relaxation by incorporating newly generated Benders cuts, and
+- produces candidate solutions for evaluation.
 
-Use the master layer when you need to change:
-
-- the first-stage formulation;
-- the shape of the coupling variables passed into the subproblem;
-- the meaning and dimension of the approximation variables `t`.
+In BendersX.jl, the Master is:
+- is encapsulated by a subtype of `AbstractMaster`
+- owns a JuMP model defining the master problem, and
+- accepts newly generated Benders cuts during the solution process.
 
 ### Oracle
+An **Oracle** encapsulates all procedures related to **cut generation** at a given separation point.
 
-An [`AbstractOracle`](@ref) receives a candidate `(x, t)` point and returns a
-tuple of the form `(is_in_L, hyperplanes, f_x)` through
-[`generate_cuts`](@ref).
+In BendersX.jl, an Oracle:
+- is implemented as a subtype of `AbstractOracle`
+- is fully decoupled from the Master and Environment, and
+- focuses exclusively on cut generation.
 
-Use the oracle layer when you need to change:
-
-- how subproblems are solved;
-- what cuts are generated;
-- how feasibility and optimality are detected;
-- whether the subproblem structure is classical, separable, problem-specific,
-  or disjunctive.
+Oracle behavior can be configured via parameters, such as violation tolerances and cut selection rules.
 
 ### Environment
+The **Environment** controls the **execution logic** of the Benders algorithm.
 
-An [`AbstractBendersEnv`](@ref) owns the algorithmic control flow. Sequential
-environments repeatedly solve the master and query an oracle. Callback-based
-environments integrate cut generation into a MIP solver. Specialized
-environments may impose additional rules on the master and oracle pair.
+While the Master and Oracle define *what* problems are solved and *how* cuts are generated, the Environment defines *how the algorithm proceeds*. Specifically, it:
+- orchestrates the interaction between the Master and Oracle,
+- manages iteration order and termination criteria, and
+- handles logging, statistics, and output.
 
-Use the environment layer when you need to change:
+In BendersX.jl, an Environment:
+- is implemented as a subtype of `AbstractBendersEnv`
+- encapsulates the overall control flow of the algorithm, and
+- enables alternative execution strategies to be expressed cleanly.
 
-- the iteration logic;
-- stabilization and stopping rules;
-- callback behavior;
-- root preprocessing;
-- how logs and progress data are collected.
+Environment behavior can be adjusted via parameters (e.g., stopping rules, stabilization dynamics) and configurable subcomponents (e.g., root preprocessing, callbacks).
 
-## Type hierarchies
+--- 
 
-The package exposes the main hierarchy explicitly so that new implementations
-can be built incrementally rather than from scratch.
+## Hierarchical Architecture
+Each component follows a clear type hierarchy that supports specialization and reuse. This hierarchy allows advanced users to extend existing implementations incrementally rather than implementing full components from scratch.
 
-### Environment hierarchy
+### Environment
+![dd](EnvHierarchy.pdf)
 
-![Environment hierarchy](EnvHierarchy.png)
 
-### Oracle hierarchy
+### Oracle
+![dd](OracleHierarchy.pdf)
 
-![Oracle hierarchy](OracleHierarchy.png)
+## Adding New Oracles
+Advanced users can implement custom cut generators by defining a new oracle:
+```julia
+struct MyOracle <: AbstractOracle
+    # fields
+end
+```
+together with the required interface:
+```julia
+function generate_cuts(oracle::MyOracle)::Tuple
+    # return a collection of cuts
+end
+```
+This interface-based design allows new algorithmic ideas to be prototyped directly within the framework.
 
-## How the pieces fit together
 
-1. Build a data container that is a subtype of [`AbstractData`](@ref).
-2. Construct a [`Master`](@ref) with [`customize_master_model!`](@ref).
-3. Choose an oracle such as [`ClassicalOracle`](@ref),
-   [`SeparableOracle`](@ref), or [`SplitOracle`](@ref).
-4. Choose an environment such as [`BendersSeq`](@ref),
-   [`BendersSeqInOut`](@ref), [`BendersBnB`](@ref), or
-   [`SpecializedBendersSeq`](@ref).
-5. Call [`solve!`](@ref).
+## Adding New Environments
+Custom execution logic can be implemented by defining a new Environment:
+```julia
+struct MyEnv <: AbstractBendersEnv
+    # fields
+end
+```
+together with the required execution method:
+```julia
+function solve!(env::MyEnv)::DataFrame
+    # execution logic
+end
+```
 
-## Choosing an extension point
+---
 
-- If you are changing the first-stage formulation or the coupling variables,
-  update the master customization function.
-- If you are changing how cuts are derived, add or modify an oracle.
-- If you are changing how and when the master and oracle interact, add or
-  modify an environment.
-
-The dedicated extension contracts are documented in
-[Extending BendersX](@ref extending-bendersx).
+## Rule of Thumb
+- If you are changing *which cuts are generated*, customize the Oracle.
+- If you are changing *how the algorithm runs*, customize the Environment.
