@@ -6,7 +6,7 @@ makedocs(
     sitename = "BendersX.jl",
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://asu-opt-lab.github.io/BendersDecomposition/",
+        canonical = "https://asu-opt-lab.github.io/BendersX.jl/",
     ),
     checkdocs = :public,
     pages = [
@@ -25,7 +25,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/asu-opt-lab/BendersDecomposition.git",
+    repo = "github.com/asu-opt-lab/BendersX.jl.git",
     devbranch = "main",
     push_preview = true,
     versions = nothing,
