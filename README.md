@@ -46,19 +46,44 @@ Pkg.instantiate()
 
 ### Minimal workflow
 
-This example shows a minimal end-to-end workflow.
+This example shows a minimal end-to-end workflow with a concrete optimizer and the required customization hooks.
 
 ```julia
-using BendersX, JuMP
+using BendersX, JuMP, HiGHS
 
-# 1. User-defined data
-data = MyData(...)
+# 1. User-defined data must subtype AbstractData
+struct MyData <: AbstractData end
 
-# 2. Create master and provide master problem customization
-master = Master(data; customize = customize_master_model!)
+function customize_master_model!(model::Model, data::MyData)
+    @variable(model, x[1:1], Bin)
+    @variable(model, t[1:1] >= 0)
+    @objective(model, Min, x[1] + t[1])
+    return (x = x,), t
+end
 
-# 3. Select oracle and provide subproblem customization
-oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+function customize_sub_model!(model::Model, data::MyData, scen_idx::Int; x)
+    @variable(model, y >= 0)
+    @objective(model, Min, y)
+    @constraint(model, y >= 1 - x[1])
+    return nothing
+end
+
+data = MyData()
+
+# 2. Create master and attach an optimizer
+master = Master(
+    data;
+    customize = customize_master_model!,
+    optimizer = HiGHS.Optimizer,
+)
+
+# 3. Create a model-based oracle with its own optimizer
+oracle = ClassicalOracle(
+    data,
+    master;
+    customize = customize_sub_model!,
+    optimizer = HiGHS.Optimizer,
+)
 
 # 4. Choose environment
 env = BendersSeq(master, oracle)
@@ -69,9 +94,9 @@ log = solve!(env)
 
 #### Modeling
 
-Users provide master and subproblem formulations through *customization functions* written in standard JuMP syntax. See the package docs for concrete examples and the full modeling interface. If you are new to JuMP, consult the JuMP documentation: [https://jump.dev/JuMP.jl/stable/](https://jump.dev/JuMP.jl/stable/).
+Users provide master and subproblem formulations through *customization functions* written in standard JuMP syntax. `customize_master_model!` must return `(x_namedtuple, t)`, and model-based oracles require a matching `customize_sub_model!`; if either hook is missing for your `AbstractData` subtype, the default methods throw `UndefError`. See the package docs for concrete examples and the full modeling interface. If you are new to JuMP, consult the JuMP documentation: [https://jump.dev/JuMP.jl/stable/](https://jump.dev/JuMP.jl/stable/).
 
-The default `using BendersX` workflow brings in the core constructors and `solve!`. Advanced extension hooks and problem-specific helpers remain public APIs and can be accessed with either `import BendersX: ...` or explicit qualification such as `BendersX.read_cflp_benchmark_data`.
+The default `using BendersX` workflow brings in the core constructors, `solve!`, common parameter and status types, problem data types, built-in problem-specific oracles, and benchmark readers. Advanced utility helpers remain public APIs, but many of them are intended to be accessed via explicit qualification such as `BendersX.copy_variables!` or `BendersX.read_cflp_benchmark_data`.
 
 #### Built-in variants
 
@@ -86,6 +111,8 @@ The default `using BendersX` workflow brings in the core constructors and `solve
 | `UFLKnapsackOracle` | Knapsack-based oracle for uncapacitated facility location            |
 | `CFLKnapsackOracle` | Knapsack-based oracle for capacitated facility location              |
 | `SplitOracle`       | Generates split cuts to strengthen the master relaxation             |
+
+`ClassicalOracle`, `UnifiedOracle`, and `ParetoOracle` are general model-based oracles. `SeparableOracle`, `SplitOracle`, `UFLKnapsackOracle`, and `CFLKnapsackOracle` are specialized constructors with different signatures and setup requirements; refer to the corresponding docs/API before swapping them into a workflow.
 
 #### Environment variants (examples)
 
