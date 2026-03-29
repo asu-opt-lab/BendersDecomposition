@@ -27,5 +27,6 @@ makedocs(
 deploydocs(
     repo = "github.com/asu-opt-lab/BendersDecomposition.git",
     devbranch = "main",
+    push_preview = true,
     versions = nothing,
 )
