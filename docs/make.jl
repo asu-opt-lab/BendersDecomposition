@@ -4,7 +4,10 @@ using BendersX
 makedocs(
     modules = [BendersX],
     sitename = "BendersX.jl",
-    format = Documenter.HTML(prettyurls=false),
+    format = Documenter.HTML(
+        prettyurls = get(ENV, "CI", "false") == "true",
+        canonical = "https://asu-opt-lab.github.io/BendersDecomposition/",
+    ),
     checkdocs = :public,
     pages = [
         "Home" => "index.md",
@@ -19,4 +22,10 @@ makedocs(
         "API" => "api.md"
     ],
     # sitelogo = "assets/logo.svg",
+)
+
+deploydocs(
+    repo = "github.com/asu-opt-lab/BendersDecomposition.git",
+    devbranch = "main",
+    versions = nothing,
 )
