@@ -84,6 +84,7 @@ to Kelley's cutting-plane method (setting λ = 1.0).
 function solve!(env::BendersSeqInOut)
     param = env.param
     log = BendersSeqLog()
+    require_optimizer_attached(env.master.model, "The master model")
     try    
         state = BendersSeqState()
         stabilizing_x = param.stabilizing_x

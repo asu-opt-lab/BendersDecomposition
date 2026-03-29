@@ -81,6 +81,7 @@ cutting plane approach, and processes the results.
 function solve!(env::BendersBnB) 
     log = BendersBnBLog()
     param = env.param
+    require_optimizer_attached(env.master.model, "The master model")
     try 
         log.start_time = time()
         
@@ -150,6 +151,5 @@ function solve!(env::BendersBnB)
         return to_dataframe(env, log)
     end
 end
-
 
 

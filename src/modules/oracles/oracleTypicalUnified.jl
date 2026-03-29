@@ -117,10 +117,12 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
     function UnifiedOracle(data::AbstractData, master::Master; 
                           customize = customize_sub_model!,
                           scen_idx::Int = 0, 
-                          param::UnifiedOracleParam = UnifiedOracleParam())
+                          param::UnifiedOracleParam = UnifiedOracleParam(),
+                          optimizer = nothing)
     
         @debug "Building unified oracle"
         model = Model()
+        attach_optimizer!(model, optimizer)
 
         # Copy the master's coupling variables into the submodel (with identical axes and symbols)
         x_copy = copy_variables!(model, master.x_tuple)
@@ -280,7 +282,8 @@ end
 Generate Benders cuts using the reformulated primal problem [`UnifiedOracle`](@ref).
 """
 function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
-                       tol_normalize = 1.0, time_limit = 3600)
+                  tol_normalize = 1.0, time_limit = 3600)
+    require_optimizer_attached(oracle.model, "UnifiedOracle subproblem model")
     set_time_limit_sec(oracle.model, time_limit)
     
     set_normalized_rhs(oracle.objective_constraint, -t_value[1])

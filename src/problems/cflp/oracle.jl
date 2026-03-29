@@ -44,9 +44,11 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     function CFLKnapsackOracle(data::AbstractData, master::Master; 
                             customize = customize_sub_model!,
                             scen_idx::Int=-1, 
-                            param::CFLKnapsackOracleParam = CFLKnapsackOracleParam())
+                            param::CFLKnapsackOracleParam = CFLKnapsackOracleParam(),
+                            optimizer = nothing)
         @debug "Building knapsack oracle for CFLP"
         model = Model()
+        attach_optimizer!(model, optimizer)
 
         # Copy the master's coupling variables into the submodel (with identical axes and symbols)
         x_copy = copy_variables!(model, master.x_tuple)
@@ -70,6 +72,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
 end
 
 function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
+    require_optimizer_attached(oracle.model, "CFLKnapsackOracle subproblem model")
     set_time_limit_sec(oracle.model, time_limit)
     
     # Set GBC bounds based on expression evaluation

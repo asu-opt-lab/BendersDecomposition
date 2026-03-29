@@ -110,11 +110,13 @@ A `SplitOracle` is constructed by combining two *typical* oracles (denoted by
 encapsulates a [`DcglpParam`](@ref), which controls the behavior of the DCGLP.
 
 ```julia
+using CPLEX
+import BendersX: cplex_optimizer
+
 oracle_kappa = ClassicalOracle(data, master)
 oracle_nu    = ClassicalOracle(data, master)
 
-dcglp_optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, 
+dcglp_optimizer = cplex_optimizer(
         "CPX_PARAM_EPRHS" => 1e-9, 
         "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
         "CPX_PARAM_EPOPT" => 1e-9, 

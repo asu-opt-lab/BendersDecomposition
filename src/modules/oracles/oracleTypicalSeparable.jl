@@ -21,7 +21,8 @@ constructor.
 (::Type{T})(data::AbstractData, master::AbstractMaster;
             customize = customize_sub_model!,
             scen_idx::Int,
-            param::AbstractOracleParam) where T <: AbstractTypicalOracle =
+            param::AbstractOracleParam,
+            optimizer = nothing) where T <: AbstractTypicalOracle =
     throw(UndefError(
         """
         Oracle subtype $(T) does not implement the required constructor
@@ -30,7 +31,8 @@ constructor.
         Expected constructor signature:
 
           $(T)(data::AbstractData, master::AbstractMaster;
-              customize = customize_sub_model!, scen_idx::Int, param::AbstractOracleParam)
+              customize = customize_sub_model!, scen_idx::Int,
+              param::AbstractOracleParam, optimizer = nothing)
 
         Define this constructor for $(T) in order to use it with `SeparableOracle`.
         """
@@ -85,11 +87,12 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
                             N::Int; 
                             customize = customize_sub_model!,
                             sub_oracle_param::AbstractOracleParam = BasicOracleParam(),
-                            param::SeparableOracleParam = SeparableOracleParam()) where {T<:AbstractTypicalOracle}
+                            param::SeparableOracleParam = SeparableOracleParam(),
+                            optimizer = nothing) where {T<:AbstractTypicalOracle}
         @debug "Building classical separable oracle"
         @info "SeparableOracle: N=$N subproblems, $(Threads.nthreads()) threads available for parallel execution"
         # assume each oracle is associated with a single t, that is dim_t = N
-        oracles = [T(data, master; customize = customize, scen_idx=j, param = sub_oracle_param) for j=1:N] 
+        oracles = [T(data, master; customize = customize, scen_idx=j, param = sub_oracle_param, optimizer = optimizer) for j=1:N] 
 
         new(param, oracles, N)
     end
@@ -119,6 +122,5 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
         return true, [Hyperplane(length(x_value), length(t_value))], deepcopy(t_value)
     end
 end
-
 
 

@@ -61,14 +61,12 @@ function user_callback(cb_data, master::Master, log::BendersBnBLog, param::Bende
             # Get node information if using CPLEX
             process_node = true
             if solver_name(master.model) == "CPLEX" && (callback.params.node_count != -1 || callback.params.depth != -1)
-                n_count = Ref{CPXINT}()
-                node_depth = Ref{CPXINT}()
-                CPXcallbackgetinfoint(cb_data, CPXCALLBACKINFO_NODECOUNT, n_count)
-                CPXcallbackgetinfoint(cb_data, CPXCALLBACKINFO_NODEDEPTH, node_depth)
+                n_count = callback_node_count(cb_data, master.model)
+                node_depth = callback_node_depth(cb_data, master.model)
                 
                 # Check if node meets criteria
-                if (callback.params.node_count != -1 && n_count[] > callback.params.node_count) || 
-                   (callback.params.depth != -1 && node_depth[] < callback.params.depth)
+                if (callback.params.node_count != -1 && !isnothing(n_count) && n_count > callback.params.node_count) || 
+                   (callback.params.depth != -1 && !isnothing(node_depth) && node_depth < callback.params.depth)
                     process_node = false
                 end
             elseif (callback.params.node_count != -1 || callback.params.depth != -1) && solver_name(master.model) != "CPLEX"

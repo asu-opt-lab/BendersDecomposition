@@ -64,6 +64,7 @@ The following code block illustrates how to solve a CFLP instance using a sequen
 ```julia
 using BendersX
 using JuMP, CPLEX
+import BendersX: cplex_optimizer
 
 struct CFLPData <: AbstractData
     n_facilities::Int
@@ -84,10 +85,6 @@ function read_cflp_benchmark_data(path_to_raw_data)
 end
 
 function customize_master_model!(model::Model, data::CFLPData)
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
     I = data.n_facilities
     @variable(model, x[1:I], Bin)
     @variable(model, t >= -1e6)
@@ -98,10 +95,6 @@ function customize_master_model!(model::Model, data::CFLPData)
 end
 
 function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x) 
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
     I, J = data.n_facilities, data.n_customers   
     @variable(model, y[1:I, 1:J] >= 0)
     cost_demands = data.costs .* data.demands'
@@ -112,8 +105,10 @@ function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
 end
 
 data   = read_cflp_benchmark_data("p1")
-master = Master(data; customize = customize_master_model!)
-oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+master_optimizer = cplex_optimizer(MOI.Silent() => true)
+subproblem_optimizer = cplex_optimizer("CPXPARAM_Threads" => 7, MOI.Silent() => true)
+master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
+oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = subproblem_optimizer)
 env    = BendersSeq(master, oracle)
 log    = solve!(env)
 ```
@@ -157,22 +152,18 @@ Users specify the master formulation by implementing a function of the form:
 ```julia
 customize_master_model!(model::Model, data::AbstractData) -> NamedTuple, Vector{VariableRef}
 ```
-Within this function, users use standard JuMP commands to declare master-level variables, constraints, and the objective, as well as configure the optimizer.
+Within this function, users use standard JuMP commands to declare master-level variables, constraints, and the objective.
 The function must return:
 1. a NamedTuple mapping symbolic variable names to non-auxiliary master variables, and
 2. a Vector{VariableRef} containing the auxiliary variables $t$ used for Benders cuts.
 
-All modeling and solver-related decisions are entirely under the user’s control, while the Benders engine itself remains independent of the model and the solver.
+Optimizers can be attached separately when constructing [`Master`](@ref) and model-based oracles.
 
 ### Example
 [The CFLP master problem](@ref cflp-master) can be implemented as:
 
 ```julia
 function customize_master_model!(model::Model, data::CFLPData)
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
     I = data.n_facilities
     @variable(model, x[1:I], Bin)
     @variable(model, t >= -1e6)
@@ -181,6 +172,12 @@ function customize_master_model!(model::Model, data::CFLPData)
 
     return (x = x, ), t
 end
+```
+
+Then attach the optimizer when constructing the master:
+
+```julia
+master = Master(data; customize = customize_master_model!, optimizer = cplex_optimizer(MOI.Silent() => true))
 ```
 
 ### Subproblem Modeling
@@ -194,10 +191,6 @@ Here, `kwargs...` contains the symbolic names of the master variables that appea
 [The CFLP subproblem](@ref cflp-sub) can be implemented like this:
 ```julia
 function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x) 
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
     I, J = data.n_facilities, data.n_customers   
     @variable(model, y[1:I, 1:J] >= 0)
     cost_demands = data.costs .* data.demands'
@@ -206,6 +199,17 @@ function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
     @constraint(model, facility_open, y .<= x)
     @constraint(model, capacity[i in 1:I], sum(data.demands[:] .* y[i,:]) <= data.capacities[i] * x[i])
 end
+```
+
+Attach the subproblem optimizer when constructing the oracle:
+
+```julia
+oracle = ClassicalOracle(
+    data,
+    master;
+    customize = customize_sub_model!,
+    optimizer = cplex_optimizer("CPXPARAM_Threads" => 7, MOI.Silent() => true),
+)
 ```
 
 ### Example 2
@@ -237,11 +241,6 @@ Consider the following master and subproblem formulations:
 These problems can be implemented as follows:
 ```julia
 function customize_master_model!(model::Model, data::EmptyData)
-
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
     @variable(model, u[1:10], Bin) # Array
     @variable(model, v[3:10, [:A, :B]], Bin) # DenseAxisArray
     @variable(model, w[i=1:3,j=i:10], Bin) # SparseAxisArray
@@ -253,11 +252,6 @@ function customize_master_model!(model::Model, data::EmptyData)
 end
 
 function customize_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w) 
-
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
     @variable(model, y[1:10] >= 0)
     @objective(model, Min, sum(y))
     @constraint(model, y .<= u)
@@ -287,6 +281,5 @@ Both oracles and environments can be further customized using dedicated paramete
     - Refer to **Tutorials / Swapping Oracles and Adjusting Their Behaviors** for oracle configuration and customization.
     - Refer to **Tutorials / Swapping Environments and Adjusting Their Behaviors** for execution logic customization.
     - Refer to **Tutorials / Examples** for a collection of worked examples.
-
 
 

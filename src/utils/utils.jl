@@ -66,6 +66,7 @@ t_opt = [0.3]
 infeasibility_report(master, x_opt, t_opt)
 """
 function infeasibility_report(master::AbstractMaster, x_opt, t_opt)
+    require_optimizer_attached(master.model, "The master model")
     t_opt_ = [sum(t_opt)]
     
     opt_sol = Dict{VariableRef, Float64}()

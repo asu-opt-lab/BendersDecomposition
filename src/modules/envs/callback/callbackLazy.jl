@@ -38,9 +38,10 @@ function lazy_callback(cb_data, master::Master, log::BendersBnBLog, param::Bende
 
         state = BendersBnBState()
         if solver_name(master.model) == "CPLEX"
-            n_count = Ref{CPXINT}()
-            ret1 = CPXcallbackgetinfoint(cb_data, CPXCALLBACKINFO_NODECOUNT, n_count)
-            state.node = n_count[]
+            node_count = callback_node_count(cb_data, master.model)
+            if !isnothing(node_count)
+                state.node = node_count
+            end
         end
 
         state.values[:x] = JuMP.callback_value.(cb_data, master.x)

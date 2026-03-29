@@ -179,13 +179,16 @@ When stronger cuts are needed—such as separating fractional solutions—users 
 add a **user callback**, for example with a disjunctive oracle.
 
 ```julia
+using CPLEX
+import BendersX: cplex_optimizer
+
 # typical oracles (κ, ν)
 kappa = ClassicalOracle(data, master; customize = customize_sub_model!)
 nu    = ClassicalOracle(data, master; customize = customize_sub_model!)
 typical_oracles = [kappa, nu]
 
 # DCGLP and SplitOracle parameters
-dcglp_optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
+dcglp_optimizer = cplex_optimizer("CPXPARAM_Threads" => 7, MOI.Silent() => true)
 dcglp_param = DcglpParam(dcglp_optimizer; time_limit = 200.0)
 split_param = SplitOracleParam(
     dcglp_param;
