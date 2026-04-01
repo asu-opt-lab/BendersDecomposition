@@ -180,7 +180,6 @@ add a **user callback**, for example with a disjunctive oracle.
 
 ```julia
 using CPLEX
-import BendersX: cplex_optimizer
 
 # typical oracles (κ, ν)
 kappa = ClassicalOracle(data, master; customize = customize_sub_model!)
@@ -188,7 +187,11 @@ nu    = ClassicalOracle(data, master; customize = customize_sub_model!)
 typical_oracles = [kappa, nu]
 
 # DCGLP and SplitOracle parameters
-dcglp_optimizer = cplex_optimizer("CPXPARAM_Threads" => 7, MOI.Silent() => true)
+dcglp_optimizer = optimizer_with_attributes(
+    CPLEX.Optimizer,
+    "CPXPARAM_Threads" => 7,
+    MOI.Silent() => true,
+)
 dcglp_param = DcglpParam(dcglp_optimizer; time_limit = 200.0)
 split_param = SplitOracleParam(
     dcglp_param;
@@ -214,6 +217,8 @@ env = BendersBnB(
 )
 log = solve!(env)
 ```
+
+The master and DCGLP optimizers should be attached through standard JuMP APIs. BendersX extensions are only used internally when solver-specific callback behavior is needed.
 
 ---
 

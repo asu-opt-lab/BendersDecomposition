@@ -34,8 +34,7 @@ using BendersX
         :generate_cuts, :Hyperplane, :aggregate, :evaluate_violation,
         :select_top_fraction, :hyperplanes_to_expression, :add_constraints,
         :copy_variables!, :var_from_tuple, :transfer_scaled_linear_rows_and_bounds_with_types!,
-        :cplex_optimizer, :gurobi_optimizer,
-        :assign_attributes!, :infeasibility_report,
+        :infeasibility_report,
         :TimeLimitException, :UnexpectedModelStatusException, :UndefError,
         :AlgorithmException, :UnsupportedModelException,
     ]

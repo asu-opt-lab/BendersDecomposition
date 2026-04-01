@@ -64,7 +64,6 @@ The following code block illustrates how to solve a CFLP instance using a sequen
 ```julia
 using BendersX
 using JuMP, CPLEX
-import BendersX: cplex_optimizer
 
 struct CFLPData <: AbstractData
     n_facilities::Int
@@ -105,13 +104,19 @@ function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
 end
 
 data   = read_cflp_benchmark_data("p1")
-master_optimizer = cplex_optimizer(MOI.Silent() => true)
-subproblem_optimizer = cplex_optimizer("CPXPARAM_Threads" => 7, MOI.Silent() => true)
+master_optimizer = optimizer_with_attributes(CPLEX.Optimizer, MOI.Silent() => true)
+subproblem_optimizer = optimizer_with_attributes(
+    CPLEX.Optimizer,
+    "CPXPARAM_Threads" => 7,
+    MOI.Silent() => true,
+)
 master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
 oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = subproblem_optimizer)
 env    = BendersSeq(master, oracle)
 log    = solve!(env)
 ```
+
+Attach solvers through standard JuMP APIs such as `optimizer_with_attributes(...)`. BendersX package extensions are reserved for solver-specific internals such as callback metadata, not as a replacement solver-construction API.
 
 
 
@@ -177,7 +182,11 @@ end
 Then attach the optimizer when constructing the master:
 
 ```julia
-master = Master(data; customize = customize_master_model!, optimizer = cplex_optimizer(MOI.Silent() => true))
+master = Master(
+    data;
+    customize = customize_master_model!,
+    optimizer = optimizer_with_attributes(CPLEX.Optimizer, MOI.Silent() => true),
+)
 ```
 
 ### Subproblem Modeling
@@ -208,7 +217,11 @@ oracle = ClassicalOracle(
     data,
     master;
     customize = customize_sub_model!,
-    optimizer = cplex_optimizer("CPXPARAM_Threads" => 7, MOI.Silent() => true),
+    optimizer = optimizer_with_attributes(
+        CPLEX.Optimizer,
+        "CPXPARAM_Threads" => 7,
+        MOI.Silent() => true,
+    ),
 )
 ```
 
@@ -281,5 +294,4 @@ Both oracles and environments can be further customized using dedicated paramete
     - Refer to **Tutorials / Swapping Oracles and Adjusting Their Behaviors** for oracle configuration and customization.
     - Refer to **Tutorials / Swapping Environments and Adjusting Their Behaviors** for execution logic customization.
     - Refer to **Tutorials / Examples** for a collection of worked examples.
-
 

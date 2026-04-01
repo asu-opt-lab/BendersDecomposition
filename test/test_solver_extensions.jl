@@ -1,41 +1,16 @@
-using JuMP
+using BendersX
+using Pkg
 using Test
 
-function _capture_error(f)
-    try
-        f()
-        return nothing
-    catch err
-        return err
-    end
-end
+const REPO_ROOT = normpath(joinpath(@__DIR__, ".."))
+const PROJECT_TOML = Pkg.TOML.parsefile(joinpath(REPO_ROOT, "Project.toml"))
 
 @testset "Optional Solver Extensions" begin
-    cplex_err = _capture_error(() -> BendersX.cplex_optimizer())
-    @test cplex_err isa ArgumentError
-    @test occursin("Install and load CPLEX", sprint(showerror, cplex_err))
+    @test haskey(PROJECT_TOML, "weakdeps")
+    @test haskey(PROJECT_TOML, "extensions")
+    @test get(PROJECT_TOML["extensions"], "BendersXCPLEXExt", nothing) == "CPLEX"
+    @test haskey(PROJECT_TOML["weakdeps"], "CPLEX")
 
-    gurobi_err = _capture_error(() -> BendersX.gurobi_optimizer())
-    @test gurobi_err isa ArgumentError
-    @test occursin("Install and load Gurobi", sprint(showerror, gurobi_err))
-
-    missing_solver_err =
-        _capture_error(() -> BendersX.assign_attributes!(Model(), Dict{String,Any}()))
-    @test missing_solver_err isa ArgumentError
-    @test occursin("\"solver\"", sprint(showerror, missing_solver_err))
-
-    unsupported_solver_err =
-        _capture_error(() -> BendersX.assign_attributes!(Model(), Dict("solver" => "HiGHS")))
-    @test unsupported_solver_err isa ArgumentError
-    @test occursin("Unsupported solver", sprint(showerror, unsupported_solver_err))
-
-    delegated_cplex_err =
-        _capture_error(() -> BendersX.assign_attributes!(Model(), Dict("solver" => "CPLEX")))
-    @test delegated_cplex_err isa ArgumentError
-    @test occursin("Install and load CPLEX", sprint(showerror, delegated_cplex_err))
-
-    delegated_gurobi_err =
-        _capture_error(() -> BendersX.assign_attributes!(Model(), Dict("solver" => "gurobi")))
-    @test delegated_gurobi_err isa ArgumentError
-    @test occursin("Install and load Gurobi", sprint(showerror, delegated_gurobi_err))
+    @test isfile(joinpath(REPO_ROOT, "ext", "BendersXCPLEXExt.jl"))
+    @test Base.get_extension(BendersX, :BendersXCPLEXExt) === nothing
 end

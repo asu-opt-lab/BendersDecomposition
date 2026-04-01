@@ -54,8 +54,7 @@ export customize_master_model!, customize_sub_model!, customize_mip_model!
 public Hyperplane, aggregate, evaluate_violation, select_top_fraction
 public hyperplanes_to_expression, add_constraints
 public copy_variables!, var_from_tuple, transfer_scaled_linear_rows_and_bounds_with_types!
-public cplex_optimizer, gurobi_optimizer
-public assign_attributes!, infeasibility_report
+public infeasibility_report
 public TimeLimitException, UnexpectedModelStatusException, UndefError
 public AlgorithmException, UnsupportedModelException
 

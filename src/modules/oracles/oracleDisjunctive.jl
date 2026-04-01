@@ -25,10 +25,13 @@ This structure contains all the parameters needed to control the behavior of the
 # Examples
 ```julia
 using CPLEX
-import BendersX: cplex_optimizer
 
 # Create with default optimal parameters
-dcglp_optimizer = cplex_optimizer("CPXPARAM_Threads" => 7, MOI.Silent() => true)
+dcglp_optimizer = optimizer_with_attributes(
+    CPLEX.Optimizer,
+    "CPXPARAM_Threads" => 7,
+    MOI.Silent() => true,
+)
 dcglp_param = DcglpParam(dcglp_optimizer;
                         time_limit = 1000.0, 
                         gap_tolerance = 1e-3, 

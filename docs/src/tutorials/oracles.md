@@ -111,17 +111,17 @@ encapsulates a [`DcglpParam`](@ref), which controls the behavior of the DCGLP.
 
 ```julia
 using CPLEX
-import BendersX: cplex_optimizer
 
 oracle_kappa = ClassicalOracle(data, master)
 oracle_nu    = ClassicalOracle(data, master)
 
-dcglp_optimizer = cplex_optimizer(
-        "CPX_PARAM_EPRHS" => 1e-9, 
-        "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
-        "CPX_PARAM_EPOPT" => 1e-9, 
-        MOI.Silent() => true
-    )
+dcglp_optimizer = optimizer_with_attributes(
+    CPLEX.Optimizer,
+    "CPX_PARAM_EPRHS" => 1e-9,
+    "CPX_PARAM_NUMERICALEMPHASIS" => 1,
+    "CPX_PARAM_EPOPT" => 1e-9,
+    MOI.Silent() => true,
+)
 dcglp_param = DcglpParam(dcglp_optimizer)
 split_param = SplitOracleParam(
         dcglp_param;
@@ -132,6 +132,8 @@ split_param = SplitOracleParam(
 
 oracle = SplitOracle(master, [oracle_kappa, oracle_nu], split_param)
 ```
+Attach the DCGLP solver through standard JuMP APIs such as `optimizer_with_attributes(...)`; BendersX extensions are reserved for solver-specific internals.
+
 The component oracles `oracle_kappa` and `oracle_nu` can be any implementation of typical oracles compatible with the underlying problem.
 
 ### Configuring `SplitOracle` Behavior
