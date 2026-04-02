@@ -294,15 +294,17 @@ function transfer_scaled_linear_rows_and_bounds_with_types!(
 
             expr = sum(a * omega[j] for (a, j) in terms)
 
+            # MOI stores scalar affine constraints as `constant + expr in set`.
+            # The lifted point (omega / omega0) must satisfy the same relation.
             if S == MOI.GreaterThan{Float64}
-                @constraint(dcglp, set.lower * omega0 - expr >= constant * omega0)
+                @constraint(dcglp, expr + constant * omega0 >= set.lower * omega0)
             elseif S == MOI.LessThan{Float64}
-                @constraint(dcglp, expr - set.upper * omega0 >= -constant * omega0)
+                @constraint(dcglp, expr + constant * omega0 <= set.upper * omega0)
             elseif S == MOI.EqualTo{Float64}
-                @constraint(dcglp, expr - set.value * omega0 == -constant * omega0)
+                @constraint(dcglp, expr + constant * omega0 == set.value * omega0)
             elseif S == MOI.Interval{Float64}
-                @constraint(dcglp, expr - set.upper * omega0 >= -constant * omega0)
-                @constraint(dcglp, set.lower * omega0 - expr >= constant * omega0)
+                @constraint(dcglp, expr + constant * omega0 <= set.upper * omega0)
+                @constraint(dcglp, expr + constant * omega0 >= set.lower * omega0)
             end
         end
     end

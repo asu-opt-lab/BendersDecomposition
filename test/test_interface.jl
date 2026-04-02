@@ -1,6 +1,7 @@
 using Test
 using BendersX
-import BendersX: copy_variables!, UndefError
+import BendersX: copy_variables!, transfer_scaled_linear_rows_and_bounds_with_types!, UndefError
+using HiGHS
 using JuMP
 
 @testset "BendersX copy_variables!" begin
@@ -169,6 +170,33 @@ using JuMP
             print(sub_model)
         end
     end
+end
+
+@testset "transfer_scaled_linear_rows_and_bounds_with_types!" begin
+    function transferred_status(point::Vector{Float64})
+        master = Model()
+        @variable(master, x[1:2] >= 0)
+        @constraint(master, x[1] + x[2] >= 1.0)
+        @constraint(master, x[1] + x[2] <= 1.5)
+        @constraint(master, x[1] - x[2] == 0.0)
+
+        dcglp = Model(HiGHS.Optimizer)
+        @variable(dcglp, omega0)
+        @variable(dcglp, omega[1:2])
+        @objective(dcglp, Min, 0.0)
+
+        fix(omega0, 1.0; force = true)
+        fix.(omega, point; force = true)
+
+        transfer_scaled_linear_rows_and_bounds_with_types!(master, x, dcglp, omega, omega0)
+        optimize!(dcglp)
+
+        return termination_status(dcglp)
+    end
+
+    @test transferred_status([0.75, 0.75]) == OPTIMAL
+    @test transferred_status([0.2, 0.2]) == INFEASIBLE
+    @test transferred_status([1.0, 1.0]) == INFEASIBLE
 end
 
 @testset "BendersX customize model functions" begin
