@@ -3,6 +3,7 @@ using CSV
 using DataFrames
 using Test
 using JuMP
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
 @testset verbose = true "SNIP Sequential Benders Tests" begin
     reference_path = normpath(joinpath(@__DIR__, "..", "reference_objectives", "snip.csv"))
@@ -30,8 +31,8 @@ using JuMP
 
             @testset "Classic oracle" begin     
                 @info "solving SNIP instance-$instance snipno-$snipno budget-$budget - classical oracle - seq..."
-                master = Master(data; customize = customize_master_model!)
-                oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; customize = customize_sub_model!)
+                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; customize = customize_sub_model!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -40,9 +41,9 @@ using JuMP
 
             @testset "Pareto oracle" begin
                 @info "solving SNIP instance-$instance snipno-$snipno budget-$budget - pareto oracle - seqInOut..."
-                master = Master(data; customize = customize_master_model!)
+                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                 param = ParetoOracleParam(fill(1.0, length(data.D)))
-                oracle = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = param)
+                oracle = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = param, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -51,8 +52,8 @@ using JuMP
 
             @testset "Unified oracle" begin
                 @info "solving SNIP instance-$instance snipno-$snipno budget-$budget - unified oracle - seqInOut..."
-                master = Master(data; customize = customize_master_model!)
-                oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = UnifiedOracleParam())
+                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()

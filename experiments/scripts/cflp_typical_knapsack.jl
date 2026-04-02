@@ -3,6 +3,7 @@ using BendersX
 using Printf
 using Statistics
 using CPLEX
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
 # load settings
 # args = parse_commandline()
@@ -20,12 +21,12 @@ data = read_cfl_file(instance)
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
-master = Master(data; customize = customize_master_model!)
+master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
 
 # -----------------------------------------------------------------------------
 # typical oracle
 # -----------------------------------------------------------------------------
-typical_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!)
+typical_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
 
 # -----------------------------------------------------------------------------
 # BendersSeqInOut

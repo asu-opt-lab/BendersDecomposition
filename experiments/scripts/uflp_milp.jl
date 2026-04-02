@@ -4,6 +4,7 @@ using ArgParse
 using Random
 using Printf
 using Statistics
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
 function parse_commandline()
     s = ArgParseSettings()
@@ -44,7 +45,7 @@ data = read_Simple_data(instance)
 # -----------------------------------------------------------------------------
 # MIP model
 # -----------------------------------------------------------------------------
-mip_model = Model()
+mip_model = Model(mip_optimizer)
 customize_mip_model!(mip_model, data)
 set_optimizer_attribute(mip_model, "CPXPARAM_Threads", threads)
 set_optimizer_attribute(mip_model, "CPX_PARAM_BRDIR", 1)

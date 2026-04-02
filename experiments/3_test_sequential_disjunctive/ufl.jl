@@ -4,6 +4,7 @@ using DataFrames
 using Test
 using JuMP
 using CPLEX
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
 @testset verbose = true "UFLP Sequential Benders Tests -- MIP master" begin
     reference_path = normpath(joinpath(@__DIR__, "..", "reference_objectives", "uflp.csv"))
@@ -69,8 +70,8 @@ using CPLEX
                                                             reuse_dcglp = reuse_dcglp,
                                                             lift = lift)
 
-                            master = Master(data; customize = customize_master_model!)
-                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!); ClassicalOracle(data, master; customize = customize_sub_model!)] # for kappa & nu
+                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)] # for kappa & nu
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                             
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
@@ -101,8 +102,8 @@ using CPLEX
                                                             reuse_dcglp = reuse_dcglp,
                                                             lift = lift)
 
-                            master = Master(data; customize = customize_master_model!)
-                            typical_oracles = [UnifiedOracle(data, master; customize = customize_sub_model!); UnifiedOracle(data, master; customize = customize_sub_model!)]
+                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            typical_oracles = [UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
@@ -130,9 +131,9 @@ using CPLEX
                                                             reuse_dcglp = reuse_dcglp,
                                                             lift = lift)
 
-                            master = Master(data; customize = customize_master_model!)
+                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                            typical_oracles = [ParetoOracle(data, master, pareto_param; customize = customize_sub_model!); ParetoOracle(data, master, pareto_param; customize = customize_sub_model!)]
+                            typical_oracles = [ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
@@ -150,8 +151,8 @@ using CPLEX
                         @info "solving UFLP p$i - disjunctive oracle/classical with GBC"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                             oracle_param = SplitOracleParam(dcglp_param; norm = LpNorm(p), split_index_selection_rule = LargestFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 0.05, reuse_dcglp = reuse_dcglp, lift = lift)
-                            master = Master(data; customize = customize_master_model!)
-                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model_gbc!); ClassicalOracle(data, master; customize = customize_sub_model_gbc!)]
+                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer); ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                             log = solve!(env)
@@ -180,7 +181,7 @@ using CPLEX
                     @info "solving UFLP p$i - disjunctive oracle/fat knapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                             
-                            master = Master(data; customize = customize_master_model!)
+                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                             typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
 
                             oracle_param = SplitOracleParam(dcglp_param;

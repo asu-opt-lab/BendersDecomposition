@@ -4,6 +4,7 @@ using DataFrames
 using Test
 using JuMP
 using CPLEX
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
 @testset verbose = true "CFLP Callback Benders Tests" begin
     reference_path = normpath(joinpath(@__DIR__, "..", "reference_objectives", "cflp.csv"))
@@ -55,8 +56,8 @@ using CPLEX
                 @testset "NoSeq" begin
                     @info "solving CFLP p$i - classical oracle - no seq..."
                     # This setting can use default initializer
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
 
                     # root_preprocessing = NoRootNodePreprocessing()
                     # lazy_callback = LazyCallback(oracle)
@@ -71,8 +72,8 @@ using CPLEX
 
                 @testset "Seq" begin
                     @info "solving CFLP p$i - classical oracle - seq..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -93,8 +94,8 @@ using CPLEX
 
                 @testset "SeqInOut" begin
                     @info "solving CFLP p$i - classical oracle - seqinout..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -120,8 +121,8 @@ using CPLEX
             @testset "Knapsack oracle" begin
                 @testset "NoSeq" begin
                     @info "solving CFLP p$i - knapsack oracle - no seq..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
 
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
@@ -135,8 +136,8 @@ using CPLEX
                 
                 @testset "Seq" begin
                     @info "solving CFLP p$i - knapsack oracle - seq..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -157,8 +158,8 @@ using CPLEX
 
                 @testset "SeqInOut" begin
                     @info "solving CFLP p$i - knapsack oracle - seqinout..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -184,8 +185,8 @@ using CPLEX
             @testset "Unified oracle" begin
                 @testset "NoSeq" begin
                     @info "solving CFLP p$i - unified oracle - no seq..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = UnifiedOracle(data, master; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
                     env = BendersBnB(master, oracle; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
@@ -194,8 +195,8 @@ using CPLEX
 
                 @testset "Seq" begin
                     @info "solving CFLP p$i - unified oracle - seq..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = UnifiedOracle(data, master; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -216,8 +217,8 @@ using CPLEX
 
                 @testset "SeqInOut" begin
                     @info "solving CFLP p$i - unified oracle - seqinout..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = UnifiedOracle(data, master; customize = customize_sub_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -243,8 +244,8 @@ using CPLEX
             @testset "Classic oracle with GBC" begin
                 @testset "NoSeq" begin
                     @info "solving CFLP p$i - classical oracle with GBC - no seq..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
                     env = BendersBnB(master, oracle; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
@@ -253,8 +254,8 @@ using CPLEX
 
                 @testset "Seq" begin
                     @info "solving CFLP p$i - classical oracle with GBC - seq..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -275,8 +276,8 @@ using CPLEX
 
                 @testset "SeqInOut" begin
                     @info "solving CFLP p$i - classical oracle with GBC - seqinout..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -302,9 +303,9 @@ using CPLEX
             @testset "Pareto oracle" begin
                 @testset "NoSeq" begin
                     @info "solving CFLP p$i - pareto oracle - no seq..."
-                    master = Master(data; customize = customize_master_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                     pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                    oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!)
+                    oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)
                     env = BendersBnB(master, oracle; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
@@ -313,9 +314,9 @@ using CPLEX
 
                 @testset "Seq" begin
                     @info "solving CFLP p$i - pareto oracle - seq..."
-                    master = Master(data; customize = customize_master_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                     pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                    oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!)
+                    oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -336,9 +337,9 @@ using CPLEX
 
                 @testset "SeqInOut" begin
                     @info "solving CFLP p$i - pareto oracle - seqinout..."
-                    master = Master(data; customize = customize_master_model!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                     pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                    oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!)
+                    oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -364,8 +365,8 @@ using CPLEX
             @testset "Knapsack oracle with GBC" begin
                 @testset "NoSeq" begin
                     @info "solving CFLP p$i - knapsack oracle with GBC - no seq..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model_gbc!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
@@ -377,8 +378,8 @@ using CPLEX
 
                 @testset "Seq" begin
                     @info "solving CFLP p$i - knapsack oracle with GBC - seq..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model_gbc!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -399,8 +400,8 @@ using CPLEX
 
                 @testset "SeqInOut" begin
                     @info "solving CFLP p$i - knapsack oracle with GBC - seqinout..."
-                    master = Master(data; customize = customize_master_model!)
-                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model_gbc!)
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(

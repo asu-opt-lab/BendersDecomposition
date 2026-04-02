@@ -5,6 +5,7 @@ using Random
 using Printf
 using Statistics
 using CPLEX
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
 global_logger(ConsoleLogger(stderr, Logging.Debug))
 
@@ -104,7 +105,7 @@ oracle_param = SplitOracleParam(dcglp_param;
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
-master = Master(data; customize = customize_master_model!)
+master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
 set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
 
 # -----------------------------------------------------------------------------

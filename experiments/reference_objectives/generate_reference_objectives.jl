@@ -2,11 +2,12 @@ using BendersX
 using CSV
 using DataFrames
 using JuMP
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
 const OUTPUT_DIR = @__DIR__
 
 function solve_reference_objective(data, instance_name::AbstractString)
-    mip_model = Model()
+    mip_model = Model(mip_optimizer)
     customize_mip_model!(mip_model, data)
     optimize!(mip_model)
     termination_status(mip_model) == OPTIMAL || error("Reference MILP for $(instance_name) did not terminate optimally: $(termination_status(mip_model))")

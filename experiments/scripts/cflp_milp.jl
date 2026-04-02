@@ -3,6 +3,7 @@ using BendersX
 using ArgParse
 using Printf
 using Statistics
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
 function parse_commandline()
     s = ArgParseSettings()
@@ -33,7 +34,7 @@ data = read_cfl_file(instance)
 # -----------------------------------------------------------------------------
 # MIP model
 # -----------------------------------------------------------------------------
-mip_model = Model()
+mip_model = Model(mip_optimizer)
 customize_mip_model!(mip_model, data)
 set_optimizer_attribute(mip_model, "CPXPARAM_Threads", 7)
 set_time_limit_sec(mip_model, 14400.0)

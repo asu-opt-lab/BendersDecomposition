@@ -4,6 +4,7 @@ using DataFrames
 using Test
 using JuMP
 using CPLEX
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
 @testset verbose = true "Stochastic CFLP Sequential Benders Tests" begin
     reference_path = normpath(joinpath(@__DIR__, "..", "reference_objectives", "scflp.csv"))
@@ -52,8 +53,8 @@ using CPLEX
             
             @testset "Classic oracle" begin     
                 @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle - seq..."
-                master = Master(data; customize = customize_master_model!)
-                oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model!)
+                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -62,8 +63,8 @@ using CPLEX
             
             @testset "Knapsack oracle" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - seq..."
-                master = Master(data; customize = customize_master_model!)
-                oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!)
+                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -72,8 +73,8 @@ using CPLEX
 
             @testset "Unified oracle" begin     
                 @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - seq..."
-                master = Master(data; customize = customize_master_model!)
-                oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = UnifiedOracleParam())
+                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -82,8 +83,8 @@ using CPLEX
 
             @testset "Classic oracle with GBC" begin     
                 @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle with GBC - seq..."
-                master = Master(data; customize = customize_master_model!)
-                oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model_gbc!)
+                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model_gbc!, optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -92,8 +93,8 @@ using CPLEX
             
             @testset "Knapsack oracle with GBC" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle with GBC - seq..."
-                master = Master(data; customize = customize_master_model!)
-                oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model_gbc!)
+                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model_gbc!, optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -102,9 +103,9 @@ using CPLEX
 
             @testset "Pareto oracle" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - pareto oracle - seq..."
-                master = Master(data; customize = customize_master_model!)
+                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                 param = ParetoOracleParam(fill(1.0, data.n_facilities))
-                oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = param)
+                oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = param, optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
