@@ -6,7 +6,7 @@ Parameters for user callbacks in the branch-and-bound process.
 
 # Fields
 - `frequency::Int = 50`: How often to process nodes (every N fractional nodes)
-- `node_count::Int = -1`: Only process nodes after this node count (-1 means process all)
+- `node_count::Int = -1`: Minimum node count threshold; only process nodes with `node_count >= threshold` (-1 means process all)
 - `depth::Int = -1`: Only process nodes with depth >= this value (-1 means process all depths)
 """
 Base.@kwdef struct UserCallbackParam <: AbstractUserCallbackParam
@@ -47,7 +47,52 @@ Generates and adds Benders cuts at fractional nodes based on the specified frequ
 - `log::BendersBnBLog`: Log object to record statistics
 - `param::BendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::UserCallback`: Configuration for the user callback with parameters controlling when cuts are generated
+
+# Notes
+- Solver-specific callback metadata such as node count and depth is resolved through package extensions.
 """
+function _evaluate_user_callback_filters(
+    params::UserCallbackParam;
+    node_count::Union{Nothing,Int} = nothing,
+    node_depth::Union{Nothing,Int} = nothing,
+)
+    missing_node_count = params.node_count != -1 && isnothing(node_count)
+    missing_depth = params.depth != -1 && isnothing(node_depth)
+
+    process_node = true
+    if params.node_count != -1 && !isnothing(node_count) && node_count < params.node_count
+        process_node = false
+    end
+    if params.depth != -1 && !isnothing(node_depth) && node_depth < params.depth
+        process_node = false
+    end
+
+    return (; process_node, missing_node_count, missing_depth)
+end
+
+function _warn_ignored_user_callback_filters(
+    solver::AbstractString;
+    missing_node_count::Bool = false,
+    missing_depth::Bool = false,
+)
+    ignored_filters = String[]
+    missing_node_count && push!(ignored_filters, "node_count")
+    missing_depth && push!(ignored_filters, "depth")
+    isempty(ignored_filters) && return nothing
+
+    warning_id = if missing_node_count && missing_depth
+        :user_callback_missing_node_count_depth
+    elseif missing_node_count
+        :user_callback_missing_node_count
+    else
+        :user_callback_missing_depth
+    end
+    ignored_filter_list = join(ignored_filters, ", ")
+    message = "Ignoring unsupported user callback filter(s) $(ignored_filter_list) for $(solver) solver because the required callback metadata is unavailable."
+    @warn message maxlog=1 _id=warning_id
+    return nothing
+end
+
 function user_callback(cb_data, master::Master, log::BendersBnBLog, param::BendersBnBParam, callback::UserCallback)
     status = JuMP.callback_node_status(cb_data, master.model)
     
@@ -58,22 +103,16 @@ function user_callback(cb_data, master::Master, log::BendersBnBLog, param::Bende
         if log.num_of_fraction_node >= callback.params.frequency
             log.num_of_fraction_node = 0
             
-            # Get node information if using CPLEX
-            process_node = true
-            if solver_name(master.model) == "CPLEX" && (callback.params.node_count != -1 || callback.params.depth != -1)
-                n_count = callback_node_count(cb_data, master.model)
-                node_depth = callback_node_depth(cb_data, master.model)
-                
-                # Check if node meets criteria
-                if (callback.params.node_count != -1 && !isnothing(n_count) && n_count > callback.params.node_count) || 
-                   (callback.params.depth != -1 && !isnothing(node_depth) && node_depth < callback.params.depth)
-                    process_node = false
-                end
-            elseif (callback.params.node_count != -1 || callback.params.depth != -1) && solver_name(master.model) != "CPLEX"
-                @warn "node_count and depth parameters are not supported for $(solver_name(master.model)) solver"
-            end
+            node_count = callback.params.node_count == -1 ? nothing : callback_node_count(cb_data, master.model)
+            node_depth = callback.params.depth == -1 ? nothing : callback_node_depth(cb_data, master.model)
+            filter_result = _evaluate_user_callback_filters(callback.params; node_count=node_count, node_depth=node_depth)
+            _warn_ignored_user_callback_filters(
+                solver_name(master.model);
+                missing_node_count=filter_result.missing_node_count,
+                missing_depth=filter_result.missing_depth,
+            )
             
-            if process_node
+            if filter_result.process_node
                 # Create state and get current variable values
                 state = BendersBnBState()
                 state.values[:x] = JuMP.callback_value.(cb_data, master.x)

@@ -31,18 +31,23 @@ Generates and adds Benders cuts when integer solutions are found.
 - `log::BendersBnBLog`: Log object to record statistics
 - `param::BendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::LazyCallback`: Configuration for the lazy callback
+
+# Notes
+- Solver-specific callback metadata such as node counts is resolved through package extensions.
 """
+function _record_callback_node!(state::BendersBnBState, node_count::Union{Nothing,Int})
+    if !isnothing(node_count)
+        state.node = node_count
+    end
+    return state
+end
+
 function lazy_callback(cb_data, master::Master, log::BendersBnBLog, param::BendersBnBParam, callback::LazyCallback)
     status = JuMP.callback_node_status(cb_data, master.model)
     if status == MOI.CALLBACK_NODE_STATUS_INTEGER
 
         state = BendersBnBState()
-        if solver_name(master.model) == "CPLEX"
-            node_count = callback_node_count(cb_data, master.model)
-            if !isnothing(node_count)
-                state.node = node_count
-            end
-        end
+        _record_callback_node!(state, callback_node_count(cb_data, master.model))
 
         state.values[:x] = JuMP.callback_value.(cb_data, master.x)
         state.values[:t] = JuMP.callback_value.(cb_data, master.t)

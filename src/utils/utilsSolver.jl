@@ -30,6 +30,9 @@ end
 
 callback_solver_tag(model::Model) = Val(Symbol(solver_name(model)))
 
+# Solver extensions override these methods to expose callback metadata.
+# Returning `nothing` means the active solver does not provide the requested
+# metadata in the callback context.
 function callback_node_count(cb_data, model::Model)
     return callback_node_count(cb_data, model, callback_solver_tag(model))
 end
