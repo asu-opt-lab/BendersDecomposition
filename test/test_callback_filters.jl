@@ -38,9 +38,9 @@ using BendersX
         @test length(logs) == 2
 
         state = BendersX.BendersBnBState()
-        @test BendersX._record_callback_node!(state, nothing) === state
+        @test BendersX.record_node_count!(state, nothing) === state
         @test state.node == 0
-        @test BendersX._record_callback_node!(state, 7) === state
+        @test BendersX.record_node_count!(state, 7) === state
         @test state.node == 7
     end
 end

@@ -35,7 +35,7 @@ Generates and adds Benders cuts when integer solutions are found.
 # Notes
 - Solver-specific callback metadata such as node counts is resolved through package extensions.
 """
-function _record_callback_node!(state::BendersBnBState, node_count::Union{Nothing,Int})
+function record_node_count!(state::BendersBnBState, node_count::Union{Nothing,Int})
     if !isnothing(node_count)
         state.node = node_count
     end
@@ -47,7 +47,7 @@ function lazy_callback(cb_data, master::Master, log::BendersBnBLog, param::Bende
     if status == MOI.CALLBACK_NODE_STATUS_INTEGER
 
         state = BendersBnBState()
-        _record_callback_node!(state, callback_node_count(cb_data, master.model))
+        record_node_count!(state, callback_node_count(cb_data, master.model))
 
         state.values[:x] = JuMP.callback_value.(cb_data, master.x)
         state.values[:t] = JuMP.callback_value.(cb_data, master.t)
