@@ -50,48 +50,8 @@ Generates and adds Benders cuts at fractional nodes based on the specified frequ
 
 # Notes
 - Solver-specific callback metadata such as node count and depth is resolved through package extensions.
+- If callback metadata is unsupported by the active solver, the fallback metadata accessor emits a warning and the corresponding filter is ignored.
 """
-function _evaluate_user_callback_filters(
-    params::UserCallbackParam;
-    node_count::Union{Nothing,Int} = nothing,
-    node_depth::Union{Nothing,Int} = nothing,
-)
-    missing_node_count = params.node_count != -1 && isnothing(node_count)
-    missing_depth = params.depth != -1 && isnothing(node_depth)
-
-    process_node = true
-    if params.node_count != -1 && !isnothing(node_count) && node_count < params.node_count
-        process_node = false
-    end
-    if params.depth != -1 && !isnothing(node_depth) && node_depth < params.depth
-        process_node = false
-    end
-
-    return (; process_node, missing_node_count, missing_depth)
-end
-
-function _warn_ignored_user_callback_filters(
-    solver::AbstractString;
-    missing_node_count::Bool = false,
-    missing_depth::Bool = false,
-)
-    ignored_filters = String[]
-    missing_node_count && push!(ignored_filters, "node_count")
-    missing_depth && push!(ignored_filters, "depth")
-    isempty(ignored_filters) && return nothing
-
-    warning_id = if missing_node_count && missing_depth
-        :user_callback_missing_node_count_depth
-    elseif missing_node_count
-        :user_callback_missing_node_count
-    else
-        :user_callback_missing_depth
-    end
-    ignored_filter_list = join(ignored_filters, ", ")
-    message = "Ignoring unsupported user callback filter(s) $(ignored_filter_list) for $(solver) solver because the required callback metadata is unavailable."
-    @warn message maxlog=1 _id=warning_id
-    return nothing
-end
 
 function user_callback(cb_data, master::Master, log::BendersBnBLog, param::BendersBnBParam, callback::UserCallback)
     status = JuMP.callback_node_status(cb_data, master.model)
@@ -103,16 +63,16 @@ function user_callback(cb_data, master::Master, log::BendersBnBLog, param::Bende
         if log.num_of_fraction_node >= callback.params.frequency
             log.num_of_fraction_node = 0
             
-            node_count = callback.params.node_count == -1 ? nothing : callback_node_count(cb_data, master.model)
-            node_depth = callback.params.depth == -1 ? nothing : callback_node_depth(cb_data, master.model)
-            filter_result = _evaluate_user_callback_filters(callback.params; node_count=node_count, node_depth=node_depth)
-            _warn_ignored_user_callback_filters(
-                solver_name(master.model);
-                missing_node_count=filter_result.missing_node_count,
-                missing_depth=filter_result.missing_depth,
-            )
+            node_count = callback.params.node_count == -1 ? nothing :
+                callback_node_count(cb_data, master.model)
+            node_depth = callback.params.depth == -1 ? nothing :
+                callback_node_depth(cb_data, master.model)
+
+            process_node =
+                (isnothing(node_count) || node_count >= callback.params.node_count) &&
+                (isnothing(node_depth) || node_depth >= callback.params.depth)
             
-            if filter_result.process_node
+            if process_node
                 # Create state and get current variable values
                 state = BendersBnBState()
                 state.values[:x] = JuMP.callback_value.(cb_data, master.x)
