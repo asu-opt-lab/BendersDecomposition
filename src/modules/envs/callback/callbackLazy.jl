@@ -33,7 +33,10 @@ Generates and adds Benders cuts when integer solutions are found.
 - `callback::LazyCallback`: Configuration for the lazy callback
 
 # Notes
-- Solver-specific callback metadata such as node counts is resolved through package extensions.
+- Solver-specific callback metadata such as node counts is resolved through
+  [`callback_node_count`](@ref).
+- CPLEX support for this accessor is provided by `BendersXCPLEXExt` when
+  `CPLEX.jl` is loaded.
 """
 function record_node_count!(state::BendersBnBState, node_count::Union{Nothing,Int})
     if !isnothing(node_count)

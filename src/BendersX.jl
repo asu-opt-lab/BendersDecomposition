@@ -46,7 +46,7 @@ public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle
 public AbstractRootNodePreprocessing
 public AbstractNorm, StandardNorm
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
-public generate_cuts
+public generate_cuts, callback_node_count, callback_node_depth
 export set_parameter!
 export customize_master_model!, customize_sub_model!, customize_mip_model!
 

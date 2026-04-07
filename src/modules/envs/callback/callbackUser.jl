@@ -49,7 +49,10 @@ Generates and adds Benders cuts at fractional nodes based on the specified frequ
 - `callback::UserCallback`: Configuration for the user callback with parameters controlling when cuts are generated
 
 # Notes
-- Solver-specific callback metadata such as node count and depth is resolved through package extensions.
+- Solver-specific callback metadata such as node count and depth is resolved through
+  [`callback_node_count`](@ref) and [`callback_node_depth`](@ref).
+- CPLEX support for these accessors is provided by `BendersXCPLEXExt` when `CPLEX.jl`
+  is loaded.
 - If callback metadata is unsupported by the active solver, the fallback metadata accessor emits a warning and the corresponding filter is ignored.
 """
 
