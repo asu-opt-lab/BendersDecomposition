@@ -117,11 +117,11 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
     function ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
                          customize = customize_sub_model!,
                          scen_idx::Int = 0,
-                         optimizer = nothing)
+                         optimizer = DEFAULT_OPTIMIZER)
 
         @debug "Building Pareto oracle"
         model = Model()
-        attach_optimizer!(model, optimizer)
+        set_optimizer(model, optimizer)
 
         # Copy the master's coupling variables into the submodel (with identical axes and symbols)
         x_copy = copy_variables!(model, master.x_tuple)
@@ -145,7 +145,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         # Build Pareto Model (Re-run construction instead of copying)
         # ---------------------------------------------------------
         pareto_model = Model()
-        attach_optimizer!(pareto_model, optimizer)
+        set_optimizer(pareto_model, optimizer)
 
         # Copy master variables for pareto model
         pareto_x_copy = copy_variables!(pareto_model, master.x_tuple)
@@ -172,7 +172,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
                           customize = customize_sub_model!,
                           scen_idx::Int = 0,
         param::ParetoOracleParam,
-        optimizer = nothing)
+        optimizer = DEFAULT_OPTIMIZER)
         return ParetoOracle(data, master, param; customize = customize, scen_idx = scen_idx, optimizer = optimizer)
     end
 end
@@ -209,9 +209,6 @@ Generate Pareto-optimal cuts using the Magnanti-Wong method.
 """
 function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::Vector{Float64};
                        tol_normalize = 1.0, time_limit = 3600)
-    require_optimizer_attached(oracle.model, "ParetoOracle standard subproblem model")
-    require_optimizer_attached(oracle.pareto_model, "ParetoOracle pareto subproblem model")
-
     λ = oracle.param.λ
     oracle.param.core_point .= λ .* oracle.param.core_point .+ (1 - λ) .* x_value
     t0 = time()

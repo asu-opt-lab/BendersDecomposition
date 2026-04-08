@@ -68,7 +68,6 @@ This function implements the core Benders cutting-plane method: repeatedly solvi
 function solve!(env::BendersSeq; iter_prefix = "") 
     log = BendersSeqLog()
     param = env.param
-    require_optimizer_attached(env.master.model, "The master model")
     try    
         while true
             state = BendersSeqState()

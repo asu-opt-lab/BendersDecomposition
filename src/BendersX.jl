@@ -6,6 +6,7 @@ using Printf
 using LinearAlgebra
 using SparseArrays
 using DataFrames
+using GLPK
 
 const MOI = MathOptInterface
 

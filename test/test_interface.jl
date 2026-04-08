@@ -1,8 +1,11 @@
 using Test
 using BendersX
 import BendersX: copy_variables!, transfer_scaled_linear_rows_and_bounds_with_types!, UndefError
+import MathOptInterface
 using HiGHS
 using JuMP
+
+const MOI = MathOptInterface
 
 @testset "BendersX copy_variables!" begin
     @testset "VariableRef" begin
@@ -170,6 +173,99 @@ using JuMP
             print(sub_model)
         end
     end
+end
+
+@testset "Default GLPK optimizer attachment" begin
+    data = CFLPData(
+        2,
+        2,
+        [2.0, 2.0],
+        [1.0, 1.0],
+        [3.0, 4.0],
+        [1.0 2.0; 2.0 1.0],
+    )
+
+    master = Master(data)
+    classical = ClassicalOracle(data, master)
+    unified = UnifiedOracle(data, master)
+    pareto = ParetoOracle(data, master, ParetoOracleParam(fill(0.5, data.n_facilities)))
+    knapsack = CFLKnapsackOracle(data, master)
+
+    for model in (master.model, classical.model, unified.model, pareto.model, pareto.pareto_model, knapsack.model)
+        @test occursin("GLPK", solver_name(model))
+    end
+end
+
+@testset "Default optimizer is attached before customize hooks run" begin
+    struct AttrData <: AbstractData end
+    data = AttrData()
+
+    function customize_master_model!(model::Model, data::AttrData)
+        set_optimizer_attribute(model, MOI.Silent(), true)
+        @variable(model, x[1:2], Bin)
+        @variable(model, t >= 0)
+        @objective(model, Min, sum(x) + t)
+        return (x = x,), t
+    end
+
+    function customize_sub_model!(model::Model, data::AttrData, scen_idx::Int; x)
+        set_optimizer_attribute(model, MOI.Silent(), true)
+        @variable(model, y >= 0)
+        @objective(model, Min, y)
+        @constraint(model, y >= 1 - x[1])
+        return nothing
+    end
+
+    master = Master(data; customize = customize_master_model!)
+    oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+
+    @test occursin("GLPK", solver_name(master.model))
+    @test occursin("GLPK", solver_name(oracle.model))
+end
+
+@testset "SeparableOracle works with explicit non-GLPK optimizer" begin
+    struct SeparableData <: AbstractData
+        n_scenarios::Int
+    end
+    data = SeparableData(2)
+
+    function customize_master_model!(model::Model, data::SeparableData)
+        @variable(model, x[1:2], Bin)
+        @variable(model, t[1:data.n_scenarios] >= 0)
+        @objective(model, Min, sum(t))
+        return (x = x,), t
+    end
+
+    function customize_sub_model!(model::Model, data::SeparableData, scen_idx::Int; x)
+        @variable(model, y >= 0)
+        @objective(model, Min, y)
+        @constraint(model, y >= 1 - x[scen_idx])
+        return nothing
+    end
+
+    optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+    master = Master(data; customize = customize_master_model!, optimizer = optimizer)
+    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = optimizer)
+    is_in_L, hyperplanes, f_x = BendersX.generate_cuts(oracle, [0.0, 0.0], [0.0, 0.0])
+
+    @test !is_in_L
+    @test length(hyperplanes) == data.n_scenarios
+    @test f_x == [1.0, 1.0]
+    @test all(occursin("HiGHS", solver_name(suboracle.model)) for suboracle in oracle.oracles)
+end
+
+@testset "SeparableOracle rejects multi-subproblem GLPK construction" begin
+    data = CFLPData(
+        2,
+        2,
+        [2.0, 2.0],
+        [1.0, 1.0],
+        [3.0, 4.0],
+        [1.0 2.0; 2.0 1.0],
+    )
+
+    master = Master(data)
+    @test_throws ArgumentError SeparableOracle(data, master, ClassicalOracle(), 2)
 end
 
 @testset "transfer_scaled_linear_rows_and_bounds_with_types!" begin

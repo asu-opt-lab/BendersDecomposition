@@ -40,11 +40,11 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
                             customize = customize_sub_model!,
                             scen_idx::Int=0, 
                             param::ClassicalOracleParam = ClassicalOracleParam(),
-                            optimizer = nothing)
+                            optimizer = DEFAULT_OPTIMIZER)
     
             @debug "Building classical oracle"
             model = Model()
-            attach_optimizer!(model, optimizer)
+            set_optimizer(model, optimizer)
 
             # Copy the master's coupling variables into the submodel (with identical axes and symbols)
             x_copy = copy_variables!(model, master.x_tuple)
@@ -201,7 +201,6 @@ function _parse_gbc_result(result, x_vars::Vector{VariableRef})
 end
 
 function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
-    require_optimizer_attached(oracle.model, "ClassicalOracle subproblem model")
     set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     

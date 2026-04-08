@@ -24,12 +24,12 @@ mutable struct Master <: AbstractMaster
     c_x::Vector{Float64}
     c_t::Vector{Float64}
 
-    function Master(data::AbstractData; customize=customize_master_model!, optimizer = nothing)
+    function Master(data::AbstractData; customize=customize_master_model!, optimizer = DEFAULT_OPTIMIZER)
 
         @debug "Building Master module"
 
         model = Model()
-        attach_optimizer!(model, optimizer)
+        set_optimizer(model, optimizer)
 
         x_tuple, t = customize(model, data)
         t = t isa VariableRef ? [t] : t

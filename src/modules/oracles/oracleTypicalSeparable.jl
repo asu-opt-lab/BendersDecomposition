@@ -22,7 +22,7 @@ constructor.
             customize = customize_sub_model!,
             scen_idx::Int,
             param::AbstractOracleParam,
-            optimizer = nothing) where T <: AbstractTypicalOracle =
+            optimizer = DEFAULT_OPTIMIZER) where T <: AbstractTypicalOracle =
     throw(UndefError(
         """
         Oracle subtype $(T) does not implement the required constructor
@@ -32,7 +32,7 @@ constructor.
 
           $(T)(data::AbstractData, master::AbstractMaster;
               customize = customize_sub_model!, scen_idx::Int,
-              param::AbstractOracleParam, optimizer = nothing)
+              param::AbstractOracleParam, optimizer = ...)
 
         Define this constructor for $(T) in order to use it with `SeparableOracle`.
         """
@@ -50,6 +50,17 @@ See also: [`SeparableOracle`](@ref), [`AbstractOracleParam`](@ref)
 """
 mutable struct SeparableOracleParam <: AbstractOracleParam
     # may contain parameters for scenario handling.
+end
+
+function validate_separable_threading(oracles::Vector{<:AbstractTypicalOracle}; thread_count::Int = Threads.nthreads())
+    uses_glpk = any(hasproperty(suboracle, :model) && occursin("GLPK", solver_name(getproperty(suboracle, :model))) for suboracle in oracles)
+    if uses_glpk && length(oracles) > 1
+        throw(ArgumentError(
+            "SeparableOracle with GLPK subproblems is not supported when multiple subproblems are evaluated through the threaded execution path. " *
+            "Current Julia thread count: $(thread_count). Pass a different optimizer via `optimizer = ...`."
+        ))
+    end
+    return nothing
 end
 
 """
@@ -88,11 +99,12 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
                             customize = customize_sub_model!,
                             sub_oracle_param::AbstractOracleParam = BasicOracleParam(),
                             param::SeparableOracleParam = SeparableOracleParam(),
-                            optimizer = nothing) where {T<:AbstractTypicalOracle}
+                            optimizer = DEFAULT_OPTIMIZER) where {T<:AbstractTypicalOracle}
         @debug "Building classical separable oracle"
         @info "SeparableOracle: N=$N subproblems, $(Threads.nthreads()) threads available for parallel execution"
         # assume each oracle is associated with a single t, that is dim_t = N
-        oracles = [T(data, master; customize = customize, scen_idx=j, param = sub_oracle_param, optimizer = optimizer) for j=1:N] 
+        oracles = [T(data, master; customize = customize, scen_idx = j, param = sub_oracle_param, optimizer = optimizer) for j in 1:N]
+        validate_separable_threading(oracles)
 
         new(param, oracles, N)
     end
@@ -122,5 +134,3 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
         return true, [Hyperplane(length(x_value), length(t_value))], deepcopy(t_value)
     end
 end
-
-

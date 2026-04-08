@@ -1,32 +1,6 @@
-function attach_optimizer!(model::Model, optimizer)
-    if !isnothing(optimizer)
-        set_optimizer(model, optimizer)
-    end
-    return model
-end
+const DEFAULT_OPTIMIZER = optimizer_with_attributes(GLPK.Optimizer, MOI.Silent() => true)
 
-function has_optimizer_attached(model::Model)
-    try
-        MOI.get(backend(model), MOI.SolverName())
-        return true
-    catch err
-        if err isa MOI.GetAttributeNotAllowed
-            return false
-        end
-        rethrow()
-    end
-end
-
-function require_optimizer_attached(model::Model, context::AbstractString)
-    if !has_optimizer_attached(model)
-        throw(ArgumentError(
-            "$(context) requires an optimizer, but none is attached. " *
-            "Pass `optimizer = ...` when constructing `Master` or model-based oracles, " *
-            "or attach an optimizer to the `Model` before calling `customize_mip_model!` / `optimize!`."
-        ))
-    end
-    return model
-end
+default_optimizer() = optimizer_with_attributes(GLPK.Optimizer, MOI.Silent() => true)
 
 callback_solver_tag(model::Model) = Val(Symbol(solver_name(model)))
 
