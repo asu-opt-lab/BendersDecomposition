@@ -123,6 +123,49 @@ end
 remaining_time(start_time::Float64, time_limit::Float64; tol::Float64 = 1e-4) =
     max(time_limit - (time() - start_time), tol)
 
+function print_polar_iteration_info(
+    iteration::Int,
+    lb::Float64,
+    ub::Float64,
+    gap::Float64,
+    ub_k::Float64,
+    ub_v::Float64,
+    master_time::Float64,
+    oracle_times::Vector{Float64},
+)
+    @printf(
+        "   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | UB_k: %8.2f | UB_v: %8.2f | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
+        iteration,
+        lb,
+        ub,
+        gap,
+        ub_k,
+        ub_v,
+        master_time,
+        oracle_times[1],
+        oracle_times[2],
+    )
+    return nothing
+end
+
+function update_polar_no_improvement!(
+    no_improvement::Int,
+    current_lb::Float64,
+    prev_lb::Float64;
+    zero_tol::Float64 = 1e-8,
+    tol_imprv::Float64 = 1e-4,
+)
+    lb_improvement =
+        abs(prev_lb) < zero_tol ? abs(current_lb - prev_lb) :
+        abs((current_lb - prev_lb) / prev_lb) * 100
+    return lb_improvement < tol_imprv ? no_improvement + 1 : 0
+end
+
+function print_polar_stop_reason(msg::String)
+    @printf("   Stop: %s\n", msg)
+    return nothing
+end
+
 function split_phi_and_rhs(x_value::Vector{Float64}, ::BendersX.LargestFractional; zero_tol::Float64 = 1e-9)
     frac_indices = filter(i -> zero_tol <= x_value[i] <= 1.0 - zero_tol, eachindex(x_value))
     index = isempty(frac_indices) ? rand(collect(eachindex(x_value))) : maximum(frac_indices)
@@ -280,15 +323,18 @@ function optimize_polar_dcglp!(
     master_hyperplanes = BendersX.Hyperplane[]
 
     best_lb = -Inf
+    best_ub = Inf
     no_improvement = 0
     iteration = 0
+    prev_lb = -Inf
 
     while true
         iteration += 1
         JuMP.set_time_limit_sec(dcglp, remaining_time(start_time, time_limit))
 
+        master_time = 0.0
         try
-            optimize!(dcglp)
+            master_time = @elapsed optimize!(dcglp)
         catch err
             return fallback_typical_or_throw(
                 oracle,
@@ -317,20 +363,25 @@ function optimize_polar_dcglp!(
         end
 
         current_lb = objective_value(dcglp)
-        if current_lb <= best_lb + oracle.param.dcglp_param.gap_tolerance
-            no_improvement += 1
-        else
-            best_lb = current_lb
-            no_improvement = 0
+        if iteration >= 2
+            no_improvement = update_polar_no_improvement!(
+                no_improvement,
+                current_lb,
+                prev_lb;
+                zero_tol = oracle.param.zero_tol,
+            )
         end
-
-        oracle.param.dcglp_param.verbose &&
-            @printf("   Polar iter: %4d | obj: %10.4f | κ0: %.4f | ν0: %.4f\n", iteration, current_lb, value(dcglp[:omega_0][1]), value(dcglp[:omega_0][2]))
+        best_lb = max(best_lb, current_lb)
+        prev_lb = current_lb
 
         violated_cuts = AffExpr[]
         current_points_feasible = true
+        oracle_times = zeros(2)
+        omega_t_eval = [zeros(length(t_value)), zeros(length(t_value))]
         for i in 1:2
             omega_0 = value(dcglp[:omega_0][i])
+            omega_t_value = value.(dcglp[:omega_t][i, :])
+            omega_t_eval[i] .= omega_t_value
             if omega_0 < oracle.param.zero_tol
                 continue
             end
@@ -338,13 +389,22 @@ function optimize_polar_dcglp!(
             x_block = clamp.(value.(dcglp[:omega_x][i, :]) ./ omega_0, 0.0, 1.0)
             t_block = value.(dcglp[:omega_t][i, :]) ./ omega_0
 
-            is_in_L, hyperplanes_i, _ = BendersX.generate_cuts(
-                oracle.typical_oracles[i],
-                x_block,
-                t_block;
-                tol_normalize = omega_0,
-                time_limit = remaining_time(start_time, time_limit),
-            )
+            f_x_i = similar(t_value)
+            is_in_L = false
+            hyperplanes_i = BendersX.Hyperplane[]
+            oracle_times[i] = @elapsed begin
+                is_in_L, hyperplanes_i, f_x_i = BendersX.generate_cuts(
+                    oracle.typical_oracles[i],
+                    x_block,
+                    t_block;
+                    tol_normalize = omega_0,
+                    time_limit = remaining_time(start_time, time_limit),
+                )
+            end
+
+            if !any(isnan, f_x_i)
+                omega_t_eval[i] .= is_in_L ? omega_t_value : f_x_i .* omega_0
+            end
 
             if !is_in_L
                 current_points_feasible = false
@@ -365,8 +425,20 @@ function optimize_polar_dcglp!(
             end
         end
 
+        ub_k = sum(omega_t_eval[1])
+        ub_v = sum(omega_t_eval[2])
+        if isfinite(ub_k) && isfinite(ub_v)
+            best_ub = min(best_ub, ub_k + ub_v)
+        end
+        gap = isfinite(best_ub) && !iszero(best_ub) ? (best_ub - current_lb) / abs(best_ub) * 100 : Inf
+
+        oracle.param.dcglp_param.verbose &&
+            print_polar_iteration_info(iteration, current_lb, best_ub, gap, ub_k, ub_v, master_time, oracle_times)
+
         if current_points_feasible
             if current_lb > polar_master_t_value(t_value) + oracle.param.zero_tol
+                oracle.param.dcglp_param.verbose &&
+                    print_polar_stop_reason("both polar blocks certified in L; generating a disjunctive cut")
                 gamma_x = dual.(dcglp[:conx])
                 gamma_0 = current_lb - dot(gamma_x, x_value)
                 cut = BendersX.Hyperplane(gamma_x, fill(-1.0, length(t_value)), gamma_0)
@@ -377,12 +449,30 @@ function optimize_polar_dcglp!(
                 return false, master_hyperplanes, fill(Inf, length(t_value))
             end
 
+            oracle.param.dcglp_param.verbose &&
+                print_polar_stop_reason("both polar blocks are feasible in L; falling back to typical cuts")
             return BendersX.generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = remaining_time(start_time, time_limit))
+        end
+
+        if gap <= oracle.param.dcglp_param.gap_tolerance
+            oracle.param.dcglp_param.verbose &&
+                print_polar_stop_reason("dcglp gap tolerance reached before full certification; falling back to typical cuts")
+            return fallback_typical_or_throw(
+                oracle,
+                x_value,
+                t_value,
+                start_time,
+                time_limit,
+                "PolarDCGLP reached the dcglp gap tolerance before certifying the polar model.";
+                throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
+            )
         end
 
         BendersX.add_constraints(dcglp, :con_benders, violated_cuts)
 
-        if no_improvement >= oracle.param.dcglp_param.halt_limit || iteration >= oracle.param.dcglp_param.iter_limit
+        if no_improvement >= oracle.param.dcglp_param.halt_limit
+            oracle.param.dcglp_param.verbose &&
+                print_polar_stop_reason("halt limit reached due to insufficient LB improvement; falling back to typical cuts")
             return fallback_typical_or_throw(
                 oracle,
                 x_value,
@@ -390,6 +480,35 @@ function optimize_polar_dcglp!(
                 start_time,
                 time_limit,
                 "PolarDCGLP stalled before certifying the polar model.";
+                throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
+            )
+        end
+
+        if iteration >= oracle.param.dcglp_param.iter_limit
+            oracle.param.dcglp_param.verbose &&
+                print_polar_stop_reason("iteration limit reached before certification; falling back to typical cuts")
+            return fallback_typical_or_throw(
+                oracle,
+                x_value,
+                t_value,
+                start_time,
+                time_limit,
+                "PolarDCGLP reached the iteration limit before certifying the polar model.";
+                throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
+            )
+        end
+
+        elapsed_time = time() - start_time
+        if elapsed_time >= time_limit || elapsed_time >= oracle.param.dcglp_param.time_limit
+            oracle.param.dcglp_param.verbose &&
+                print_polar_stop_reason("time limit reached before certification; falling back to typical cuts")
+            return fallback_typical_or_throw(
+                oracle,
+                x_value,
+                t_value,
+                start_time,
+                time_limit,
+                "PolarDCGLP reached the time limit before certifying the polar model.";
                 throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
             )
         end
