@@ -231,6 +231,26 @@ end
         end
     end
 
+    @testset "BendersSeqInOut Solve Path" begin
+        master = Master(data; customize = customize_master_polar!)
+        oracle = make_polar_oracle(data, master; reuse_dcglp = true, adjust_t_to_fx = false)
+        env = BendersSeqInOut(
+            master,
+            oracle;
+            param = BendersSeqInOutParam(
+                time_limit = 30.0,
+                gap_tolerance = 1e-6,
+                verbose = false,
+                stabilizing_x = ones(master.dim_x),
+                α = 0.9,
+                λ = 0.1,
+            ),
+        )
+        solve!(env)
+        @test env.termination_status == Optimal()
+        @test isapprox(env.obj_value, reference_obj; atol = 1e-4)
+    end
+
     @testset "Integration Smoke Tests" begin
         master = Master(data; customize = customize_master_polar!)
         typical = ClassicalOracle(data, master; customize = customize_sub_polar!)
