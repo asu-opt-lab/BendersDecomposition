@@ -71,8 +71,6 @@ mutable struct PolarDCGLPOracle <: BendersX.AbstractDisjunctiveOracle
     ) where {T <: BendersX.AbstractTypicalOracle}
         length(typical_oracles) == 2 ||
             throw(ArgumentError("PolarDCGLPOracle requires exactly two typical oracles."))
-        master.dim_t == 1 ||
-            throw(ArgumentError("PolarDCGLPOracle currently supports scalar `t` only; received dim_t = $(master.dim_t)."))
 
         for xi in master.x
             is_binary(xi) || throw(ArgumentError("PolarDCGLPOracle requires all master variables to be binary."))
@@ -89,12 +87,12 @@ end
 function build_polar_dcglp(master::BendersX.AbstractMaster, param::PolarDCGLPParam)
     dcglp = Model(param.dcglp_param.optimizer)
 
-    @variable(dcglp, tau)
+    @variable(dcglp, tau[1:master.dim_t])
     @variable(dcglp, omega_0[1:2] >= 0)
     @variable(dcglp, omega_x[1:2, 1:master.dim_x])
     @variable(dcglp, omega_t[1:2, 1:master.dim_t])
 
-    @objective(dcglp, Min, tau)
+    @objective(dcglp, Min, sum(tau))
 
     @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= POLAR_T_LOWER_BOUND .* omega_0[i])
     @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i, j])
@@ -102,7 +100,7 @@ function build_polar_dcglp(master::BendersX.AbstractMaster, param::PolarDCGLPPar
 
     @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1.0)
     @constraint(dcglp, conx[j in 1:master.dim_x], omega_x[1, j] + omega_x[2, j] == 0.0)
-    @constraint(dcglp, cont, omega_t[1, 1] + omega_t[2, 1] - tau == 0.0)
+    @constraint(dcglp, cont[j in 1:master.dim_t], omega_t[1, j] + omega_t[2, j] - tau[j] == 0.0)
 
     for i in 1:2
         BendersX.transfer_scaled_linear_rows_and_bounds_with_types!(master.model, master.x, dcglp, dcglp[:omega_x][i, :], dcglp[:omega_0][i])
@@ -247,6 +245,8 @@ end
 hyperplane_violation(h::BendersX.Hyperplane, x_value::Vector{Float64}, t_value::Vector{Float64}) =
     h.a_0 + dot(h.a_x, x_value) + dot(h.a_t, t_value)
 
+polar_master_t_value(t_value::Vector{Float64}) = sum(t_value)
+
 function seed_initial_l!(oracle::PolarDCGLPOracle, x_value::Vector{Float64}, t_value::Vector{Float64}, start_time::Float64, time_limit::Float64)
     dcglp = oracle.dcglp
     delete_registered_constraints!(dcglp, :initial_L)
@@ -366,10 +366,10 @@ function optimize_polar_dcglp!(
         end
 
         if current_points_feasible
-            if current_lb > t_value[1] + oracle.param.zero_tol
+            if current_lb > polar_master_t_value(t_value) + oracle.param.zero_tol
                 gamma_x = dual.(dcglp[:conx])
                 gamma_0 = current_lb - dot(gamma_x, x_value)
-                cut = BendersX.Hyperplane(gamma_x, [-1.0], gamma_0)
+                cut = BendersX.Hyperplane(gamma_x, fill(-1.0, length(t_value)), gamma_0)
                 append_current_disjunctive_cut!(oracle, cut)
                 if include_disjunctive_cuts_to_hyperplanes
                     push!(master_hyperplanes, cut)
@@ -404,9 +404,6 @@ function BendersX.generate_cuts(
     throw_typical_cuts_for_errors::Bool = true,
     include_disjunctive_cuts_to_hyperplanes::Bool = true,
 )
-    length(t_value) == 1 ||
-        throw(ArgumentError("PolarDCGLPOracle only supports scalar `t`; received a vector of length $(length(t_value))."))
-
     push!(
         oracle.splits,
         split_phi_and_rhs(x_value, oracle.param.split_index_selection_rule; zero_tol = oracle.param.zero_tol),

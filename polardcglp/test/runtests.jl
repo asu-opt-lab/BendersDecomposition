@@ -103,6 +103,28 @@ function make_polar_oracle(
     return PolarDCGLPOracle(master, make_typical_oracles(data, master), param)
 end
 
+struct VectorTOracle <: BendersX.AbstractTypicalOracle end
+
+function BendersX.generate_cuts(
+    ::VectorTOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64};
+    tol_normalize::Float64 = 1.0,
+    time_limit::Float64 = 3600.0,
+)
+    hyperplanes = BendersX.Hyperplane[]
+    for j in eachindex(t_value)
+        h = BendersX.Hyperplane(length(x_value), length(t_value))
+        h.a_x[j] = -1.0
+        h.a_t[j] = -1.0
+        h.a_0 = 1.0
+        push!(hyperplanes, h)
+    end
+    f_x = 1.0 .- x_value[1:length(t_value)]
+    is_in_L = sum(f_x) <= sum(t_value) + 1e-9
+    return is_in_L, hyperplanes, f_x
+end
+
 @testset "PolarDCGLP Environment" begin
     data = simple_polar_data()
     reference_obj = solve_reference(data)
@@ -155,7 +177,8 @@ end
 
         vt_data = VectorTData()
         vt_master = Master(vt_data; customize = customize_master_vector_t!)
-        @test_throws ArgumentError PolarDCGLPOracle(vt_master, typical, param)
+        vt_typical = [VectorTOracle(), VectorTOracle()]
+        @test PolarDCGLPOracle(vt_master, vt_typical, param) isa PolarDCGLPOracle
     end
 
     @testset "Disjunctive Cut Reuse Rules" begin

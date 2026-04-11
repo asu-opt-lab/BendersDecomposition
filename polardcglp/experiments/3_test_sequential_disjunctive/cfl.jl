@@ -76,6 +76,35 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     @test isapprox(mip_opt_val, env.obj_value, atol = 1e-5)
                 end
             end
+
+            @testset "Knapsack oracle" begin
+                @testset "Seq" begin
+                    @info "solving PolarDCGLP CFLP p$i - knapsack - seq"
+
+                    oracle_param = PolarDCGLPParam(
+                        dcglp_param;
+                        split_index_selection_rule = RandomFractional(),
+                        disjunctive_cut_append_rule = AllDisjunctiveCuts(),
+                        add_benders_cuts_to_master = true,
+                        fraction_of_benders_cuts_to_master = 1.0,
+                        reuse_dcglp = true,
+                        adjust_t_to_fx = false,
+                        zero_tol = 1e-9,
+                    )
+
+                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    typical_oracles = [
+                        CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
+                        CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
+                    ]
+                    disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+                    env = BendersSeq(master, disjunctive_oracle; param = benders_param)
+
+                    solve!(env)
+                    @test env.termination_status == Optimal()
+                    @test isapprox(mip_opt_val, env.obj_value, atol = 1e-5)
+                end
+            end
         end
     end
 end
