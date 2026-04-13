@@ -364,6 +364,7 @@ function optimize_polar_dcglp!(
 
     best_lb = -Inf
     best_ub = Inf
+    current_lb = -Inf
     no_improvement = 0
     iteration = 0
     prev_lb = -Inf
@@ -502,8 +503,6 @@ function optimize_polar_dcglp!(
             break
         end
 
-        BendersX.add_constraints(dcglp, :con_benders, violated_cuts)
-
         if no_improvement >= oracle.param.dcglp_param.halt_limit
             oracle.param.dcglp_param.verbose &&
                 print_polar_stop_reason("halt limit reached due to insufficient LB improvement")
@@ -522,6 +521,8 @@ function optimize_polar_dcglp!(
                 print_polar_stop_reason("time limit reached")
             break
         end
+
+        BendersX.add_constraints(dcglp, :con_benders, violated_cuts)
     end
 
     if current_lb > polar_master_t_value(t_value) + oracle.param.zero_tol

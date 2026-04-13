@@ -12,7 +12,7 @@ include(normpath(joinpath(@__DIR__, "script_utils.jl")))
 
 options, _ = parse_script_args(ARGS)
 
-instance = get_string_option(options, "instance", "ga250a-1")
+instance = get_string_option(options, "instance", "ga250a-2")
 seed = get_int_option(options, "seed", 1)
 time_limit = get_float_option(options, "time_limit", 14400.0)
 dcglp_time_limit = get_float_option(options, "dcglp_time_limit", 100.0)
