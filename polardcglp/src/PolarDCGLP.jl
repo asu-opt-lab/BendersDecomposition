@@ -498,63 +498,58 @@ function optimize_polar_dcglp!(
 
         if gap <= oracle.param.dcglp_param.gap_tolerance
             oracle.param.dcglp_param.verbose &&
-                print_polar_stop_reason("dcglp gap tolerance reached before full certification; falling back to typical cuts")
-            return fallback_typical_or_throw(
-                oracle,
-                x_value,
-                t_value,
-                start_time,
-                time_limit,
-                "PolarDCGLP reached the dcglp gap tolerance before certifying the polar model.";
-                throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
-            )
+                print_polar_stop_reason("dcglp gap tolerance reached")
+            break
         end
 
         BendersX.add_constraints(dcglp, :con_benders, violated_cuts)
 
         if no_improvement >= oracle.param.dcglp_param.halt_limit
             oracle.param.dcglp_param.verbose &&
-                print_polar_stop_reason("halt limit reached due to insufficient LB improvement; falling back to typical cuts")
-            return fallback_typical_or_throw(
-                oracle,
-                x_value,
-                t_value,
-                start_time,
-                time_limit,
-                "PolarDCGLP stalled before certifying the polar model.";
-                throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
-            )
+                print_polar_stop_reason("halt limit reached due to insufficient LB improvement")
+            break
         end
 
         if iteration >= oracle.param.dcglp_param.iter_limit
             oracle.param.dcglp_param.verbose &&
-                print_polar_stop_reason("iteration limit reached before certification; falling back to typical cuts")
-            return fallback_typical_or_throw(
-                oracle,
-                x_value,
-                t_value,
-                start_time,
-                time_limit,
-                "PolarDCGLP reached the iteration limit before certifying the polar model.";
-                throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
-            )
+                print_polar_stop_reason("iteration limit reached")
+            break
         end
 
         elapsed_time = time() - start_time
         if elapsed_time >= time_limit || elapsed_time >= oracle.param.dcglp_param.time_limit
             oracle.param.dcglp_param.verbose &&
-                print_polar_stop_reason("time limit reached before certification; falling back to typical cuts")
-            return fallback_typical_or_throw(
-                oracle,
-                x_value,
-                t_value,
-                start_time,
-                time_limit,
-                "PolarDCGLP reached the time limit before certifying the polar model.";
-                throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
-            )
+                print_polar_stop_reason("time limit reached")
+            break
         end
     end
+
+    if current_lb > polar_master_t_value(t_value) + oracle.param.zero_tol
+        oracle.param.dcglp_param.verbose &&
+            print_polar_stop_reason("LB sufficient; generating a disjunctive cut")
+        gamma_x = dual.(dcglp[:conx])
+        gamma_0 = current_lb - dot(gamma_x, x_value)
+        cut = BendersX.Hyperplane(gamma_x, fill(-1.0, length(t_value)), gamma_0)
+        oracle.param.dcglp_param.verbose &&
+            print_disjunctive_cut(oracle, cut, x_value, t_value; zero_tol = oracle.param.zero_tol)
+        append_current_disjunctive_cut!(oracle, cut)
+        if include_disjunctive_cuts_to_hyperplanes
+            push!(master_hyperplanes, cut)
+        end
+        return false, master_hyperplanes, fill(Inf, length(t_value))
+    end
+
+    oracle.param.dcglp_param.verbose &&
+        print_polar_stop_reason("LB insufficient; falling back to typical cuts")
+    return fallback_typical_or_throw(
+        oracle,
+        x_value,
+        t_value,
+        start_time,
+        time_limit,
+        "PolarDCGLP terminated without certifying the polar model.";
+        throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
+    )
 end
 
 function BendersX.generate_cuts(
