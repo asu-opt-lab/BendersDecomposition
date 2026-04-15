@@ -84,7 +84,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         add_benders_cuts_to_master = 2,
                         fraction_of_benders_cuts_to_master = 0.05,
                         reuse_dcglp = false,
-                        adjust_t_to_fx = false,
+
                         zero_tol = 1e-9,
                     )
 
@@ -111,7 +111,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         add_benders_cuts_to_master = 2,
                         fraction_of_benders_cuts_to_master = 0.05,
                         reuse_dcglp = false,
-                        adjust_t_to_fx = false,
+
                         zero_tol = 1e-9,
                     )
 
@@ -140,7 +140,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         add_benders_cuts_to_master = true,
                         fraction_of_benders_cuts_to_master = 0.05,
                         reuse_dcglp = false,
-                        adjust_t_to_fx = false,
+
                         zero_tol = 1e-9,
                     )
 
@@ -164,7 +164,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         add_benders_cuts_to_master = true,
                         fraction_of_benders_cuts_to_master = 0.05,
                         reuse_dcglp = false,
-                        adjust_t_to_fx = false,
+
                         zero_tol = 1e-9,
                     )
 

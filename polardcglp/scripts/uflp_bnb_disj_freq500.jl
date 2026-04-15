@@ -76,7 +76,7 @@ oracle_param = PolarDCGLPParam(
     add_benders_cuts_to_master = 2,
     fraction_of_benders_cuts_to_master = 0.05,
     reuse_dcglp = reuse_dcglp,
-    adjust_t_to_fx = false,
+
     zero_tol = 1e-9,
 )
 

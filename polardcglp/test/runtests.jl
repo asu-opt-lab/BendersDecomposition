@@ -79,7 +79,6 @@ function make_polar_oracle(
     split_rule = MostFractional(),
     append_rule = AllDisjunctiveCuts(),
     reuse_dcglp::Bool = true,
-    adjust_t_to_fx::Bool = false,
     verbose::Bool = false,
 )
     dcglp_param = DcglpParam(
@@ -97,7 +96,6 @@ function make_polar_oracle(
         add_benders_cuts_to_master = 2,
         fraction_of_benders_cuts_to_master = 1.0,
         reuse_dcglp = reuse_dcglp,
-        adjust_t_to_fx = adjust_t_to_fx,
         zero_tol = 1e-9,
     )
     return PolarDCGLPOracle(master, make_typical_oracles(data, master), param)
@@ -132,15 +130,15 @@ end
     @testset "Split Rules" begin
         x_value = [0.1, 0.49, 0.7, 1.0]
 
-        phi, phi_0 = PolarDCGLP.split_phi_and_rhs(x_value, LargestFractional(); zero_tol = 1e-9)
+        phi, phi_0 = BendersX.select_disjunctive_inequality(x_value, LargestFractional(); zero_tol = 1e-9)
         @test phi_0 == 0.0
         @test findfirst(x -> !iszero(x), phi) == 3
 
-        phi, _ = PolarDCGLP.split_phi_and_rhs(x_value, MostFractional(); zero_tol = 1e-9)
+        phi, _ = BendersX.select_disjunctive_inequality(x_value, MostFractional(); zero_tol = 1e-9)
         @test findfirst(x -> !iszero(x), phi) == 2
 
         Random.seed!(1)
-        phi, _ = PolarDCGLP.split_phi_and_rhs(x_value, RandomFractional(); zero_tol = 1e-9)
+        phi, _ = BendersX.select_disjunctive_inequality(x_value, RandomFractional(); zero_tol = 1e-9)
         @test findfirst(x -> !iszero(x), phi) in (1, 2, 3)
     end
 
@@ -217,9 +215,9 @@ end
     end
 
     @testset "BendersSeq Solve Path" begin
-        for reuse_dcglp in (true, false), adjust_t_to_fx in (true, false)
+        for reuse_dcglp in (true, false)
             master = Master(data; customize = customize_master_polar!)
-            oracle = make_polar_oracle(data, master; reuse_dcglp = reuse_dcglp, adjust_t_to_fx = adjust_t_to_fx)
+            oracle = make_polar_oracle(data, master; reuse_dcglp = reuse_dcglp)
             env = BendersSeq(
                 master,
                 oracle;
@@ -233,7 +231,7 @@ end
 
     @testset "BendersSeqInOut Solve Path" begin
         master = Master(data; customize = customize_master_polar!)
-        oracle = make_polar_oracle(data, master; reuse_dcglp = true, adjust_t_to_fx = false)
+        oracle = make_polar_oracle(data, master; reuse_dcglp = true)
         env = BendersSeqInOut(
             master,
             oracle;
