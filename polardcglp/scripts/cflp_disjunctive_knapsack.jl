@@ -12,14 +12,14 @@ include(normpath(joinpath(@__DIR__, "script_utils.jl")))
 
 options, _ = parse_script_args(ARGS)
 
-instance = get_string_option(options, "instance", "T100x100_5_2")
+instance = get_string_option(options, "instance", "T300x300_5_2")
 seed = get_int_option(options, "seed", 1)
 time_limit = get_float_option(options, "time_limit", 200.0)
 dcglp_time_limit = get_float_option(options, "dcglp_time_limit", 1000.0)
 dcglp_iter_limit = get_int_option(options, "dcglp_iter_limit", 250)
 dcglp_halt_limit = get_int_option(options, "dcglp_halt_limit", 3)
 frequency = get_int_option(options, "frequency", 250)
-reuse_dcglp = get_bool_option(options, "reuse_dcglp", true)
+reuse_dcglp = get_bool_option(options, "reuse_dcglp", false)
 build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
@@ -53,7 +53,7 @@ dcglp_param = DcglpParam(
 
 oracle_param = PolarDCGLPParam(
     dcglp_param;
-    split_index_selection_rule = RandomFractional(),
+    split_index_selection_rule = MostFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
     add_benders_cuts_to_master = true,
     fraction_of_benders_cuts_to_master = 0.5,

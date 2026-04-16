@@ -103,6 +103,74 @@ function fallback_typical_or_throw(
     throw(BendersX.UnexpectedModelStatusException(msg))
 end
 
+function print_dcglp_iis(
+    oracle::PolarDCGLPOracle,
+    x_value::Vector{Float64},
+    zero_indices::Vector{Int},
+    one_indices::Vector{Int},
+)
+    dcglp = oracle.dcglp
+
+    println("========== PolarDCGLP IIS Diagnostic ==========")
+    if !isempty(oracle.splits)
+        phi, phi_0 = oracle.splits[end]
+        j_split = findfirst(v -> v > 0.5, phi)
+        if j_split !== nothing
+            @printf("  Split index: j_split = %d, phi_0 = %.6g\n", j_split, phi_0)
+            @printf("  x_value[j_split] = %.6g\n", x_value[j_split])
+        end
+    end
+    if !isempty(zero_indices)
+        println("  zero_indices (lifting): ", zero_indices)
+    end
+    if !isempty(one_indices)
+        println("  one_indices (lifting): ", one_indices)
+    end
+
+    try
+        JuMP.compute_conflict!(dcglp)
+    catch err
+        @warn "compute_conflict! failed: $(err)"
+        println("===============================================")
+        return
+    end
+
+    conflict_status = try
+        MOI.get(dcglp, MOI.ConflictStatus())
+    catch err
+        @warn "Querying ConflictStatus failed: $(err)"
+        println("===============================================")
+        return
+    end
+
+    if conflict_status != MOI.CONFLICT_FOUND
+        println("  Conflict refiner result: $(conflict_status) (no conflict reported)")
+        println("===============================================")
+        return
+    end
+
+    println("  Constraints in IIS:")
+    n_in_conflict = 0
+    for (F, S) in JuMP.list_of_constraint_types(dcglp)
+        for con in JuMP.all_constraints(dcglp, F, S)
+            cs = try
+                MOI.get(dcglp, MOI.ConstraintConflictStatus(), con)
+            catch
+                continue
+            end
+            if cs == MOI.IN_CONFLICT
+                n_in_conflict += 1
+                nm = JuMP.name(con)
+                label = isempty(nm) ? string(con) : nm
+                println("    [$(F), $(S)] ", label)
+            end
+        end
+    end
+    @printf("  Total constraints in conflict: %d\n", n_in_conflict)
+    println("===============================================")
+    return nothing
+end
+
 function generate_polar_disjunctive_cut(
     dcglp::Model,
     current_lb::Float64,
@@ -192,6 +260,9 @@ function optimize_polar_dcglp!(
         if status == TIME_LIMIT
             throw(BendersX.TimeLimitException("Time limit reached during PolarDCGLP solving."))
         elseif status != OPTIMAL
+            if status == MOI.INFEASIBLE
+                print_dcglp_iis(oracle, x_value, zero_indices, one_indices)
+            end
             return fallback_typical_or_throw(
                 oracle,
                 x_value,
