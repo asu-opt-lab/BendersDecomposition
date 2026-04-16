@@ -41,23 +41,23 @@ export RandomFractional, MostFractional, LargestFractional
 export NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
 
 # Public extension interfaces
-public AbstractBendersEnv, AbstractBendersSeq, AbstractBendersBnB
-public AbstractMaster
-public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle
-public AbstractRootNodePreprocessing
-public AbstractNorm, StandardNorm
-public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
-public generate_cuts, callback_node_count, callback_node_depth
+export AbstractBendersEnv, AbstractBendersSeq, AbstractBendersBnB
+export AbstractMaster
+export AbstractOracle, AbstractOracleParam, AbstractTypicalOracle
+export AbstractRootNodePreprocessing
+export AbstractNorm, StandardNorm
+export SplitIndexSelectionRule, DisjunctiveCutsAppendRule
+export generate_cuts, callback_node_count, callback_node_depth
 export set_parameter!
 export customize_master_model!, customize_sub_model!, customize_mip_model!
 
 # Public but not auto-imported advanced utilities and support types
-public Hyperplane, aggregate, evaluate_violation, select_top_fraction
-public hyperplanes_to_expression, add_constraints
-public copy_variables!, var_from_tuple, transfer_scaled_linear_rows_and_bounds_with_types!
-public infeasibility_report
-public TimeLimitException, UnexpectedModelStatusException, UndefError
-public AlgorithmException, UnsupportedModelException
+export Hyperplane, aggregate, evaluate_violation, select_top_fraction
+export hyperplanes_to_expression, add_constraints
+export copy_variables!, var_from_tuple, transfer_scaled_linear_rows_and_bounds_with_types!
+export infeasibility_report
+export TimeLimitException, UnexpectedModelStatusException, UndefError
+export AlgorithmException, UnsupportedModelException
 
 # Problem-specific helpers available via `using BendersX`
 export CFLPData, UFLPData, SCFLPData, SNIPData
