@@ -2,6 +2,10 @@ using BendersX
 using JuMP
 using CPLEX
 using Printf
+using Random
+
+isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl")))
+using .PolarDCGLP
 
 include(normpath(joinpath(@__DIR__, "solver_defaults.jl")))
 include(normpath(joinpath(@__DIR__, "script_utils.jl")))
@@ -15,6 +19,10 @@ time_limit = get_float_option(options, "time_limit", 60.0)
 threads = get_int_option(options, "threads", 1)
 values_arg = get_string_option(options, "values", "both")
 silent = get_bool_option(options, "silent", false)
+seed = get_int_option(options, "seed", 1)
+output_csv = get_string_option(options, "output_csv", "")
+
+Random.seed!(seed)
 
 function build_cflp_milp(data::CFLPData)
     model = Model(mip_optimizer)
@@ -160,4 +168,8 @@ infeasible_rows = filter(row -> row.is_infeasible, results)
 if !isempty(infeasible_rows)
     println("\nInfeasible variable fixings:")
     print_infeasible_rows(infeasible_rows)
+end
+
+if !isempty(output_csv)
+    write_results_csv(output_csv, results)
 end
