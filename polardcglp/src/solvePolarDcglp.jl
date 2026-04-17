@@ -171,6 +171,103 @@ function print_dcglp_iis(
     return nothing
 end
 
+function build_split_bound_cut(split_index::Int, dim_x::Int, dim_t::Int, side::Symbol)
+    cut = BendersX.Hyperplane(dim_x, dim_t)
+    if side == :x_ge_1
+        cut.a_0 = 1.0
+        cut.a_x[split_index] = -1.0
+    elseif side == :x_le_0
+        cut.a_x[split_index] = 1.0
+    else
+        throw(ArgumentError("Unsupported split bound cut side: $(side)"))
+    end
+    return cut
+end
+
+function restore_polar_conx!(dcglp::Model, x_value::Vector{Float64})
+    delete_registered_constraints!(dcglp, :conx)
+    @constraint(dcglp, conx[j in eachindex(x_value)], dcglp[:omega_x][1, j] + dcglp[:omega_x][2, j] == 0.0)
+    JuMP.set_normalized_rhs.(dcglp[:conx], x_value)
+    return nothing
+end
+
+function diagnose_infeasible_bound_cut(
+    oracle::PolarDCGLPOracle,
+    x_value::Vector{Float64},
+    start_time::Float64,
+    time_limit::Float64,
+)
+    isa(oracle.param.split_index_selection_rule, BendersX.SimpleSplit) || return nothing
+    isempty(oracle.splits) && return nothing
+
+    dcglp = oracle.dcglp
+    split_index = try
+        get_split_index(oracle)
+    catch
+        return nothing
+    end
+
+    original_sense = JuMP.objective_sense(dcglp)
+    original_objective = JuMP.objective_function(dcglp)
+    omega_max = Dict{Int, Float64}()
+
+    try
+        delete_registered_constraints!(dcglp, :conx)
+
+        for block_idx in 1:2
+            JuMP.set_objective_sense(dcglp, MOI.MAX_SENSE)
+            JuMP.set_objective_function(dcglp, dcglp[:omega_0][block_idx])
+            JuMP.set_time_limit_sec(dcglp, BendersX.get_sec_remaining(start_time, time_limit))
+            optimize!(dcglp)
+
+            status = termination_status(dcglp)
+            if status == OPTIMAL
+                omega_max[block_idx] = value(dcglp[:omega_0][block_idx])
+                @printf(
+                    "  diagnose_infeasible_bound_cut: max omega_0[%d] = %.6g\n",
+                    block_idx,
+                    omega_max[block_idx],
+                )
+            elseif status == MOI.INFEASIBLE
+                omega_max[block_idx] = 0.0
+                @printf(
+                    "  diagnose_infeasible_bound_cut: max omega_0[%d] infeasible -> %.6g\n",
+                    block_idx,
+                    omega_max[block_idx],
+                )
+            else
+                @warn "PolarDCGLP infeasible diagnostic for omega_0[$(block_idx)] returned status $(status); skipping temporary bound cut."
+                return nothing
+            end
+        end
+    finally
+        JuMP.set_objective_sense(dcglp, original_sense)
+        JuMP.set_objective_function(dcglp, original_objective)
+        restore_polar_conx!(dcglp, x_value)
+    end
+
+    zero_tol = oracle.param.zero_tol
+    omega_1 = get(omega_max, 1, 0.0)
+    omega_2 = get(omega_max, 2, 0.0)
+
+    if omega_2 <= zero_tol && omega_1 > zero_tol
+        cut = build_split_bound_cut(split_index, length(x_value), length(dcglp[:tau]), :x_ge_1)
+        println("  diagnose_infeasible_bound_cut: selected cut")
+        println("    " * format_hyperplane(cut; zero_tol = zero_tol))
+        return cut
+    elseif omega_1 <= zero_tol && omega_2 > zero_tol
+        cut = build_split_bound_cut(split_index, length(x_value), length(dcglp[:tau]), :x_le_0)
+        println("  diagnose_infeasible_bound_cut: selected cut")
+        println("    " * format_hyperplane(cut; zero_tol = zero_tol))
+        return cut
+    end
+
+    if omega_1 <= zero_tol && omega_2 <= zero_tol
+        @warn "PolarDCGLP infeasible diagnostic found both split sides unsupported after removing conx; keeping fallback path."
+    end
+    return nothing
+end
+
 function generate_polar_disjunctive_cut(
     dcglp::Model,
     current_lb::Float64,
@@ -262,6 +359,16 @@ function optimize_polar_dcglp!(
         elseif status != OPTIMAL
             if status == MOI.INFEASIBLE
                 print_dcglp_iis(oracle, x_value, zero_indices, one_indices)
+                bound_cut = diagnose_infeasible_bound_cut(oracle, x_value, start_time, time_limit)
+                if !isnothing(bound_cut)
+                    oracle.param.dcglp_param.verbose &&
+                        print_polar_stop_reason("dcglp infeasible; adding temporary split bound cut")
+                    append_current_disjunctive_cut!(oracle, bound_cut)
+                    if include_disjunctive_cuts_to_hyperplanes
+                        push!(master_hyperplanes, bound_cut)
+                    end
+                    return false, master_hyperplanes, fill(Inf, length(t_value))
+                end
             end
             return fallback_typical_or_throw(
                 oracle,
