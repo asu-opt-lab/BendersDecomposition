@@ -21,11 +21,13 @@ dcglp_halt_limit = get_int_option(options, "dcglp_halt_limit", 3)
 frequency = get_int_option(options, "frequency", 500)
 threads = get_int_option(options, "threads", 7)
 reuse_dcglp = get_bool_option(options, "reuse_dcglp", false)
+strengthened = get_bool_option(options, "strengthened", true)
+lift = get_bool_option(options, "lift", false)
 build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
 
-@info "PolarDCGLP hard UFL script" instance = instance seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp build_only = build_only
+@info "PolarDCGLP hard UFL script" instance = instance seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
 
 data = read_Simple_data(instance)
 
@@ -76,7 +78,8 @@ oracle_param = PolarDCGLPParam(
     add_benders_cuts_to_master = 2,
     fraction_of_benders_cuts_to_master = 0.05,
     reuse_dcglp = reuse_dcglp,
-
+    strengthened = strengthened,
+    lift = lift,
     zero_tol = 1e-9,
 )
 
