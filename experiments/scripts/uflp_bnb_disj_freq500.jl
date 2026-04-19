@@ -27,7 +27,7 @@ function parse_commandline()
         "--instance"
             help = "Instance name"
             arg_type = String
-            default = "ga250a-1"
+            default = "ga250a-2"
         "--seed"
             help = "Random seed"
             arg_type = Int
