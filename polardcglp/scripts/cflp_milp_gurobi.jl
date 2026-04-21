@@ -1,0 +1,56 @@
+using JuMP, DataFrames, Logging, CSV
+using BendersX
+using Random
+using Printf
+using Statistics
+using Gurobi
+
+include(normpath(joinpath(@__DIR__, "script_utils.jl")))
+
+global_logger(ConsoleLogger(stderr, Logging.Debug))
+
+options, _ = parse_script_args(ARGS)
+
+instance = get_string_option(options, "instance", "T100x100_5_1")
+seed = get_int_option(options, "seed", 1)
+output_dir = get_string_option(options, "output_dir", "output")
+time_limit = get_float_option(options, "time_limit", 14400.0)
+threads = get_int_option(options, "threads", 7)
+
+Random.seed!(seed)
+
+@info "CFLP MILP script (Gurobi)" instance = instance seed = seed time_limit = time_limit threads = threads
+
+# Gurobi-based mip_optimizer (replaces solver_defaults.jl which uses CPLEX)
+mip_optimizer = optimizer_with_attributes(
+    Gurobi.Optimizer,
+    "Threads" => threads,
+    "IntFeasTol" => 1e-9,
+    "FeasibilityTol" => 1e-9,
+    "MIPGap" => 1e-6,
+    "OptimalityTol" => 1e-9,
+    "NumericFocus" => 1,
+    MOI.Silent() => true,
+)
+
+# -----------------------------------------------------------------------------
+# load problem data
+# -----------------------------------------------------------------------------
+data = read_cfl_file(instance)
+
+# -----------------------------------------------------------------------------
+# MIP model
+# -----------------------------------------------------------------------------
+mip_model = Model(mip_optimizer)
+customize_mip_model!(mip_model, data)
+set_optimizer_attribute(mip_model, "Threads", threads)
+set_time_limit_sec(mip_model, time_limit)
+set_optimizer_attribute(mip_model, MOI.Silent(), false)
+optimize!(mip_model)
+
+@info termination_status(mip_model)
+@info "Node count: $(node_count(mip_model))"
+@info "Elapsed time: $(solve_time(mip_model))"
+@info "Objective value: $(objective_value(mip_model))"
+@info "Objective bound: $(objective_bound(mip_model))"
+@info "Relative gap: $(relative_gap(mip_model))"
