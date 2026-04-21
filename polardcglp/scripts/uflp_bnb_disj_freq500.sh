@@ -5,7 +5,7 @@
 
 ROUND_VERSION="uflp_bnb_disj_freq500"
 ROUND_DESCRIPTION="PolarDCGLP hard UFL, freq500, knapsack, 7 private cores"
-EXPERIMENT_VERSION="2"
+EXPERIMENT_VERSION="5"
 SEED="1"
 HOUR="04"
 EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}"
@@ -43,21 +43,21 @@ EOF
 # Define an array of instance names
 instances=(
 
-    "ga250a-1" "ga250a-2" "ga250a-3" "ga250a-4" "ga250a-5"
-    "ga250b-1" "ga250b-2" "ga250b-3" "ga250b-4" "ga250b-5"
-    "ga250c-1" "ga250c-2" "ga250c-3" "ga250c-4" "ga250c-5"
+    # "ga250a-1" "ga250a-2" "ga250a-3" "ga250a-4" "ga250a-5"
+    # "ga250b-1" "ga250b-2" "ga250b-3" "ga250b-4" "ga250b-5"
+    # "ga250c-1" "ga250c-2" "ga250c-3" "ga250c-4" "ga250c-5"
 
-    "gs250a-1" "gs250a-2" "gs250a-3" "gs250a-4" "gs250a-5"
-    "gs250b-1" "gs250b-2" "gs250b-3" "gs250b-4" "gs250b-5"
-    "gs250c-1" "gs250c-2" "gs250c-3" "gs250c-4" "gs250c-5"
+    # "gs250a-1" "gs250a-2" "gs250a-3" "gs250a-4" "gs250a-5"
+    # "gs250b-1" "gs250b-2" "gs250b-3" "gs250b-4" "gs250b-5"
+    # "gs250c-1" "gs250c-2" "gs250c-3" "gs250c-4" "gs250c-5"
 
-    # "ga500a-1" "ga500a-2" "ga500a-3" "ga500a-4" "ga500a-5"
-    # "ga500b-1" "ga500b-2" "ga500b-3" "ga500b-4" "ga500b-5"
-    # "ga500c-1" "ga500c-2" "ga500c-3" "ga500c-4" "ga500c-5"
+    "ga500a-1" "ga500a-2" "ga500a-3" "ga500a-4" "ga500a-5"
+    "ga500b-1" "ga500b-2" "ga500b-3" "ga500b-4" "ga500b-5"
+    "ga500c-1" "ga500c-2" "ga500c-3" "ga500c-4" "ga500c-5"
 
-    # "gs500a-1" "gs500a-2" "gs500a-3" "gs500a-4" "gs500a-5"
-    # "gs500b-1" "gs500b-2" "gs500b-3" "gs500b-4" "gs500b-5"
-    # "gs500c-1" "gs500c-2" "gs500c-3" "gs500c-4" "gs500c-5"
+    "gs500a-1" "gs500a-2" "gs500a-3" "gs500a-4" "gs500a-5"
+    "gs500b-1" "gs500b-2" "gs500b-3" "gs500b-4" "gs500b-5"
+    "gs500c-1" "gs500c-2" "gs500c-3" "gs500c-4" "gs500c-5"
 
     # "ga750a-1" "ga750a-2" "ga750a-3" "ga750a-4" "ga750a-5"
     # "ga750b-1" "ga750b-2" "ga750b-3" "ga750b-4" "ga750b-5"
@@ -80,7 +80,7 @@ for instance in "${instances[@]}"; do
     echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -c ${THREADS}" >> "${JOBSCRIPT_FILE}"
-    # echo "#SBATCH --nodelist=pcc037" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH --nodelist=pcc036,pcc037" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH --mem=60G" >> "${JOBSCRIPT_FILE}"
 
     echo "#SBATCH -t 0-${HOUR}:00:00" >> "${JOBSCRIPT_FILE}"

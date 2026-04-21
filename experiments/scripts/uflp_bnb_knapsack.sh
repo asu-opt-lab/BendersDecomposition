@@ -26,12 +26,8 @@ fi
 mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${ERR_OUT_DIR}"
 
-# Define job script directory
-# JOBSCRIPT_DIR="./job_scripts"
-# mkdir -p "${JOBSCRIPT_DIR}"
-
 # Copy src directory to output directory
-cp -r scripts/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
+cp -r experiments/scripts/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -49,7 +45,7 @@ instances=(
 
     # "ga250a-1" "ga250a-2" "ga250a-3" "ga250a-4" "ga250a-5"
     # "ga250b-1" "ga250b-2" "ga250b-3" "ga250b-4" "ga250b-5"
-    # "ga250c-1" "ga250c-2" "ga250c-3" "ga250c-4" "ga250c-5"
+    "ga250c-1" "ga250c-2" "ga250c-3" "ga250c-4" "ga250c-5"
 
     # "gs250a-1" "gs250a-2" "gs250a-3" "gs250a-4" "gs250a-5"
     # "gs250b-1" "gs250b-2" "gs250b-3" "gs250b-4" "gs250b-5"
@@ -69,7 +65,7 @@ instances=(
 
     # "gs750a-1" "gs750a-2" "gs750a-3" "gs750a-4" "gs750a-5"
     # "gs750b-1" "gs750b-2" "gs750b-3" "gs750b-4" "gs750b-5"
-    "gs750c-1" "gs750c-2" "gs750c-3" "gs750c-4" "gs750c-5"
+    # "gs750c-1" "gs750c-2" "gs750c-3" "gs750c-4" "gs750c-5"
 )
 
 # Loop through the instances and create a job script for each
@@ -79,14 +75,15 @@ for instance in "${instances[@]}"; do
     # Create job script file
     echo "#!/bin/bash" > "${JOBSCRIPT_FILE}"
 
-    echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -p htc" >> "${JOBSCRIPT_FILE}"
+    # echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -c ${THREADS}" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH --nodelist=pcc037" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH --nodelist=pcc036,pcc037" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH --mem=60G" >> "${JOBSCRIPT_FILE}"
 
-    echo "#SBATCH -t 0-${HOUR}:30:00" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -t 0-${HOUR}:00:00" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -o ${ERR_OUT_DIR}/${instance}.out%j" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -e ${ERR_OUT_DIR}/${instance}.err%j" >> "${JOBSCRIPT_FILE}"
 
@@ -97,7 +94,7 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=experiments/scripts experiments/scripts/${FILE_NAME} --instance ${instance} --output_dir ${OUTPUT_DIR} --seed ${SEED}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=experiments experiments/scripts/${FILE_NAME} --instance ${instance} --output_dir ${OUTPUT_DIR} --seed ${SEED}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

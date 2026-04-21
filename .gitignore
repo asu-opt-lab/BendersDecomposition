@@ -12,3 +12,5 @@ artifacts_output/
 
 # Generated documentation site
 docs/build/
+
+results_old/

@@ -3,18 +3,18 @@
 
 # Define variables to make the script more readable and maintainable
 
-ROUND_VERSION="uflp_bnb_disj_freq500"
-ROUND_DESCRIPTION="freq500, knapsack, 7 private cores"
-EXPERIMENT_VERSION="1"
+ROUND_VERSION="uflp_bnb_disj_freq500_gurobi"
+ROUND_DESCRIPTION="PolarDCGLP hard UFL, freq500, knapsack, 7 private cores, Gurobi"
+EXPERIMENT_VERSION="add_benders_cuts_to_master_0"
 SEED="1"
 HOUR="04"
-EXPERIMENT_DESCRIPTION="unsolved 500c instances, ${HOUR} hr, LargestFractional, no lift, no reuse dcglp, branch_dir 1, 5% vbcuts to master, seed = ${SEED}"
+EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}"
 
-FILE_NAME="uflp_bnb_disj_freq500.jl"
+FILE_NAME="uflp_bnb_disj_freq500_gurobi.jl"
 THREADS=7
 
 # Define variables to make the script more readable and maintainable
-OUTPUT_DIR="experiments/${ROUND_VERSION}/${EXPERIMENT_VERSION}"
+OUTPUT_DIR="polardcglp/experiment/${ROUND_VERSION}/${EXPERIMENT_VERSION}"
 ERR_OUT_DIR="${OUTPUT_DIR}/results"
 
 if [ -d "${OUTPUT_DIR}" ]; then
@@ -27,7 +27,7 @@ mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${ERR_OUT_DIR}"
 
 # Copy src directory to output directory
-cp -r experiments/scripts/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
+cp -r polardcglp/scripts/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -43,23 +43,21 @@ EOF
 # Define an array of instance names
 instances=(
 
-    # "ga250a-1" "ga250a-2" "ga250a-3" "ga250a-4" "ga250a-5"
-    # "ga250b-1" "ga250b-2" "ga250b-3" "ga250b-4" "ga250b-5"
-    # "ga250c-1" "ga250c-2" "ga250c-3" "ga250c-4" "ga250c-5"
+    "ga250a-1" "ga250a-2" "ga250a-3" "ga250a-4" "ga250a-5"
+    "ga250b-1" "ga250b-2" "ga250b-3" "ga250b-4" "ga250b-5"
+    "ga250c-1" "ga250c-2" "ga250c-3" "ga250c-4" "ga250c-5"
 
-    # "gs250a-1" "gs250a-2" "gs250a-3" "gs250a-4" "gs250a-5"
-    # "gs250b-1" "gs250b-2" "gs250b-3" "gs250b-4" "gs250b-5"
-    # "gs250c-1" "gs250c-2" "gs250c-3" "gs250c-4" "gs250c-5"
+    "gs250a-1" "gs250a-2" "gs250a-3" "gs250a-4" "gs250a-5"
+    "gs250b-1" "gs250b-2" "gs250b-3" "gs250b-4" "gs250b-5"
+    "gs250c-1" "gs250c-2" "gs250c-3" "gs250c-4" "gs250c-5"
 
     # "ga500a-1" "ga500a-2" "ga500a-3" "ga500a-4" "ga500a-5"
     # "ga500b-1" "ga500b-2" "ga500b-3" "ga500b-4" "ga500b-5"
-    # "ga500c-1" 
-    # "ga500c-2" "ga500c-3" "ga500c-4" "ga500c-5"
+    # "ga500c-1" "ga500c-2" "ga500c-3" "ga500c-4" "ga500c-5"
 
     # "gs500a-1" "gs500a-2" "gs500a-3" "gs500a-4" "gs500a-5"
     # "gs500b-1" "gs500b-2" "gs500b-3" "gs500b-4" "gs500b-5"
-    # "gs500c-1" "gs500c-2" 
-    # "gs500c-3" "gs500c-4" "gs500c-5"
+    # "gs500c-1" "gs500c-2" "gs500c-3" "gs500c-4" "gs500c-5"
 
     # "ga750a-1" "ga750a-2" "ga750a-3" "ga750a-4" "ga750a-5"
     # "ga750b-1" "ga750b-2" "ga750b-3" "ga750b-4" "ga750b-5"
@@ -73,7 +71,7 @@ instances=(
 # Loop through the instances and create a job script for each
 for instance in "${instances[@]}"; do
     JOBSCRIPT_FILE="${OUTPUT_DIR}/${instance}.sh"
-    
+
     # Create job script file
     echo "#!/bin/bash" > "${JOBSCRIPT_FILE}"
 
@@ -92,11 +90,10 @@ for instance in "${instances[@]}"; do
     # Load necessary modules
     echo "module purge" >> "${JOBSCRIPT_FILE}"
     echo "module load julia" >> "${JOBSCRIPT_FILE}"
-    echo "module load cplex" >> "${JOBSCRIPT_FILE}"
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=experiments experiments/scripts/${FILE_NAME} --instance ${instance} --output_dir ${OUTPUT_DIR} --seed ${SEED}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=polardcglp polardcglp/scripts/${FILE_NAME} --instance=${instance} --seed=${SEED}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

@@ -10,7 +10,6 @@ using .PolarDCGLP
 include(normpath(joinpath(@__DIR__, "solver_defaults.jl")))
 include(normpath(joinpath(@__DIR__, "script_utils.jl")))
 
-const MOI = MathOptInterface
 
 options, _ = parse_script_args(ARGS)
 
