@@ -5,10 +5,12 @@ function update_directional_no_improvement!(
     zero_tol::Float64 = 1e-8,
     tol_imprv::Float64 = 1e-4,
 )
-    lb_improvement =
-        abs(prev_lb) < zero_tol ? abs(current_lb - prev_lb) :
-        abs((current_lb - prev_lb) / prev_lb) * 100
-    return lb_improvement < tol_imprv ? no_improvement + 1 : 0
+    abs_imprv = abs(current_lb - prev_lb)
+    sufficient =
+        abs(prev_lb) < zero_tol ?
+            (abs_imprv >= tol_imprv) :
+            (abs_imprv >= tol_imprv) && (abs_imprv / abs(prev_lb) * 100 >= tol_imprv)
+    return sufficient ? 0 : no_improvement + 1
 end
 
 function print_directional_iteration_info(
@@ -20,7 +22,7 @@ function print_directional_iteration_info(
     oracle_times::Vector{Float64},
 )
     @printf(
-        "   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
+        "   Iter: %4d | LB: %12.8f | UB: %12.8f | Gap: %8.4f%% | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
         iteration,
         lb,
         ub,
@@ -34,6 +36,39 @@ end
 
 function print_directional_stop_reason(msg::String)
     @printf("   Stop: %s\n", msg)
+    return nothing
+end
+
+function compute_directional_oracle_gap(
+    is_in_L::Bool,
+    t_block::Vector{Float64},
+    f_x_i::Vector{Float64},
+    omega_0::Float64,
+)
+    if is_in_L
+        return 0.0, 0.0
+    elseif any(isnan, f_x_i)
+        return NaN, NaN
+    end
+
+    gap = maximum(max.(f_x_i .- t_block, 0.0))
+    return gap, omega_0 * gap
+end
+
+function print_directional_oracle_statuses(
+    oracle_statuses::Vector{Symbol},
+    oracle_gaps::Vector{Float64},
+    oracle_scaled_gaps::Vector{Float64},
+)
+    @printf(
+        "      Oracle status | k: %-10s gap: %8.4f scaled: %8.4f | v: %-10s gap: %8.4f scaled: %8.4f\n",
+        String(oracle_statuses[1]),
+        oracle_gaps[1],
+        oracle_scaled_gaps[1],
+        String(oracle_statuses[2]),
+        oracle_gaps[2],
+        oracle_scaled_gaps[2],
+    )
     return nothing
 end
 
@@ -233,6 +268,9 @@ function optimize_directional_polar_dcglp!(
         violated_cuts = AffExpr[]
         current_points_feasible = true
         oracle_times = zeros(2)
+        oracle_statuses = fill(:inactive, 2)
+        oracle_gaps = fill(0.0, 2)
+        oracle_scaled_gaps = fill(0.0, 2)
 
         for i in 1:2
             omega_0 = value(dcglp[:omega_0][i])
@@ -255,6 +293,8 @@ function optimize_directional_polar_dcglp!(
                     time_limit = BendersX.get_sec_remaining(start_time, time_limit),
                 )
             end
+            oracle_statuses[i] = is_in_L ? :feasible : :infeasible
+            oracle_gaps[i], oracle_scaled_gaps[i] = compute_directional_oracle_gap(is_in_L, t_block, f_x_i, omega_0)
 
             if !is_in_L
                 current_points_feasible = false
@@ -286,6 +326,8 @@ function optimize_directional_polar_dcglp!(
 
         oracle.param.dcglp_param.verbose &&
             print_directional_iteration_info(iteration, current_lb, best_ub, gap, master_time, oracle_times)
+        oracle.param.dcglp_param.verbose &&
+            print_directional_oracle_statuses(oracle_statuses, oracle_gaps, oracle_scaled_gaps)
 
         if current_points_feasible
             if current_lb > oracle.param.zero_tol

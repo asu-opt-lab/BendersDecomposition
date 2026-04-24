@@ -187,6 +187,17 @@ end
         @test DirectionalPolarDCGLP.hyperplane_violation(cut, x_value, t_value) > 0.0
     end
 
+    @testset "Directional Oracle Gap" begin
+        gap, scaled_gap = DirectionalPolarDCGLP.compute_directional_oracle_gap(
+            false,
+            [2.0, 5.0],
+            [3.5, 4.0],
+            0.25,
+        )
+        @test isapprox(gap, 1.5; atol = 1e-9)
+        @test isapprox(scaled_gap, 0.375; atol = 1e-9)
+    end
+
     @testset "BendersSeq Solve Path" begin
         data = directional_simple_polar_data()
         reference_obj = solve_directional_reference(data)

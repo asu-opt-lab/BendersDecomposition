@@ -357,19 +357,19 @@ function optimize_polar_dcglp!(
         if status == TIME_LIMIT
             throw(BendersX.TimeLimitException("Time limit reached during PolarDCGLP solving."))
         elseif status != OPTIMAL
-            if status == MOI.INFEASIBLE
-                print_dcglp_iis(oracle, x_value, zero_indices, one_indices)
-                bound_cut = diagnose_infeasible_bound_cut(oracle, x_value, start_time, time_limit)
-                if !isnothing(bound_cut)
-                    oracle.param.dcglp_param.verbose &&
-                        print_polar_stop_reason("dcglp infeasible; adding temporary split bound cut")
-                    append_current_disjunctive_cut!(oracle, bound_cut)
-                    if include_disjunctive_cuts_to_hyperplanes
-                        push!(master_hyperplanes, bound_cut)
-                    end
-                    return false, master_hyperplanes, fill(Inf, length(t_value))
-                end
-            end
+            # if status == MOI.INFEASIBLE
+            #     print_dcglp_iis(oracle, x_value, zero_indices, one_indices)
+            #     bound_cut = diagnose_infeasible_bound_cut(oracle, x_value, start_time, time_limit)
+            #     if !isnothing(bound_cut)
+            #         oracle.param.dcglp_param.verbose &&
+            #             print_polar_stop_reason("dcglp infeasible; adding temporary split bound cut")
+            #         append_current_disjunctive_cut!(oracle, bound_cut)
+            #         if include_disjunctive_cuts_to_hyperplanes
+            #             push!(master_hyperplanes, bound_cut)
+            #         end
+            #         return false, master_hyperplanes, fill(Inf, length(t_value))
+            #     end
+            # end
             return fallback_typical_or_throw(
                 oracle,
                 x_value,

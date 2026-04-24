@@ -102,11 +102,11 @@ end
 
 options, _ = parse_script_args(ARGS)
 
-instance = get_string_option(options, "instance", "T100x100_5_3")
+instance = get_string_option(options, "instance", "T300x300_5_5")
 seed = get_int_option(options, "seed", 1)
 time_limit = get_float_option(options, "time_limit", 1200.0)
 dcglp_time_limit = get_float_option(options, "dcglp_time_limit", 1000.0)
-dcglp_iter_limit = get_int_option(options, "dcglp_iter_limit", 10)
+dcglp_iter_limit = get_int_option(options, "dcglp_iter_limit", 100)
 dcglp_halt_limit = get_int_option(options, "dcglp_halt_limit", 3)
 frequency = get_int_option(options, "frequency", 2500)
 reuse_dcglp = get_bool_option(options, "reuse_dcglp", true)
