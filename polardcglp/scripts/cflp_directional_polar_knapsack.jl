@@ -11,6 +11,7 @@ using .DirectionalPolarDCGLP
 
 include(normpath(joinpath(@__DIR__, "solver_defaults.jl")))
 include(normpath(joinpath(@__DIR__, "script_utils.jl")))
+include(normpath(joinpath(@__DIR__, "..", "src", "read_flcap.jl")))
 
 const MOI = MathOptInterface
 
@@ -102,14 +103,14 @@ end
 
 options, _ = parse_script_args(ARGS)
 
-instance = get_string_option(options, "instance", "T300x300_5_5")
+instance = get_string_option(options, "instance", "capc3")
 seed = get_int_option(options, "seed", 1)
 time_limit = get_float_option(options, "time_limit", 1200.0)
 dcglp_time_limit = get_float_option(options, "dcglp_time_limit", 1000.0)
 dcglp_iter_limit = get_int_option(options, "dcglp_iter_limit", 100)
 dcglp_halt_limit = get_int_option(options, "dcglp_halt_limit", 3)
 frequency = get_int_option(options, "frequency", 2500)
-reuse_dcglp = get_bool_option(options, "reuse_dcglp", true)
+reuse_dcglp = get_bool_option(options, "reuse_dcglp", false)
 strengthened = get_bool_option(options, "strengthened", false)
 build_only = get_bool_option(options, "build_only", false)
 split_rule_name = get_string_option(options, "split_rule", "most_fractional")
@@ -121,7 +122,7 @@ Random.seed!(seed)
 
 @info "DirectionalPolarDCGLP CFL script" instance = instance seed = seed time_limit = time_limit frequency = frequency reuse_dcglp = reuse_dcglp strengthened = strengthened build_only = build_only split_rule = split_rule_name core_x_mode = core_x_mode
 
-data = read_cfl_file(instance)
+data = read_flcap_data(instance)
 split_rule = parse_split_rule(split_rule_name)
 core_x, core_t, core_delta, core_recourse = build_directional_core_point(
     data;

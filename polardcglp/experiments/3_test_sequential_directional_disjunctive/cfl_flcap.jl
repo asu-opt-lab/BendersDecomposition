@@ -10,6 +10,19 @@ isdefined(Main, :DirectionalPolarDCGLP) || include(normpath(joinpath(@__DIR__, "
 using .DirectionalPolarDCGLP
 
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
+include(normpath(joinpath(@__DIR__, "..", "..", "src", "read_flcap.jl")))
+
+const FLCAP_INSTANCE_NAMES = [
+    "cap61", "cap62", "cap63", "cap64",
+    "cap71", "cap72", "cap73", "cap74",
+    "cap91", "cap92", "cap93", "cap94",
+    "cap101", "cap102", "cap103", "cap104",
+    "cap121", "cap122", "cap123", "cap124",
+    "cap131", "cap132", "cap133", "cap134",
+    "capa1", "capa2", "capa3", "capa4",
+    "capb1", "capb2", "capb3", "capb4",
+    "capc1", "capc2", "capc3", "capc4",
+]
 
 function build_cflp_core_point_x(data::CFLPData; optimizer = optimizer)
     model = Model(optimizer)
@@ -85,17 +98,15 @@ function build_directional_core_point(
     return x_core, [recourse_value + t_margin], delta, recourse_value
 end
 
-@testset verbose = true "CFLP Sequential Directional Disjunctive Tests" begin
-    root_experiments_dir = normpath(joinpath(@__DIR__, "..", "..", "..", "experiments"))
-    reference_path = normpath(joinpath(root_experiments_dir, "reference_objectives", "cflp.csv"))
+@testset verbose = true "CFLP FLCAP Sequential Directional Disjunctive Tests" begin
+    reference_path = normpath(joinpath(@__DIR__, "..", "reference_objectives", "cflp_flcap.csv"))
     reference_df = DataFrame(CSV.File(reference_path))
-    @assert nrow(reference_df) == length(unique(reference_df.instance_name)) "Duplicate CFLP reference objectives found in $(reference_path)"
+    @assert nrow(reference_df) == length(unique(reference_df.instance_name)) "Duplicate CFLP FLCAP reference objectives found in $(reference_path)"
     reference_objectives = Dict(String(row.instance_name) => Float64(row.objective_value) for row in eachrow(reference_df))
-    instances = setdiff(1:71, [67])
 
-    for i in instances
-        @testset "Instance: p$i" begin
-            data = read_cflp_benchmark_data("p$i")
+    for instance_name in FLCAP_INSTANCE_NAMES
+        @testset "Instance: $instance_name" begin
+            data = read_flcap_data(instance_name)
 
             core_x, core_t, _, _ = build_directional_core_point(
                 data;
@@ -135,13 +146,12 @@ end
                 λ = 0.1,
             )
 
-            instance_name = "p$i"
-            @assert haskey(reference_objectives, instance_name) "Missing CFLP reference objective for $(instance_name) in $(reference_path)"
+            @assert haskey(reference_objectives, instance_name) "Missing CFLP FLCAP reference objective for $(instance_name) in $(reference_path)"
             mip_opt_val = reference_objectives[instance_name]
 
             @testset "Classical oracle" begin
                 @testset "Seq" begin
-                    @info "solving DirectionalPolarDCGLP CFLP p$i - classical - seq"
+                    @info "solving DirectionalPolarDCGLP CFLP FLCAP $instance_name - classical - seq"
 
                     oracle_param = DirectionalPolarDCGLPParam(
                         dcglp_param,
@@ -170,7 +180,7 @@ end
                 end
 
                 @testset "SeqInOut" begin
-                    @info "solving DirectionalPolarDCGLP CFLP p$i - classical - seqinout"
+                    @info "solving DirectionalPolarDCGLP CFLP FLCAP $instance_name - classical - seqinout"
 
                     oracle_param = DirectionalPolarDCGLPParam(
                         dcglp_param,
@@ -201,7 +211,7 @@ end
 
             @testset "Knapsack oracle" begin
                 @testset "Seq" begin
-                    @info "solving DirectionalPolarDCGLP CFLP p$i - knapsack - seq"
+                    @info "solving DirectionalPolarDCGLP CFLP FLCAP $instance_name - knapsack - seq"
 
                     oracle_param = DirectionalPolarDCGLPParam(
                         dcglp_param,
@@ -230,7 +240,7 @@ end
                 end
 
                 @testset "SeqInOut" begin
-                    @info "solving DirectionalPolarDCGLP CFLP p$i - knapsack - seqinout"
+                    @info "solving DirectionalPolarDCGLP CFLP FLCAP $instance_name - knapsack - seqinout"
 
                     oracle_param = DirectionalPolarDCGLPParam(
                         dcglp_param,
