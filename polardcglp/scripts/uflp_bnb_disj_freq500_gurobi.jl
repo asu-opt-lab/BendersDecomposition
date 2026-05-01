@@ -13,11 +13,11 @@ options, _ = parse_script_args(ARGS)
 
 instance = get_string_option(options, "instance", "ga250a-2")
 seed = get_int_option(options, "seed", 1)
-time_limit = get_float_option(options, "time_limit", 14400.0)
+time_limit = get_float_option(options, "time_limit", 14000.0)
 dcglp_time_limit = get_float_option(options, "dcglp_time_limit", 100.0)
 dcglp_iter_limit = get_int_option(options, "dcglp_iter_limit", 250)
 dcglp_halt_limit = get_int_option(options, "dcglp_halt_limit", 3)
-frequency = get_int_option(options, "frequency", 500)
+frequency = get_int_option(options, "frequency", 1000)
 threads = get_int_option(options, "threads", 7)
 reuse_dcglp = get_bool_option(options, "reuse_dcglp", false)
 strengthened = get_bool_option(options, "strengthened", true)
@@ -33,7 +33,7 @@ data = read_Simple_data(instance)
 # Gurobi-based mip_optimizer (replaces solver_defaults.jl which uses CPLEX)
 mip_optimizer = optimizer_with_attributes(
     Gurobi.Optimizer,
-    "Threads" => threads,
+    "Threads" => 1,
     "IntFeasTol" => 1e-9,
     "FeasibilityTol" => 1e-9,
     "MIPGap" => 1e-6,
@@ -79,14 +79,14 @@ dcglp_param = DcglpParam(
     gap_tolerance = 1e-3,
     halt_limit = dcglp_halt_limit,
     iter_limit = dcglp_iter_limit,
-    verbose = true,
+    verbose = false,
 )
 
 oracle_param = PolarDCGLPParam(
     dcglp_param;
     split_index_selection_rule = LargestFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-    add_benders_cuts_to_master = 0,
+    add_benders_cuts_to_master = 2,
     fraction_of_benders_cuts_to_master = 0.05,
     reuse_dcglp = reuse_dcglp,
     strengthened = strengthened,

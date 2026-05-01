@@ -54,7 +54,7 @@ data = read_Simple_data(instance)
 # -----------------------------------------------------------------------------
 function customize_master_model!(model::Model, data::UFLPData)
     optimizer = optimizer_with_attributes(Gurobi.Optimizer,
-        "Threads" => 7, "IntFeasTol" => 1e-9,
+        "Threads" => 1, "IntFeasTol" => 1e-9,
         "FeasibilityTol" => 1e-9, "MIPGap" => 1e-6,
         MOI.Silent() => true)
     set_optimizer(model, optimizer)
@@ -70,7 +70,7 @@ end
 # -----------------------------------------------------------------------------
 # Algorithm parameters
 benders_param = BendersBnBParam(
-    time_limit = 14400.0,
+    time_limit = 14000.0,
     gap_tolerance = 1e-6,
     verbose = true
 )

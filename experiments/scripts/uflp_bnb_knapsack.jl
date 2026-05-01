@@ -59,7 +59,7 @@ end
 # -----------------------------------------------------------------------------
 # Algorithm parameters
 benders_param = BendersBnBParam(
-    time_limit = 14400.0,
+    time_limit = 14000.0,
     gap_tolerance = 1e-6,
     verbose = true
 )
