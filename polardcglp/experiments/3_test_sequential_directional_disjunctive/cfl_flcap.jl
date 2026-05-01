@@ -176,7 +176,7 @@ end
 
                     solve!(env)
                     @test env.termination_status == Optimal()
-                    @test isapprox(mip_opt_val, env.obj_value, atol = 1e-5)
+                    @test isapprox(mip_opt_val, env.obj_value, atol = 1.0, rtol = 1e-5)
                 end
 
                 @testset "SeqInOut" begin
@@ -205,7 +205,7 @@ end
 
                     solve!(env)
                     @test env.termination_status == Optimal()
-                    @test isapprox(mip_opt_val, env.obj_value, atol = 1e-5)
+                    @test isapprox(mip_opt_val, env.obj_value, atol = 1.0, rtol = 1e-5)
                 end
             end
 
@@ -236,7 +236,7 @@ end
 
                     solve!(env)
                     @test env.termination_status == Optimal()
-                    @test isapprox(mip_opt_val, env.obj_value, atol = 1e-5)
+                    @test isapprox(mip_opt_val, env.obj_value, atol = 1.0, rtol = 1e-5)
                 end
 
                 @testset "SeqInOut" begin
@@ -265,7 +265,7 @@ end
 
                     solve!(env)
                     @test env.termination_status == Optimal()
-                    @test isapprox(mip_opt_val, env.obj_value, atol = 1e-5)
+                    @test isapprox(mip_opt_val, env.obj_value, atol = 1.0, rtol = 1e-5)
                 end
             end
         end

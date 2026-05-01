@@ -68,7 +68,7 @@ end
 
 function append_record(csv_path::AbstractString, name::AbstractString, obj_value::Float64)
     open(csv_path, "a") do io
-        @printf(io, "%s,%.10g\n", name, obj_value)
+        @printf(io, "%s,%.16g\n", name, obj_value)
     end
 end
 

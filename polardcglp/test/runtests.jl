@@ -17,6 +17,7 @@ struct SimplePolarData <: AbstractData
     ship_cost::Matrix{Float64}
 end
 
+include("test_read_flcap.jl")
 include("test_directional_polar_dcglp.jl")
 
 function simple_polar_data()

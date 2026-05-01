@@ -3,22 +3,35 @@ import BendersX: CFLPData
 """
     read_flcap_data(filename; filepath) -> CFLPData
 
-Read an FLCAP-format CFLP instance.
-
-File layout:
-- line 1: `n_facilities n_customers`
-- next `n_facilities` lines: `capacity fixed_cost`
-- next line: `n_customers` demand values
-- next `n_facilities` lines: each line lists total assignment costs from that
-  facility to all customers
+Read an FLCAP-format CFLP instance. When `filepath` is omitted, the loader
+first checks this package's `data/FLCAP` directory and then falls back to the
+shared `polardcglp/data/FLCAP` directory.
 
 The original Beasley/OR-Library files store the cost of assigning all demand of
 customer `j` to facility `i`. Internally `CFLPData.costs[i, j]` is interpreted
 as a unit cost, so we divide each stored total cost by `demands[j]` here.
 """
-function read_flcap_data(filename::AbstractString;
-                         filepath = joinpath(@__DIR__, "..", "data", "FLCAP"))
-    fullpath = joinpath(filepath, filename)
+function read_flcap_data(filename::AbstractString; filepath::Union{Nothing, AbstractString} = nothing)
+    candidate_paths =
+        filepath === nothing ?
+        [
+            joinpath(@__DIR__, "..", "data", "FLCAP"),
+            joinpath(@__DIR__, "..", "..", "polardcglp", "data", "FLCAP"),
+        ] :
+        [filepath]
+
+    fullpath = nothing
+    for basepath in candidate_paths
+        path = joinpath(basepath, filename)
+        if isfile(path)
+            fullpath = path
+            break
+        end
+    end
+
+    isnothing(fullpath) &&
+        throw(ArgumentError("Unable to locate FLCAP instance `$(filename)` in any known data directory."))
+
     f = open(fullpath)
 
     vals = split(readline(f))
