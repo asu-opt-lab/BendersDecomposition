@@ -1,6 +1,6 @@
 using BendersX
 using JuMP
-using CPLEX
+using Gurobi
 using Printf
 using Random
 using MathOptInterface
@@ -12,7 +12,6 @@ const MOI = MathOptInterface
 isdefined(Main, :DirectionalPolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "DirectionalPolarDCGLP.jl")))
 using .DirectionalPolarDCGLP
 
-include(normpath(joinpath(@__DIR__, "solver_defaults.jl")))
 include(normpath(joinpath(@__DIR__, "script_utils.jl")))
 
 function parse_split_rule(name::String)
@@ -119,6 +118,7 @@ dcglp_time_limit = get_float_option(options, "dcglp_time_limit", 1000.0)
 dcglp_iter_limit = get_int_option(options, "dcglp_iter_limit", 250)
 dcglp_halt_limit = get_int_option(options, "dcglp_halt_limit", 3)
 frequency = get_int_option(options, "frequency", 250)
+threads = get_int_option(options, "threads", 7)
 reuse_dcglp = get_bool_option(options, "reuse_dcglp", false)
 strengthened = get_bool_option(options, "strengthened", true)
 build_only = get_bool_option(options, "build_only", false)
@@ -129,14 +129,35 @@ core_t_margin_abs = get_float_option(options, "core_t_margin_abs", 1.0)
 
 Random.seed!(seed)
 
-@info "DirectionalPolarDCGLP SCFLP script (CPLEX, FLCAP)" instance = instance seed = seed time_limit = time_limit frequency = frequency reuse_dcglp = reuse_dcglp strengthened = strengthened build_only = build_only split_rule = split_rule_name core_x_mode = core_x_mode
+@info "DirectionalPolarDCGLP SCFLP script (Gurobi, FLCAP)" instance = instance seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened build_only = build_only split_rule = split_rule_name core_x_mode = core_x_mode
+
+# Gurobi-based mip_optimizer (replaces solver_defaults.jl which uses CPLEX)
+mip_optimizer = optimizer_with_attributes(
+    Gurobi.Optimizer,
+    "Threads" => threads,
+    "IntFeasTol" => 1e-9,
+    "FeasibilityTol" => 1e-9,
+    "MIPGap" => 1e-6,
+    "OptimalityTol" => 1e-9,
+    "NumericFocus" => 1,
+    MOI.Silent() => true,
+)
+
+optimizer = optimizer_with_attributes(
+    Gurobi.Optimizer,
+    "Threads" => threads,
+    "FeasibilityTol" => 1e-9,
+    "OptimalityTol" => 1e-9,
+    "NumericFocus" => 1,
+    MOI.Silent() => true,
+)
 
 dcglp_optimizer = optimizer_with_attributes(
-    CPLEX.Optimizer,
-    "CPXPARAM_Threads" => 7,
-    "CPX_PARAM_EPRHS" => 1e-9,
-    "CPX_PARAM_NUMERICALEMPHASIS" => 1,
-    "CPX_PARAM_EPOPT" => 1e-9,
+    Gurobi.Optimizer,
+    "Threads" => threads,
+    "FeasibilityTol" => 1e-9,
+    "NumericFocus" => 1,
+    "OptimalityTol" => 1e-9,
     MOI.Silent() => true,
 )
 
@@ -232,7 +253,7 @@ env = BendersBnB(
 )
 
 if build_only
-    @info "DirectionalPolarDCGLP SCFLP knapsack script (CPLEX, FLCAP) build completed without solve." instance = instance
+    @info "DirectionalPolarDCGLP SCFLP knapsack script (Gurobi, FLCAP) build completed without solve." instance = instance
 else
     solve!(env)
     obj_value = try
@@ -240,5 +261,5 @@ else
     catch
         NaN
     end
-    @info "DirectionalPolarDCGLP SCFLP knapsack script (CPLEX, FLCAP) finished" instance = instance termination_status = env.termination_status objective_value = obj_value
+    @info "DirectionalPolarDCGLP SCFLP knapsack script (Gurobi, FLCAP) finished" instance = instance termination_status = env.termination_status objective_value = obj_value
 end

@@ -3,9 +3,8 @@ using BendersX
 using Random
 using Printf
 using Statistics
-using CPLEX
+using Gurobi
 
-include(normpath(joinpath(@__DIR__, "solver_defaults.jl")))
 include(normpath(joinpath(@__DIR__, "script_utils.jl")))
 
 global_logger(ConsoleLogger(stderr, Logging.Debug))
@@ -16,13 +15,35 @@ instance = get_string_option(options, "instance", "cap101-s256")
 seed = get_int_option(options, "seed", 1)
 output_dir = get_string_option(options, "output_dir", "output")
 time_limit = get_float_option(options, "time_limit", 14400.0)
+threads = get_int_option(options, "threads", 7)
 build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
 
 const SCFLP_DIR = normpath(joinpath(@__DIR__, "..", "data", "SCFLP"))
 
-@info "SCFLP knapsack script (CPLEX, FLCAP)" instance = instance dataset_dir = SCFLP_DIR seed = seed time_limit = time_limit build_only = build_only
+@info "SCFLP knapsack script (Gurobi, FLCAP)" instance = instance dataset_dir = SCFLP_DIR seed = seed time_limit = time_limit threads = threads build_only = build_only
+
+# Gurobi-based mip_optimizer (replaces solver_defaults.jl which uses CPLEX)
+mip_optimizer = optimizer_with_attributes(
+    Gurobi.Optimizer,
+    "Threads" => threads,
+    "IntFeasTol" => 1e-9,
+    "FeasibilityTol" => 1e-9,
+    "MIPGap" => 1e-6,
+    "OptimalityTol" => 1e-9,
+    "NumericFocus" => 1,
+    MOI.Silent() => true,
+)
+
+optimizer = optimizer_with_attributes(
+    Gurobi.Optimizer,
+    "Threads" => threads,
+    "FeasibilityTol" => 1e-9,
+    "OptimalityTol" => 1e-9,
+    "NumericFocus" => 1,
+    MOI.Silent() => true,
+)
 
 # -----------------------------------------------------------------------------
 # load problem data
@@ -86,7 +107,7 @@ env = BendersBnB(
 )
 
 if build_only
-    @info "SCFLP knapsack script (CPLEX, FLCAP) build completed without solve." instance = instance
+    @info "SCFLP knapsack script (Gurobi, FLCAP) build completed without solve." instance = instance
 else
     solve!(env)
     obj_value = try
@@ -94,5 +115,5 @@ else
     catch
         NaN
     end
-    @info "SCFLP knapsack script (CPLEX, FLCAP) finished" instance = instance termination_status = env.termination_status objective_value = obj_value
+    @info "SCFLP knapsack script (Gurobi, FLCAP) finished" instance = instance termination_status = env.termination_status objective_value = obj_value
 end

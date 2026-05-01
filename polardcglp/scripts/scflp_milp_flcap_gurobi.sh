@@ -3,14 +3,14 @@
 
 # Define variables to make the script more readable and maintainable
 
-ROUND_VERSION="scflp_directional_polar_knapsack_flcap"
-ROUND_DESCRIPTION="DirectionalPolarDCGLP SCFLP, knapsack typical oracle, FLCAP-based stochastic data, 7 private cores, CPLEX"
-EXPERIMENT_VERSION="1"
+ROUND_VERSION="scflp_milp_flcap_gurobi"
+ROUND_DESCRIPTION="SCFLP MILP, FLCAP-based stochastic data, 7 private cores, Gurobi"
+EXPERIMENT_VERSION="2"
 SEED="1"
 HOUR="04"
 EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}"
 
-FILE_NAME="scflp_directional_polar_knapsack_flcap.jl"
+FILE_NAME="scflp_milp_flcap_gurobi.jl"
 THREADS=7
 
 # Define variables to make the script more readable and maintainable
@@ -112,11 +112,10 @@ for instance in "${instances[@]}"; do
     # Load necessary modules
     echo "module purge" >> "${JOBSCRIPT_FILE}"
     echo "module load julia" >> "${JOBSCRIPT_FILE}"
-    echo "module load cplex" >> "${JOBSCRIPT_FILE}"
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=polardcglp polardcglp/scripts/${FILE_NAME} --instance=${instance} --seed=${SEED}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=polardcglp polardcglp/scripts/${FILE_NAME} --instance=${instance} --output_dir=${OUTPUT_DIR} --seed=${SEED}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

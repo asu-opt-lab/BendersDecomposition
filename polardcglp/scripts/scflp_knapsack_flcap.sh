@@ -4,7 +4,7 @@
 # Define variables to make the script more readable and maintainable
 
 ROUND_VERSION="scflp_knapsack_flcap"
-ROUND_DESCRIPTION="SCFLP Benders BnB, knapsack oracle, FLCAP-based stochastic data, 7 private cores, Gurobi"
+ROUND_DESCRIPTION="SCFLP Benders BnB, knapsack oracle, FLCAP-based stochastic data, 7 private cores, CPLEX"
 EXPERIMENT_VERSION="1"
 SEED="1"
 HOUR="04"
@@ -112,6 +112,7 @@ for instance in "${instances[@]}"; do
     # Load necessary modules
     echo "module purge" >> "${JOBSCRIPT_FILE}"
     echo "module load julia" >> "${JOBSCRIPT_FILE}"
+    echo "module load cplex" >> "${JOBSCRIPT_FILE}"
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
