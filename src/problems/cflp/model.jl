@@ -36,7 +36,7 @@ function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
     @objective(model, Min, sum(cost_demands .* y))
     # Add constraints
     @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
-    @constraint(model, facility_open, y .<= x)
+    # @constraint(model, facility_open, y .<= x)
     @constraint(model, capacity[i in 1:I], sum(data.demands[:] .* y[i,:]) <= data.capacities[i] * x[i])
     return nothing
 end
