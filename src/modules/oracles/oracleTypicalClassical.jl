@@ -226,7 +226,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
         if sub_obj_val >= t_value[1] * (1 + oracle.param.rtol) + oracle.param.atol / tol_normalize
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
-            return true, Hyperplane[], [sub_obj_val]
+            return true, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         end
 
     elseif status == INFEASIBILITY_CERTIFICATE
@@ -243,7 +243,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
             if dual_sub_obj_val >= oracle.param.zero_tol / tol_normalize
                 return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
             else
-                return true, Hyperplane[], [Inf]
+                return true, [Hyperplane(a_x, a_t, a_0)], [Inf]
             end
         end
     else
