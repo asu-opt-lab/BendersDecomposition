@@ -16,7 +16,7 @@ function parse_commandline()
         "--snip_no"
             help = "SNIP interdiction setting"
             arg_type = Int
-            default = 3
+            default = 4
         "--budget"
             help = "Sensor installation budget"
             arg_type = Float64
@@ -71,15 +71,12 @@ master = Master(data; customize = customize_master_model!, optimizer = mip_optim
 oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; customize = customize_sub_model!, optimizer = optimizer)
 
 # -----------------------------------------------------------------------------
-# root node preprocessing (BendersSeqInOut)
+# root node preprocessing (BendersSeq)
 # -----------------------------------------------------------------------------
-root_seq_type = BendersSeqInOut
-root_param = BendersSeqInOutParam(
+root_seq_type = BendersSeq
+root_param = BendersSeqParam(
     time_limit = 300.0,
     gap_tolerance = 1e-9,
-    stabilizing_x = ones(length(data.D)),
-    α = 0.9,
-    λ = 0.1,
     verbose = true
 )
 root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)

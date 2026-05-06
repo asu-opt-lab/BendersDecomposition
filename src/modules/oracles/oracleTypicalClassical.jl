@@ -221,12 +221,12 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
         # Accumulate GBC dual values
         _accumulate_gbc_duals!(a_x, oracle.gbc_lhs, oracle.gbc_rhs, oracle.gbc_sense)
         
-        a_t = [-1.0] 
-        a_0 = sub_obj_val - a_x'*x_value 
+        a_t = [-1.0]
+        a_0 = sub_obj_val - a_x'*x_value
         if sub_obj_val >= t_value[1] * (1 + oracle.param.rtol) + oracle.param.atol / tol_normalize
             return false, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
         else
-            return true, [Hyperplane(a_x, a_t, a_0)], [sub_obj_val]
+            return true, Hyperplane[], [sub_obj_val]
         end
 
     elseif status == INFEASIBILITY_CERTIFICATE
@@ -239,11 +239,11 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
             _accumulate_gbc_duals!(a_x, oracle.gbc_lhs, oracle.gbc_rhs, oracle.gbc_sense)
             
             a_t = [0.0]
-            a_0 = dual_sub_obj_val - a_x' * x_value 
+            a_0 = dual_sub_obj_val - a_x' * x_value
             if dual_sub_obj_val >= oracle.param.zero_tol / tol_normalize
                 return false, [Hyperplane(a_x, a_t, a_0)], [Inf]
             else
-                return true, [Hyperplane(a_x, a_t, a_0)], [Inf]
+                return true, Hyperplane[], [Inf]
             end
         end
     else
