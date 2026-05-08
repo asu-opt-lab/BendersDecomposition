@@ -8,7 +8,9 @@ using Printf
 
 const MOI = MathOptInterface
 
-include(normpath(joinpath(@__DIR__, "..", "..", "src", "read_flcap.jl")))
+isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "PolarDCGLP.jl")))
+using .PolarDCGLP
+
 
 const INSTANCE_NAMES = [
     "cap61", "cap62", "cap63", "cap64",

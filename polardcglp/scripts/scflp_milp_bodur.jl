@@ -5,10 +5,11 @@ using Printf
 using Statistics
 using CPLEX
 
+isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl")))
+using .PolarDCGLP
+
 include(normpath(joinpath(@__DIR__, "solver_defaults.jl")))
 include(normpath(joinpath(@__DIR__, "script_utils.jl")))
-include(normpath(joinpath(@__DIR__, "..", "src", "newscflp_data.jl")))
-include(normpath(joinpath(@__DIR__, "..", "src", "newscflp_model.jl")))
 
 global_logger(ConsoleLogger(stderr, Logging.Debug))
 

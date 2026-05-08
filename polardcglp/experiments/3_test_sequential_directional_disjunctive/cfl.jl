@@ -6,8 +6,8 @@ using JuMP
 using CPLEX
 using LinearAlgebra
 
-isdefined(Main, :DirectionalPolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "DirectionalPolarDCGLP.jl")))
-using .DirectionalPolarDCGLP
+isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "PolarDCGLP.jl")))
+using .PolarDCGLP
 
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
@@ -149,9 +149,9 @@ end
                         core_t;
                         split_index_selection_rule = RandomFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-                        add_benders_cuts_to_master = true,
+                        add_benders_cuts_to_master = false,
                         fraction_of_benders_cuts_to_master = 1.0,
-                        reuse_dcglp = true,
+                        reuse_dcglp = false,
 
                         zero_tol = 1e-9,
                     )
@@ -178,9 +178,9 @@ end
                         core_t;
                         split_index_selection_rule = RandomFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-                        add_benders_cuts_to_master = true,
+                        add_benders_cuts_to_master = false,
                         fraction_of_benders_cuts_to_master = 1.0,
-                        reuse_dcglp = true,
+                        reuse_dcglp = false,
 
                         zero_tol = 1e-9,
                     )
@@ -209,9 +209,9 @@ end
                         core_t;
                         split_index_selection_rule = RandomFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-                        add_benders_cuts_to_master = true,
+                        add_benders_cuts_to_master = false,
                         fraction_of_benders_cuts_to_master = 1.0,
-                        reuse_dcglp = true,
+                        reuse_dcglp = false,
 
                         zero_tol = 1e-9,
                     )
@@ -238,9 +238,9 @@ end
                         core_t;
                         split_index_selection_rule = RandomFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-                        add_benders_cuts_to_master = true,
+                        add_benders_cuts_to_master = false,
                         fraction_of_benders_cuts_to_master = 1.0,
-                        reuse_dcglp = true,
+                        reuse_dcglp = false,
 
                         zero_tol = 1e-9,
                     )

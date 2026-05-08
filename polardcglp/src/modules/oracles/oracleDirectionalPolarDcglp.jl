@@ -1,19 +1,3 @@
-module DirectionalPolarDCGLP
-
-using JuMP
-using MathOptInterface
-using LinearAlgebra
-using Printf
-using Random
-using SparseArrays
-
-import BendersX
-
-const MOI = MathOptInterface
-const POLAR_T_LOWER_BOUND = -1e6
-
-export DirectionalPolarDCGLPParam, DirectionalPolarDCGLPOracle, set_core_point!
-
 mutable struct DirectionalPolarDCGLPParam <: BendersX.AbstractOracleParam
     dcglp_param::BendersX.DcglpParam
     core_point_x::Vector{Float64}
@@ -101,6 +85,69 @@ mutable struct DirectionalPolarDCGLPOracle <: BendersX.AbstractDisjunctiveOracle
     end
 end
 
+function BendersX.generate_cuts(
+    oracle::DirectionalPolarDCGLPOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64};
+    time_limit::Float64 = 3600.0,
+    throw_typical_cuts_for_errors::Bool = true,
+    include_disjunctive_cuts_to_hyperplanes::Bool = true,
+)
+    direction_x = x_value .- oracle.param.core_point_x
+    direction_t = t_value .- oracle.param.core_point_t
+    if LinearAlgebra.norm(vcat(direction_x, direction_t), Inf) <= oracle.param.zero_tol
+        return BendersX.generate_cuts(
+            oracle.typical_oracles[1],
+            x_value,
+            t_value;
+            time_limit = time_limit,
+        )
+    end
+
+    push!(
+        oracle.splits,
+        BendersX.select_disjunctive_inequality(x_value, oracle.param.split_index_selection_rule; zero_tol = oracle.param.zero_tol),
+    )
+    replace_disjunctive_inequality!(oracle)
+
+    if !oracle.param.reuse_dcglp
+        delete_registered_constraints!(oracle.dcglp, :con_benders)
+    end
+    add_disjunctive_cuts!(oracle, oracle.param.disjunctive_cut_append_rule)
+
+    direction_x, direction_t = replace_direction_constraints!(oracle, x_value, t_value)
+
+    zero_indices, one_indices = oracle.param.lift ? BendersX.retrieve_zero_one(x_value, oracle.param.zero_tol) : (Int[], Int[])
+    BendersX.add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices)
+
+    start_time = time()
+
+    return BendersX.solve_dcglp!(
+        oracle,
+        x_value,
+        t_value,
+        direction_x,
+        direction_t,
+        zero_indices,
+        one_indices;
+        start_time = start_time,
+        time_limit = time_limit,
+        throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
+        include_disjunctive_cuts_to_hyperplanes = include_disjunctive_cuts_to_hyperplanes,
+    )
+end
+
+function set_core_point!(oracle::DirectionalPolarDCGLPOracle, core_point_x::Vector{Float64}, core_point_t::Vector{Float64})
+    length(core_point_x) == length(oracle.param.core_point_x) ||
+        throw(DimensionMismatch("`core_point_x` has length $(length(core_point_x)) but expected $(length(oracle.param.core_point_x))."))
+    length(core_point_t) == length(oracle.param.core_point_t) ||
+        throw(DimensionMismatch("`core_point_t` has length $(length(core_point_t)) but expected $(length(oracle.param.core_point_t))."))
+
+    oracle.param.core_point_x .= core_point_x
+    oracle.param.core_point_t .= core_point_t
+    return nothing
+end
+
 function build_directional_polar_dcglp(master::BendersX.AbstractMaster, param::DirectionalPolarDCGLPParam)
     dcglp = Model(param.dcglp_param.optimizer)
 
@@ -134,17 +181,6 @@ function build_directional_polar_dcglp(master::BendersX.AbstractMaster, param::D
     return dcglp
 end
 
-function delete_registered_constraints!(model::Model, sym::Symbol)
-    haskey(model, sym) || return
-    registered = model[sym]
-    if registered isa AbstractArray
-        delete.(model, registered)
-    else
-        delete(model, registered)
-    end
-    unregister(model, sym)
-end
-
 function get_split_index(oracle::DirectionalPolarDCGLPOracle)
     isa(oracle.param.split_index_selection_rule, BendersX.SimpleSplit) ||
         throw(BendersX.AlgorithmException("get_split_index is only valid for simple split rules."))
@@ -161,17 +197,6 @@ function replace_disjunctive_inequality!(oracle::DirectionalPolarDCGLPOracle)
     @constraint(dcglp, con_split_kappa, 0 >= dcglp[:omega_0][1] * (phi_0 + 1.0) - phi' * dcglp[:omega_x][1, :])
     @constraint(dcglp, con_split_nu, 0 >= -dcglp[:omega_0][2] * phi_0 + phi' * dcglp[:omega_x][2, :])
 
-    return nothing
-end
-
-function set_core_point!(oracle::DirectionalPolarDCGLPOracle, core_point_x::Vector{Float64}, core_point_t::Vector{Float64})
-    length(core_point_x) == length(oracle.param.core_point_x) ||
-        throw(DimensionMismatch("`core_point_x` has length $(length(core_point_x)) but expected $(length(oracle.param.core_point_x))."))
-    length(core_point_t) == length(oracle.param.core_point_t) ||
-        throw(DimensionMismatch("`core_point_t` has length $(length(core_point_t)) but expected $(length(oracle.param.core_point_t))."))
-
-    oracle.param.core_point_x .= core_point_x
-    oracle.param.core_point_t .= core_point_t
     return nothing
 end
 
@@ -200,8 +225,3 @@ function replace_direction_constraints!(
 
     return direction_x, direction_t
 end
-
-include("DirectionalPolarDCGLPInterface.jl")
-include("solveDirectionalPolarDcglp.jl")
-
-end # module DirectionalPolarDCGLP

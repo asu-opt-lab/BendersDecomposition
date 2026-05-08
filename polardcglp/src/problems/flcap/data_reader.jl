@@ -17,7 +17,7 @@ customer `j` to facility `i`. Internally `CFLPData.costs[i, j]` is interpreted
 as a unit cost, so we divide each stored total cost by `demands[j]` here.
 """
 function read_flcap_data(filename::AbstractString;
-                         filepath = joinpath(@__DIR__, "..", "data", "FLCAP"))
+                         filepath = joinpath(POLARDCGLP_ROOT, "data", "FLCAP"))
     fullpath = joinpath(filepath, filename)
     f = open(fullpath)
 

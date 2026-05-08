@@ -5,7 +5,7 @@ function generate_scflp_from_flcap(flcap_filename::AbstractString, n_scenarios::
                                     seed::Union{Int,Nothing}=nothing,
                                     sigma_l::Float64=0.1,
                                     sigma_u::Float64=0.3,
-                                    flcap_dir::AbstractString=joinpath(@__DIR__, "..", "data", "FLCAP"))
+                                    flcap_dir::AbstractString=joinpath(POLARDCGLP_ROOT, "data", "FLCAP"))
     cflp_data = read_flcap_data(flcap_filename; filepath=flcap_dir)
 
     actual_seed = seed === nothing ?

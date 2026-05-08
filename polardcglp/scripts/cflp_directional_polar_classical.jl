@@ -6,8 +6,8 @@ using Random
 using MathOptInterface
 using LinearAlgebra
 
-isdefined(Main, :DirectionalPolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "DirectionalPolarDCGLP.jl")))
-using .DirectionalPolarDCGLP
+isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl")))
+using .PolarDCGLP
 
 include(normpath(joinpath(@__DIR__, "solver_defaults.jl")))
 include(normpath(joinpath(@__DIR__, "script_utils.jl")))

@@ -19,6 +19,8 @@ end
 
 include("test_read_flcap.jl")
 include("test_directional_polar_dcglp.jl")
+include("test_newpolar.jl")
+include("test_reversepolar.jl")
 
 function simple_polar_data()
     return SimplePolarData(
@@ -215,6 +217,15 @@ end
         cut = last(oracle.disjunctiveCuts)
         @test length(cut.a_t) == 1
         @test isapprox(cut.a_t[1], -1.0; atol = 1e-9)
+    end
+
+    @testset "Verbose Smoke" begin
+        master = Master(data; customize = customize_master_polar!)
+        oracle = make_polar_oracle(data, master; verbose = true)
+        @test begin
+            is_in_L, _, _ = BendersX.generate_cuts(oracle, fill(0.5, master.dim_x), [0.0]; time_limit = 10.0)
+            !is_in_L
+        end
     end
 
     @testset "BendersSeq Solve Path" begin

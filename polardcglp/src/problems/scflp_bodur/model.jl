@@ -1,7 +1,7 @@
 using JuMP
 import BendersX: customize_mip_model!, customize_master_model!, customize_sub_model!
 
-# Requires SCFLPBodurData to be defined; include newscflp_data.jl first.
+# Requires SCFLPBodurData to be included first.
 
 function customize_mip_model!(model::Model, data::SCFLPBodurData)
     I, J, N = data.n_facilities, data.n_customers, data.n_scenarios

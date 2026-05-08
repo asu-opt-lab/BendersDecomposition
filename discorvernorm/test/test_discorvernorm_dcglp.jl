@@ -8,8 +8,8 @@ using LinearAlgebra
 include(joinpath(@__DIR__, "..", "src", "DiscorverNormDCGLP.jl"))
 import .DiscorverNormDCGLP
 
-include(joinpath(@__DIR__, "..", "..", "polardcglp", "src", "DirectionalPolarDCGLP.jl"))
-import .DirectionalPolarDCGLP
+include(joinpath(@__DIR__, "..", "..", "polardcglp", "src", "PolarDCGLP.jl"))
+import .PolarDCGLP
 
 const DMOI = MathOptInterface
 
@@ -145,7 +145,7 @@ function make_directional_reference_oracle(vt_master::Master, core_x::Vector{Flo
         iter_limit = 25,
         verbose = false,
     )
-    param = DirectionalPolarDCGLP.DirectionalPolarDCGLPParam(
+    param = PolarDCGLP.DirectionalPolarDCGLPParam(
         dcglp_param,
         core_x,
         core_t;
@@ -156,7 +156,7 @@ function make_directional_reference_oracle(vt_master::Master, core_x::Vector{Flo
         strengthened = false,
         zero_tol = 1e-9,
     )
-    return DirectionalPolarDCGLP.DirectionalPolarDCGLPOracle(vt_master, [DiscorverVectorTOracle(), DiscorverVectorTOracle()], param)
+    return PolarDCGLP.DirectionalPolarDCGLPOracle(vt_master, [DiscorverVectorTOracle(), DiscorverVectorTOracle()], param)
 end
 
 @testset "DiscorverNormDCGLP Environment" begin

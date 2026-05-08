@@ -1,6 +1,8 @@
 using Statistics
 
-include(joinpath(@__DIR__, "..", "src", "read_flcap.jl"))
+isdefined(Main, :PolarDCGLP) || include(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl"))
+using .PolarDCGLP
+
 
 @testset "FLCAP Reader" begin
     data = read_flcap_data("cap61")

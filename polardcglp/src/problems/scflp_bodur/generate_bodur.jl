@@ -1,8 +1,7 @@
 using Random
 using JSON
 
-# Reuses read_flcap_data from read_flcap.jl and write_scflp_json from
-# generate_scflp_from_flcap.jl; callers must include those files first.
+# Reuses read_flcap_data and write_scflp_json from the PolarDCGLP problem includes.
 
 """
     generate_scflp_bodur(flcap_filename, n_scenarios; seed, sigma_l, sigma_u, flcap_dir)
@@ -19,7 +18,7 @@ function generate_scflp_bodur(flcap_filename::AbstractString, n_scenarios::Int;
                               seed::Union{Int,Nothing}=nothing,
                               sigma_l::Float64=0.1,
                               sigma_u::Float64=0.3,
-                              flcap_dir::AbstractString=joinpath(@__DIR__, "..", "data", "FLCAP"))
+                              flcap_dir::AbstractString=joinpath(POLARDCGLP_ROOT, "data", "FLCAP"))
     cflp_data = read_flcap_data(flcap_filename; filepath=flcap_dir)
 
     actual_seed = seed === nothing ?

@@ -42,7 +42,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             benders_param = BendersSeqParam(
                 time_limit = 800.0,
                 gap_tolerance = 1e-6,
-                verbose = false,
+                verbose = true,
             )
             dcglp_optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer,
@@ -63,7 +63,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             benders_inout_param = BendersSeqInOutParam(
                 time_limit = 800.0,
                 gap_tolerance = 1e-6,
-                verbose = false,
+                verbose = true,
                 stabilizing_x = ones(data.n_facilities),
                 α = 0.9,
                 λ = 0.1,
@@ -81,7 +81,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         dcglp_param;
                         split_index_selection_rule = LargestFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-                        add_benders_cuts_to_master = 2,
+                        add_benders_cuts_to_master = false,
                         fraction_of_benders_cuts_to_master = 0.05,
                         reuse_dcglp = false,
 
@@ -108,7 +108,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         dcglp_param;
                         split_index_selection_rule = LargestFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-                        add_benders_cuts_to_master = 2,
+                        add_benders_cuts_to_master = false,
                         fraction_of_benders_cuts_to_master = 0.05,
                         reuse_dcglp = false,
 
@@ -137,7 +137,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         dcglp_param;
                         split_index_selection_rule = LargestFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-                        add_benders_cuts_to_master = true,
+                        add_benders_cuts_to_master = false,
                         fraction_of_benders_cuts_to_master = 0.05,
                         reuse_dcglp = false,
 
@@ -161,7 +161,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         dcglp_param;
                         split_index_selection_rule = LargestFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-                        add_benders_cuts_to_master = true,
+                        add_benders_cuts_to_master = false,
                         fraction_of_benders_cuts_to_master = 0.05,
                         reuse_dcglp = false,
 

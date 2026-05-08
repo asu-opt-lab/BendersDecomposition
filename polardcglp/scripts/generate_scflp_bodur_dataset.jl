@@ -1,9 +1,9 @@
 using Random
 using JSON
 
-include(normpath(joinpath(@__DIR__, "..", "src", "read_flcap.jl")))
-include(normpath(joinpath(@__DIR__, "..", "src", "generate_scflp_from_flcap.jl")))
-include(normpath(joinpath(@__DIR__, "..", "src", "generate_scflp_bodur.jl")))
+isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl")))
+using .PolarDCGLP
+
 
 const FLCAP_DIR = normpath(joinpath(@__DIR__, "..", "data", "FLCAP"))
 const OUTPUT_DIR = normpath(joinpath(@__DIR__, "..", "data", "SCFLP_bodur"))

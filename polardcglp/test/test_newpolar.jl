@@ -8,24 +8,24 @@ using LinearAlgebra
 isdefined(Main, :PolarDCGLP) || include(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl"))
 using .PolarDCGLP
 
-const DMOI = MathOptInterface
+const NMOI = MathOptInterface
 
-struct DirectionalSimplePolarData <: AbstractData
+struct NewPolarData <: AbstractData
     open_cost::Vector{Float64}
     ship_cost::Matrix{Float64}
 end
 
-directional_simple_polar_data() = DirectionalSimplePolarData(
+newpolar_data() = NewPolarData(
     [0.5, 0.6, 0.8],
     [1.0 3.0 2.0 4.0;
      2.0 1.0 2.5 2.0;
      3.0 2.0 1.0 1.5],
 )
 
-directional_highs_optimizer() = optimizer_with_attributes(HiGHS.Optimizer, DMOI.Silent() => true)
+newpolar_highs_optimizer() = optimizer_with_attributes(HiGHS.Optimizer, NMOI.Silent() => true)
 
-function customize_master_directional_polar!(model::Model, data::DirectionalSimplePolarData)
-    set_optimizer(model, directional_highs_optimizer())
+function customize_master_newpolar!(model::Model, data::NewPolarData)
+    set_optimizer(model, newpolar_highs_optimizer())
 
     n_facilities = length(data.open_cost)
     @variable(model, x[1:n_facilities], Bin)
@@ -35,8 +35,8 @@ function customize_master_directional_polar!(model::Model, data::DirectionalSimp
     return (x = x,), t
 end
 
-function customize_sub_directional_polar!(model::Model, data::DirectionalSimplePolarData, scen_idx::Int; x)
-    set_optimizer(model, directional_highs_optimizer())
+function customize_sub_newpolar!(model::Model, data::NewPolarData, scen_idx::Int; x)
+    set_optimizer(model, newpolar_highs_optimizer())
 
     n_facilities, n_customers = size(data.ship_cost)
     @variable(model, y[1:n_facilities, 1:n_customers] >= 0)
@@ -46,9 +46,9 @@ function customize_sub_directional_polar!(model::Model, data::DirectionalSimpleP
     return nothing
 end
 
-function solve_directional_reference(data::DirectionalSimplePolarData)
+function solve_newpolar_reference(data::NewPolarData)
     model = Model()
-    set_optimizer(model, directional_highs_optimizer())
+    set_optimizer(model, newpolar_highs_optimizer())
     n_facilities, n_customers = size(data.ship_cost)
     @variable(model, x[1:n_facilities], Bin)
     @variable(model, y[1:n_facilities, 1:n_customers] >= 0)
@@ -60,53 +60,47 @@ function solve_directional_reference(data::DirectionalSimplePolarData)
     return objective_value(model)
 end
 
-function make_directional_typical_oracles(data::DirectionalSimplePolarData, master::Master)
+function make_newpolar_typical_oracles(data::NewPolarData, master::Master)
     return [
-        ClassicalOracle(data, master; customize = customize_sub_directional_polar!),
-        ClassicalOracle(data, master; customize = customize_sub_directional_polar!),
+        ClassicalOracle(data, master; customize = customize_sub_newpolar!),
+        ClassicalOracle(data, master; customize = customize_sub_newpolar!),
     ]
 end
 
-function make_directional_polar_oracle(
-    data::DirectionalSimplePolarData,
+function make_newpolar_oracle(
+    data::NewPolarData,
     master::Master;
-    core_x = fill(0.6, master.dim_x),
-    core_t = [10.0],
     split_rule = MostFractional(),
     append_rule = AllDisjunctiveCuts(),
     reuse_dcglp::Bool = true,
-    strengthened::Bool = false,
     verbose::Bool = false,
 )
     dcglp_param = DcglpParam(
-        directional_highs_optimizer();
+        newpolar_highs_optimizer();
         time_limit = 10.0,
         gap_tolerance = 1e-8,
         halt_limit = 3,
         iter_limit = 25,
         verbose = verbose,
     )
-    param = DirectionalPolarDCGLPParam(
-        dcglp_param,
-        collect(core_x),
-        collect(core_t);
+    param = NewPolarDCGLPParam(
+        dcglp_param;
         split_index_selection_rule = split_rule,
         disjunctive_cut_append_rule = append_rule,
         add_benders_cuts_to_master = 2,
         fraction_of_benders_cuts_to_master = 1.0,
         reuse_dcglp = reuse_dcglp,
-        strengthened = strengthened,
         zero_tol = 1e-9,
     )
-    return DirectionalPolarDCGLPOracle(master, make_directional_typical_oracles(data, master), param)
+    return NewPolarDCGLPOracle(master, make_newpolar_typical_oracles(data, master), param)
 end
 
-struct DirectionalVectorTData <: AbstractData end
+struct NewPolarVectorTData <: AbstractData end
 
-struct DirectionalVectorTOracle <: BendersX.AbstractTypicalOracle end
+struct NewPolarVectorTOracle <: BendersX.AbstractTypicalOracle end
 
-function customize_master_directional_vector_t!(model::Model, data::DirectionalVectorTData)
-    set_optimizer(model, directional_highs_optimizer())
+function customize_master_newpolar_vector_t!(model::Model, data::NewPolarVectorTData)
+    set_optimizer(model, newpolar_highs_optimizer())
     @variable(model, x[1:2], Bin)
     @variable(model, t[1:2] >= -1e6)
     @objective(model, Min, sum(t))
@@ -114,7 +108,7 @@ function customize_master_directional_vector_t!(model::Model, data::DirectionalV
 end
 
 function BendersX.generate_cuts(
-    ::DirectionalVectorTOracle,
+    ::NewPolarVectorTOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64};
     tol_normalize::Float64 = 1.0,
@@ -133,38 +127,28 @@ function BendersX.generate_cuts(
     return is_in_L, hyperplanes, f_x
 end
 
-@testset "DirectionalPolarDCGLP Environment" begin
+@testset "newpolar Environment" begin
     @testset "Constructor Validation" begin
-        data = directional_simple_polar_data()
-        master = Master(data; customize = customize_master_directional_polar!)
-        oracle = make_directional_polar_oracle(data, master)
-        @test oracle isa DirectionalPolarDCGLPOracle
-        @test haskey(oracle.dcglp, :tau_var)
-        @test !haskey(oracle.dcglp, :lambda_var)
-
-        dcglp_param = DcglpParam(directional_highs_optimizer(); verbose = false)
-        @test_throws DimensionMismatch DirectionalPolarDCGLPOracle(
-            master,
-            make_directional_typical_oracles(data, master),
-            DirectionalPolarDCGLPParam(dcglp_param, [0.5, 0.5], [10.0]),
-        )
+        data = newpolar_data()
+        master = Master(data; customize = customize_master_newpolar!)
+        oracle = make_newpolar_oracle(data, master)
+        @test oracle isa NewPolarDCGLPOracle
+        @test oracle.dcglp[:tau] isa VariableRef
     end
 
-    @testset "Direct Directional Cut Generation" begin
-        vt_data = DirectionalVectorTData()
-        vt_master = Master(vt_data; customize = customize_master_directional_vector_t!)
+    @testset "Direct Vector-T Cut Generation" begin
+        vt_data = NewPolarVectorTData()
+        vt_master = Master(vt_data; customize = customize_master_newpolar_vector_t!)
         dcglp_param = DcglpParam(
-            directional_highs_optimizer();
+            newpolar_highs_optimizer();
             time_limit = 10.0,
             gap_tolerance = 1e-8,
             halt_limit = 3,
             iter_limit = 25,
             verbose = false,
         )
-        param = DirectionalPolarDCGLPParam(
-            dcglp_param,
-            [0.5, 0.5],
-            [0.75, 0.75];
+        param = NewPolarDCGLPParam(
+            dcglp_param;
             split_index_selection_rule = MostFractional(),
             disjunctive_cut_append_rule = AllDisjunctiveCuts(),
             add_benders_cuts_to_master = 2,
@@ -172,7 +156,7 @@ end
             strengthened = false,
             zero_tol = 1e-9,
         )
-        oracle = DirectionalPolarDCGLPOracle(vt_master, [DirectionalVectorTOracle(), DirectionalVectorTOracle()], param)
+        oracle = NewPolarDCGLPOracle(vt_master, [NewPolarVectorTOracle(), NewPolarVectorTOracle()], param)
 
         x_value = zeros(2)
         t_value = zeros(2)
@@ -181,38 +165,24 @@ end
         @test !isempty(oracle.disjunctiveCuts)
 
         cut = last(oracle.disjunctiveCuts)
-        direction_x = x_value .- param.core_point_x
-        direction_t = t_value .- param.core_point_t
-        @test isapprox(dot(cut.a_x, direction_x) + dot(cut.a_t, direction_t), 1.0; atol = 1e-6)
+        @test length(cut.a_t) == 2
+        @test isapprox(sum(cut.a_t), -1.0; atol = 1e-6)
         @test PolarDCGLP.hyperplane_violation(cut, x_value, t_value) > 0.0
     end
 
-    @testset "Directional Oracle Gap" begin
-        gap, scaled_gap = PolarDCGLP.compute_directional_oracle_gap(
-            false,
-            [2.0, 5.0],
-            [3.5, 4.0],
-            0.25,
-        )
-        @test isapprox(gap, 1.5; atol = 1e-9)
-        @test isapprox(scaled_gap, 0.375; atol = 1e-9)
-    end
-
     @testset "Fallback to Typical Cuts" begin
-        vt_data = DirectionalVectorTData()
-        vt_master = Master(vt_data; customize = customize_master_directional_vector_t!)
+        vt_data = NewPolarVectorTData()
+        vt_master = Master(vt_data; customize = customize_master_newpolar_vector_t!)
         dcglp_param = DcglpParam(
-            directional_highs_optimizer();
+            newpolar_highs_optimizer();
             time_limit = 10.0,
             gap_tolerance = 1e-8,
             halt_limit = 3,
             iter_limit = 25,
             verbose = false,
         )
-        param = DirectionalPolarDCGLPParam(
-            dcglp_param,
-            [0.5, 0.5],
-            [0.75, 0.75];
+        param = NewPolarDCGLPParam(
+            dcglp_param;
             split_index_selection_rule = MostFractional(),
             disjunctive_cut_append_rule = AllDisjunctiveCuts(),
             add_benders_cuts_to_master = 2,
@@ -220,10 +190,10 @@ end
             strengthened = false,
             zero_tol = 1e-9,
         )
-        oracle = DirectionalPolarDCGLPOracle(vt_master, [DirectionalVectorTOracle(), DirectionalVectorTOracle()], param)
+        oracle = NewPolarDCGLPOracle(vt_master, [NewPolarVectorTOracle(), NewPolarVectorTOracle()], param)
 
         x_value = ones(2)
-        t_value = ones(2)
+        t_value = zeros(2)
         is_in_L, hyperplanes, f_x = BendersX.generate_cuts(oracle, x_value, t_value; time_limit = 10.0)
         @test is_in_L
         @test isempty(oracle.disjunctiveCuts)
@@ -232,20 +202,18 @@ end
     end
 
     @testset "Verbose Smoke" begin
-        vt_data = DirectionalVectorTData()
-        vt_master = Master(vt_data; customize = customize_master_directional_vector_t!)
+        vt_data = NewPolarVectorTData()
+        vt_master = Master(vt_data; customize = customize_master_newpolar_vector_t!)
         dcglp_param = DcglpParam(
-            directional_highs_optimizer();
+            newpolar_highs_optimizer();
             time_limit = 10.0,
             gap_tolerance = 1e-8,
             halt_limit = 3,
             iter_limit = 25,
             verbose = true,
         )
-        param = DirectionalPolarDCGLPParam(
-            dcglp_param,
-            [0.5, 0.5],
-            [0.75, 0.75];
+        param = NewPolarDCGLPParam(
+            dcglp_param;
             split_index_selection_rule = MostFractional(),
             disjunctive_cut_append_rule = AllDisjunctiveCuts(),
             add_benders_cuts_to_master = 2,
@@ -253,7 +221,7 @@ end
             strengthened = false,
             zero_tol = 1e-9,
         )
-        oracle = DirectionalPolarDCGLPOracle(vt_master, [DirectionalVectorTOracle(), DirectionalVectorTOracle()], param)
+        oracle = NewPolarDCGLPOracle(vt_master, [NewPolarVectorTOracle(), NewPolarVectorTOracle()], param)
         @test begin
             is_in_L, _, _ = BendersX.generate_cuts(oracle, zeros(2), zeros(2); time_limit = 10.0)
             !is_in_L
@@ -261,11 +229,11 @@ end
     end
 
     @testset "BendersSeq Solve Path" begin
-        data = directional_simple_polar_data()
-        reference_obj = solve_directional_reference(data)
+        data = newpolar_data()
+        reference_obj = solve_newpolar_reference(data)
 
-        master = Master(data; customize = customize_master_directional_polar!)
-        oracle = make_directional_polar_oracle(data, master; reuse_dcglp = true, strengthened = false)
+        master = Master(data; customize = customize_master_newpolar!)
+        oracle = make_newpolar_oracle(data, master; reuse_dcglp = true)
         env = BendersSeq(
             master,
             oracle;

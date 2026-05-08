@@ -2,8 +2,8 @@ using BendersX
 using Test
 using JuMP
 
-isdefined(Main, :DirectionalPolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "DirectionalPolarDCGLP.jl")))
-using .DirectionalPolarDCGLP
+isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "PolarDCGLP.jl")))
+using .PolarDCGLP
 
 @testset "Callback Directional Disjunctive Tests" begin
     @info "Running DirectionalPolarDCGLP callback disjunctive tests"
