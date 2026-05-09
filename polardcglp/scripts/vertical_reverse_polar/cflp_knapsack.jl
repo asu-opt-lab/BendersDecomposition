@@ -7,21 +7,18 @@ using Random
 isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
 using .SimplexNormDCGLP
 
-
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 options, _ = parse_script_args(ARGS)
 
-instance_no = get_int_option(options, "instance_no", 0)
-snip_no = get_int_option(options, "snip_no", 3)
-budget = get_float_option(options, "budget", 30.0)
+instance = get_string_option(options, "instance", "T100x100_5_3")
 seed = get_int_option(options, "seed", 1)
-time_limit = get_float_option(options, "time_limit", 14400.0)
-dcglp_time_limit = get_float_option(options, "dcglp_time_limit", 100.0)
+time_limit = get_float_option(options, "time_limit", 200.0)
+dcglp_time_limit = get_float_option(options, "dcglp_time_limit", 1000.0)
 dcglp_iter_limit = get_int_option(options, "dcglp_iter_limit", 250)
 dcglp_halt_limit = get_int_option(options, "dcglp_halt_limit", 3)
-frequency = get_int_option(options, "frequency", 500)
+frequency = get_int_option(options, "frequency", 250)
 threads = get_int_option(options, "threads", 7)
 reuse_dcglp = get_bool_option(options, "reuse_dcglp", false)
 strengthened = get_bool_option(options, "strengthened", true)
@@ -30,14 +27,32 @@ build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
 
-@info "vertical_reverse_polar SNIP script" instance_no = instance_no snip_no = snip_no budget = budget seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
+@info "vertical_reverse_polar hard CFL script" instance = instance seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
 
-data = read_snip_data(instance_no, snip_no, budget)
+data = read_cfl_file(instance)
 
 benders_param = BendersBnBParam(
     time_limit = time_limit,
     gap_tolerance = 1e-6,
     verbose = true,
+)
+
+master_optimizer_local = optimizer_with_attributes(
+    CPLEX.Optimizer,
+    "CPXPARAM_Threads" => threads,
+    "CPX_PARAM_EPINT" => 1e-9,
+    "CPX_PARAM_EPRHS" => 1e-9,
+    "CPX_PARAM_EPGAP" => 1e-6,
+    MOI.Silent() => true,
+)
+
+sub_optimizer_local = optimizer_with_attributes(
+    CPLEX.Optimizer,
+    "CPXPARAM_Threads" => threads,
+    "CPX_PARAM_EPRHS" => 1e-9,
+    "CPX_PARAM_EPOPT" => 1e-9,
+    "CPX_PARAM_NUMERICALEMPHASIS" => 1,
+    MOI.Silent() => true,
 )
 
 dcglp_optimizer = optimizer_with_attributes(
@@ -54,7 +69,7 @@ dcglp_param = DcglpParam(
     gap_tolerance = 1e-3,
     halt_limit = dcglp_halt_limit,
     iter_limit = dcglp_iter_limit,
-    verbose = false,
+    verbose = true,
 )
 
 oracle_param = VerticalReversePolarDCGLPParam(
@@ -69,21 +84,25 @@ oracle_param = VerticalReversePolarDCGLPParam(
     zero_tol = 1e-9,
 )
 
-master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
+master = Master(data; customize = customize_master_model!, optimizer = master_optimizer_local)
+set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
 
 typical_oracles = [
-    SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; customize = customize_sub_model!, optimizer = sub_optimizer),
-    SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; customize = customize_sub_model!, optimizer = sub_optimizer),
+    CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer_local),
+    CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer_local),
 ]
 disjunctive_oracle = VerticalReversePolarDCGLPOracle(master, typical_oracles, oracle_param)
 
-lazy_oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; customize = customize_sub_model!, optimizer = sub_optimizer)
+lazy_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer_local)
 root_preprocessing = RootNodePreprocessing(
     lazy_oracle,
-    BendersSeq,
-    BendersSeqParam(
+    BendersSeqInOut,
+    BendersSeqInOutParam(
         time_limit = min(100.0, time_limit),
         gap_tolerance = 1e-6,
+        stabilizing_x = ones(data.n_facilities),
+        α = 0.9,
+        λ = 0.1,
         verbose = true,
     ),
 )
@@ -99,7 +118,7 @@ env = BendersBnB(
 )
 
 if build_only
-    @info "vertical_reverse_polar SNIP script build completed without solve." instance_no = instance_no snip_no = snip_no budget = budget
+    @info "vertical_reverse_polar hard CFL script build completed without solve." instance = instance
 else
     solve!(env)
     obj_value = try
@@ -107,5 +126,5 @@ else
     catch
         NaN
     end
-    @info "vertical_reverse_polar SNIP script finished" instance_no = instance_no snip_no = snip_no budget = budget termination_status = env.termination_status objective_value = obj_value
+    @info "vertical_reverse_polar hard CFL script finished" instance = instance termination_status = env.termination_status objective_value = obj_value
 end
