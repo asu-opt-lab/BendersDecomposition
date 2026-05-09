@@ -15,12 +15,12 @@ const MOI = MathOptInterface
 const POLARDCGLP_ROOT = normpath(joinpath(@__DIR__, ".."))
 const SIMPLEXNORM_T_LOWER_BOUND = -1e6
 const NEWPOLAR_T_LOWER_BOUND = -1e6
-const REVERSEPOLAR_T_LOWER_BOUND = -1e6
+const SIMPLEXNORMTEST_T_LOWER_BOUND = -1e6
 
 export SimplexNormDCGLPParam, SimplexNormDCGLPOracle
 export DirectionalPolarDCGLPParam, DirectionalPolarDCGLPOracle, set_core_point!
 export NewPolarDCGLPParam, NewPolarDCGLPOracle
-export ReversePolarDCGLPParam, ReversePolarDCGLPOracle
+export SimplexNormTestDCGLPParam, SimplexNormTestDCGLPOracle
 export SCFLPBodurData, read_flcap_data, read_scflp_bodur
 export generate_scflp_from_flcap, generate_scflp_bodur, write_scflp_json
 

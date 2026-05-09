@@ -1,4 +1,4 @@
-mutable struct ReversePolarDCGLPParam <: BendersX.AbstractOracleParam
+mutable struct SimplexNormTestDCGLPParam <: BendersX.AbstractOracleParam
     dcglp_param::BendersX.DcglpParam
     split_index_selection_rule::BendersX.SplitIndexSelectionRule
     disjunctive_cut_append_rule::BendersX.DisjunctiveCutsAppendRule
@@ -9,7 +9,7 @@ mutable struct ReversePolarDCGLPParam <: BendersX.AbstractOracleParam
     lift::Bool
     zero_tol::Float64
 
-    function ReversePolarDCGLPParam(
+    function SimplexNormTestDCGLPParam(
         dcglp_param::BendersX.DcglpParam;
         split_index_selection_rule::BendersX.SplitIndexSelectionRule = BendersX.RandomFractional(),
         disjunctive_cut_append_rule::BendersX.DisjunctiveCutsAppendRule = BendersX.AllDisjunctiveCuts(),
@@ -43,27 +43,27 @@ mutable struct ReversePolarDCGLPParam <: BendersX.AbstractOracleParam
     end
 end
 
-mutable struct ReversePolarDCGLPOracle <: BendersX.AbstractDisjunctiveOracle
-    param::ReversePolarDCGLPParam
+mutable struct SimplexNormTestDCGLPOracle <: BendersX.AbstractDisjunctiveOracle
+    param::SimplexNormTestDCGLPParam
     dcglp::Model
     typical_oracles::Vector{BendersX.AbstractTypicalOracle}
     disjunctiveCutsByIndex::Vector{Vector{BendersX.Hyperplane}}
     disjunctiveCuts::Vector{BendersX.Hyperplane}
     splits::Vector{Tuple{SparseVector{Float64, Int}, Float64}}
 
-    function ReversePolarDCGLPOracle(
+    function SimplexNormTestDCGLPOracle(
         master::BendersX.AbstractMaster,
         typical_oracles::Vector{T},
-        param::ReversePolarDCGLPParam,
+        param::SimplexNormTestDCGLPParam,
     ) where {T <: BendersX.AbstractTypicalOracle}
         length(typical_oracles) == 2 ||
-            throw(ArgumentError("ReversePolarDCGLPOracle requires exactly two typical oracles."))
+            throw(ArgumentError("SimplexNormTestDCGLPOracle requires exactly two typical oracles."))
 
         for xi in master.x
-            is_binary(xi) || throw(ArgumentError("ReversePolarDCGLPOracle requires all master variables to be binary."))
+            is_binary(xi) || throw(ArgumentError("SimplexNormTestDCGLPOracle requires all master variables to be binary."))
         end
 
-        dcglp = build_reverse_polar_dcglp(master, param)
+        dcglp = build_simplex_norm_test_dcglp(master, param)
         disjunctive_cuts_by_index = [Vector{BendersX.Hyperplane}() for _ in 1:master.dim_x]
         splits = Vector{Tuple{SparseVector{Float64, Int}, Float64}}()
 
@@ -72,7 +72,7 @@ mutable struct ReversePolarDCGLPOracle <: BendersX.AbstractDisjunctiveOracle
 end
 
 function BendersX.generate_cuts(
-    oracle::ReversePolarDCGLPOracle,
+    oracle::SimplexNormTestDCGLPOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64};
     time_limit::Float64 = 3600.0,
@@ -111,7 +111,7 @@ function BendersX.generate_cuts(
     )
 end
 
-function build_reverse_polar_dcglp(master::BendersX.AbstractMaster, param::ReversePolarDCGLPParam)
+function build_simplex_norm_test_dcglp(master::BendersX.AbstractMaster, param::SimplexNormTestDCGLPParam)
     dcglp = Model(param.dcglp_param.optimizer)
 
     @variable(dcglp, tau[1:master.dim_t])
@@ -121,7 +121,7 @@ function build_reverse_polar_dcglp(master::BendersX.AbstractMaster, param::Rever
 
     @objective(dcglp, Min, sum(tau))
 
-    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= REVERSEPOLAR_T_LOWER_BOUND .* omega_0[i])
+    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= SIMPLEXNORMTEST_T_LOWER_BOUND .* omega_0[i])
     @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i, j])
     @constraint(dcglp, condelta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_x[i, j])
 
@@ -136,13 +136,13 @@ function build_reverse_polar_dcglp(master::BendersX.AbstractMaster, param::Rever
     return dcglp
 end
 
-function get_split_index(oracle::ReversePolarDCGLPOracle)
+function get_split_index(oracle::SimplexNormTestDCGLPOracle)
     isa(oracle.param.split_index_selection_rule, BendersX.SimpleSplit) ||
         throw(BendersX.AlgorithmException("get_split_index is only valid for simple split rules."))
     return findfirst(x -> x > 0.5, oracle.splits[end][1])
 end
 
-function replace_disjunctive_inequality!(oracle::ReversePolarDCGLPOracle)
+function replace_disjunctive_inequality!(oracle::SimplexNormTestDCGLPOracle)
     dcglp = oracle.dcglp
     phi, phi_0 = oracle.splits[end]
 
