@@ -90,7 +90,7 @@ function BendersX.solve_dcglp!(
                                     hyperplanes,
                                     BendersX.select_top_fraction(
                                         hyperplanes_i,
-                                        h -> BendersX.evaluate_violation(h, x_value, t_value; zero_tol = oracle.param.zero_tol),
+                                        h -> hyperplane_violation(h, x_value, t_value),
                                         oracle.param.fraction_of_benders_cuts_to_master;
                                         add_only_violated_cuts = add_violated,
                                     ),

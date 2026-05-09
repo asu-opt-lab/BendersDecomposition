@@ -4,6 +4,10 @@ include("simplex_norm_dcglp/oracleSimplexNormDcglp.jl")
 include("simplex_norm_dcglp/oracleSimplexNormDcglpInterface.jl")
 include("simplex_norm_dcglp/SimplexNormDcglp.jl")
 
+include("simplex_norm_old/oracleSimplexNormOldDcglp.jl")
+include("simplex_norm_old/oracleSimplexNormOldDcglpInterface.jl")
+include("simplex_norm_old/SimplexNormOldDcglp.jl")
+
 include("directional_polar/oracleDirectionalPolarDcglp.jl")
 include("directional_polar/oracleDirectionalPolarDcglpInterface.jl")
 include("directional_polar/DirectionalPolarDcglp.jl")

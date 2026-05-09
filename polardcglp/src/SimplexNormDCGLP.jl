@@ -14,10 +14,12 @@ import BendersX: customize_mip_model!, customize_master_model!, customize_sub_mo
 const MOI = MathOptInterface
 const POLARDCGLP_ROOT = normpath(joinpath(@__DIR__, ".."))
 const SIMPLEXNORM_T_LOWER_BOUND = -1e6
+const SIMPLEXNORMOLD_T_LOWER_BOUND = -1e6
 const VERTICAL_REVERSE_POLAR_T_LOWER_BOUND = -1e6
 const SIMPLEXNORMTEST_T_LOWER_BOUND = -1e6
 
 export SimplexNormDCGLPParam, SimplexNormDCGLPOracle
+export SimplexNormOldDCGLPParam, SimplexNormOldDCGLPOracle
 export DirectionalPolarDCGLPParam, DirectionalPolarDCGLPOracle, set_core_point!
 export VerticalReversePolarDCGLPParam, VerticalReversePolarDCGLPOracle
 export SimplexNormTestDCGLPParam, SimplexNormTestDCGLPOracle
