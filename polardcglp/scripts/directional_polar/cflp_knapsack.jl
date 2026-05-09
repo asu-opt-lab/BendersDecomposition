@@ -172,12 +172,12 @@ oracle_param = DirectionalPolarDCGLPParam(
 master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
 
 typical_oracles = [
-    CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
-    CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
+    CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer),
+    CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer),
 ]
 disjunctive_oracle = DirectionalPolarDCGLPOracle(master, typical_oracles, oracle_param)
 
-lazy_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+lazy_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer)
 root_preprocessing = RootNodePreprocessing(
     lazy_oracle,
     BendersSeqInOut,

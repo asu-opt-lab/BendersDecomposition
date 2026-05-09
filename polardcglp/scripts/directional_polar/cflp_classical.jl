@@ -173,12 +173,12 @@ oracle_param = DirectionalPolarDCGLPParam(
 master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
 
 typical_oracles = [
-    ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
-    ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
+    ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer),
+    ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer),
 ]
 disjunctive_oracle = DirectionalPolarDCGLPOracle(master, typical_oracles, oracle_param)
 
-lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer)
 root_preprocessing = RootNodePreprocessing(
     lazy_oracle,
     BendersSeqInOut,
