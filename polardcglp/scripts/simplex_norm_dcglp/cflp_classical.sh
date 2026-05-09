@@ -3,7 +3,7 @@
 
 # Define variables to make the script more readable and maintainable
 
-ROUND_VERSION="cflp_polar_classical"
+ROUND_VERSION="simplex_norm_dcglp/cflp_classical"
 ROUND_DESCRIPTION="SimplexNormDCGLP CFLP, classical typical oracle, 7 private cores, CPLEX"
 EXPERIMENT_VERSION="1"
 SEED="1"
@@ -13,8 +13,8 @@ ROOT_TIME_LIMIT="3600"
 DCGLP_TIME_LIMIT="3600"
 EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}, polar classical"
 
-FILE_NAME="cflp_polar_classical.jl"
-SHELL_FILE_NAME="cflp_polar_classical.sh"
+FILE_NAME="cflp_classical.jl"
+SHELL_FILE_NAME="cflp_classical.sh"
 THREADS=7
 
 # Define variables to make the script more readable and maintainable
@@ -31,8 +31,8 @@ mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${ERR_OUT_DIR}"
 
 # Copy scripts to output directory
-cp -r polardcglp/scripts/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
-cp -r polardcglp/scripts/${SHELL_FILE_NAME} "${OUTPUT_DIR}/${SHELL_FILE_NAME}"
+cp -r polardcglp/scripts/simplex_norm_dcglp/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
+cp -r polardcglp/scripts/simplex_norm_dcglp/${SHELL_FILE_NAME} "${OUTPUT_DIR}/${SHELL_FILE_NAME}"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -98,7 +98,7 @@ for instance in "${instances[@]}"; do
     echo "module load cplex" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=polardcglp polardcglp/scripts/${FILE_NAME} --instance=${instance} --seed=${SEED} --time_limit=${TIME_LIMIT} --root_time_limit=${ROOT_TIME_LIMIT} --dcglp_time_limit=${DCGLP_TIME_LIMIT} --output_dir=${OUTPUT_DIR}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=polardcglp polardcglp/scripts/simplex_norm_dcglp/${FILE_NAME} --instance=${instance} --seed=${SEED} --time_limit=${TIME_LIMIT} --root_time_limit=${ROOT_TIME_LIMIT} --dcglp_time_limit=${DCGLP_TIME_LIMIT} --output_dir=${OUTPUT_DIR}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

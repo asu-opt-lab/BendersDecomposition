@@ -5,9 +5,9 @@ using JuMP
 isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
 using .SimplexNormDCGLP
 
-@testset "Callback Disjunctive Tests" begin
-    @info "Running SimplexNormDCGLP callback disjunctive tests"
+@testset "Sequential Vertical Reverse Polar Tests" begin
+    @info "Running VerticalReversePolarDCGLP sequential disjunctive tests"
     include("ufl.jl")
     include("cfl.jl")
-    @info "SimplexNormDCGLP callback disjunctive tests completed"
+    @info "VerticalReversePolarDCGLP sequential disjunctive tests completed"
 end

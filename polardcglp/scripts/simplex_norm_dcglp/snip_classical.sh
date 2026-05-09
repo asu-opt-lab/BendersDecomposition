@@ -3,14 +3,14 @@
 
 # Define variables to make the script more readable and maintainable
 
-ROUND_VERSION="snip_bnb_disj_classical"
+ROUND_VERSION="simplex_norm_dcglp/snip_classical"
 ROUND_DESCRIPTION="SimplexNormDCGLP SNIP, classical separable oracle, freq500, 56 cores SLURM, julia --threads=8"
 EXPERIMENT_VERSION="1"
 SEED="1"
 HOUR="01"
 EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}"
 
-FILE_NAME="snip_bnb_disj_classical.jl"
+FILE_NAME="snip_classical.jl"
 THREADS=56
 JULIA_THREADS=8
 
@@ -28,7 +28,7 @@ mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${ERR_OUT_DIR}"
 
 # Copy julia script to output directory
-cp -r polardcglp/scripts/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
+cp -r polardcglp/scripts/simplex_norm_dcglp/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -74,7 +74,7 @@ for instance_no in "${instance_nos[@]}"; do
             echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
             # Run Julia script with algorithm parameters
-            echo "julia --threads=${JULIA_THREADS} --project=polardcglp polardcglp/scripts/${FILE_NAME} --instance_no=${instance_no} --snip_no=${snip_no} --budget=${budget} --seed=${SEED}" >> "${JOBSCRIPT_FILE}"
+            echo "julia --threads=${JULIA_THREADS} --project=polardcglp polardcglp/scripts/simplex_norm_dcglp/${FILE_NAME} --instance_no=${instance_no} --snip_no=${snip_no} --budget=${budget} --seed=${SEED}" >> "${JOBSCRIPT_FILE}"
 
             # Submit job
             sbatch "${JOBSCRIPT_FILE}"

@@ -10,7 +10,7 @@ using .SimplexNormDCGLP
 
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
-@testset verbose = true "UFLP Sequential Benders Tests -- MIP master" begin
+@testset verbose = true "UFLP Sequential Simplex Norm DCGLP Tests -- MIP master" begin
     root_experiments_dir = normpath(joinpath(@__DIR__, "..", "..", "..", "experiments"))
     reference_path = normpath(joinpath(root_experiments_dir, "reference_objectives", "uflp.csv"))
     reference_df = DataFrame(CSV.File(reference_path))
@@ -44,14 +44,6 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 gap_tolerance = 1e-6,
                 verbose = true,
             )
-            dcglp_optimizer = optimizer_with_attributes(
-                CPLEX.Optimizer,
-                "CPXPARAM_Threads" => 7,
-                "CPX_PARAM_EPRHS" => 1e-9,
-                "CPX_PARAM_NUMERICALEMPHASIS" => 1,
-                "CPX_PARAM_EPOPT" => 1e-9,
-                MOI.Silent() => true,
-            )
             dcglp_param = DcglpParam(
                 dcglp_optimizer;
                 time_limit = 1000.0,
@@ -59,14 +51,6 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 halt_limit = 3,
                 iter_limit = 250,
                 verbose = false,
-            )
-            benders_inout_param = BendersSeqInOutParam(
-                time_limit = 800.0,
-                gap_tolerance = 1e-6,
-                verbose = true,
-                stabilizing_x = ones(data.n_facilities),
-                α = 0.9,
-                λ = 0.1,
             )
 
             instance_name = "p$i"
@@ -82,9 +66,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         split_index_selection_rule = LargestFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
                         add_benders_cuts_to_master = false,
-                        fraction_of_benders_cuts_to_master = 0.05,
                         reuse_dcglp = false,
-
                         zero_tol = 1e-9,
                     )
 
@@ -95,33 +77,6 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     ]
                     disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
                     env = BendersSeq(master, disjunctive_oracle; param = benders_param)
-
-                    solve!(env)
-                    @test env.termination_status == Optimal()
-                    @test isapprox(mip_opt_val, env.obj_value, atol = 1e-5)
-                end
-
-                @testset "SeqInOut" begin
-                    @info "solving SimplexNormDCGLP UFLP p$i - classical - seqinout"
-
-                    oracle_param = SimplexNormDCGLPParam(
-                        dcglp_param;
-                        split_index_selection_rule = LargestFractional(),
-                        disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-                        add_benders_cuts_to_master = false,
-                        fraction_of_benders_cuts_to_master = 0.05,
-                        reuse_dcglp = false,
-
-                        zero_tol = 1e-9,
-                    )
-
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                    typical_oracles = [
-                        ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
-                        ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
-                    ]
-                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
-                    env = BendersSeqInOut(master, disjunctive_oracle; param = benders_inout_param)
 
                     solve!(env)
                     @test env.termination_status == Optimal()
@@ -138,9 +93,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         split_index_selection_rule = LargestFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
                         add_benders_cuts_to_master = false,
-                        fraction_of_benders_cuts_to_master = 0.05,
                         reuse_dcglp = false,
-
                         zero_tol = 1e-9,
                     )
 
@@ -148,30 +101,6 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]
                     disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
                     env = BendersSeq(master, disjunctive_oracle; param = benders_param)
-
-                    solve!(env)
-                    @test env.termination_status == Optimal()
-                    @test isapprox(mip_opt_val, env.obj_value, atol = 1e-5)
-                end
-
-                @testset "SeqInOut" begin
-                    @info "solving SimplexNormDCGLP UFLP p$i - fat knapsack - seqinout"
-
-                    oracle_param = SimplexNormDCGLPParam(
-                        dcglp_param;
-                        split_index_selection_rule = LargestFractional(),
-                        disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-                        add_benders_cuts_to_master = false,
-                        fraction_of_benders_cuts_to_master = 0.05,
-                        reuse_dcglp = false,
-
-                        zero_tol = 1e-9,
-                    )
-
-                    master = Master(data; customize = customize_master_knapsack!, optimizer = mip_optimizer)
-                    typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]
-                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
-                    env = BendersSeqInOut(master, disjunctive_oracle; param = benders_inout_param)
 
                     solve!(env)
                     @test env.termination_status == Optimal()

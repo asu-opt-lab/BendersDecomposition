@@ -19,7 +19,7 @@ end
 
 include("test_read_flcap.jl")
 include("test_directional_polar_dcglp.jl")
-include("test_newpolar.jl")
+include("test_vertical_reverse_polar.jl")
 include("test_simplexnormtest.jl")
 
 function simple_polar_data()

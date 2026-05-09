@@ -9,10 +9,10 @@ using Statistics
 
 const MOI = MathOptInterface
 
-isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl")))
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
 using .SimplexNormDCGLP
 
-include(normpath(joinpath(@__DIR__, "script_utils.jl")))
+include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 function parse_split_rule(name::String)
     normalized = lowercase(strip(name))
@@ -161,7 +161,7 @@ dcglp_optimizer = optimizer_with_attributes(
     MOI.Silent() => true,
 )
 
-const SCFLP_DIR = normpath(joinpath(@__DIR__, "..", "data", "SCFLP"))
+const SCFLP_DIR = normpath(joinpath(@__DIR__, "..", "..", "data", "SCFLP"))
 
 # -----------------------------------------------------------------------------
 # load problem data

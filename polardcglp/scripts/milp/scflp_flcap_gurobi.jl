@@ -5,7 +5,7 @@ using Printf
 using Statistics
 using Gurobi
 
-include(normpath(joinpath(@__DIR__, "script_utils.jl")))
+include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 # Gurobi-based mip_optimizer (replaces solver_defaults.jl which uses CPLEX)
 mip_optimizer = optimizer_with_attributes(
@@ -33,7 +33,7 @@ output_dir = get_string_option(options, "output_dir", "output")
 
 Random.seed!(seed)
 
-const SCFLP_DIR = normpath(joinpath(@__DIR__, "..", "data", "SCFLP"))
+const SCFLP_DIR = normpath(joinpath(@__DIR__, "..", "..", "data", "SCFLP"))
 
 @info "SCFLP MILP script (Gurobi, FLCAP)" instance = instance dataset_dir = SCFLP_DIR seed = seed time_limit = time_limit threads = threads
 

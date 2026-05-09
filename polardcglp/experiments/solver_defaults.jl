@@ -10,6 +10,8 @@ optimizer = optimizer_with_attributes(
     MOI.Silent() => true,
 )
 
+dcglp_optimizer = optimizer
+
 mip_optimizer = optimizer_with_attributes(
     CPLEX.Optimizer,
     "CPXPARAM_Threads" => 7,

@@ -1,8 +1,8 @@
 #!/bin/sh
 #SBATCH -t 0-01:00:00
 
-ROUND_VERSION="uflp_bnb_newpolar_freq500"
-ROUND_DESCRIPTION="newpolar hard UFL, freq500, knapsack, 7 private cores, CPLEX"
+ROUND_VERSION="vertical_reverse_polar/uflp_knapsack"
+ROUND_DESCRIPTION="vertical_reverse_polar hard UFL, freq500, knapsack, 7 private cores, CPLEX"
 EXPERIMENT_VERSION="1"
 SEED="1"
 HOUR="04"
@@ -14,10 +14,10 @@ FREQUENCY="500"
 REUSE_DCGLP="false"
 STRENGTHENED="true"
 LIFT="false"
-EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}, newpolar"
+EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}, vertical_reverse_polar"
 
-FILE_NAME="uflp_bnb_newpolar_freq500.jl"
-SHELL_FILE_NAME="uflp_bnb_newpolar_freq500.sh"
+FILE_NAME="uflp_knapsack.jl"
+SHELL_FILE_NAME="uflp_knapsack.sh"
 THREADS=7
 
 OUTPUT_DIR="polardcglp/experiment/${ROUND_VERSION}/${EXPERIMENT_VERSION}"
@@ -31,8 +31,8 @@ fi
 mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${ERR_OUT_DIR}"
 
-cp -r polardcglp/scripts/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
-cp -r polardcglp/scripts/${SHELL_FILE_NAME} "${OUTPUT_DIR}/${SHELL_FILE_NAME}"
+cp -r polardcglp/scripts/vertical_reverse_polar/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
+cp -r polardcglp/scripts/vertical_reverse_polar/${SHELL_FILE_NAME} "${OUTPUT_DIR}/${SHELL_FILE_NAME}"
 
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
 # Experiment Metadata
@@ -91,7 +91,7 @@ for instance in "${instances[@]}"; do
     echo "module load julia" >> "${JOBSCRIPT_FILE}"
     echo "module load cplex" >> "${JOBSCRIPT_FILE}"
 
-    echo "julia --project=polardcglp polardcglp/scripts/${FILE_NAME} --instance=${instance} --seed=${SEED} --time_limit=${TIME_LIMIT} --dcglp_time_limit=${DCGLP_TIME_LIMIT} --dcglp_iter_limit=${DCGLP_ITER_LIMIT} --dcglp_halt_limit=${DCGLP_HALT_LIMIT} --frequency=${FREQUENCY} --reuse_dcglp=${REUSE_DCGLP} --strengthened=${STRENGTHENED} --lift=${LIFT}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=polardcglp polardcglp/scripts/vertical_reverse_polar/${FILE_NAME} --instance=${instance} --seed=${SEED} --time_limit=${TIME_LIMIT} --dcglp_time_limit=${DCGLP_TIME_LIMIT} --dcglp_iter_limit=${DCGLP_ITER_LIMIT} --dcglp_halt_limit=${DCGLP_HALT_LIMIT} --frequency=${FREQUENCY} --reuse_dcglp=${REUSE_DCGLP} --strengthened=${STRENGTHENED} --lift=${LIFT}" >> "${JOBSCRIPT_FILE}"
 
     sbatch "${JOBSCRIPT_FILE}"
     rm "${JOBSCRIPT_FILE}"

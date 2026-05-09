@@ -3,14 +3,14 @@
 
 # Define variables to make the script more readable and maintainable
 
-ROUND_VERSION="scflp_directional_polar_knapsack_flcap_gurobi"
+ROUND_VERSION="directional_polar/scflp_knapsack_flcap_gurobi"
 ROUND_DESCRIPTION="DirectionalPolarDCGLP SCFLP, knapsack typical oracle, FLCAP-based stochastic data, 7 private cores, Gurobi"
 EXPERIMENT_VERSION="1"
 SEED="1"
 HOUR="04"
 EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}"
 
-FILE_NAME="scflp_directional_polar_knapsack_flcap_gurobi.jl"
+FILE_NAME="scflp_knapsack_flcap_gurobi.jl"
 THREADS=7
 
 # Define variables to make the script more readable and maintainable
@@ -27,7 +27,7 @@ mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${ERR_OUT_DIR}"
 
 # Copy src directory to output directory
-cp -r polardcglp/scripts/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
+cp -r polardcglp/scripts/directional_polar/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -115,7 +115,7 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=polardcglp polardcglp/scripts/${FILE_NAME} --instance=${instance} --seed=${SEED}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=polardcglp polardcglp/scripts/directional_polar/${FILE_NAME} --instance=${instance} --seed=${SEED}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

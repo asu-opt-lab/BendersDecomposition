@@ -4,10 +4,10 @@ using Gurobi
 using Printf
 using Random
 
-isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl")))
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
 using .SimplexNormDCGLP
 
-include(normpath(joinpath(@__DIR__, "script_utils.jl")))
+include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 options, _ = parse_script_args(ARGS)
 

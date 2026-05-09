@@ -4,12 +4,12 @@ using CPLEX
 using Printf
 using Random
 
-isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl")))
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
 using .SimplexNormDCGLP
 
 
-include(normpath(joinpath(@__DIR__, "solver_defaults.jl")))
-include(normpath(joinpath(@__DIR__, "script_utils.jl")))
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
+include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 options, _ = parse_script_args(ARGS)
 
@@ -30,7 +30,7 @@ build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
 
-@info "newpolar SNIP script" instance_no = instance_no snip_no = snip_no budget = budget seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
+@info "vertical_reverse_polar SNIP script" instance_no = instance_no snip_no = snip_no budget = budget seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
 
 data = read_snip_data(instance_no, snip_no, budget)
 
@@ -57,7 +57,7 @@ dcglp_param = DcglpParam(
     verbose = true,
 )
 
-oracle_param = NewPolarDCGLPParam(
+oracle_param = VerticalReversePolarDCGLPParam(
     dcglp_param;
     split_index_selection_rule = LargestFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -75,7 +75,7 @@ typical_oracles = [
     SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; customize = customize_sub_model!, optimizer = optimizer),
     SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; customize = customize_sub_model!, optimizer = optimizer),
 ]
-disjunctive_oracle = NewPolarDCGLPOracle(master, typical_oracles, oracle_param)
+disjunctive_oracle = VerticalReversePolarDCGLPOracle(master, typical_oracles, oracle_param)
 
 lazy_oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; customize = customize_sub_model!, optimizer = optimizer)
 root_preprocessing = RootNodePreprocessing(
@@ -99,7 +99,7 @@ env = BendersBnB(
 )
 
 if build_only
-    @info "newpolar SNIP script build completed without solve." instance_no = instance_no snip_no = snip_no budget = budget
+    @info "vertical_reverse_polar SNIP script build completed without solve." instance_no = instance_no snip_no = snip_no budget = budget
 else
     solve!(env)
     obj_value = try
@@ -107,5 +107,5 @@ else
     catch
         NaN
     end
-    @info "newpolar SNIP script finished" instance_no = instance_no snip_no = snip_no budget = budget termination_status = env.termination_status objective_value = obj_value
+    @info "vertical_reverse_polar SNIP script finished" instance_no = instance_no snip_no = snip_no budget = budget termination_status = env.termination_status objective_value = obj_value
 end

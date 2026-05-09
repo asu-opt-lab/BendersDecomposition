@@ -1,5 +1,5 @@
 function BendersX.solve_dcglp!(
-    oracle::NewPolarDCGLPOracle,
+    oracle::VerticalReversePolarDCGLPOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
     zero_indices::Vector{Int},
@@ -28,7 +28,7 @@ function BendersX.solve_dcglp!(
                         t_value,
                         start_time,
                         time_limit,
-                        "NewPolarDCGLP master: unexpected error encountered when optimizing dcglp master: $(err)";
+                        "VerticalReversePolarDCGLP master: unexpected error encountered when optimizing dcglp master: $(err)";
                         throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
                     )
                 end
@@ -49,13 +49,13 @@ function BendersX.solve_dcglp!(
                         t_value,
                         start_time,
                         time_limit,
-                        "NewPolarDCGLP master: unexpected dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue";
+                        "VerticalReversePolarDCGLP master: unexpected dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue";
                         throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
                     )
                 elseif termination_status(dcglp) == TIME_LIMIT
-                    throw(BendersX.TimeLimitException("Time limit reached during NewPolarDCGLP solving"))
+                    throw(BendersX.TimeLimitException("Time limit reached during VerticalReversePolarDCGLP solving"))
                 else
-                    throw(BendersX.UnexpectedModelStatusException("NewPolarDCGLP master: $(termination_status(dcglp))"))
+                    throw(BendersX.UnexpectedModelStatusException("VerticalReversePolarDCGLP master: $(termination_status(dcglp))"))
                 end
             end
 
@@ -117,7 +117,7 @@ function BendersX.solve_dcglp!(
             BendersX.record_iteration!(log, state)
         end
 
-        oracle.param.dcglp_param.verbose && print_new_polar_iteration_info(state, log)
+        oracle.param.dcglp_param.verbose && print_vertical_reverse_polar_iteration_info(state, log)
         BendersX.check_lb_improvement!(state, log; zero_tol = oracle.param.zero_tol)
         BendersX.is_terminated(state, log, oracle.param.dcglp_param, time_limit) && break
 
@@ -126,7 +126,7 @@ function BendersX.solve_dcglp!(
 
     current_lb = log.iterations[end].LB
     if current_lb >= oracle.param.zero_tol
-        cut = generate_new_polar_disjunctive_cut(
+        cut = generate_vertical_reverse_polar_disjunctive_cut(
             dcglp,
             current_lb,
             x_value,
@@ -157,7 +157,7 @@ function BendersX.solve_dcglp!(
     )
 end
 
-function generate_new_polar_disjunctive_cut(
+function generate_vertical_reverse_polar_disjunctive_cut(
     dcglp::Model,
     current_lb::Float64,
     x_value::Vector{Float64},
@@ -208,7 +208,7 @@ function generate_new_polar_disjunctive_cut(
 end
 
 function fallback_typical_or_throw(
-    oracle::NewPolarDCGLPOracle,
+    oracle::VerticalReversePolarDCGLPOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
     start_time::Float64,
@@ -223,7 +223,7 @@ function fallback_typical_or_throw(
     throw(BendersX.UnexpectedModelStatusException(msg))
 end
 
-function print_new_polar_iteration_info(state::BendersX.DcglpState, log::BendersX.DcglpLog)
+function print_vertical_reverse_polar_iteration_info(state::BendersX.DcglpState, log::BendersX.DcglpLog)
     @printf(
         "   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | UB_k: %8.2f | UB_v: %8.2f | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
         log.n_iter,
@@ -240,7 +240,7 @@ function print_new_polar_iteration_info(state::BendersX.DcglpState, log::Benders
 end
 
 function print_disjunctive_cut(
-    oracle::NewPolarDCGLPOracle,
+    oracle::VerticalReversePolarDCGLPOracle,
     cut::BendersX.Hyperplane,
     x_value::Vector{Float64},
     t_value::Vector{Float64};

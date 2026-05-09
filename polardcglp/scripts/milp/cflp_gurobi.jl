@@ -5,7 +5,7 @@ using Printf
 using Statistics
 using Gurobi
 
-include(normpath(joinpath(@__DIR__, "script_utils.jl")))
+include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 global_logger(ConsoleLogger(stderr, Logging.Debug))
 

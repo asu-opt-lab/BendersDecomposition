@@ -5,8 +5,8 @@ isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", 
 using .SimplexNormDCGLP
 
 @testset "SimplexNormDCGLP Experiments" begin
-    # include("3_test_sequential_disjunctive/runtest.jl")
-    # include("5_test_callback_disjunctive/runtest.jl")
-    # include("3_test_sequential_directional_disjunctive/runtest.jl")
-    include("5_test_callback_directional_disjunctive/runtest.jl")
+    include("3_test_sequential_simplex_norm_dcglp/runtest.jl")
+    include("3_test_sequential_directional_polar/runtest.jl")
+    include("3_test_sequential_vertical_reverse_polar/runtest.jl")
+    include("3_test_sequential_simplex_norm_test/runtest.jl")
 end

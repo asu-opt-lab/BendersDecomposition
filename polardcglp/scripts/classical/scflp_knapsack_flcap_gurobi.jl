@@ -5,7 +5,7 @@ using Printf
 using Statistics
 using Gurobi
 
-include(normpath(joinpath(@__DIR__, "script_utils.jl")))
+include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 global_logger(ConsoleLogger(stderr, Logging.Debug))
 
@@ -20,7 +20,7 @@ build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
 
-const SCFLP_DIR = normpath(joinpath(@__DIR__, "..", "data", "SCFLP"))
+const SCFLP_DIR = normpath(joinpath(@__DIR__, "..", "..", "data", "SCFLP"))
 
 @info "SCFLP knapsack script (Gurobi, FLCAP)" instance = instance dataset_dir = SCFLP_DIR seed = seed time_limit = time_limit threads = threads build_only = build_only
 

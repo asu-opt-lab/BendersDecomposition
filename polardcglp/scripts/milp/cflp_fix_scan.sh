@@ -3,14 +3,14 @@
 
 # Define variables to make the script more readable and maintainable
 
-ROUND_VERSION="cflp_milp_fix_scan"
+ROUND_VERSION="milp/cflp_fix_scan"
 ROUND_DESCRIPTION="CFLP MILP fix scan, 7 private cores"
 EXPERIMENT_VERSION="1"
 SEED="1"
 HOUR="04"
 EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}"
 
-FILE_NAME="cflp_milp_fix_scan.jl"
+FILE_NAME="cflp_fix_scan.jl"
 THREADS=7
 TIME_LIMIT=60
 VALUES="both"
@@ -29,7 +29,7 @@ mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${ERR_OUT_DIR}"
 
 # Copy src directory to output directory
-cp -r polardcglp/scripts/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
+cp -r polardcglp/scripts/milp/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -89,7 +89,7 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=polardcglp polardcglp/scripts/${FILE_NAME} --instance=${instance} --seed=${SEED} --time_limit=${TIME_LIMIT} --threads=${THREADS} --values=${VALUES} --output_csv=${ERR_OUT_DIR}/${instance}.csv" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=polardcglp polardcglp/scripts/milp/${FILE_NAME} --instance=${instance} --seed=${SEED} --time_limit=${TIME_LIMIT} --threads=${THREADS} --values=${VALUES} --output_csv=${ERR_OUT_DIR}/${instance}.csv" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

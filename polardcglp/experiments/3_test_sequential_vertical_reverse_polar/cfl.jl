@@ -10,7 +10,7 @@ using .SimplexNormDCGLP
 
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
-@testset verbose = true "CFLP Sequential Simplex Norm DCGLP Tests" begin
+@testset verbose = true "CFLP Sequential Vertical Reverse Polar Tests" begin
     root_experiments_dir = normpath(joinpath(@__DIR__, "..", "..", "..", "experiments"))
     reference_path = normpath(joinpath(root_experiments_dir, "reference_objectives", "cflp.csv"))
     reference_df = DataFrame(CSV.File(reference_path))
@@ -42,9 +42,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Classical oracle" begin
                 @testset "Seq" begin
-                    @info "solving SimplexNormDCGLP CFLP p$i - classical - seq"
+                    @info "solving VerticalReversePolarDCGLP CFLP p$i - classical - seq"
 
-                    oracle_param = SimplexNormDCGLPParam(
+                    oracle_param = VerticalReversePolarDCGLPParam(
                         dcglp_param;
                         split_index_selection_rule = RandomFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -58,7 +58,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                     ]
-                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = VerticalReversePolarDCGLPOracle(master, typical_oracles, oracle_param)
                     env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
                     solve!(env)
@@ -69,9 +69,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Knapsack oracle" begin
                 @testset "Seq" begin
-                    @info "solving SimplexNormDCGLP CFLP p$i - knapsack - seq"
+                    @info "solving VerticalReversePolarDCGLP CFLP p$i - knapsack - seq"
 
-                    oracle_param = SimplexNormDCGLPParam(
+                    oracle_param = VerticalReversePolarDCGLPParam(
                         dcglp_param;
                         split_index_selection_rule = RandomFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -85,7 +85,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                     ]
-                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = VerticalReversePolarDCGLPOracle(master, typical_oracles, oracle_param)
                     env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
                     solve!(env)

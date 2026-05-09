@@ -1,12 +1,12 @@
 using Random
 using JSON
 
-isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl")))
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
 using .SimplexNormDCGLP
 
 
-const FLCAP_DIR = normpath(joinpath(@__DIR__, "..", "data", "FLCAP"))
-const OUTPUT_DIR = normpath(joinpath(@__DIR__, "..", "data", "SCFLP_bodur"))
+const FLCAP_DIR = normpath(joinpath(@__DIR__, "..", "..", "data", "FLCAP"))
+const OUTPUT_DIR = normpath(joinpath(@__DIR__, "..", "..", "data", "SCFLP_bodur"))
 const SCENARIO_SIZES = [250, 500, 1500]
 
 mkpath(OUTPUT_DIR)

@@ -10,22 +10,22 @@ using .SimplexNormDCGLP
 
 const NMOI = MathOptInterface
 
-struct NewPolarData <: AbstractData
+struct VerticalReversePolarData <: AbstractData
     open_cost::Vector{Float64}
     ship_cost::Matrix{Float64}
 end
 
-newpolar_data() = NewPolarData(
+vertical_reverse_polar_data() = VerticalReversePolarData(
     [0.5, 0.6, 0.8],
     [1.0 3.0 2.0 4.0;
      2.0 1.0 2.5 2.0;
      3.0 2.0 1.0 1.5],
 )
 
-newpolar_highs_optimizer() = optimizer_with_attributes(HiGHS.Optimizer, NMOI.Silent() => true)
+vertical_reverse_polar_highs_optimizer() = optimizer_with_attributes(HiGHS.Optimizer, NMOI.Silent() => true)
 
-function customize_master_newpolar!(model::Model, data::NewPolarData)
-    set_optimizer(model, newpolar_highs_optimizer())
+function customize_master_vertical_reverse_polar!(model::Model, data::VerticalReversePolarData)
+    set_optimizer(model, vertical_reverse_polar_highs_optimizer())
 
     n_facilities = length(data.open_cost)
     @variable(model, x[1:n_facilities], Bin)
@@ -35,8 +35,8 @@ function customize_master_newpolar!(model::Model, data::NewPolarData)
     return (x = x,), t
 end
 
-function customize_sub_newpolar!(model::Model, data::NewPolarData, scen_idx::Int; x)
-    set_optimizer(model, newpolar_highs_optimizer())
+function customize_sub_vertical_reverse_polar!(model::Model, data::VerticalReversePolarData, scen_idx::Int; x)
+    set_optimizer(model, vertical_reverse_polar_highs_optimizer())
 
     n_facilities, n_customers = size(data.ship_cost)
     @variable(model, y[1:n_facilities, 1:n_customers] >= 0)
@@ -46,9 +46,9 @@ function customize_sub_newpolar!(model::Model, data::NewPolarData, scen_idx::Int
     return nothing
 end
 
-function solve_newpolar_reference(data::NewPolarData)
+function solve_vertical_reverse_polar_reference(data::VerticalReversePolarData)
     model = Model()
-    set_optimizer(model, newpolar_highs_optimizer())
+    set_optimizer(model, vertical_reverse_polar_highs_optimizer())
     n_facilities, n_customers = size(data.ship_cost)
     @variable(model, x[1:n_facilities], Bin)
     @variable(model, y[1:n_facilities, 1:n_customers] >= 0)
@@ -60,15 +60,15 @@ function solve_newpolar_reference(data::NewPolarData)
     return objective_value(model)
 end
 
-function make_newpolar_typical_oracles(data::NewPolarData, master::Master)
+function make_vertical_reverse_polar_typical_oracles(data::VerticalReversePolarData, master::Master)
     return [
-        ClassicalOracle(data, master; customize = customize_sub_newpolar!),
-        ClassicalOracle(data, master; customize = customize_sub_newpolar!),
+        ClassicalOracle(data, master; customize = customize_sub_vertical_reverse_polar!),
+        ClassicalOracle(data, master; customize = customize_sub_vertical_reverse_polar!),
     ]
 end
 
-function make_newpolar_oracle(
-    data::NewPolarData,
+function make_vertical_reverse_polar_oracle(
+    data::VerticalReversePolarData,
     master::Master;
     split_rule = MostFractional(),
     append_rule = AllDisjunctiveCuts(),
@@ -76,14 +76,14 @@ function make_newpolar_oracle(
     verbose::Bool = false,
 )
     dcglp_param = DcglpParam(
-        newpolar_highs_optimizer();
+        vertical_reverse_polar_highs_optimizer();
         time_limit = 10.0,
         gap_tolerance = 1e-8,
         halt_limit = 3,
         iter_limit = 25,
         verbose = verbose,
     )
-    param = NewPolarDCGLPParam(
+    param = VerticalReversePolarDCGLPParam(
         dcglp_param;
         split_index_selection_rule = split_rule,
         disjunctive_cut_append_rule = append_rule,
@@ -92,15 +92,15 @@ function make_newpolar_oracle(
         reuse_dcglp = reuse_dcglp,
         zero_tol = 1e-9,
     )
-    return NewPolarDCGLPOracle(master, make_newpolar_typical_oracles(data, master), param)
+    return VerticalReversePolarDCGLPOracle(master, make_vertical_reverse_polar_typical_oracles(data, master), param)
 end
 
-struct NewPolarVectorTData <: AbstractData end
+struct VerticalReversePolarVectorTData <: AbstractData end
 
-struct NewPolarVectorTOracle <: BendersX.AbstractTypicalOracle end
+struct VerticalReversePolarVectorTOracle <: BendersX.AbstractTypicalOracle end
 
-function customize_master_newpolar_vector_t!(model::Model, data::NewPolarVectorTData)
-    set_optimizer(model, newpolar_highs_optimizer())
+function customize_master_vertical_reverse_polar_vector_t!(model::Model, data::VerticalReversePolarVectorTData)
+    set_optimizer(model, vertical_reverse_polar_highs_optimizer())
     @variable(model, x[1:2], Bin)
     @variable(model, t[1:2] >= -1e6)
     @objective(model, Min, sum(t))
@@ -108,7 +108,7 @@ function customize_master_newpolar_vector_t!(model::Model, data::NewPolarVectorT
 end
 
 function BendersX.generate_cuts(
-    ::NewPolarVectorTOracle,
+    ::VerticalReversePolarVectorTOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64};
     tol_normalize::Float64 = 1.0,
@@ -127,27 +127,27 @@ function BendersX.generate_cuts(
     return is_in_L, hyperplanes, f_x
 end
 
-@testset "newpolar Environment" begin
+@testset "vertical_reverse_polar Environment" begin
     @testset "Constructor Validation" begin
-        data = newpolar_data()
-        master = Master(data; customize = customize_master_newpolar!)
-        oracle = make_newpolar_oracle(data, master)
-        @test oracle isa NewPolarDCGLPOracle
+        data = vertical_reverse_polar_data()
+        master = Master(data; customize = customize_master_vertical_reverse_polar!)
+        oracle = make_vertical_reverse_polar_oracle(data, master)
+        @test oracle isa VerticalReversePolarDCGLPOracle
         @test oracle.dcglp[:tau] isa VariableRef
     end
 
     @testset "Direct Vector-T Cut Generation" begin
-        vt_data = NewPolarVectorTData()
-        vt_master = Master(vt_data; customize = customize_master_newpolar_vector_t!)
+        vt_data = VerticalReversePolarVectorTData()
+        vt_master = Master(vt_data; customize = customize_master_vertical_reverse_polar_vector_t!)
         dcglp_param = DcglpParam(
-            newpolar_highs_optimizer();
+            vertical_reverse_polar_highs_optimizer();
             time_limit = 10.0,
             gap_tolerance = 1e-8,
             halt_limit = 3,
             iter_limit = 25,
             verbose = false,
         )
-        param = NewPolarDCGLPParam(
+        param = VerticalReversePolarDCGLPParam(
             dcglp_param;
             split_index_selection_rule = MostFractional(),
             disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -156,7 +156,7 @@ end
             strengthened = false,
             zero_tol = 1e-9,
         )
-        oracle = NewPolarDCGLPOracle(vt_master, [NewPolarVectorTOracle(), NewPolarVectorTOracle()], param)
+        oracle = VerticalReversePolarDCGLPOracle(vt_master, [VerticalReversePolarVectorTOracle(), VerticalReversePolarVectorTOracle()], param)
 
         x_value = zeros(2)
         t_value = zeros(2)
@@ -171,17 +171,17 @@ end
     end
 
     @testset "Fallback to Typical Cuts" begin
-        vt_data = NewPolarVectorTData()
-        vt_master = Master(vt_data; customize = customize_master_newpolar_vector_t!)
+        vt_data = VerticalReversePolarVectorTData()
+        vt_master = Master(vt_data; customize = customize_master_vertical_reverse_polar_vector_t!)
         dcglp_param = DcglpParam(
-            newpolar_highs_optimizer();
+            vertical_reverse_polar_highs_optimizer();
             time_limit = 10.0,
             gap_tolerance = 1e-8,
             halt_limit = 3,
             iter_limit = 25,
             verbose = false,
         )
-        param = NewPolarDCGLPParam(
+        param = VerticalReversePolarDCGLPParam(
             dcglp_param;
             split_index_selection_rule = MostFractional(),
             disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -190,7 +190,7 @@ end
             strengthened = false,
             zero_tol = 1e-9,
         )
-        oracle = NewPolarDCGLPOracle(vt_master, [NewPolarVectorTOracle(), NewPolarVectorTOracle()], param)
+        oracle = VerticalReversePolarDCGLPOracle(vt_master, [VerticalReversePolarVectorTOracle(), VerticalReversePolarVectorTOracle()], param)
 
         x_value = ones(2)
         t_value = zeros(2)
@@ -202,17 +202,17 @@ end
     end
 
     @testset "Verbose Smoke" begin
-        vt_data = NewPolarVectorTData()
-        vt_master = Master(vt_data; customize = customize_master_newpolar_vector_t!)
+        vt_data = VerticalReversePolarVectorTData()
+        vt_master = Master(vt_data; customize = customize_master_vertical_reverse_polar_vector_t!)
         dcglp_param = DcglpParam(
-            newpolar_highs_optimizer();
+            vertical_reverse_polar_highs_optimizer();
             time_limit = 10.0,
             gap_tolerance = 1e-8,
             halt_limit = 3,
             iter_limit = 25,
             verbose = true,
         )
-        param = NewPolarDCGLPParam(
+        param = VerticalReversePolarDCGLPParam(
             dcglp_param;
             split_index_selection_rule = MostFractional(),
             disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -221,7 +221,7 @@ end
             strengthened = false,
             zero_tol = 1e-9,
         )
-        oracle = NewPolarDCGLPOracle(vt_master, [NewPolarVectorTOracle(), NewPolarVectorTOracle()], param)
+        oracle = VerticalReversePolarDCGLPOracle(vt_master, [VerticalReversePolarVectorTOracle(), VerticalReversePolarVectorTOracle()], param)
         @test begin
             is_in_L, _, _ = BendersX.generate_cuts(oracle, zeros(2), zeros(2); time_limit = 10.0)
             !is_in_L
@@ -229,11 +229,11 @@ end
     end
 
     @testset "BendersSeq Solve Path" begin
-        data = newpolar_data()
-        reference_obj = solve_newpolar_reference(data)
+        data = vertical_reverse_polar_data()
+        reference_obj = solve_vertical_reverse_polar_reference(data)
 
-        master = Master(data; customize = customize_master_newpolar!)
-        oracle = make_newpolar_oracle(data, master; reuse_dcglp = true)
+        master = Master(data; customize = customize_master_vertical_reverse_polar!)
+        oracle = make_vertical_reverse_polar_oracle(data, master; reuse_dcglp = true)
         env = BendersSeq(
             master,
             oracle;

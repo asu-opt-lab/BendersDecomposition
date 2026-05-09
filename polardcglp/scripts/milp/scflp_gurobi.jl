@@ -5,7 +5,7 @@ using Printf
 using Statistics
 using Gurobi
 
-include(normpath(joinpath(@__DIR__, "script_utils.jl")))
+include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 # Gurobi-based mip_optimizer (replaces solver_defaults.jl which uses CPLEX)
 mip_optimizer = optimizer_with_attributes(

@@ -5,8 +5,8 @@ using Printf
 using Statistics
 using CPLEX
 
-include(normpath(joinpath(@__DIR__, "solver_defaults.jl")))
-include(normpath(joinpath(@__DIR__, "script_utils.jl")))
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
+include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 global_logger(ConsoleLogger(stderr, Logging.Debug))
 
@@ -20,7 +20,7 @@ time_limit = get_float_option(options, "time_limit", 14400.0)
 
 Random.seed!(seed)
 
-const SCFLP_DIR = normpath(joinpath(@__DIR__, "..", "data", "SCFLP"))
+const SCFLP_DIR = normpath(joinpath(@__DIR__, "..", "..", "data", "SCFLP"))
 
 @info "SCFLP MILP script (CPLEX, FLCAP)" instance = instance dataset_dir = SCFLP_DIR seed = seed time_limit = time_limit
 

@@ -3,8 +3,8 @@
 
 # Define variables to make the script more readable and maintainable
 
-ROUND_VERSION="snip_bnb_newpolar_classical"
-ROUND_DESCRIPTION="newpolar SNIP, classical separable oracle, freq500, 56 cores SLURM, julia --threads=8, CPLEX"
+ROUND_VERSION="vertical_reverse_polar/snip_classical"
+ROUND_DESCRIPTION="vertical_reverse_polar SNIP, classical separable oracle, freq500, 56 cores SLURM, julia --threads=8, CPLEX"
 EXPERIMENT_VERSION="1"
 SEED="1"
 HOUR="04"
@@ -16,10 +16,10 @@ FREQUENCY="500"
 REUSE_DCGLP="false"
 STRENGTHENED="true"
 LIFT="false"
-EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}, newpolar"
+EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}, vertical_reverse_polar"
 
-FILE_NAME="snip_bnb_newpolar_classical.jl"
-SHELL_FILE_NAME="snip_bnb_newpolar_classical.sh"
+FILE_NAME="snip_classical.jl"
+SHELL_FILE_NAME="snip_classical.sh"
 THREADS=56
 JULIA_THREADS=8
 
@@ -37,8 +37,8 @@ mkdir -p "${OUTPUT_DIR}"
 mkdir -p "${ERR_OUT_DIR}"
 
 # Copy julia and shell script to output directory
-cp -r polardcglp/scripts/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
-cp -r polardcglp/scripts/${SHELL_FILE_NAME} "${OUTPUT_DIR}/${SHELL_FILE_NAME}"
+cp -r polardcglp/scripts/vertical_reverse_polar/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
+cp -r polardcglp/scripts/vertical_reverse_polar/${SHELL_FILE_NAME} "${OUTPUT_DIR}/${SHELL_FILE_NAME}"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -83,7 +83,7 @@ for instance_no in "${instance_nos[@]}"; do
             echo "module load cplex" >> "${JOBSCRIPT_FILE}"
 
             # Run Julia script with algorithm parameters
-            echo "julia --threads=${JULIA_THREADS} --project=polardcglp polardcglp/scripts/${FILE_NAME} --instance_no=${instance_no} --snip_no=${snip_no} --budget=${budget} --seed=${SEED} --time_limit=${TIME_LIMIT} --dcglp_time_limit=${DCGLP_TIME_LIMIT} --dcglp_iter_limit=${DCGLP_ITER_LIMIT} --dcglp_halt_limit=${DCGLP_HALT_LIMIT} --frequency=${FREQUENCY} --reuse_dcglp=${REUSE_DCGLP} --strengthened=${STRENGTHENED} --lift=${LIFT}" >> "${JOBSCRIPT_FILE}"
+            echo "julia --threads=${JULIA_THREADS} --project=polardcglp polardcglp/scripts/vertical_reverse_polar/${FILE_NAME} --instance_no=${instance_no} --snip_no=${snip_no} --budget=${budget} --seed=${SEED} --time_limit=${TIME_LIMIT} --dcglp_time_limit=${DCGLP_TIME_LIMIT} --dcglp_iter_limit=${DCGLP_ITER_LIMIT} --dcglp_halt_limit=${DCGLP_HALT_LIMIT} --frequency=${FREQUENCY} --reuse_dcglp=${REUSE_DCGLP} --strengthened=${STRENGTHENED} --lift=${LIFT}" >> "${JOBSCRIPT_FILE}"
 
             # Submit job
             sbatch "${JOBSCRIPT_FILE}"
