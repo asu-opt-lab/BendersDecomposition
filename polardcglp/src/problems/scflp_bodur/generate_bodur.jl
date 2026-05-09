@@ -1,7 +1,7 @@
 using Random
 using JSON
 
-# Reuses read_flcap_data and write_scflp_json from the PolarDCGLP problem includes.
+# Reuses read_flcap_data and write_scflp_json from the SimplexNormDCGLP problem includes.
 
 """
     generate_scflp_bodur(flcap_filename, n_scenarios; seed, sigma_l, sigma_u, flcap_dir)

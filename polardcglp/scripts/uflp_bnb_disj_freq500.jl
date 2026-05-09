@@ -4,8 +4,8 @@ using CPLEX
 using Printf
 using Random
 
-isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl")))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl")))
+using .SimplexNormDCGLP
 
 include(normpath(joinpath(@__DIR__, "solver_defaults.jl")))
 include(normpath(joinpath(@__DIR__, "script_utils.jl")))
@@ -27,7 +27,7 @@ build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
 
-@info "PolarDCGLP hard UFL script" instance = instance seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
+@info "SimplexNormDCGLP hard UFL script" instance = instance seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
 
 data = read_Simple_data(instance)
 
@@ -71,7 +71,7 @@ dcglp_param = DcglpParam(
     verbose = true,
 )
 
-oracle_param = PolarDCGLPParam(
+oracle_param = SimplexNormDCGLPParam(
     dcglp_param;
     split_index_selection_rule = LargestFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -90,7 +90,7 @@ typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]
 for oracle in typical_oracles
     set_parameter!(oracle, "add_only_violated_cuts", true)
 end
-disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
 
 lazy_oracle = UFLKnapsackOracle(data)
 set_parameter!(lazy_oracle, "add_only_violated_cuts", true)
@@ -115,7 +115,7 @@ env = BendersBnB(
 )
 
 if build_only
-    @info "PolarDCGLP hard UFL script build completed without solve." instance = instance
+    @info "SimplexNormDCGLP hard UFL script build completed without solve." instance = instance
 else
     solve!(env)
     obj_value = try
@@ -123,5 +123,5 @@ else
     catch
         NaN
     end
-    @info "PolarDCGLP hard UFL script finished" instance = instance termination_status = env.termination_status objective_value = obj_value
+    @info "SimplexNormDCGLP hard UFL script finished" instance = instance termination_status = env.termination_status objective_value = obj_value
 end

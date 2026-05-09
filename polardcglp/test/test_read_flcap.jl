@@ -1,7 +1,7 @@
 using Statistics
 
-isdefined(Main, :PolarDCGLP) || include(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl"))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl"))
+using .SimplexNormDCGLP
 
 
 @testset "FLCAP Reader" begin

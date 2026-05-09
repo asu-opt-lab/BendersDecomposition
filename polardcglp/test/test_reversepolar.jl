@@ -5,8 +5,8 @@ using BendersX
 using MathOptInterface
 using LinearAlgebra
 
-isdefined(Main, :PolarDCGLP) || include(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl"))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl"))
+using .SimplexNormDCGLP
 
 const RMOI = MathOptInterface
 
@@ -166,7 +166,7 @@ end
 
         cut = last(oracle.disjunctiveCuts)
         @test length(cut.a_t) == 2
-        @test PolarDCGLP.hyperplane_violation(cut, x_value, t_value) > 0.0
+        @test SimplexNormDCGLP.hyperplane_violation(cut, x_value, t_value) > 0.0
     end
 
     @testset "Fallback to Typical Cuts" begin

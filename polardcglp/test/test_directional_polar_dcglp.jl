@@ -5,8 +5,8 @@ using BendersX
 using MathOptInterface
 using LinearAlgebra
 
-isdefined(Main, :PolarDCGLP) || include(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl"))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl"))
+using .SimplexNormDCGLP
 
 const DMOI = MathOptInterface
 
@@ -184,11 +184,11 @@ end
         direction_x = x_value .- param.core_point_x
         direction_t = t_value .- param.core_point_t
         @test isapprox(dot(cut.a_x, direction_x) + dot(cut.a_t, direction_t), 1.0; atol = 1e-6)
-        @test PolarDCGLP.hyperplane_violation(cut, x_value, t_value) > 0.0
+        @test SimplexNormDCGLP.hyperplane_violation(cut, x_value, t_value) > 0.0
     end
 
     @testset "Directional Oracle Gap" begin
-        gap, scaled_gap = PolarDCGLP.compute_directional_oracle_gap(
+        gap, scaled_gap = SimplexNormDCGLP.compute_directional_oracle_gap(
             false,
             [2.0, 5.0],
             [3.5, 4.0],

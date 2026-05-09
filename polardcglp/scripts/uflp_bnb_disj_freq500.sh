@@ -4,7 +4,7 @@
 # Define variables to make the script more readable and maintainable
 
 ROUND_VERSION="uflp_bnb_disj_freq500"
-ROUND_DESCRIPTION="PolarDCGLP hard UFL, freq500, knapsack, 7 private cores"
+ROUND_DESCRIPTION="SimplexNormDCGLP hard UFL, freq500, knapsack, 7 private cores"
 EXPERIMENT_VERSION="5"
 SEED="1"
 HOUR="04"

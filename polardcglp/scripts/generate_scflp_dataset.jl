@@ -1,8 +1,8 @@
 using Random
 using JSON
 
-isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl")))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl")))
+using .SimplexNormDCGLP
 
 
 const FLCAP_DIR = normpath(joinpath(@__DIR__, "..", "data", "FLCAP"))

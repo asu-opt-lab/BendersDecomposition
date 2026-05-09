@@ -6,8 +6,8 @@ using JuMP
 using CPLEX
 using LinearAlgebra
 
-isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "PolarDCGLP.jl")))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
+using .SimplexNormDCGLP
 
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 

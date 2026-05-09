@@ -158,7 +158,7 @@ function build_directional_polar_dcglp(master::BendersX.AbstractMaster, param::D
 
     @objective(dcglp, Min, tau_var)
 
-    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= POLAR_T_LOWER_BOUND .* omega_0[i])
+    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= SIMPLEXNORM_T_LOWER_BOUND .* omega_0[i])
     @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i, j])
     @constraint(dcglp, condelta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_x[i, j])
 

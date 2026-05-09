@@ -125,18 +125,19 @@ function BendersX.solve_dcglp!(
     end
 
     current_lb = log.iterations[end].LB
-    cut = generate_new_polar_disjunctive_cut(
-        dcglp,
-        current_lb,
-        x_value,
-        length(t_value),
-        zero_indices,
-        one_indices;
-        strengthen = oracle.param.strengthened,
-        lift = oracle.param.lift,
-        zero_tol = oracle.param.zero_tol,
-    )
-    if BendersX.evaluate_violation(cut, x_value, t_value; zero_tol = oracle.param.zero_tol)
+    if current_lb >= oracle.param.zero_tol
+        cut = generate_new_polar_disjunctive_cut(
+            dcglp,
+            current_lb,
+            x_value,
+            t_value,
+            length(t_value),
+            zero_indices,
+            one_indices;
+            strengthen = oracle.param.strengthened,
+            lift = oracle.param.lift,
+            zero_tol = oracle.param.zero_tol,
+        )
         oracle.param.dcglp_param.verbose &&
             print_disjunctive_cut(oracle, cut, x_value, t_value; zero_tol = oracle.param.zero_tol)
         store_dcglp_disjunctive_cut!(
@@ -160,6 +161,7 @@ function generate_new_polar_disjunctive_cut(
     dcglp::Model,
     current_lb::Float64,
     x_value::Vector{Float64},
+    t_value::Vector{Float64},
     dim_t::Int,
     zero_indices::Vector{Int},
     one_indices::Vector{Int};
@@ -169,7 +171,7 @@ function generate_new_polar_disjunctive_cut(
 )
     gamma_x = dual.(dcglp[:conx])
     gamma_t = dual.(dcglp[:cont])
-    gamma_0 = current_lb - dot(gamma_x, x_value)
+    gamma_0 = current_lb - dot(gamma_x, x_value) - dot(gamma_t, t_value)
 
     if lift && (!isempty(zero_indices) || !isempty(one_indices))
         zeta_k = !isempty(zero_indices) ? dual.(dcglp[:con_zeta][1, :]) : Float64[]

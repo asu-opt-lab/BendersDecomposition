@@ -4,8 +4,8 @@ using Gurobi
 using Printf
 using Random
 
-isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl")))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl")))
+using .SimplexNormDCGLP
 
 include(normpath(joinpath(@__DIR__, "script_utils.jl")))
 
@@ -26,7 +26,7 @@ build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
 
-@info "PolarDCGLP SCFLP disjunctive knapsack script (Gurobi)" instance = instance seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
+@info "SimplexNormDCGLP SCFLP disjunctive knapsack script (Gurobi)" instance = instance seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
 
 # Gurobi-based mip_optimizer (replaces solver_defaults.jl which uses CPLEX)
 mip_optimizer = optimizer_with_attributes(
@@ -81,7 +81,7 @@ dcglp_param = DcglpParam(
     verbose = true,
 )
 
-oracle_param = PolarDCGLPParam(
+oracle_param = SimplexNormDCGLPParam(
     dcglp_param;
     split_index_selection_rule = MostFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -105,7 +105,7 @@ typical_oracles = [
     SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = optimizer),
     SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = optimizer),
 ]
-disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
 
 # -----------------------------------------------------------------------------
 # lazy oracle + root preprocessing
@@ -135,7 +135,7 @@ env = BendersBnB(
 )
 
 if build_only
-    @info "PolarDCGLP SCFLP disjunctive knapsack script (Gurobi) build completed without solve." instance = instance
+    @info "SimplexNormDCGLP SCFLP disjunctive knapsack script (Gurobi) build completed without solve." instance = instance
 else
     solve!(env)
     obj_value = try
@@ -143,5 +143,5 @@ else
     catch
         NaN
     end
-    @info "PolarDCGLP SCFLP disjunctive knapsack script (Gurobi) finished" instance = instance termination_status = env.termination_status objective_value = obj_value
+    @info "SimplexNormDCGLP SCFLP disjunctive knapsack script (Gurobi) finished" instance = instance termination_status = env.termination_status objective_value = obj_value
 end

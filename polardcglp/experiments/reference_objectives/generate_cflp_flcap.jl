@@ -8,8 +8,8 @@ using Printf
 
 const MOI = MathOptInterface
 
-isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "PolarDCGLP.jl")))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
+using .SimplexNormDCGLP
 
 
 const INSTANCE_NAMES = [

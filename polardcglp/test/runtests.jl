@@ -7,8 +7,8 @@ using LinearAlgebra
 using Random
 using SparseArrays
 
-include(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl"))
-using .PolarDCGLP
+include(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl"))
+using .SimplexNormDCGLP
 
 const MOI = MathOptInterface
 
@@ -94,7 +94,7 @@ function make_polar_oracle(
         iter_limit = 25,
         verbose = verbose,
     )
-    param = PolarDCGLPParam(
+    param = SimplexNormDCGLPParam(
         dcglp_param;
         split_index_selection_rule = split_rule,
         disjunctive_cut_append_rule = append_rule,
@@ -103,7 +103,7 @@ function make_polar_oracle(
         reuse_dcglp = reuse_dcglp,
         zero_tol = 1e-9,
     )
-    return PolarDCGLPOracle(master, make_typical_oracles(data, master), param)
+    return SimplexNormDCGLPOracle(master, make_typical_oracles(data, master), param)
 end
 
 struct VectorTOracle <: BendersX.AbstractTypicalOracle end
@@ -128,7 +128,7 @@ function BendersX.generate_cuts(
     return is_in_L, hyperplanes, f_x
 end
 
-@testset "PolarDCGLP Environment" begin
+@testset "SimplexNormDCGLP Environment" begin
     data = simple_polar_data()
     reference_obj = solve_reference(data)
 
@@ -149,7 +149,7 @@ end
 
     @testset "Constructor Validation" begin
         master = Master(data; customize = customize_master_polar!)
-        @test make_polar_oracle(data, master) isa PolarDCGLPOracle
+        @test make_polar_oracle(data, master) isa SimplexNormDCGLPOracle
 
         struct NonBinaryData <: AbstractData end
 
@@ -164,9 +164,9 @@ end
         nb_data = NonBinaryData()
         nb_master = Master(nb_data; customize = customize_master_nonbinary!)
         dcglp_param = DcglpParam(highs_optimizer(); verbose = false)
-        param = PolarDCGLPParam(dcglp_param)
+        param = SimplexNormDCGLPParam(dcglp_param)
         typical = [ClassicalOracle(data, master; customize = customize_sub_polar!), ClassicalOracle(data, master; customize = customize_sub_polar!)]
-        @test_throws ArgumentError PolarDCGLPOracle(nb_master, typical, param)
+        @test_throws ArgumentError SimplexNormDCGLPOracle(nb_master, typical, param)
 
         struct VectorTData <: AbstractData end
 
@@ -181,7 +181,7 @@ end
         vt_data = VectorTData()
         vt_master = Master(vt_data; customize = customize_master_vector_t!)
         vt_typical = [VectorTOracle(), VectorTOracle()]
-        @test PolarDCGLPOracle(vt_master, vt_typical, param) isa PolarDCGLPOracle
+        @test SimplexNormDCGLPOracle(vt_master, vt_typical, param) isa SimplexNormDCGLPOracle
     end
 
     @testset "Disjunctive Cut Reuse Rules" begin
@@ -193,18 +193,18 @@ end
         push!(oracle.disjunctiveCutsByIndex[2], cut_2)
         push!(oracle.disjunctiveCuts, cut_1, cut_2)
         push!(oracle.splits, (sparsevec([2], [1.0], master.dim_x), 0.0))
-        PolarDCGLP.add_disjunctive_cuts!(oracle, oracle.param.disjunctive_cut_append_rule)
+        SimplexNormDCGLP.add_disjunctive_cuts!(oracle, oracle.param.disjunctive_cut_append_rule)
         @test haskey(oracle.dcglp, :con_disjunctive)
         @test length(oracle.dcglp[:con_disjunctive]) == 2
 
         oracle_none = make_polar_oracle(data, master; append_rule = NoDisjunctiveCuts())
-        PolarDCGLP.add_disjunctive_cuts!(oracle_none, oracle_none.param.disjunctive_cut_append_rule)
+        SimplexNormDCGLP.add_disjunctive_cuts!(oracle_none, oracle_none.param.disjunctive_cut_append_rule)
         @test !haskey(oracle_none.dcglp, :con_disjunctive)
 
         oracle_all = make_polar_oracle(data, master; append_rule = AllDisjunctiveCuts())
         push!(oracle_all.splits, (sparsevec([1], [1.0], master.dim_x), 0.0))
-        PolarDCGLP.append_current_disjunctive_cut!(oracle_all, cut_1)
-        PolarDCGLP.add_disjunctive_cuts!(oracle_all, oracle_all.param.disjunctive_cut_append_rule)
+        SimplexNormDCGLP.append_current_disjunctive_cut!(oracle_all, cut_1)
+        SimplexNormDCGLP.add_disjunctive_cuts!(oracle_all, oracle_all.param.disjunctive_cut_append_rule)
         @test haskey(oracle_all.dcglp, :con_disjunctive)
     end
 

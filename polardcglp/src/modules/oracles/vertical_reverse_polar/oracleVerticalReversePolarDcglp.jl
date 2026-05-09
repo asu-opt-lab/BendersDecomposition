@@ -91,6 +91,7 @@ function BendersX.generate_cuts(
     add_disjunctive_cuts!(oracle, oracle.param.disjunctive_cut_append_rule)
 
     JuMP.set_normalized_rhs.(oracle.dcglp[:conx], x_value)
+    JuMP.set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 
     zero_indices, one_indices = oracle.param.lift ? BendersX.retrieve_zero_one(x_value, oracle.param.zero_tol) : (Int[], Int[])
     BendersX.add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices)

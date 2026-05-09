@@ -1,4 +1,4 @@
-module PolarDCGLP
+module SimplexNormDCGLP
 
 using JuMP
 using MathOptInterface
@@ -13,11 +13,11 @@ import BendersX: customize_mip_model!, customize_master_model!, customize_sub_mo
 
 const MOI = MathOptInterface
 const POLARDCGLP_ROOT = normpath(joinpath(@__DIR__, ".."))
-const POLAR_T_LOWER_BOUND = -1e6
+const SIMPLEXNORM_T_LOWER_BOUND = -1e6
 const NEWPOLAR_T_LOWER_BOUND = -1e6
 const REVERSEPOLAR_T_LOWER_BOUND = -1e6
 
-export PolarDCGLPParam, PolarDCGLPOracle
+export SimplexNormDCGLPParam, SimplexNormDCGLPOracle
 export DirectionalPolarDCGLPParam, DirectionalPolarDCGLPOracle, set_core_point!
 export NewPolarDCGLPParam, NewPolarDCGLPOracle
 export ReversePolarDCGLPParam, ReversePolarDCGLPOracle
@@ -27,4 +27,4 @@ export generate_scflp_from_flcap, generate_scflp_bodur, write_scflp_json
 include("modules/modules.jl")
 include("problems/problems.jl")
 
-end # module PolarDCGLP
+end # module SimplexNormDCGLP

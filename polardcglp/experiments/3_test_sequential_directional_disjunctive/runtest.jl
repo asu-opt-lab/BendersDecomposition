@@ -2,8 +2,8 @@ using BendersX
 using Test
 using JuMP
 
-isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "PolarDCGLP.jl")))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
+using .SimplexNormDCGLP
 
 @testset "Sequential Directional Disjunctive Tests" begin
     @info "Running DirectionalPolarDCGLP sequential disjunctive tests"

@@ -4,7 +4,7 @@
 # Define variables to make the script more readable and maintainable
 
 ROUND_VERSION="cflp_polar_classical"
-ROUND_DESCRIPTION="PolarDCGLP CFLP, classical typical oracle, 7 private cores, CPLEX"
+ROUND_DESCRIPTION="SimplexNormDCGLP CFLP, classical typical oracle, 7 private cores, CPLEX"
 EXPERIMENT_VERSION="1"
 SEED="1"
 HOUR="01"

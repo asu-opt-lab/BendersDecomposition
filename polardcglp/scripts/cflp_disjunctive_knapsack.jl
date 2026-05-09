@@ -4,8 +4,8 @@ using CPLEX
 using Printf
 using Random
 
-isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "PolarDCGLP.jl")))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "src", "SimplexNormDCGLP.jl")))
+using .SimplexNormDCGLP
 
 include(normpath(joinpath(@__DIR__, "solver_defaults.jl")))
 include(normpath(joinpath(@__DIR__, "script_utils.jl")))
@@ -24,7 +24,7 @@ build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
 
-@info "PolarDCGLP hard CFL script" instance = instance seed = seed time_limit = time_limit frequency = frequency reuse_dcglp = reuse_dcglp build_only = build_only
+@info "SimplexNormDCGLP hard CFL script" instance = instance seed = seed time_limit = time_limit frequency = frequency reuse_dcglp = reuse_dcglp build_only = build_only
 
 data = read_cfl_file(instance)
 
@@ -51,7 +51,7 @@ dcglp_param = DcglpParam(
     verbose = true,
 )
 
-oracle_param = PolarDCGLPParam(
+oracle_param = SimplexNormDCGLPParam(
     dcglp_param;
     split_index_selection_rule = MostFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -68,7 +68,7 @@ typical_oracles = [
     CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
     CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
 ]
-disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
 
 lazy_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
 root_preprocessing = RootNodePreprocessing(
@@ -95,7 +95,7 @@ env = BendersBnB(
 )
 
 if build_only
-    @info "PolarDCGLP hard CFL script build completed without solve." instance = instance
+    @info "SimplexNormDCGLP hard CFL script build completed without solve." instance = instance
 else
     solve!(env)
     obj_value = try
@@ -103,5 +103,5 @@ else
     catch
         NaN
     end
-    @info "PolarDCGLP hard CFL script finished" instance = instance termination_status = env.termination_status objective_value = obj_value
+    @info "SimplexNormDCGLP hard CFL script finished" instance = instance termination_status = env.termination_status objective_value = obj_value
 end

@@ -1,12 +1,12 @@
-function add_disjunctive_cuts!(oracle::PolarDCGLPOracle, ::BendersX.NoDisjunctiveCuts)
+function add_disjunctive_cuts!(oracle::SimplexNormDCGLPOracle, ::BendersX.NoDisjunctiveCuts)
     return nothing
 end
 
-function add_disjunctive_cuts!(oracle::PolarDCGLPOracle, ::BendersX.AllDisjunctiveCuts)
+function add_disjunctive_cuts!(oracle::SimplexNormDCGLPOracle, ::BendersX.AllDisjunctiveCuts)
     return nothing
 end
 
-function add_disjunctive_cuts!(oracle::PolarDCGLPOracle, ::BendersX.DisjunctiveCutsSmallerIndices)
+function add_disjunctive_cuts!(oracle::SimplexNormDCGLPOracle, ::BendersX.DisjunctiveCutsSmallerIndices)
     current_index = get_split_index(oracle)
     reusable = BendersX.Hyperplane[]
     for idx in 1:(current_index - 1)
@@ -16,7 +16,7 @@ function add_disjunctive_cuts!(oracle::PolarDCGLPOracle, ::BendersX.DisjunctiveC
     return nothing
 end
 
-function install_disjunctive_cuts!(oracle::PolarDCGLPOracle, cuts::Vector{BendersX.Hyperplane})
+function install_disjunctive_cuts!(oracle::SimplexNormDCGLPOracle, cuts::Vector{BendersX.Hyperplane})
     dcglp = oracle.dcglp
     delete_registered_constraints!(dcglp, :con_disjunctive)
     isempty(cuts) && return nothing
@@ -30,7 +30,7 @@ function install_disjunctive_cuts!(oracle::PolarDCGLPOracle, cuts::Vector{Bender
     return nothing
 end
 
-function append_current_disjunctive_cut!(oracle::PolarDCGLPOracle, cut::BendersX.Hyperplane)
+function append_current_disjunctive_cut!(oracle::SimplexNormDCGLPOracle, cut::BendersX.Hyperplane)
     push!(oracle.disjunctiveCuts, cut)
     if isa(oracle.param.split_index_selection_rule, BendersX.SimpleSplit)
         push!(oracle.disjunctiveCutsByIndex[get_split_index(oracle)], cut)

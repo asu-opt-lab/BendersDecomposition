@@ -1,5 +1,5 @@
 function BendersX.solve_dcglp!(
-    oracle::PolarDCGLPOracle,
+    oracle::SimplexNormDCGLPOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
     zero_indices::Vector{Int},
@@ -28,7 +28,7 @@ function BendersX.solve_dcglp!(
                         t_value,
                         start_time,
                         time_limit,
-                        "PolarDCGLP master: unexpected error encountered when optimizing dcglp master: $(err)";
+                        "SimplexNormDCGLP master: unexpected error encountered when optimizing dcglp master: $(err)";
                         throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
                     )
                 end
@@ -49,13 +49,13 @@ function BendersX.solve_dcglp!(
                         t_value,
                         start_time,
                         time_limit,
-                        "PolarDCGLP master: unexpected dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue";
+                        "SimplexNormDCGLP master: unexpected dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue";
                         throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
                     )
                 elseif termination_status(dcglp) == TIME_LIMIT
-                    throw(BendersX.TimeLimitException("Time limit reached during PolarDCGLP solving"))
+                    throw(BendersX.TimeLimitException("Time limit reached during SimplexNormDCGLP solving"))
                 else
-                    throw(BendersX.UnexpectedModelStatusException("PolarDCGLP master: $(termination_status(dcglp))"))
+                    throw(BendersX.UnexpectedModelStatusException("SimplexNormDCGLP master: $(termination_status(dcglp))"))
                 end
             end
 
@@ -117,7 +117,7 @@ function BendersX.solve_dcglp!(
             BendersX.record_iteration!(log, state)
         end
 
-        oracle.param.dcglp_param.verbose && print_polar_iteration_info(state, log)
+        oracle.param.dcglp_param.verbose && print_simplex_norm_iteration_info(state, log)
         BendersX.check_lb_improvement!(state, log; zero_tol = oracle.param.zero_tol)
         BendersX.is_terminated(state, log, oracle.param.dcglp_param, time_limit) && break
 
@@ -125,8 +125,8 @@ function BendersX.solve_dcglp!(
     end
 
     current_lb = log.iterations[end].LB
-    if current_lb > polar_master_t_value(t_value) + oracle.param.zero_tol
-        cut = generate_polar_disjunctive_cut(
+    if current_lb > simplex_norm_master_t_value(t_value) + oracle.param.zero_tol
+        cut = generate_simplex_norm_disjunctive_cut(
             dcglp, current_lb, x_value, length(t_value), zero_indices, one_indices;
             strengthen = oracle.param.strengthened, lift = oracle.param.lift, zero_tol = oracle.param.zero_tol,
         )
@@ -149,7 +149,7 @@ function BendersX.solve_dcglp!(
     )
 end
 
-function generate_polar_disjunctive_cut(
+function generate_simplex_norm_disjunctive_cut(
     dcglp::Model,
     current_lb::Float64,
     x_value::Vector{Float64},
@@ -195,10 +195,10 @@ function generate_polar_disjunctive_cut(
     return BendersX.Hyperplane(gamma_x, fill(-1.0, dim_t), gamma_0)
 end
 
-polar_master_t_value(t_value::Vector{Float64}) = sum(t_value)
+simplex_norm_master_t_value(t_value::Vector{Float64}) = sum(t_value)
 
 function fallback_typical_or_throw(
-    oracle::PolarDCGLPOracle,
+    oracle::SimplexNormDCGLPOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
     start_time::Float64,
@@ -213,7 +213,7 @@ function fallback_typical_or_throw(
     throw(BendersX.UnexpectedModelStatusException(msg))
 end
 
-function print_polar_iteration_info(state::BendersX.DcglpState, log::BendersX.DcglpLog)
+function print_simplex_norm_iteration_info(state::BendersX.DcglpState, log::BendersX.DcglpLog)
     @printf(
         "   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | UB_k: %8.2f | UB_v: %8.2f | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
         log.n_iter,
@@ -230,7 +230,7 @@ function print_polar_iteration_info(state::BendersX.DcglpState, log::BendersX.Dc
 end
 
 function print_disjunctive_cut(
-    oracle::PolarDCGLPOracle,
+    oracle::SimplexNormDCGLPOracle,
     cut::BendersX.Hyperplane,
     x_value::Vector{Float64},
     t_value::Vector{Float64};

@@ -2,12 +2,12 @@ using BendersX
 using Test
 using JuMP
 
-isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "PolarDCGLP.jl")))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
+using .SimplexNormDCGLP
 
 @testset "Callback Disjunctive Tests" begin
-    @info "Running PolarDCGLP callback disjunctive tests"
+    @info "Running SimplexNormDCGLP callback disjunctive tests"
     include("ufl.jl")
     include("cfl.jl")
-    @info "PolarDCGLP callback disjunctive tests completed"
+    @info "SimplexNormDCGLP callback disjunctive tests completed"
 end

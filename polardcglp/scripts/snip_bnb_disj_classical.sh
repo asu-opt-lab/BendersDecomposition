@@ -4,7 +4,7 @@
 # Define variables to make the script more readable and maintainable
 
 ROUND_VERSION="snip_bnb_disj_classical"
-ROUND_DESCRIPTION="PolarDCGLP SNIP, classical separable oracle, freq500, 56 cores SLURM, julia --threads=8"
+ROUND_DESCRIPTION="SimplexNormDCGLP SNIP, classical separable oracle, freq500, 56 cores SLURM, julia --threads=8"
 EXPERIMENT_VERSION="1"
 SEED="1"
 HOUR="01"

@@ -1,4 +1,4 @@
-mutable struct PolarDCGLPParam <: BendersX.AbstractOracleParam
+mutable struct SimplexNormDCGLPParam <: BendersX.AbstractOracleParam
     dcglp_param::BendersX.DcglpParam
     split_index_selection_rule::BendersX.SplitIndexSelectionRule
     disjunctive_cut_append_rule::BendersX.DisjunctiveCutsAppendRule
@@ -9,7 +9,7 @@ mutable struct PolarDCGLPParam <: BendersX.AbstractOracleParam
     lift::Bool
     zero_tol::Float64
 
-    function PolarDCGLPParam(
+    function SimplexNormDCGLPParam(
         dcglp_param::BendersX.DcglpParam;
         split_index_selection_rule::BendersX.SplitIndexSelectionRule = BendersX.RandomFractional(),
         disjunctive_cut_append_rule::BendersX.DisjunctiveCutsAppendRule = BendersX.AllDisjunctiveCuts(),
@@ -43,27 +43,27 @@ mutable struct PolarDCGLPParam <: BendersX.AbstractOracleParam
     end
 end
 
-mutable struct PolarDCGLPOracle <: BendersX.AbstractDisjunctiveOracle
-    param::PolarDCGLPParam
+mutable struct SimplexNormDCGLPOracle <: BendersX.AbstractDisjunctiveOracle
+    param::SimplexNormDCGLPParam
     dcglp::Model
     typical_oracles::Vector{BendersX.AbstractTypicalOracle}
     disjunctiveCutsByIndex::Vector{Vector{BendersX.Hyperplane}}
     disjunctiveCuts::Vector{BendersX.Hyperplane}
     splits::Vector{Tuple{SparseVector{Float64, Int}, Float64}}
 
-    function PolarDCGLPOracle(
+    function SimplexNormDCGLPOracle(
         master::BendersX.AbstractMaster,
         typical_oracles::Vector{T},
-        param::PolarDCGLPParam,
+        param::SimplexNormDCGLPParam,
     ) where {T <: BendersX.AbstractTypicalOracle}
         length(typical_oracles) == 2 ||
-            throw(ArgumentError("PolarDCGLPOracle requires exactly two typical oracles."))
+            throw(ArgumentError("SimplexNormDCGLPOracle requires exactly two typical oracles."))
 
         for xi in master.x
-            is_binary(xi) || throw(ArgumentError("PolarDCGLPOracle requires all master variables to be binary."))
+            is_binary(xi) || throw(ArgumentError("SimplexNormDCGLPOracle requires all master variables to be binary."))
         end
 
-        dcglp = build_polar_dcglp(master, param)
+        dcglp = build_simplex_norm_dcglp(master, param)
         disjunctive_cuts_by_index = [Vector{BendersX.Hyperplane}() for _ in 1:master.dim_x]
         splits = Vector{Tuple{SparseVector{Float64, Int}, Float64}}()
 
@@ -72,7 +72,7 @@ mutable struct PolarDCGLPOracle <: BendersX.AbstractDisjunctiveOracle
 end
 
 function BendersX.generate_cuts(
-    oracle::PolarDCGLPOracle,
+    oracle::SimplexNormDCGLPOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64};
     time_limit::Float64 = 3600.0,
@@ -110,7 +110,7 @@ function BendersX.generate_cuts(
     )
 end
 
-function build_polar_dcglp(master::BendersX.AbstractMaster, param::PolarDCGLPParam)
+function build_simplex_norm_dcglp(master::BendersX.AbstractMaster, param::SimplexNormDCGLPParam)
     dcglp = Model(param.dcglp_param.optimizer)
 
     @variable(dcglp, tau[1:master.dim_t])
@@ -120,7 +120,7 @@ function build_polar_dcglp(master::BendersX.AbstractMaster, param::PolarDCGLPPar
 
     @objective(dcglp, Min, sum(tau))
 
-    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= POLAR_T_LOWER_BOUND .* omega_0[i])
+    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= SIMPLEXNORM_T_LOWER_BOUND .* omega_0[i])
     @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i, j])
     @constraint(dcglp, condelta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_x[i, j])
 
@@ -135,13 +135,13 @@ function build_polar_dcglp(master::BendersX.AbstractMaster, param::PolarDCGLPPar
     return dcglp
 end
 
-function get_split_index(oracle::PolarDCGLPOracle)
+function get_split_index(oracle::SimplexNormDCGLPOracle)
     isa(oracle.param.split_index_selection_rule, BendersX.SimpleSplit) ||
         throw(BendersX.AlgorithmException("get_split_index is only valid for simple split rules."))
     return findfirst(x -> x > 0.5, oracle.splits[end][1])
 end
 
-function replace_disjunctive_inequality!(oracle::PolarDCGLPOracle)
+function replace_disjunctive_inequality!(oracle::SimplexNormDCGLPOracle)
     dcglp = oracle.dcglp
     phi, phi_0 = oracle.splits[end]
 

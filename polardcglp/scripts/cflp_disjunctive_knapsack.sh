@@ -4,7 +4,7 @@
 # Define variables to make the script more readable and maintainable
 
 ROUND_VERSION="cflp_disjunctive_knapsack"
-ROUND_DESCRIPTION="PolarDCGLP hard CFL, knapsack, 7 private cores"
+ROUND_DESCRIPTION="SimplexNormDCGLP hard CFL, knapsack, 7 private cores"
 EXPERIMENT_VERSION="7"
 SEED="1"
 HOUR="04"

@@ -5,8 +5,8 @@ using Test
 using JuMP
 using CPLEX
 
-isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "PolarDCGLP.jl")))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
+using .SimplexNormDCGLP
 
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
@@ -50,7 +50,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             mip_opt_val = reference_objectives[instance_name]
 
             @testset "Classical oracle" begin
-                oracle_param = PolarDCGLPParam(
+                oracle_param = SimplexNormDCGLPParam(
                     dcglp_param;
                     split_index_selection_rule = RandomFractional(),
                     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -62,14 +62,14 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 )
 
                 @testset "NoSeq" begin
-                    @info "solving PolarDCGLP CFLP p$i - callback - classical/no seq"
+                    @info "solving SimplexNormDCGLP CFLP p$i - callback - classical/no seq"
                     master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                     lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
                     typical_oracles = [
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                     ]
-                    disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
 
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(lazy_oracle)
@@ -82,14 +82,14 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 end
 
                 @testset "Seq" begin
-                    @info "solving PolarDCGLP CFLP p$i - callback - classical/seq"
+                    @info "solving SimplexNormDCGLP CFLP p$i - callback - classical/seq"
                     master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                     lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
                     typical_oracles = [
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                     ]
-                    disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
 
                     root_preprocessing = RootNodePreprocessing(
                         lazy_oracle,
@@ -106,14 +106,14 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 end
 
                 @testset "SeqInOut" begin
-                    @info "solving PolarDCGLP CFLP p$i - callback - classical/seqinout"
+                    @info "solving SimplexNormDCGLP CFLP p$i - callback - classical/seqinout"
                     master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                     lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
                     typical_oracles = [
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                     ]
-                    disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
 
                     root_preprocessing = RootNodePreprocessing(
                         lazy_oracle,
@@ -138,7 +138,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             end
 
             @testset "Knapsack oracle" begin
-                oracle_param = PolarDCGLPParam(
+                oracle_param = SimplexNormDCGLPParam(
                     dcglp_param;
                     split_index_selection_rule = RandomFractional(),
                     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -150,14 +150,14 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 )
 
                 @testset "NoSeq" begin
-                    @info "solving PolarDCGLP CFLP p$i - callback - knapsack/no seq"
+                    @info "solving SimplexNormDCGLP CFLP p$i - callback - knapsack/no seq"
                     master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                     lazy_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
                     typical_oracles = [
                         CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                     ]
-                    disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
 
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(lazy_oracle)
@@ -170,14 +170,14 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 end
 
                 @testset "Seq" begin
-                    @info "solving PolarDCGLP CFLP p$i - callback - knapsack/seq"
+                    @info "solving SimplexNormDCGLP CFLP p$i - callback - knapsack/seq"
                     master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                     lazy_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
                     typical_oracles = [
                         CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                     ]
-                    disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
 
                     root_preprocessing = RootNodePreprocessing(
                         lazy_oracle,
@@ -194,14 +194,14 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 end
 
                 @testset "SeqInOut" begin
-                    @info "solving PolarDCGLP CFLP p$i - callback - knapsack/seqinout"
+                    @info "solving SimplexNormDCGLP CFLP p$i - callback - knapsack/seqinout"
                     master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
                     lazy_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
                     typical_oracles = [
                         CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                     ]
-                    disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
 
                     root_preprocessing = RootNodePreprocessing(
                         lazy_oracle,

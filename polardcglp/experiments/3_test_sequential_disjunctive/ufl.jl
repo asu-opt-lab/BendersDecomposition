@@ -5,8 +5,8 @@ using Test
 using JuMP
 using CPLEX
 
-isdefined(Main, :PolarDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "PolarDCGLP.jl")))
-using .PolarDCGLP
+isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
+using .SimplexNormDCGLP
 
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
@@ -75,9 +75,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Classical oracle" begin
                 @testset "Seq" begin
-                    @info "solving PolarDCGLP UFLP p$i - classical - seq"
+                    @info "solving SimplexNormDCGLP UFLP p$i - classical - seq"
 
-                    oracle_param = PolarDCGLPParam(
+                    oracle_param = SimplexNormDCGLPParam(
                         dcglp_param;
                         split_index_selection_rule = LargestFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -93,7 +93,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                     ]
-                    disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
                     env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
                     solve!(env)
@@ -102,9 +102,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 end
 
                 @testset "SeqInOut" begin
-                    @info "solving PolarDCGLP UFLP p$i - classical - seqinout"
+                    @info "solving SimplexNormDCGLP UFLP p$i - classical - seqinout"
 
-                    oracle_param = PolarDCGLPParam(
+                    oracle_param = SimplexNormDCGLPParam(
                         dcglp_param;
                         split_index_selection_rule = LargestFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -120,7 +120,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                     ]
-                    disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
                     env = BendersSeqInOut(master, disjunctive_oracle; param = benders_inout_param)
 
                     solve!(env)
@@ -131,9 +131,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Fat knapsack oracle" begin
                 @testset "Seq" begin
-                    @info "solving PolarDCGLP UFLP p$i - fat knapsack - seq"
+                    @info "solving SimplexNormDCGLP UFLP p$i - fat knapsack - seq"
 
-                    oracle_param = PolarDCGLPParam(
+                    oracle_param = SimplexNormDCGLPParam(
                         dcglp_param;
                         split_index_selection_rule = LargestFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -146,7 +146,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                     master = Master(data; customize = customize_master_knapsack!, optimizer = mip_optimizer)
                     typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]
-                    disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
                     env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
                     solve!(env)
@@ -155,9 +155,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 end
 
                 @testset "SeqInOut" begin
-                    @info "solving PolarDCGLP UFLP p$i - fat knapsack - seqinout"
+                    @info "solving SimplexNormDCGLP UFLP p$i - fat knapsack - seqinout"
 
-                    oracle_param = PolarDCGLPParam(
+                    oracle_param = SimplexNormDCGLPParam(
                         dcglp_param;
                         split_index_selection_rule = LargestFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -170,7 +170,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                     master = Master(data; customize = customize_master_knapsack!, optimizer = mip_optimizer)
                     typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]
-                    disjunctive_oracle = PolarDCGLPOracle(master, typical_oracles, oracle_param)
+                    disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
                     env = BendersSeqInOut(master, disjunctive_oracle; param = benders_inout_param)
 
                     solve!(env)
