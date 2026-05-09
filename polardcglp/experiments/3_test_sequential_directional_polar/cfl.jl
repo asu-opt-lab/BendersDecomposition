@@ -11,7 +11,7 @@ using .SimplexNormDCGLP
 
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
-function build_cflp_core_point_x(data::CFLPData; optimizer = optimizer)
+function build_cflp_core_point_x(data::CFLPData; optimizer = sub_optimizer)
     model = Model(optimizer)
     I = data.n_facilities
 
@@ -37,7 +37,7 @@ function build_cflp_ones_core_point_x(data::CFLPData)
     return ones(data.n_facilities), 0.0
 end
 
-function solve_cflp_recourse_value(data::CFLPData, x_value::Vector{Float64}; optimizer = optimizer)
+function solve_cflp_recourse_value(data::CFLPData, x_value::Vector{Float64}; optimizer = sub_optimizer)
     model = Model(optimizer)
     I, J = data.n_facilities, data.n_customers
     @variable(model, y[1:I, 1:J] >= 0)
@@ -60,7 +60,7 @@ function build_directional_core_point(
     x_mode::String,
     t_margin_rel::Float64,
     t_margin_abs::Float64,
-    optimizer = optimizer,
+    optimizer = sub_optimizer,
 )
     normalized_x_mode = lowercase(strip(x_mode))
     if normalized_x_mode in ("ones", "all_ones", "one")
@@ -102,7 +102,7 @@ end
                 x_mode = "ones",
                 t_margin_rel = 0.05,
                 t_margin_abs = 1.0,
-                optimizer = optimizer,
+                optimizer = sub_optimizer,
             )
 
             benders_param = BendersSeqParam(
@@ -138,7 +138,7 @@ end
                         zero_tol = 1e-9,
                     )
 
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
                     typical_oracles = [
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
@@ -167,7 +167,7 @@ end
                         zero_tol = 1e-9,
                     )
 
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
                     typical_oracles = [
                         CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
                         CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),

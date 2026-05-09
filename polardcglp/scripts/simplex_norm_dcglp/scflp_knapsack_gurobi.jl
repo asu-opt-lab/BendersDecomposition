@@ -7,6 +7,7 @@ using Random
 isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
 using .SimplexNormDCGLP
 
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults_gurobi.jl")))
 include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 options, _ = parse_script_args(ARGS)
@@ -28,26 +29,7 @@ Random.seed!(seed)
 
 @info "SimplexNormDCGLP SCFLP disjunctive knapsack script (Gurobi)" instance = instance seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
 
-# Gurobi-based mip_optimizer (replaces solver_defaults.jl which uses CPLEX)
-mip_optimizer = optimizer_with_attributes(
-    Gurobi.Optimizer,
-    "Threads" => threads,
-    "IntFeasTol" => 1e-9,
-    "FeasibilityTol" => 1e-9,
-    "MIPGap" => 1e-6,
-    "OptimalityTol" => 1e-9,
-    "NumericFocus" => 1,
-    MOI.Silent() => true,
-)
 
-optimizer = optimizer_with_attributes(
-    Gurobi.Optimizer,
-    "Threads" => threads,
-    "FeasibilityTol" => 1e-9,
-    "OptimalityTol" => 1e-9,
-    "NumericFocus" => 1,
-    MOI.Silent() => true,
-)
 
 dcglp_optimizer = optimizer_with_attributes(
     Gurobi.Optimizer,
@@ -96,21 +78,21 @@ oracle_param = SimplexNormDCGLPParam(
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
-master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
 
 # -----------------------------------------------------------------------------
 # typical oracles: separable knapsack over scenarios (two copies for disjunction)
 # -----------------------------------------------------------------------------
 typical_oracles = [
-    SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = optimizer),
-    SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = optimizer),
+    SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = sub_optimizer),
+    SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = sub_optimizer),
 ]
 disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
 
 # -----------------------------------------------------------------------------
 # lazy oracle + root preprocessing
 # -----------------------------------------------------------------------------
-lazy_oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = optimizer)
+lazy_oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = sub_optimizer)
 root_preprocessing = RootNodePreprocessing(
     lazy_oracle,
     BendersSeqInOut,

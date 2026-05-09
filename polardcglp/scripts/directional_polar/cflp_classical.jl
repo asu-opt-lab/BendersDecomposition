@@ -26,7 +26,7 @@ function parse_split_rule(name::String)
     throw(ArgumentError("Unsupported split rule `$(name)`. Use one of: most_fractional, largest_fractional, random_fractional."))
 end
 
-function build_cflp_core_point_x(data::CFLPData; optimizer = optimizer)
+function build_cflp_core_point_x(data::CFLPData; optimizer = sub_optimizer)
     model = Model(optimizer)
     I = data.n_facilities
 
@@ -52,7 +52,7 @@ function build_cflp_ones_core_point_x(data::CFLPData)
     return ones(data.n_facilities), 0.0
 end
 
-function solve_cflp_recourse_value(data::CFLPData, x_value::Vector{Float64}; optimizer = optimizer)
+function solve_cflp_recourse_value(data::CFLPData, x_value::Vector{Float64}; optimizer = sub_optimizer)
     model = Model(optimizer)
     I, J = data.n_facilities, data.n_customers
     @variable(model, y[1:I, 1:J] >= 0)
@@ -75,7 +75,7 @@ function build_directional_core_point(
     x_mode::String,
     t_margin_rel::Float64,
     t_margin_abs::Float64,
-    optimizer = optimizer,
+    optimizer = sub_optimizer,
 )
     normalized_x_mode = lowercase(strip(x_mode))
     if normalized_x_mode in ("ones", "all_ones", "one")
@@ -129,7 +129,7 @@ core_x, core_t, core_delta, core_recourse = build_directional_core_point(
     x_mode = core_x_mode,
     t_margin_rel = core_t_margin_rel,
     t_margin_abs = core_t_margin_abs,
-    optimizer = optimizer,
+    optimizer = sub_optimizer,
 )
 
 @info "Directional core point constructed" instance = instance core_x_mode = core_x_mode core_delta = core_delta core_x_min = minimum(core_x) core_x_max = maximum(core_x) capacity_ratio = dot(data.capacities, core_x) / sum(data.demands) core_recourse = core_recourse core_t = core_t[1]
@@ -170,7 +170,7 @@ oracle_param = DirectionalPolarDCGLPParam(
     zero_tol = 1e-9,
 )
 
-master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
 
 typical_oracles = [
     ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),

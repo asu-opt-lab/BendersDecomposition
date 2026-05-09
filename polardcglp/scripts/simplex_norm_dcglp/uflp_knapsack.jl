@@ -83,7 +83,7 @@ oracle_param = SimplexNormDCGLPParam(
     zero_tol = 1e-9,
 )
 
-master = Master(data; customize = customize_master_knapsack!, optimizer = mip_optimizer)
+master = Master(data; customize = customize_master_knapsack!, optimizer = master_optimizer)
 set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
 
 typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]

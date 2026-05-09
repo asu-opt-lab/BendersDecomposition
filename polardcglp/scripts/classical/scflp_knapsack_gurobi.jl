@@ -5,6 +5,7 @@ using Printf
 using Statistics
 using Gurobi
 
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults_gurobi.jl")))
 include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 global_logger(ConsoleLogger(stderr, Logging.Debug))
@@ -22,26 +23,7 @@ Random.seed!(seed)
 
 @info "SCFLP knapsack script (Gurobi)" instance = instance seed = seed time_limit = time_limit threads = threads build_only = build_only
 
-# Gurobi-based mip_optimizer (replaces solver_defaults.jl which uses CPLEX)
-mip_optimizer = optimizer_with_attributes(
-    Gurobi.Optimizer,
-    "Threads" => threads,
-    "IntFeasTol" => 1e-9,
-    "FeasibilityTol" => 1e-9,
-    "MIPGap" => 1e-6,
-    "OptimalityTol" => 1e-9,
-    "NumericFocus" => 1,
-    MOI.Silent() => true,
-)
 
-optimizer = optimizer_with_attributes(
-    Gurobi.Optimizer,
-    "Threads" => threads,
-    "FeasibilityTol" => 1e-9,
-    "OptimalityTol" => 1e-9,
-    "NumericFocus" => 1,
-    MOI.Silent() => true,
-)
 
 # -----------------------------------------------------------------------------
 # load problem data
@@ -51,7 +33,7 @@ data = read_stochastic_capacited_facility_location_problem(instance)
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
-master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
 
 # -----------------------------------------------------------------------------
 # typical oracle: separable knapsack over scenarios
@@ -62,7 +44,7 @@ typical_oracle = SeparableOracle(
     CFLKnapsackOracle(),
     data.n_scenarios;
     customize = customize_sub_model!,
-    optimizer = optimizer,
+    optimizer = sub_optimizer,
 )
 
 # -----------------------------------------------------------------------------

@@ -62,15 +62,15 @@ oracle_param = SimplexNormDCGLPParam(
     zero_tol = 1e-9,
 )
 
-master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
 
 typical_oracles = [
-    CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
-    CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
+    CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer),
+    CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer),
 ]
 disjunctive_oracle = SimplexNormDCGLPOracle(master, typical_oracles, oracle_param)
 
-lazy_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+lazy_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer)
 root_preprocessing = RootNodePreprocessing(
     lazy_oracle,
     BendersSeqInOut,

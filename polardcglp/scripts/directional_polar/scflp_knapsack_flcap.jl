@@ -31,7 +31,7 @@ function build_scflp_ones_core_point_x(data::SCFLPData)
     return ones(data.n_facilities), 0.0
 end
 
-function build_scflp_centered_core_point_x(data::SCFLPData; optimizer)
+function build_scflp_centered_core_point_x(data::SCFLPData; sub_optimizer)
     model = Model(optimizer)
     I = data.n_facilities
 
@@ -55,7 +55,7 @@ function build_scflp_centered_core_point_x(data::SCFLPData; optimizer)
     return value.(x), objective_value(model)
 end
 
-function solve_scflp_recourse_value(data::SCFLPData, x_value::Vector{Float64}, scen_idx::Int; optimizer)
+function solve_scflp_recourse_value(data::SCFLPData, x_value::Vector{Float64}, scen_idx::Int; sub_optimizer)
     model = Model(optimizer)
     I, J = data.n_facilities, data.n_customers
     d_k = data.demands[scen_idx]
@@ -80,7 +80,7 @@ function build_scflp_directional_core_point(
     x_mode::String,
     t_margin_rel::Float64,
     t_margin_abs::Float64,
-    optimizer,
+    sub_optimizer,
 )
     normalized_x_mode = lowercase(strip(x_mode))
     if normalized_x_mode in ("ones", "all_ones", "one")
@@ -154,7 +154,7 @@ core_x, core_t, core_delta, mean_recourse = build_scflp_directional_core_point(
     x_mode = core_x_mode,
     t_margin_rel = core_t_margin_rel,
     t_margin_abs = core_t_margin_abs,
-    optimizer = optimizer,
+    optimizer = sub_optimizer,
 )
 
 @info "Directional core point constructed" instance = instance core_x_mode = core_x_mode core_delta = core_delta core_x_min = minimum(core_x) core_x_max = maximum(core_x) capacity_ratio = dot(data.capacities, core_x) / maximum(sum(d) for d in data.demands) mean_recourse = mean_recourse core_t_min = minimum(core_t) core_t_max = maximum(core_t)
@@ -193,7 +193,7 @@ oracle_param = DirectionalPolarDCGLPParam(
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
-master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
 
 # -----------------------------------------------------------------------------
 # typical oracles: separable knapsack over scenarios (two copies for disjunction)

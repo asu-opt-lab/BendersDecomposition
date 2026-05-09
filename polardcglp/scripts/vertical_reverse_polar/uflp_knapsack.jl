@@ -69,7 +69,7 @@ dcglp_param = DcglpParam(
     gap_tolerance = 1e-3,
     halt_limit = dcglp_halt_limit,
     iter_limit = dcglp_iter_limit,
-    verbose = true,
+    verbose = false,
 )
 
 oracle_param = VerticalReversePolarDCGLPParam(
@@ -84,7 +84,7 @@ oracle_param = VerticalReversePolarDCGLPParam(
     zero_tol = 1e-9,
 )
 
-master = Master(data; customize = customize_master_knapsack!, optimizer = mip_optimizer)
+master = Master(data; customize = customize_master_knapsack!, optimizer = master_optimizer)
 set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
 
 typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]

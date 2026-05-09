@@ -70,10 +70,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         zero_tol = 1e-9,
                     )
 
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
                     typical_oracles = [
-                        ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
-                        ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer),
+                        ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer),
+                        ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = sub_optimizer),
                     ]
                     disjunctive_oracle = VerticalReversePolarDCGLPOracle(master, typical_oracles, oracle_param)
                     env = BendersSeq(master, disjunctive_oracle; param = benders_param)
@@ -97,7 +97,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         zero_tol = 1e-9,
                     )
 
-                    master = Master(data; customize = customize_master_knapsack!, optimizer = mip_optimizer)
+                    master = Master(data; customize = customize_master_knapsack!, optimizer = master_optimizer)
                     typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]
                     disjunctive_oracle = VerticalReversePolarDCGLPOracle(master, typical_oracles, oracle_param)
                     env = BendersSeq(master, disjunctive_oracle; param = benders_param)

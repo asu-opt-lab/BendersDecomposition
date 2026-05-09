@@ -5,19 +5,9 @@ using Printf
 using Statistics
 using Gurobi
 
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults_gurobi.jl")))
 include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
-# Gurobi-based mip_optimizer (replaces solver_defaults.jl which uses CPLEX)
-mip_optimizer = optimizer_with_attributes(
-    Gurobi.Optimizer,
-    "Threads" => 7,
-    "IntFeasTol" => 1e-9,
-    "FeasibilityTol" => 1e-9,
-    "MIPGap" => 1e-6,
-    "OptimalityTol" => 1e-9,
-    "NumericFocus" => 1,
-    MOI.Silent() => true,
-)
 
 global_logger(ConsoleLogger(stderr, Logging.Debug))
 

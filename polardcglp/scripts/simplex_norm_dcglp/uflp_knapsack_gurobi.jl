@@ -7,6 +7,7 @@ using Random
 isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
 using .SimplexNormDCGLP
 
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults_gurobi.jl")))
 include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
 options, _ = parse_script_args(ARGS)
@@ -30,17 +31,6 @@ Random.seed!(seed)
 
 data = read_Simple_data(instance)
 
-# Gurobi-based mip_optimizer (replaces solver_defaults.jl which uses CPLEX)
-mip_optimizer = optimizer_with_attributes(
-    Gurobi.Optimizer,
-    "Threads" => 1,
-    "IntFeasTol" => 1e-9,
-    "FeasibilityTol" => 1e-9,
-    "MIPGap" => 1e-6,
-    "OptimalityTol" => 1e-9,
-    "NumericFocus" => 1,
-    MOI.Silent() => true,
-)
 
 function customize_master_knapsack!(model::Model, data::UFLPData)
     optimizer = optimizer_with_attributes(
@@ -94,7 +84,7 @@ oracle_param = SimplexNormDCGLPParam(
     zero_tol = 1e-9,
 )
 
-master = Master(data; customize = customize_master_knapsack!, optimizer = mip_optimizer)
+master = Master(data; customize = customize_master_knapsack!, optimizer = master_optimizer)
 set_optimizer_attribute(master.model, "BranchDir", 1)
 
 typical_oracles = [UFLKnapsackOracle(data), UFLKnapsackOracle(data)]

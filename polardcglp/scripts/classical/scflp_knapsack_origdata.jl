@@ -32,7 +32,7 @@ data = read_stochastic_capacited_facility_location_problem(instance; filepath = 
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
-master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+master = Master(data; customize = customize_master_model!, optimizer = master_optimizer)
 
 # -----------------------------------------------------------------------------
 # typical oracle: separable knapsack over scenarios
@@ -43,7 +43,7 @@ typical_oracle = SeparableOracle(
     CFLKnapsackOracle(),
     data.n_scenarios;
     customize = customize_sub_model!,
-    optimizer = optimizer,
+    optimizer = sub_optimizer,
 )
 
 # -----------------------------------------------------------------------------
