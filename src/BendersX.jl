@@ -52,7 +52,7 @@ export set_parameter!
 export customize_master_model!, customize_sub_model!, customize_mip_model!
 
 # Public but not auto-imported advanced utilities and support types
-export Hyperplane, aggregate, evaluate_violation, select_top_fraction
+export Hyperplane, aggregate, evaluate_violation, hyperplane_violation, select_top_fraction
 export hyperplanes_to_expression, add_constraints
 export copy_variables!, var_from_tuple, transfer_scaled_linear_rows_and_bounds_with_types!
 export infeasibility_report

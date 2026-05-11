@@ -121,7 +121,7 @@ function solve_dcglp!(oracle::SplitOracle, x_value::Vector{Float64}, t_value::Ve
                             end
                             if oracle.param.add_benders_cuts_to_master != 0
                                 add_violated = oracle.param.add_benders_cuts_to_master == 2
-                                append!(hyperplanes, select_top_fraction(hyperplanes_a, h -> evaluate_violation(h, x_value, t_value), oracle.param.fraction_of_benders_cuts_to_master; add_only_violated_cuts = add_violated))
+                                append!(hyperplanes, select_top_fraction(hyperplanes_a, h -> hyperplane_violation(h, x_value, t_value), oracle.param.fraction_of_benders_cuts_to_master; add_only_violated_cuts = add_violated))
                             end
                         end
                     else

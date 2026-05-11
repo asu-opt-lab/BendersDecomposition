@@ -72,6 +72,11 @@ function evaluate_violation(h::Hyperplane, x_value::Vector{Float64}, t_value::Ve
     return h.a_0 + h.a_x' * x_value + h.a_t' * t_value >= zero_tol
 end
 """
+continuous violation magnitude of a hyperplane at (x_value, t_value)
+"""
+hyperplane_violation(h::Hyperplane, x_value::Vector{Float64}, t_value::Vector{Float64}) =
+    h.a_0 + dot(h.a_x, x_value) + dot(h.a_t, t_value)
+"""
 select a top fraction of a set of hyperplanes based on a score measured by a function f
 """
 function select_top_fraction(a::Vector{Hyperplane}, f::Function, p::Float64; add_only_violated_cuts = false)

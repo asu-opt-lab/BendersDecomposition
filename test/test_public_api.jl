@@ -31,7 +31,7 @@ using BendersX
         :AbstractMaster, :AbstractOracle, :AbstractOracleParam, :AbstractTypicalOracle,
         :AbstractRootNodePreprocessing, :AbstractNorm, :StandardNorm,
         :SplitIndexSelectionRule, :DisjunctiveCutsAppendRule,
-        :generate_cuts, :Hyperplane, :aggregate, :evaluate_violation,
+        :generate_cuts, :Hyperplane, :aggregate, :evaluate_violation, :hyperplane_violation,
         :select_top_fraction, :hyperplanes_to_expression, :add_constraints,
         :copy_variables!, :var_from_tuple, :transfer_scaled_linear_rows_and_bounds_with_types!,
         :infeasibility_report,
