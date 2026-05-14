@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 #SBATCH -t 0-01:00:00
 
 ROUND_VERSION="classical/scflp_bodur"
-ROUND_DESCRIPTION="Classical Benders SCFLP, Bodur data with src-style fraction model, CPLEX"
+ROUND_DESCRIPTION="SCFLP Benders BnB, Bodur data, knapsack/classical oracle, 7 private cores, CPLEX"
 EXPERIMENT_VERSION="1"
 SEED="1"
 HOUR="04"
@@ -57,12 +57,14 @@ for scenario_size in "${SCENARIO_SIZES[@]}"; do
     JOBSCRIPT_FILE="${OUTPUT_DIR}/${instance}.sh"
 
     echo "#!/bin/bash" > "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -p htc" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -p general" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -c ${THREADS}" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH --nodelist=pcc036,pcc037" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH --mem=60G" >> "${JOBSCRIPT_FILE}"
-    echo "#SBATCH -t 0-${HOUR}:00:00" >> "${JOBSCRIPT_FILE}"
+    echo "#SBATCH -t 0-${HOUR}:30:00" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -o ${ERR_OUT_DIR}/${instance}.out%j" >> "${JOBSCRIPT_FILE}"
     echo "#SBATCH -e ${ERR_OUT_DIR}/${instance}.err%j" >> "${JOBSCRIPT_FILE}"
     echo "module purge" >> "${JOBSCRIPT_FILE}"
