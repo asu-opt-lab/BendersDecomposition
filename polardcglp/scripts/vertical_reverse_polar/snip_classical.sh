@@ -5,9 +5,9 @@
 
 ROUND_VERSION="vertical_reverse_polar/snip_classical"
 ROUND_DESCRIPTION="vertical_reverse_polar SNIP, classical separable oracle, freq500, 56 cores SLURM, julia --threads=8, CPLEX"
-EXPERIMENT_VERSION="1"
+EXPERIMENT_VERSION="new_true_parallel"
 SEED="1"
-HOUR="04"
+HOUR="01"
 TIME_LIMIT="14400"
 DCGLP_TIME_LIMIT="100"
 DCGLP_ITER_LIMIT="250"
@@ -20,8 +20,8 @@ EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}, vertical_reverse_polar"
 
 FILE_NAME="snip_classical.jl"
 SHELL_FILE_NAME="snip_classical.sh"
-THREADS=56
-JULIA_THREADS=8
+THREADS=7
+JULIA_THREADS=7
 
 # Define variables to make the script more readable and maintainable
 OUTPUT_DIR="polardcglp/experiment/${ROUND_VERSION}/${EXPERIMENT_VERSION}"
@@ -55,6 +55,7 @@ EOF
 instance_nos=(0 1 2 3 4)
 snip_nos=(3 4)
 budgets=(30.0 40.0 50.0 60.0 70.0 80.0 90.0)
+# budgets=(100.0 110.0 120.0 130.0 140.0 150.0)
 
 # Loop through the instances and create a job script for each combination
 for instance_no in "${instance_nos[@]}"; do
@@ -67,13 +68,14 @@ for instance_no in "${instance_nos[@]}"; do
             echo "#!/bin/bash" > "${JOBSCRIPT_FILE}"
 
             echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
+            echo "#SBATCH -p general" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -c ${THREADS}" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH --nodelist=pcc036,pcc037" >> "${JOBSCRIPT_FILE}"
-            echo "#SBATCH --mem=200G" >> "${JOBSCRIPT_FILE}"
+            echo "#SBATCH --mem=100G" >> "${JOBSCRIPT_FILE}"
 
-            echo "#SBATCH -t 0-${HOUR}:00:00" >> "${JOBSCRIPT_FILE}"
+            echo "#SBATCH -t 0-${HOUR}:30:00" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -o ${ERR_OUT_DIR}/${TAG}.out%j" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -e ${ERR_OUT_DIR}/${TAG}.err%j" >> "${JOBSCRIPT_FILE}"
 

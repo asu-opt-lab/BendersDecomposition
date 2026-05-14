@@ -56,7 +56,8 @@ for instance_no in "${instance_nos[@]}"; do
             # Create job script file
             echo "#!/bin/bash" > "${JOBSCRIPT_FILE}"
 
-            echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
+            # echo "#SBATCH -q grp_gbyeon" >> "${JOBSCRIPT_FILE}"
+            echo "#SBATCH -p htc" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -c ${THREADS}" >> "${JOBSCRIPT_FILE}"

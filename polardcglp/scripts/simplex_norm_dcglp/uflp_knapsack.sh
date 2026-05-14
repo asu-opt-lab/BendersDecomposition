@@ -5,7 +5,7 @@
 
 ROUND_VERSION="simplex_norm_dcglp/uflp_knapsack"
 ROUND_DESCRIPTION="SimplexNormDCGLP hard UFL, freq500, knapsack, 7 private cores"
-EXPERIMENT_VERSION="5"
+EXPERIMENT_VERSION="500"
 SEED="1"
 HOUR="04"
 EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}"
@@ -45,8 +45,8 @@ instances=(
 
     # "ga250a-1" "ga250a-2" "ga250a-3" "ga250a-4" "ga250a-5"
     # "ga250b-1" "ga250b-2" "ga250b-3" "ga250b-4" "ga250b-5"
-    # "ga250c-1" "ga250c-2" "ga250c-3" "ga250c-4" "ga250c-5"
-
+    # "ga250c-1" "ga250c-2" "ga250c-3" "ga250c-4" "ga250c-5" 
+ 
     # "gs250a-1" "gs250a-2" "gs250a-3" "gs250a-4" "gs250a-5"
     # "gs250b-1" "gs250b-2" "gs250b-3" "gs250b-4" "gs250b-5"
     # "gs250c-1" "gs250c-2" "gs250c-3" "gs250c-4" "gs250c-5"

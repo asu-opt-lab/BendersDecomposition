@@ -55,7 +55,16 @@ function BendersX.solve_dcglp!(
                 elseif termination_status(dcglp) == TIME_LIMIT
                     throw(BendersX.TimeLimitException("Time limit reached during VerticalReversePolarDCGLP solving"))
                 else
-                    throw(BendersX.UnexpectedModelStatusException("VerticalReversePolarDCGLP master: $(termination_status(dcglp))"))
+                    return fallback_typical_or_throw(
+                        oracle,
+                        x_value,
+                        t_value,
+                        start_time,
+                        time_limit,
+                        "VerticalReversePolarDCGLP master: termination status is $(termination_status(dcglp))";
+                        throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
+                    )
+                    # throw(BendersX.UnexpectedModelStatusException("VerticalReversePolarDCGLP master: $(termination_status(dcglp))"))
                 end
             end
 

@@ -7,8 +7,6 @@ using Statistics
 using CPLEX
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
-global_logger(ConsoleLogger(stderr, Logging.Debug))
-
 frequency = 500
 reuse_dcglp = false
 add_benders_cuts_to_master = 2

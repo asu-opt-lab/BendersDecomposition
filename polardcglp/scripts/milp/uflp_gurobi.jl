@@ -8,8 +8,6 @@ using Gurobi
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults_gurobi.jl")))
 include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
-global_logger(ConsoleLogger(stderr, Logging.Debug))
-
 options, _ = parse_script_args(ARGS)
 
 instance = get_string_option(options, "instance", "ga250a-2")

@@ -68,7 +68,7 @@ dcglp_param = DcglpParam(
     gap_tolerance = 1e-3,
     halt_limit = dcglp_halt_limit,
     iter_limit = dcglp_iter_limit,
-    verbose = false,
+    verbose = true,
 )
 
 oracle_param = SimplexNormDCGLPParam(

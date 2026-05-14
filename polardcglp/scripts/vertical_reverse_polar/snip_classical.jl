@@ -25,10 +25,19 @@ frequency = get_int_option(options, "frequency", 500)
 threads = get_int_option(options, "threads", 7)
 reuse_dcglp = get_bool_option(options, "reuse_dcglp", false)
 strengthened = get_bool_option(options, "strengthened", true)
-lift = get_bool_option(options, "lift", false)
+lift = get_bool_option(options, "lift", true)
 build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
+
+sub_optimizer = optimizer_with_attributes(
+    CPLEX.Optimizer,
+    "CPXPARAM_Threads" => 1,
+    "CPX_PARAM_EPRHS" => 1e-9,
+    "CPX_PARAM_EPOPT" => 1e-9,
+    "CPX_PARAM_NUMERICALEMPHASIS" => 1,
+    MOI.Silent() => true,
+)
 
 @info "vertical_reverse_polar SNIP script" instance_no = instance_no snip_no = snip_no budget = budget seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
 
@@ -61,7 +70,7 @@ oracle_param = VerticalReversePolarDCGLPParam(
     dcglp_param;
     split_index_selection_rule = LargestFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-    add_benders_cuts_to_master = 2,
+    add_benders_cuts_to_master = 1,
     fraction_of_benders_cuts_to_master = 0.05,
     reuse_dcglp = reuse_dcglp,
     strengthened = strengthened,
