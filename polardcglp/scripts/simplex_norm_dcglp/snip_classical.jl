@@ -7,6 +7,7 @@ using Random
 isdefined(Main, :SimplexNormDCGLP) || include(normpath(joinpath(@__DIR__, "..", "..", "src", "SimplexNormDCGLP.jl")))
 using .SimplexNormDCGLP
 
+
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 include(normpath(joinpath(@__DIR__, "..", "script_utils.jl")))
 
@@ -24,10 +25,19 @@ frequency = get_int_option(options, "frequency", 500)
 threads = get_int_option(options, "threads", 7)
 reuse_dcglp = get_bool_option(options, "reuse_dcglp", false)
 strengthened = get_bool_option(options, "strengthened", true)
-lift = get_bool_option(options, "lift", false)
+lift = get_bool_option(options, "lift", true)
 build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
+
+sub_optimizer = optimizer_with_attributes(
+    CPLEX.Optimizer,
+    "CPXPARAM_Threads" => 1,
+    "CPX_PARAM_EPRHS" => 1e-9,
+    "CPX_PARAM_EPOPT" => 1e-9,
+    "CPX_PARAM_NUMERICALEMPHASIS" => 1,
+    MOI.Silent() => true,
+)
 
 @info "SimplexNormDCGLP SNIP script" instance_no = instance_no snip_no = snip_no budget = budget seed = seed time_limit = time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift build_only = build_only
 
@@ -53,14 +63,14 @@ dcglp_param = DcglpParam(
     gap_tolerance = 1e-3,
     halt_limit = dcglp_halt_limit,
     iter_limit = dcglp_iter_limit,
-    verbose = true,
+    verbose = false,
 )
 
 oracle_param = SimplexNormDCGLPParam(
     dcglp_param;
     split_index_selection_rule = LargestFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-    add_benders_cuts_to_master = 2,
+    add_benders_cuts_to_master = 1,
     fraction_of_benders_cuts_to_master = 0.05,
     reuse_dcglp = reuse_dcglp,
     strengthened = strengthened,
