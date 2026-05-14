@@ -5,10 +5,8 @@ import BendersX: AbstractData
     SCFLPBodurData <: AbstractData
 
 Data container for the stochastic capacitated facility location problem
-following the Bodur et al. (2016) formulation (eq. 15a-e), where second-stage
-variables `y[i,j,k]` represent absolute flow (amount of customer j's demand
-served by facility i in scenario k), as opposed to the fraction-based
-formulation in `BendersX.SCFLPData`.
+using the Bodur-generated instance data. The model methods for this data type
+use the same fraction-based second-stage variables as `BendersX.SCFLPData`.
 """
 struct SCFLPBodurData <: AbstractData
     n_facilities::Int

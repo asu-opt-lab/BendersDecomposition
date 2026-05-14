@@ -25,7 +25,7 @@ Random.seed!(seed)
 
 const SCFLP_DIR = normpath(joinpath(@__DIR__, "..", "..", "data", "SCFLP_bodur"))
 
-@info "SCFLP classical script (CPLEX, Bodur formulation)" instance = instance dataset_dir = SCFLP_DIR seed = seed time_limit = time_limit build_only = build_only
+@info "SCFLP classical script (CPLEX, Bodur data)" instance = instance dataset_dir = SCFLP_DIR seed = seed time_limit = time_limit build_only = build_only
 
 # -----------------------------------------------------------------------------
 # load problem data
@@ -89,7 +89,7 @@ env = BendersBnB(
 )
 
 if build_only
-    @info "SCFLP classical script (CPLEX, Bodur formulation) build completed without solve." instance = instance
+    @info "SCFLP classical script (CPLEX, Bodur data) build completed without solve." instance = instance
 else
     solve!(env)
     obj_value = try
@@ -97,5 +97,5 @@ else
     catch
         NaN
     end
-    @info "SCFLP classical script (CPLEX, Bodur formulation) finished" instance = instance termination_status = env.termination_status objective_value = obj_value
+    @info "SCFLP classical script (CPLEX, Bodur data) finished" instance = instance termination_status = env.termination_status objective_value = obj_value
 end

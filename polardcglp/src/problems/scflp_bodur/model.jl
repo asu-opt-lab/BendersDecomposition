@@ -11,14 +11,17 @@ function customize_mip_model!(model::Model, data::SCFLPBodurData)
 
     @objective(model, Min,
         data.fixed_costs' * x +
-        (1 / N) * sum(data.costs[i, j] * y[i, j, k] for i in 1:I, j in 1:J, k in 1:N)
+        (1 / N) * sum(data.costs[i, j] * data.demands[k][j] * y[i, j, k] for i in 1:I, j in 1:J, k in 1:N)
     )
 
     @constraint(model, demand[j in 1:J, k in 1:N],
-        sum(y[i, j, k] for i in 1:I) >= data.demands[k][j])
+        sum(y[:, j, k]) == 1)
+
+    @constraint(model, facility_open[i in 1:I, j in 1:J, k in 1:N],
+        y[i, j, k] <= x[i])
 
     @constraint(model, capacity[i in 1:I, k in 1:N],
-        sum(y[i, j, k] for j in 1:J) <= data.capacities[i] * x[i])
+        sum(data.demands[k][j] * y[i, j, k] for j in 1:J) <= data.capacities[i] * x[i])
 
     max_total = maximum(sum(data.demands[k]) for k in 1:N)
     @constraint(model, total_capacity,
@@ -45,14 +48,17 @@ function customize_sub_model!(model::Model, data::SCFLPBodurData, scen_idx::Int;
 
     @variable(model, y[1:I, 1:J] >= 0)
 
-    @objective(model, Min,
-        sum(data.costs[i, j] * y[i, j] for i in 1:I, j in 1:J))
+    cost_demands = data.costs .* data.demands[scen_idx]'
+    @objective(model, Min, sum(cost_demands .* y))
 
     @constraint(model, demand[j in 1:J],
-        sum(y[i, j] for i in 1:I) >= data.demands[scen_idx][j])
+        sum(y[:, j]) == 1)
+
+    @constraint(model, facility_open,
+        y .<= x)
 
     @constraint(model, capacity[i in 1:I],
-        sum(y[i, j] for j in 1:J) <= data.capacities[i] * x[i])
+        sum(data.demands[scen_idx][:] .* y[i, :]) <= data.capacities[i] * x[i])
 
     return nothing
 end
