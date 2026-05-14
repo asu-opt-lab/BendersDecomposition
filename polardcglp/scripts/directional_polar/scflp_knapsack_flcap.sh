@@ -73,20 +73,20 @@ instances=(
     "cap91-s512" "cap92-s512" "cap93-s512" "cap94-s512"
     "cap91-s1024" "cap92-s1024" "cap93-s1024" "cap94-s1024"
 
-    # capax (16 facilities)
-    "capa1-s256" "capa2-s256" "capa3-s256" "capa4-s256"
-    "capa1-s512" "capa2-s512" "capa3-s512" "capa4-s512"
-    "capa1-s1024" "capa2-s1024" "capa3-s1024" "capa4-s1024"
+    # # capax (16 facilities)
+    # "capa1-s256" "capa2-s256" "capa3-s256" "capa4-s256"
+    # "capa1-s512" "capa2-s512" "capa3-s512" "capa4-s512"
+    # "capa1-s1024" "capa2-s1024" "capa3-s1024" "capa4-s1024"
 
-    # capbx (16 facilities)
-    "capb1-s256" "capb2-s256" "capb3-s256" "capb4-s256"
-    "capb1-s512" "capb2-s512" "capb3-s512" "capb4-s512"
-    "capb1-s1024" "capb2-s1024" "capb3-s1024" "capb4-s1024"
+    # # capbx (16 facilities)
+    # "capb1-s256" "capb2-s256" "capb3-s256" "capb4-s256"
+    # "capb1-s512" "capb2-s512" "capb3-s512" "capb4-s512"
+    # "capb1-s1024" "capb2-s1024" "capb3-s1024" "capb4-s1024"
 
-    # capcx (16 facilities)
-    "capc1-s256" "capc2-s256" "capc3-s256" "capc4-s256"
-    "capc1-s512" "capc2-s512" "capc3-s512" "capc4-s512"
-    "capc1-s1024" "capc2-s1024" "capc3-s1024" "capc4-s1024"
+    # # capcx (16 facilities)
+    # "capc1-s256" "capc2-s256" "capc3-s256" "capc4-s256"
+    # "capc1-s512" "capc2-s512" "capc3-s512" "capc4-s512"
+    # "capc1-s1024" "capc2-s1024" "capc3-s1024" "capc4-s1024"
 
 )
 

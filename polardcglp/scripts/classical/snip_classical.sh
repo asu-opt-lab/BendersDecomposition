@@ -5,7 +5,7 @@
 
 ROUND_VERSION="classical/snip_classical"
 ROUND_DESCRIPTION="SNIP Benders BnB, classical separable oracle, 7 private cores, CPLEX"
-EXPERIMENT_VERSION="1"
+EXPERIMENT_VERSION="2"
 SEED="1"
 HOUR="04"
 TIME_LIMIT="14400"
@@ -47,7 +47,8 @@ EOF
 # Define instance parameter arrays
 instance_nos=(0 1 2 3 4)
 snip_nos=(3 4)
-budgets=(30.0 40.0 50.0 60.0 70.0 80.0 90.0)
+# budgets=(30.0 40.0 50.0 60.0 70.0 80.0 90.0)
+budgets=(100.0 110.0 120.0 130.0 140.0 150.0)
 
 # Loop through the instances and create a job script for each combination
 for instance_no in "${instance_nos[@]}"; do
