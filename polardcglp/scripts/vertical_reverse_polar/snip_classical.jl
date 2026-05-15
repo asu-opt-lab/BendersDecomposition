@@ -70,7 +70,7 @@ oracle_param = VerticalReversePolarDCGLPParam(
     dcglp_param;
     split_index_selection_rule = LargestFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-    add_benders_cuts_to_master = 1,
+    add_benders_cuts_to_master = 2,
     fraction_of_benders_cuts_to_master = 0.05,
     reuse_dcglp = reuse_dcglp,
     strengthened = strengthened,

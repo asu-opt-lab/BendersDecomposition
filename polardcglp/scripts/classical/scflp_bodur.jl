@@ -78,7 +78,7 @@ root_preprocessing = RootNodePreprocessing(
     typical_oracle,
     BendersSeqInOut,
     BendersSeqInOutParam(
-        time_limit = min(300.0, time_limit),
+        time_limit = min(500.0, time_limit),
         gap_tolerance = 1e-9,
         stabilizing_x = ones(data.n_facilities),
         α = 0.9,
@@ -86,6 +86,7 @@ root_preprocessing = RootNodePreprocessing(
         verbose = true,
     ),
 )
+# root_preprocessing = NoRootNodePreprocessing()
 
 lazy_callback = LazyCallback(typical_oracle)
 user_callback = NoUserCallback()

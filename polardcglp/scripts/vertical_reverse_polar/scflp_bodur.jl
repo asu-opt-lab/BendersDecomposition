@@ -114,7 +114,7 @@ oracle_param = VerticalReversePolarDCGLPParam(
 )
 
 master = Master(data; customize = customize_master_model!, optimizer = master_optimizer_local)
-set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
+# set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
 
 typical_oracles = [
     build_scflp_bodur_oracle(data, master, oracle_name; optimizer = sub_optimizer_local),
@@ -127,7 +127,7 @@ root_preprocessing = RootNodePreprocessing(
     lazy_oracle,
     BendersSeqInOut,
     BendersSeqInOutParam(
-        time_limit = min(300.0, time_limit),
+        time_limit = min(500.0, time_limit),
         gap_tolerance = 1e-6,
         stabilizing_x = ones(data.n_facilities),
         α = 0.9,
@@ -135,6 +135,7 @@ root_preprocessing = RootNodePreprocessing(
         verbose = true,
     ),
 )
+# root_preprocessing = NoRootNodePreprocessing()
 lazy_callback = LazyCallback(lazy_oracle)
 user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = frequency))
 
