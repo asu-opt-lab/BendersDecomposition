@@ -2,6 +2,17 @@ const DEFAULT_OPTIMIZER = optimizer_with_attributes(GLPK.Optimizer, MOI.Silent()
 
 default_optimizer() = optimizer_with_attributes(GLPK.Optimizer, MOI.Silent() => true)
 
+function set_optimizer_checked!(model::Model, optimizer, context::AbstractString)
+    if isnothing(optimizer)
+        throw(ArgumentError(
+            "$(context) requires a valid optimizer. " *
+            "Omit `optimizer` to use the default GLPK optimizer, or pass a JuMP-compatible optimizer constructor."
+        ))
+    end
+    set_optimizer(model, optimizer)
+    return model
+end
+
 callback_solver_tag(model::Model) = Val(Symbol(solver_name(model)))
 
 """

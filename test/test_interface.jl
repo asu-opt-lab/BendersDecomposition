@@ -196,6 +196,36 @@ end
     end
 end
 
+@testset "Explicit nothing optimizer rejected" begin
+    data = CFLPData(
+        2,
+        2,
+        [2.0, 2.0],
+        [1.0, 1.0],
+        [3.0, 4.0],
+        [1.0 2.0; 2.0 1.0],
+    )
+
+    err = try
+        Master(data; optimizer = nothing)
+        nothing
+    catch e
+        e
+    end
+    @test err isa ArgumentError
+    @test occursin("Omit `optimizer` to use the default GLPK optimizer", sprint(showerror, err))
+
+    master = Master(data)
+    err = try
+        ClassicalOracle(data, master; optimizer = nothing)
+        nothing
+    catch e
+        e
+    end
+    @test err isa ArgumentError
+    @test occursin("ClassicalOracle subproblem model requires a valid optimizer", sprint(showerror, err))
+end
+
 @testset "Default optimizer is attached before customize hooks run" begin
     struct AttrData <: AbstractData end
     data = AttrData()

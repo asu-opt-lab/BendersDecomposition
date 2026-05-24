@@ -48,7 +48,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
                             optimizer = DEFAULT_OPTIMIZER)
         @debug "Building knapsack oracle for CFLP"
         model = Model()
-        set_optimizer(model, optimizer)
+        set_optimizer_checked!(model, optimizer, "CFLKnapsackOracle subproblem model")
 
         # Copy the master's coupling variables into the submodel (with identical axes and symbols)
         x_copy = copy_variables!(model, master.x_tuple)

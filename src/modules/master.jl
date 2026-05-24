@@ -29,7 +29,7 @@ mutable struct Master <: AbstractMaster
         @debug "Building Master module"
 
         model = Model()
-        set_optimizer(model, optimizer)
+        set_optimizer_checked!(model, optimizer, "Master model")
 
         x_tuple, t = customize(model, data)
         t = t isa VariableRef ? [t] : t
