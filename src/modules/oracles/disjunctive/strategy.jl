@@ -8,14 +8,14 @@ configuration (`norm`, `core_point_*`, …) and the dispatch surface listed belo
 
 # Strategy interface (one method per variant)
 - [`build_strategy_dcglp`](@ref) — build the JuMP model from `master` / `param`.
-- [`prepare_dcglp_call!`](@ref) — per-call setup (RHS, direction). May return
-  a precomputed [`Hyperplane`](@ref) tuple to short-circuit DCGLP.
+- [`update_dcglp_for_candidate!`](@ref) — per-call setup for the current
+  candidate point (RHS, direction).
 - [`validate_strategy_specific!`](@ref) — extra construction-time validation.
 - [`strategy_label`](@ref) — human-readable name used in error messages.
 - [`dcglp_tau_value`](@ref), [`dcglp_sx_value`](@ref),
   [`dcglp_lower_bound`](@ref) — solution reads after each DCGLP solve.
 - [`initialize_dcglp_state`](@ref) — strategy-aware state initialization.
-- [`prepare_dcglp_reference_t!`](@ref) — strategies may override to adjust the
+- [`update_dcglp_reference_t!`](@ref) — strategies may override to adjust the
   reference epigraph used by the UB recomputation.
 - [`record_dcglp_oracle_result!`](@ref) — strategies may record subproblem
   results into the state.
@@ -78,7 +78,7 @@ validate_strategy_specific!(::AbstractDcglpStrategy, ::AbstractMaster) = nothing
 
 initialize_dcglp_state(::AbstractDcglpStrategy) = DcglpState()
 
-prepare_dcglp_reference_t!(::AbstractDcglpStrategy, ::AbstractDcglpOracle, ::Vector{Float64}, t_value::Vector{Float64}, ::Float64, ::Float64) = copy(t_value)
+update_dcglp_reference_t!(::AbstractDcglpStrategy, ::AbstractDcglpOracle, ::Vector{Float64}, t_value::Vector{Float64}, ::Float64, ::Float64) = copy(t_value)
 
 dcglp_sx_value(::AbstractDcglpStrategy, ::Model) = Float64[]
 

@@ -16,7 +16,6 @@ end
 function validate_two_typical_oracles!(typical_oracles, oracle_name::String)
     length(typical_oracles) == 2 ||
         throw(ArgumentError("$oracle_name requires exactly two typical oracles."))
-    return nothing
 end
 
 function validate_binary_master!(master::AbstractMaster, oracle_name::String)
@@ -24,7 +23,6 @@ function validate_binary_master!(master::AbstractMaster, oracle_name::String)
         is_binary(xi) ||
             throw(ArgumentError("$oracle_name requires all master variables to be binary."))
     end
-    return nothing
 end
 
 function initialize_disjunctive_cut_storage(master::AbstractMaster)
@@ -42,11 +40,10 @@ function delete_registered_constraints!(model::Model, sym::Symbol)
         delete(model, registered)
     end
     unregister(model, sym)
-    return nothing
 end
 
 """
-    build_dcglp_skeleton!(dcglp::Model, master::AbstractMaster; omega_0_nonneg::Bool)
+    build_dcglp_skeleton!(dcglp::Model, master::AbstractMaster)
 
 Create the shared DCGLP variables and constraints that every disjunctive oracle
 relies on: `omega_0`, `omega_x`, `omega_t`, the `con0` simplex constraint, the
@@ -56,13 +53,8 @@ relies on: `omega_0`, `omega_x`, `omega_t`, the `con0` simplex constraint, the
 Caller is responsible for the oracle-specific `tau`, objective, `conx`/`cont`
 constraints (which involve RHS), and any normalization constraint.
 """
-function build_dcglp_skeleton!(dcglp::Model, master::AbstractMaster; omega_0_nonneg::Bool)
-    if omega_0_nonneg
-        @variable(dcglp, omega_0[1:2] >= 0)
-    else
-        @variable(dcglp, omega_0[1:2])
-        @constraint(dcglp, conineq[i in 1:2], omega_0[i] >= 0)
-    end
+function build_dcglp_skeleton!(dcglp::Model, master::AbstractMaster)
+    @variable(dcglp, omega_0[1:2] >= 0)
 
     @variable(dcglp, omega_x[1:2, 1:master.dim_x])
     @variable(dcglp, omega_t[1:2, 1:master.dim_t])
@@ -84,30 +76,6 @@ function build_dcglp_skeleton!(dcglp::Model, master::AbstractMaster; omega_0_non
     end
 
     return dcglp
-end
-
-function format_sparse_terms(coeffs::SparseVector{Float64, Int}, var_name::String; zero_tol::Float64 = 1.0e-10)
-    terms = String[]
-    for p in sortperm(coeffs.nzind)
-        idx = coeffs.nzind[p]
-        val = coeffs.nzval[p]
-        abs(val) <= zero_tol && continue
-        sign = val >= 0 ? "+" : "-"
-        push!(terms, @sprintf("%s %.6g %s[%d]", sign, abs(val), var_name, idx))
-    end
-    return terms
-end
-
-function format_hyperplane(h::Hyperplane; zero_tol::Float64 = 1.0e-10)
-    pieces = String[]
-    if abs(h.a_0) > zero_tol || (nnz(h.a_x) == 0 && nnz(h.a_t) == 0)
-        push!(pieces, @sprintf("%.6g", h.a_0))
-    else
-        push!(pieces, "0")
-    end
-    append!(pieces, format_sparse_terms(h.a_x, "x"; zero_tol = zero_tol))
-    append!(pieces, format_sparse_terms(h.a_t, "t"; zero_tol = zero_tol))
-    return join(pieces, " ") * " <= 0"
 end
 
 function fallback_typical_or_throw(

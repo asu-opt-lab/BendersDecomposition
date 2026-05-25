@@ -4,12 +4,10 @@ end
 
 function add_disjunctive_cuts!(oracle::AbstractDcglpOracle, ::NoDisjunctiveCuts)
     delete_registered_constraints!(oracle.dcglp, :con_disjunctive)
-    return nothing
 end
 
 function add_disjunctive_cuts!(oracle::AbstractDcglpOracle, ::AllDisjunctiveCuts)
     install_disjunctive_cuts!(oracle, oracle.disjunctive_cuts)
-    return nothing
 end
 
 function add_disjunctive_cuts!(oracle::AbstractDcglpOracle, ::DisjunctiveCutsSmallerIndices)
@@ -23,7 +21,6 @@ function add_disjunctive_cuts!(oracle::AbstractDcglpOracle, ::DisjunctiveCutsSma
         Hyperplane[]
     end
     install_disjunctive_cuts!(oracle, cuts)
-    return nothing
 end
 
 function install_disjunctive_cuts!(oracle::AbstractDcglpOracle, cuts::Vector{Hyperplane})
@@ -45,16 +42,14 @@ function install_disjunctive_cuts!(oracle::AbstractDcglpOracle, cuts::Vector{Hyp
         )
     end
     add_constraints(dcglp, :con_disjunctive, exprs)
-    return nothing
 end
 
-function prepare_dynamic_dcglp_constraints!(oracle::AbstractDcglpOracle)
+function update_dynamic_dcglp_constraints!(oracle::AbstractDcglpOracle)
     if !oracle.param.reuse_dcglp
         delete_registered_constraints!(oracle.dcglp, :con_benders)
         delete_registered_constraints!(oracle.dcglp, :con_disjunctive)
     end
     add_disjunctive_cuts!(oracle, oracle.param.disjunctive_cut_append_rule)
-    return nothing
 end
 
 function append_current_disjunctive_cut!(oracle::AbstractDcglpOracle, cut::Hyperplane)
@@ -63,7 +58,6 @@ function append_current_disjunctive_cut!(oracle::AbstractDcglpOracle, cut::Hyper
         index = get_split_index(oracle)
         push!(oracle.disjunctive_cuts_by_index[index], cut)
     end
-    return nothing
 end
 
 function store_dcglp_disjunctive_cut!(
@@ -74,5 +68,4 @@ function store_dcglp_disjunctive_cut!(
 )
     append_current_disjunctive_cut!(oracle, cut)
     include_disjunctive_cuts_to_hyperplanes && push!(master_hyperplanes, cut)
-    return nothing
 end

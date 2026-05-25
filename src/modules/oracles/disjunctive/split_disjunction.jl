@@ -46,7 +46,6 @@ function replace_disjunctive_inequality!(oracle::AbstractDcglpOracle)
 
     @constraint(dcglp, con_split_kappa, 0 >= dcglp[:omega_0][1] * (phi_0 + 1.0) - phi' * dcglp[:omega_x][1, :])
     @constraint(dcglp, con_split_nu, 0 >= -dcglp[:omega_0][2] * phi_0 + phi' * dcglp[:omega_x][2, :])
-    return nothing
 end
 
 function retrieve_zero_one(x_value::Vector{Float64}, zero_tol)
@@ -63,11 +62,9 @@ function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_i
         @constraint(dcglp, con_zeta[i in 1:2, j in eachindex(zero_indices)], 0 >= dcglp[:omega_x][i, zero_indices[j]])
     !isempty(one_indices) &&
         @constraint(dcglp, con_xi[i in 1:2, j in eachindex(one_indices)], 0 >= dcglp[:omega_0][i] - dcglp[:omega_x][i, one_indices[j]])
-
-    return nothing
 end
 
-function choose_split_and_prepare_lifting!(
+function choose_split_and_update_lifting!(
     oracle::AbstractDcglpOracle,
     x_value::Vector{Float64},
 )

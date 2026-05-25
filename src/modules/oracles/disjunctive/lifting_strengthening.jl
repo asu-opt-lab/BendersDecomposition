@@ -33,11 +33,10 @@ read_strengthening_duals(dcglp::Model) = (
 )
 
 """
-    lift_x_coefficients(dcglp, gamma_x, gamma_0, zero_indices, one_indices; strengthen, zero_tol, return_negated=false)
+    lift_x_coefficients(dcglp, gamma_x, gamma_0, zero_indices, one_indices; strengthen, zero_tol)
 
-Apply lifting (and optional strengthening) to `gamma_x`. By default returns the
-non-negated `(gamma_x, gamma_0)`. The distance-norm cut path uses
-`return_negated = true` to keep `-gamma_x` for its norm-rescaling step.
+Apply lifting (and optional strengthening) to `gamma_x`. Returns the lifted
+`(gamma_x, gamma_0)` pair in the common cut orientation.
 """
 function lift_x_coefficients(
     dcglp::Model,
@@ -47,7 +46,6 @@ function lift_x_coefficients(
     one_indices::Vector{Int};
     strengthen::Bool,
     zero_tol::Float64,
-    return_negated::Bool = false,
 )
     zeta_k = !isempty(zero_indices) ? dual.(dcglp[:con_zeta][1, :]) : Float64[]
     zeta_v = !isempty(zero_indices) ? dual.(dcglp[:con_zeta][2, :]) : Float64[]
@@ -68,7 +66,7 @@ function lift_x_coefficients(
         lifted_gamma_x = strengthen_coefficients(lifted_gamma_x, sigma, Dict(1 => delta_1, 2 => delta_2); zero_tol = zero_tol)
     end
 
-    return return_negated ? (lifted_gamma_x, lifted_gamma_0) : (-lifted_gamma_x, lifted_gamma_0)
+    return -lifted_gamma_x, lifted_gamma_0
 end
 
 function normalize_directional_duals!(
@@ -83,7 +81,7 @@ function normalize_directional_duals!(
         throw(AlgorithmException("DirectionalPolarStrategy cut normalization failed because the directional support is numerically zero."))
     gamma_x ./= direction_value
     gamma_t ./= direction_value
-    return nothing
+    return direction_value
 end
 
 function strengthen_coefficients(gamma_x, sigma, delta; zero_tol = 1.0e-9)

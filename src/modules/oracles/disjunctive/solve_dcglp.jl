@@ -18,9 +18,9 @@ function generate_cuts(
         return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = Float64(time_limit))
 
     start_time = time()
-    zero_indices, one_indices = choose_split_and_prepare_lifting!(oracle, x_value)
-    prepare_dynamic_dcglp_constraints!(oracle)
-    prepare_dcglp_call!(strategy, oracle, x_value, t_value)
+    zero_indices, one_indices = choose_split_and_update_lifting!(oracle, x_value)
+    update_dynamic_dcglp_constraints!(oracle)
+    update_dcglp_for_candidate!(strategy, oracle, x_value, t_value)
 
     return solve_dcglp_loop!(
         oracle,
@@ -63,7 +63,7 @@ function solve_dcglp_loop!(
 
     dcglp = oracle.dcglp
     hyperplanes = Hyperplane[]
-    reference_t = prepare_dcglp_reference_t!(strategy, oracle, x_value, t_value, start_time, time_limit)
+    reference_t = update_dcglp_reference_t!(strategy, oracle, x_value, t_value, start_time, time_limit)
 
     while true
         state = initialize_dcglp_state(strategy)
@@ -143,7 +143,6 @@ function read_dcglp_solution!(oracle::DcglpOracle, state::DcglpState)
     state.values[:tau] = dcglp_tau_value(strategy, dcglp)
     state.values[:sx] = dcglp_sx_value(strategy, dcglp)
     state.LB = dcglp_lower_bound(strategy, dcglp)
-    return nothing
 end
 
 function collect_dcglp_benders_cuts!(
@@ -194,7 +193,6 @@ function collect_dcglp_benders_cuts!(
             end
         end
     end
-    return nothing
 end
 
 function append_selected_benders_cuts_to_master!(
@@ -216,7 +214,6 @@ function append_selected_benders_cuts_to_master!(
             add_only_violated_cuts = add_violated,
         ),
     )
-    return nothing
 end
 
 function fill_dcglp_omega_t_estimates!(state::DcglpState, t_value::Vector{Float64})
@@ -226,21 +223,4 @@ function fill_dcglp_omega_t_estimates!(state::DcglpState, t_value::Vector{Float6
             any(isnan, state.f_x[i]) ? fill(NaN, length(t_value)) :
             state.f_x[i] * state.values[:ω_0][i]
     end
-    return nothing
-end
-
-function print_disjunctive_cut(
-    oracle::DcglpOracle,
-    cut::Hyperplane,
-    x_value::Vector{Float64},
-    t_value::Vector{Float64};
-    zero_tol::Float64 = 1.0e-10,
-)
-    println("   Disjunctive cut:")
-    println("      " * format_hyperplane(cut; zero_tol = zero_tol))
-    if oracle.param.split_index_selection_rule isa SimpleSplit
-        @printf("   Split index: x[%d]\n", get_split_index(oracle))
-    end
-    @printf("   Cut violation at current point: %.6f\n", evaluate_violation(cut, x_value, t_value))
-    return nothing
 end
