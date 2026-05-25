@@ -53,6 +53,57 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @assert haskey(reference_objectives, instance_name) "Missing UFLP reference objective for $(instance_name) in $(reference_path)"
             mip_opt_val = reference_objectives[instance_name]
 
+            @testset "DCGLP strategy oracles" begin
+                strategy_specs = [
+                    (
+                        "SimplexNormOracle",
+                        SimplexNormOracle,
+                        SimplexNormOracleParam(
+                            dcglp_param;
+                            split_index_selection_rule = LargestFractional(),
+                            disjunctive_cut_append_rule = AllDisjunctiveCuts(),
+                            strengthened = true,
+                            add_benders_cuts_to_master = false,
+                            reuse_dcglp = false,
+                            lift = false,
+                            zero_tol = 1e-9,
+                        ),
+                    ),
+                    (
+                        "VerticalReversePolarOracle",
+                        VerticalReversePolarOracle,
+                        VerticalReversePolarOracleParam(
+                            dcglp_param;
+                            split_index_selection_rule = LargestFractional(),
+                            disjunctive_cut_append_rule = AllDisjunctiveCuts(),
+                            strengthened = true,
+                            add_benders_cuts_to_master = false,
+                            reuse_dcglp = false,
+                            lift = false,
+                            zero_tol = 1e-9,
+                        ),
+                    ),
+                ]
+
+                for (strategy_name, oracle_type, oracle_param) in strategy_specs
+                    @info "solving UFLP p$i - $strategy_name/classical - benders2master false reuse false lift false"
+                    @testset "$strategy_name with ClassicalOracle" begin
+                        master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                        typical_oracles = [
+                            ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer),
+                            ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer),
+                        ]
+                        disjunctive_oracle = oracle_type(master, typical_oracles, oracle_param)
+                        @test disjunctive_oracle isa BendersX.AbstractDcglpOracle
+
+                        env = BendersSeq(master, disjunctive_oracle; param = benders_param)
+                        solve!(env)
+                        @test env.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                    end
+                end
+            end
+
             @testset "Classical oracle" begin
                 @testset "Seq" begin
                     # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]

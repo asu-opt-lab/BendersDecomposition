@@ -3,12 +3,17 @@ using BendersX
 using JuMP
 using HiGHS
 using MathOptInterface
+using LinearAlgebra
 
 const DNO_MOI = MathOptInterface
 
 struct DisjunctiveNormTestData <: AbstractData
     costs::Matrix{Float64}
 end
+
+struct DirectionalVectorTTestData <: AbstractData end
+
+struct DirectionalVectorTTestOracle <: BendersX.AbstractTypicalOracle end
 
 function disjunctive_norm_optimizer()
     return optimizer_with_attributes(HiGHS.Optimizer, DNO_MOI.Silent() => true)
@@ -79,6 +84,37 @@ function disjunctive_norm_dcglp_param(; verbose::Bool = false)
         iter_limit = 20,
         verbose = verbose,
     )
+end
+
+function customize_directional_vector_t_master!(model::Model, ::DirectionalVectorTTestData)
+    set_optimizer(model, disjunctive_norm_optimizer())
+
+    @variable(model, x[1:2], Bin)
+    @variable(model, t[1:2] >= -1.0e6)
+    @objective(model, Min, sum(t))
+
+    return (x = x,), t
+end
+
+function BendersX.generate_cuts(
+    ::DirectionalVectorTTestOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64};
+    tol_normalize::Float64 = 1.0,
+    time_limit::Float64 = 3600.0,
+)
+    hyperplanes = BendersX.Hyperplane[]
+    for j in eachindex(t_value)
+        h = BendersX.Hyperplane(length(x_value), length(t_value))
+        h.a_x[j] = -1.0
+        h.a_t[j] = -1.0
+        h.a_0 = 1.0
+        push!(hyperplanes, h)
+    end
+
+    f_x = 1.0 .- x_value[1:length(t_value)]
+    is_in_L = all(f_x .<= t_value .+ 1.0e-9)
+    return is_in_L, hyperplanes, f_x
 end
 
 function run_direct_cut_smoke(oracle)
@@ -180,6 +216,35 @@ end
         @test oracle.param.core_point_x == [0.2, 0.3]
         @test oracle.param.core_point_t == [0.1]
         @test_throws DimensionMismatch set_core_point!(oracle, [0.1], [0.0])
+    end
+
+    @testset "directional lift cut normalization" begin
+        data = DirectionalVectorTTestData()
+        master = Master(data; model = customize_directional_vector_t_master!, optimizer = disjunctive_norm_optimizer())
+        param = DirectionalPolarOracleParam(
+            disjunctive_norm_dcglp_param(),
+            [0.5, 0.5],
+            [0.75, 0.75];
+            split_index_selection_rule = MostFractional(),
+            disjunctive_cut_append_rule = AllDisjunctiveCuts(),
+            add_benders_cuts_to_master = 2,
+            reuse_dcglp = true,
+            strengthened = false,
+            lift = true,
+        )
+        oracle = DirectionalPolarOracle(master, [DirectionalVectorTTestOracle(), DirectionalVectorTTestOracle()], param)
+
+        x_value = [0.5, 0.5]
+        t_value = [0.0, 0.0]
+        is_in_L, _, _ = BendersX.generate_cuts(oracle, x_value, t_value; time_limit = 20.0)
+
+        @test !is_in_L
+        @test !isempty(oracle.disjunctive_cuts)
+        cut = last(oracle.disjunctive_cuts)
+        direction_x = x_value .- oracle.param.core_point_x
+        direction_t = t_value .- oracle.param.core_point_t
+        @test isapprox(dot(cut.a_x, direction_x) + dot(cut.a_t, direction_t), 1.0; atol = 1.0e-6)
+        @test BendersX.evaluate_violation(cut, x_value, t_value) > 0.0
     end
 
     @testset "BendersSeq solve smoke" begin
