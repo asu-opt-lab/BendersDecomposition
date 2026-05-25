@@ -14,7 +14,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
     instances = setdiff(1:71, [67])
 
     # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
-    function update_sub_gbc_model!(model::Model, data::CFLPData, scen_idx::Int; x)
+    function customize_sub_model_gbc!(model::Model, data::CFLPData, scen_idx::Int; x)
         optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
         set_optimizer(model, optimizer)
 
@@ -64,7 +64,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
-                        oracle_param = SplitOracleParam(dcglp_param;
+                        oracle_param = DistanceNormOracleParam(dcglp_param;
                                                                 norm = LpNorm(p),
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
@@ -79,7 +79,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -90,8 +90,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             if benders_param.verbose
-                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
-                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctive_cuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctive_cuts))"
                             end
                         end
 
@@ -100,7 +100,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -111,8 +111,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             if benders_param.verbose
-                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
-                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctive_cuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctive_cuts))"
                             end
                         end
 
@@ -121,7 +121,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -132,8 +132,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             if benders_param.verbose
-                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
-                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctive_cuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctive_cuts))"
                             end
                         end
                     end
@@ -145,7 +145,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule" begin
 
-                        oracle_param = SplitOracleParam(dcglp_param;
+                        oracle_param = DistanceNormOracleParam(dcglp_param;
                                                                 norm = LpNorm(p),
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
@@ -160,7 +160,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -171,8 +171,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             if benders_param.verbose
-                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
-                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctive_cuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctive_cuts))"
                             end
                         end
                         @testset "Seq" begin
@@ -180,7 +180,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -191,8 +191,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             if benders_param.verbose
-                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
-                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctive_cuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctive_cuts))"
                             end
                         end
                         @testset "SeqInOut" begin
@@ -200,7 +200,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -211,8 +211,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @test env.termination_status == Optimal()
                             @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                             if benders_param.verbose
-                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctiveCuts))"
-                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctiveCuts))"
+                                @info "Disjunctive cuts added: $(length(env.user_callback.oracle.disjunctive_cuts))"
+                                env.user_callback.oracle.param.add_benders_cuts_to_master != 0 && @info "Byproduct Benders cuts added: $(log.n_user_cuts[1] - length(env.user_callback.oracle.disjunctive_cuts))"
                             end
                         end
                     end
@@ -222,7 +222,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Unified oracle" begin
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
-                        oracle_param = SplitOracleParam(dcglp_param;
+                        oracle_param = DistanceNormOracleParam(dcglp_param;
                                                                 norm = LpNorm(p),
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
@@ -237,7 +237,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -254,7 +254,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -271,7 +271,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -289,7 +289,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Pareto oracle" begin
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
-                        oracle_param = SplitOracleParam(dcglp_param;
+                        oracle_param = DistanceNormOracleParam(dcglp_param;
                                                                 norm = LpNorm(p),
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
@@ -305,7 +305,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
                             lazy_oracle = ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -323,7 +323,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
                             lazy_oracle = ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -341,7 +341,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
                             lazy_oracle = ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -359,7 +359,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Classic oracle with GBC" begin
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
-                        oracle_param = SplitOracleParam(dcglp_param;
+                        oracle_param = DistanceNormOracleParam(dcglp_param;
                                                                 norm = LpNorm(p),
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
@@ -372,9 +372,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "NoSeq" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical with GBC/no seq"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -389,9 +389,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "Seq" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical with GBC/seq"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -406,9 +406,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "SeqInOut" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical with GBC/seqinout"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -426,7 +426,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Knapsack oracle with GBC" begin
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
-                        oracle_param = SplitOracleParam(dcglp_param;
+                        oracle_param = DistanceNormOracleParam(dcglp_param;
                                                                 norm = LpNorm(p),
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
@@ -439,9 +439,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "NoSeq" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle with GBC/no seq"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -456,9 +456,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "Seq" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle with GBC/seq"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -473,9 +473,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "SeqInOut" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle with GBC/seqinout"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)

@@ -5,20 +5,20 @@
 Specialized sequential environment for split-based disjunctive Benders cuts.
 
 This environment alternates between solving a linearized master relaxation and
-calling a [`SplitOracle`](@ref) at carefully chosen fractional vertices. It is
+calling an [`AbstractDcglpOracle`](@ref) at carefully chosen fractional vertices. It is
 intended for the split-cut workflow implemented in this package and enforces
 the split-selection and cut-appending rules required by that workflow.
 
 # Fields
 - `master::AbstractMaster`: Master problem, which is relaxed to an LP internally.
-- `oracle::SplitOracle`: Disjunctive oracle used to generate split cuts.
+- `oracle::AbstractDcglpOracle`: Disjunctive oracle used to generate split cuts.
 - `param::SpecializedBendersSeqParam`: Loop controls for the specialized algorithm.
 - `obj_value::Float64`: Best bound recorded on termination.
 - `termination_status::TerminationStatus`: Final solve status.
 """
 mutable struct SpecializedBendersSeq <: AbstractBendersSeq
     master::AbstractMaster
-    oracle::SplitOracle
+    oracle::AbstractDcglpOracle
 
     param::SpecializedBendersSeqParam
 
@@ -26,8 +26,8 @@ mutable struct SpecializedBendersSeq <: AbstractBendersSeq
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function SpecializedBendersSeq(master::AbstractMaster, oracle::SplitOracle; param::SpecializedBendersSeqParam = SpecializedBendersSeqParam()) 
-        
+    function SpecializedBendersSeq(master::AbstractMaster, oracle::AbstractDcglpOracle; param::SpecializedBendersSeqParam = SpecializedBendersSeqParam())
+
         # Relax integrality in master
         relax_integrality(master.model)
 
@@ -47,7 +47,7 @@ This routine maintains a linear master relaxation, solves auxiliary LPs to
 recover stable fractional vertices, and then queries the disjunctive oracle to
 add split cuts tailored to the current branch of the relaxation.
 """
-function solve!(env::SpecializedBendersSeq) 
+function solve!(env::SpecializedBendersSeq)
     log = BendersSeqLog()
     L_param = BendersSeqParam(; time_limit = env.param.time_limit, gap_tolerance = env.param.lp_gap_tolerance, verbose = env.param.verbose)
     L_env = BendersSeq(env.master, env.oracle.typical_oracles[1]; param = L_param)
@@ -57,7 +57,7 @@ function solve!(env::SpecializedBendersSeq)
             state = BendersSeqState()
             state.total_time = @elapsed begin
                 ## add all found disjunctive cuts to master
-                all_disj_cuts = hyperplanes_to_expression(env.master.model, env.oracle.disjunctiveCuts, env.master.x, env.master.t)    
+                all_disj_cuts = hyperplanes_to_expression(env.master.model, env.oracle.disjunctive_cuts, env.master.x, env.master.t)
                 @constraint(env.master.model, con_disjunctive, 0.0 .>= all_disj_cuts)
 
                 # Solve linear relaxation
@@ -72,14 +72,14 @@ function solve!(env::SpecializedBendersSeq)
 
                 # generate optimal solution that is vertex of P^{k,j}; essential for numerical stability
                 generate_optimal_vertex!(env, L_env, state)
-                
+
                 state.oracle_time = @elapsed begin
                     state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, env.param), throw_typical_cuts_for_errors = false, include_disjunctive_cuts_to_hyperplanes = false)
                     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.x, env.master.t) : []
                 end
 
                 state.is_in_L && throw(UnexpectedModelStatusException("SpecializedBendersSeq: τ=0 at fractional point, possibly numerical issue"))
-                
+
                 record_iteration!(log, state)
 
                 env.param.verbose && print_iteration_info(state, log)
@@ -90,7 +90,7 @@ function solve!(env::SpecializedBendersSeq)
         end
         env.termination_status = Optimal()
         env.obj_value = log.iterations[end].LB
-        
+
         return to_dataframe(log)
     catch e
         if typeof(e) <: TimeLimitException
@@ -100,7 +100,7 @@ function solve!(env::SpecializedBendersSeq)
             env.termination_status = InfeasibleOrNumericalIssue()
             @warn e.msg
         else
-            rethrow()  
+            rethrow()
         end
         if env.param.verbose
             println("Terminated with $(env.termination_status)")
@@ -111,12 +111,12 @@ end
 
 function generate_optimal_vertex!(env::SpecializedBendersSeq, L_env::AbstractBendersSeq, state::BendersSeqState)
     dim_x = env.master.dim_x
-    
+
     ## find largest fractional idx
     frac_idx = -1
     for idx in reverse(1:dim_x)
         val = state.values[:x][idx]
-        if !isapprox(abs(val - 0.5), 0.5, atol = env.param.integrality_tolerance) 
+        if !isapprox(abs(val - 0.5), 0.5, atol = env.param.integrality_tolerance)
             frac_idx = idx
             break
         end
@@ -127,10 +127,10 @@ function generate_optimal_vertex!(env::SpecializedBendersSeq, L_env::AbstractBen
     env.master.model[:fix_x] = @constraint(env.master.model, [i in frac_idx+1:dim_x], env.master.x[i] == round(state.values[:x][i]))
     ## remove and add all disjunctive cuts up to idx
     if haskey(env.master.model, :con_disjunctive)
-        delete.(env.master.model, env.master.model[:con_disjunctive]) 
+        delete.(env.master.model, env.master.model[:con_disjunctive])
         unregister(env.master.model, :con_disjunctive)
     end
-    disj_cuts_idx = reduce(vcat, [hyperplanes_to_expression(env.master.model, env.oracle.disjunctiveCutsByIndex[i], env.master.x, env.master.t) for i = 1:frac_idx])
+    disj_cuts_idx = reduce(vcat, [hyperplanes_to_expression(env.master.model, env.oracle.disjunctive_cuts_by_index[i], env.master.x, env.master.t) for i = 1:frac_idx])
     @constraint(env.master.model, con_disjunctive, 0.0 .>= disj_cuts_idx)
 
     ## solve master again
@@ -147,11 +147,11 @@ function generate_optimal_vertex!(env::SpecializedBendersSeq, L_env::AbstractBen
 
     ## remove fixing constraints and disjunctive cuts
     if haskey(env.master.model, :fix_x)
-        delete.(env.master.model, env.master.model[:fix_x]) 
+        delete.(env.master.model, env.master.model[:fix_x])
         unregister(env.master.model, :fix_x)
     end
     if haskey(env.master.model, :con_disjunctive)
-        delete.(env.master.model, env.master.model[:con_disjunctive]) 
+        delete.(env.master.model, env.master.model[:con_disjunctive])
         unregister(env.master.model, :con_disjunctive)
     end
 end

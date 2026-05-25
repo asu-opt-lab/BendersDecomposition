@@ -27,7 +27,7 @@ preprocessing = DisjunctiveRootNodePreprocessing(typical_oracle, disj_oracle)
 # Use with BendersBnB
 env = BendersBnB(master, preprocessing, lazy_callback, user_callback)
 ```
-See also: [`RootNodePreprocessing`](@ref), [`SplitOracle`](@ref)
+See also: [`RootNodePreprocessing`](@ref), [`AbstractDisjunctiveOracle`](@ref)
 """
 mutable struct DisjunctiveRootNodePreprocessing <: AbstractRootNodePreprocessing
     typical_oracle::AbstractTypicalOracle
@@ -71,7 +71,7 @@ The function returns the preprocessing times.
 """
 function root_node_processing!(master::AbstractMaster, preprocessing::DisjunctiveRootNodePreprocessing)
 
-    root_param = deepcopy(root_preprocessing.params)
+    root_param = deepcopy(preprocessing.params)
 
     # Relax integrality, ensure undo() always runs even on error
     undo = relax_integrality(master.model)
@@ -86,7 +86,7 @@ function root_node_processing!(master::AbstractMaster, preprocessing::Disjunctiv
         root_param.time_limit -= typical_time
 
         # Phase 2: Preprocessing with disjunctive oracle 
-        env_root_disjunctive = preprocessing.seq_type(data, master, preprocessing.disjunctive_oracle; param = root_param)
+        env_root_disjunctive = preprocessing.seq_type(master, preprocessing.disjunctive_oracle; param = root_param)
         solve!(env_root_disjunctive)
     finally
         # always restore integrality (even on exceptions)

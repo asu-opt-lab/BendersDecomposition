@@ -245,7 +245,7 @@ end
     transfer_scaled_linear_rows_and_bounds_with_types!(master, x, dcglp, omega, omega0)
 
 Copy linear rows and scalar bounds from a master model into the DCGLP
-formulation used by [`SplitOracle`](@ref).
+formulation used by disjunctive DCGLP oracles.
 
 Only linear constraints whose variables all belong to the supplied vector `x`
 are transferred. Variable integrality restrictions are ignored, because the

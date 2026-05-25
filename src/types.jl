@@ -141,7 +141,7 @@ Lp normalization used by the disjunctive cut generating LP.
 The value `p` specifies the norm order used in normalization constraints for
 the DCGLP. Typical choices are `1.0`, `2.0`, and `Inf`.
 
-See also: [`SplitOracleParam`](@ref), `add_normalization_constraint`
+See also: [`DistanceNormOracleParam`](@ref), `add_normalization_constraint`
 """
 mutable struct LpNorm <: AbstractNorm
     p::Float64
@@ -157,7 +157,7 @@ end
     SplitIndexSelectionRule
 
 Abstract supertype for rules that choose which fractional master variable is
-used to form a split disjunction in [`SplitOracle`](@ref).
+used to form a split disjunction in disjunctive DCGLP oracles.
 """
 abstract type SplitIndexSelectionRule end
 abstract type SimpleSplit <: SplitIndexSelectionRule end
@@ -175,7 +175,7 @@ struct LargestFractional <: SimpleSplit end
     DisjunctiveCutsAppendRule
 
 Abstract supertype for policies that decide how previously generated
-disjunctive cuts are reused inside the DCGLP solved by [`SplitOracle`](@ref).
+disjunctive cuts are reused inside the DCGLP solved by disjunctive oracles.
 """
 abstract type DisjunctiveCutsAppendRule end
 """Do not reuse previously generated disjunctive cuts."""

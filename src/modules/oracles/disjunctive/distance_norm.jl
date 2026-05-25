@@ -1,0 +1,138 @@
+function build_strategy_dcglp(strategy::DistanceNormStrategy, master::AbstractMaster, param::DcglpOracleParam{DistanceNormStrategy})
+    dcglp = Model(param.dcglp_param.optimizer)
+
+    @variable(dcglp, tau)
+    @variable(dcglp, sx[1:master.dim_x])
+    @variable(dcglp, st[1:master.dim_t])
+
+    @objective(dcglp, Min, tau)
+
+    build_dcglp_skeleton!(dcglp, master; omega_0_nonneg = false)
+
+    @constraint(dcglp, conx, dcglp[:omega_x][1, :] + dcglp[:omega_x][2, :] - sx .== 0)
+    @constraint(dcglp, cont[j = 1:master.dim_t], dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] - st[j] == 0)
+
+    var_vec = [tau; sx; st]
+    norm = strategy.norm
+    norm isa LpNorm || throw(UndefError("Unsupported norm type: $(typeof(norm))"))
+    if norm.p == 1.0
+        @constraint(dcglp, concone, var_vec in MOI.NormOneCone(length(var_vec)))
+    elseif norm.p == 2.0
+        @constraint(dcglp, concone, var_vec in MOI.SecondOrderCone(length(var_vec)))
+    elseif norm.p == Inf
+        @constraint(dcglp, concone, var_vec in MOI.NormInfinityCone(length(var_vec)))
+    else
+        throw(UndefError("Unsupported LpNorm: p=$(norm.p)"))
+    end
+    return dcglp
+end
+
+function prepare_dcglp_call!(::DistanceNormStrategy, oracle::DistanceNormOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
+    set_normalized_rhs.(oracle.dcglp[:conx], x_value)
+    set_normalized_rhs.(oracle.dcglp[:cont], t_value)
+    return nothing
+end
+
+dcglp_tau_value(::DistanceNormStrategy, dcglp::Model) = value(dcglp[:tau])
+dcglp_sx_value(::DistanceNormStrategy, dcglp::Model) = value.(dcglp[:sx])
+dcglp_lower_bound(::DistanceNormStrategy, dcglp::Model) = value(dcglp[:tau])
+
+function prepare_dcglp_reference_t!(
+    ::DistanceNormStrategy,
+    oracle::DistanceNormOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    start_time::Float64,
+    time_limit::Float64,
+)
+    reference_t = copy(t_value)
+    oracle.param.strategy.adjust_t_to_fx || return reference_t
+
+    dcglp = oracle.dcglp
+    delete_registered_constraints!(dcglp, :initial_L)
+
+    _, initial_hyperplanes, f_x = generate_cuts(
+        oracle.typical_oracles[1],
+        x_value,
+        t_value;
+        time_limit = get_sec_remaining(start_time, time_limit),
+    )
+    any(isnan, f_x) &&
+        throw(AlgorithmException("solve_dcglp!: `t_value` cannot be adjusted to `f(x)` since $(typeof(oracle.typical_oracles[1])) does not compute `f(x)`."))
+
+    initial_benders_cuts = AffExpr[]
+    for k in 1:2
+        append!(
+            initial_benders_cuts,
+            hyperplanes_to_expression(
+                dcglp,
+                initial_hyperplanes,
+                dcglp[:omega_x][k, :],
+                dcglp[:omega_t][k, :],
+                dcglp[:omega_0][k],
+            ),
+        )
+    end
+    dcglp[:initial_L] = @constraint(dcglp, 0 .>= initial_benders_cuts)
+    set_normalized_rhs.(dcglp[:cont], f_x)
+    return copy(f_x)
+end
+
+function update_dcglp_upper_bound_and_gap!(
+    strategy::DistanceNormStrategy,
+    state::DcglpState,
+    log::DcglpLog,
+    reference_t::Vector{Float64},
+    t_value::Vector{Float64},
+)
+    fill_dcglp_omega_t_estimates!(state, t_value)
+    all(f_i -> !any(isnan, f_i), state.f_x) || return nothing
+    update_upper_bound_and_gap!(
+        state,
+        log,
+        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], strategy.norm.p),
+    )
+    return nothing
+end
+
+function has_dcglp_disjunctive_cut(::DistanceNormStrategy, current_lb::Float64, ::Vector{Float64}, zero_tol::Float64)
+    return current_lb >= zero_tol
+end
+
+function build_dcglp_disjunctive_cut(
+    strategy::DistanceNormStrategy,
+    dcglp::Model,
+    common::DcglpOracleParam{DistanceNormStrategy},
+    ::Float64,
+    ::Vector{Float64},
+    ::Vector{Float64},
+    zero_indices::Vector{Int},
+    one_indices::Vector{Int},
+)
+    gamma_x = dual.(dcglp[:conx])
+    gamma_t = dual.(dcglp[:cont])
+    gamma_0 = dual(dcglp[:con0])
+
+    if common.lift
+        # Lifted distance-norm needs a Lp-norm rescaling based on the lifted
+        # coefficients, which makes it structurally different from the other
+        # variants — we keep it on its dedicated path.
+        lifted_gamma_x_neg, lifted_gamma_0 = lift_x_coefficients(
+            dcglp, gamma_x, gamma_0, zero_indices, one_indices;
+            strengthen = common.strengthened, zero_tol = common.zero_tol,
+            return_negated = true,
+        )
+        norm_value = compute_norm_value(lifted_gamma_x_neg, gamma_t, strategy.norm)
+        return Hyperplane(lifted_gamma_x_neg ./ norm_value, gamma_t ./ norm_value, lifted_gamma_0 / norm_value)
+    end
+
+    gamma_x, _ = apply_lift_or_strengthen(
+        dcglp, gamma_x, zero_indices, one_indices;
+        lift = false, strengthen = common.strengthened, zero_tol = common.zero_tol,
+    )
+    return Hyperplane(gamma_x, gamma_t, gamma_0)
+end
+
+function print_dcglp_iteration_info(::DistanceNormStrategy, state::DcglpState, log::DcglpLog)
+    print_iteration_info(state, log)
+end

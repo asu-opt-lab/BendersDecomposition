@@ -186,14 +186,14 @@ kappa = ClassicalOracle(data, master; model = update_sub_model!)
 nu    = ClassicalOracle(data, master; model = update_sub_model!)
 typical_oracles = [kappa, nu]
 
-# DCGLP and SplitOracle parameters
+# DCGLP and DistanceNormOracle parameters
 dcglp_optimizer = optimizer_with_attributes(
     CPLEX.Optimizer,
     "CPXPARAM_Threads" => 7,
     MOI.Silent() => true,
 )
 dcglp_param = DcglpParam(dcglp_optimizer; time_limit = 200.0)
-split_param = SplitOracleParam(
+split_param = DistanceNormOracleParam(
     dcglp_param;
     norm = LpNorm(1.0),
     strengthened = true,
@@ -202,7 +202,7 @@ split_param = SplitOracleParam(
 )
 
 # disjunctive oracle and callbacks
-disjunctive_oracle = SplitOracle(master, typical_oracles, split_param)
+disjunctive_oracle = DistanceNormOracle(master, typical_oracles, split_param)
 user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = 1))
 
 lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!)

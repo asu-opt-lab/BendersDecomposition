@@ -11,9 +11,14 @@ from a single LP subproblem evaluation. They typically maintain additional
 state, such as a DCGLP model and a history of previously generated
 disjunctive cuts.
 
-See also: [`SplitOracle`](@ref)
+See also: [`DistanceNormOracle`](@ref)
 """
 abstract type AbstractDisjunctiveOracle <: AbstractOracle end
+
+"""
+Abstract supertype for disjunctive oracles implemented with a DCGLP model.
+"""
+abstract type AbstractDcglpOracle <: AbstractDisjunctiveOracle end
 
 """
 Prototype for the `generate_cuts` function.
@@ -264,4 +269,4 @@ function set_parameter!(oracle::AbstractDisjunctiveOracle, args...)
     ))
 end
 
-include("oracleDisjunctive.jl")
+include("disjunctive/disjunctive.jl")

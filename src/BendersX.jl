@@ -23,12 +23,14 @@ include("problems/problems.jl")
 export AbstractData
 export Master
 export BendersSeq, BendersSeqInOut, SpecializedBendersSeq, BendersBnB
-export ClassicalOracle, UnifiedOracle, ParetoOracle, SeparableOracle, SplitOracle
+export ClassicalOracle, UnifiedOracle, ParetoOracle, SeparableOracle
+export DistanceNormOracle, SimplexNormOracle, VerticalReversePolarOracle, DirectionalPolarOracle
 export solve!
 
 # User-facing parameter and configuration types
 export BasicOracleParam, ClassicalOracleParam, UnifiedOracleParam, ParetoOracleParam
-export SeparableOracleParam, SplitOracleParam, DcglpParam
+export SeparableOracleParam, DcglpParam
+export DistanceNormOracleParam, SimplexNormOracleParam, VerticalReversePolarOracleParam, DirectionalPolarOracleParam
 export BendersSeqParam, BendersSeqInOutParam, BendersBnBParam, SpecializedBendersSeqParam
 export LazyCallback, UserCallback, NoUserCallback, UserCallbackParam
 export RootNodePreprocessing, NoRootNodePreprocessing, DisjunctiveRootNodePreprocessing
@@ -43,12 +45,13 @@ export NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
 # Public extension interfaces
 public AbstractBendersEnv, AbstractBendersSeq, AbstractBendersBnB
 public AbstractMaster
-public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle
+public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, AbstractDisjunctiveOracle, AbstractDcglpOracle
 public AbstractRootNodePreprocessing
 public AbstractNorm, StandardNorm
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
 public generate_cuts, callback_node_count, callback_node_depth
 export set_parameter!
+export set_core_point!
 export update_master_model!, update_sub_model!
 
 # Public but not auto-imported advanced utilities and support types
