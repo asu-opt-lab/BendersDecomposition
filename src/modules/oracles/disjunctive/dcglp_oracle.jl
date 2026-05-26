@@ -26,10 +26,14 @@ mutable struct DcglpOracleParam{S<:AbstractDcglpStrategy} <: AbstractOracleParam
     zero_tol::Float64
 end
 
-const DistanceNormOracleParam        = DcglpOracleParam{DistanceNormStrategy}
-const SimplexNormOracleParam         = DcglpOracleParam{SimplexNormStrategy}
+"""Parameter container for [`DistanceNormOracle`](@ref)."""
+const DistanceNormOracleParam         = DcglpOracleParam{DistanceNormStrategy}
+"""Parameter container for [`SimplexNormOracle`](@ref)."""
+const SimplexNormOracleParam          = DcglpOracleParam{SimplexNormStrategy}
+"""Parameter container for [`VerticalReversePolarOracle`](@ref)."""
 const VerticalReversePolarOracleParam = DcglpOracleParam{VerticalReversePolarStrategy}
-const DirectionalPolarOracleParam    = DcglpOracleParam{DirectionalPolarStrategy}
+"""Parameter container for [`DirectionalPolarOracle`](@ref)."""
+const DirectionalPolarOracleParam     = DcglpOracleParam{DirectionalPolarStrategy}
 
 function Base.getproperty(p::DcglpOracleParam, name::Symbol)
     name in fieldnames(DcglpOracleParam) ?
