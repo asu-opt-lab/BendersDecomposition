@@ -163,7 +163,7 @@ The function must return:
 1. a NamedTuple mapping symbolic variable names to non-auxiliary master variables, and
 2. a Vector{VariableRef} containing the auxiliary variables $t$ used for Benders cuts.
 
-Optimizers are attached when constructing [`Master`](@ref) and model-based oracles, separately from the model-update functions.
+All modeling and solver-related decisions are entirely under the user’s control, while the Benders engine itself remains independent of the model and the solver.
 
 ### Example
 [The CFLP master problem](@ref cflp-master) can be implemented as:
