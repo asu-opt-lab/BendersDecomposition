@@ -1,4 +1,7 @@
 
+_resolve_model_update_keyword(model_update, customize) =
+    customize === nothing ? model_update : customize
+
 """
     customize_master_model!(model::Model, data::AbstractData) -> NamedTuple, Vector{VariableRef}
 

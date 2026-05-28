@@ -18,8 +18,8 @@ This oracle copies the master variables into a subproblem model, fixes them to
 the current candidate point, and uses dual information from the resulting LP to
 produce classical optimality or feasibility cuts.
 
-The user supplies the subproblem through a customization function. The
-customization may optionally return generalized bound constraints (GBCs),
+The user supplies the subproblem through a model-update function. The
+function may optionally return generalized bound constraints (GBCs),
 which are enforced while the oracle evaluates candidate master points.
 
 See also: [`BasicOracleParam`](@ref), [`UnifiedOracle`](@ref), [`ParetoOracle`](@ref)
@@ -37,32 +37,34 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
 
 
     function ClassicalOracle(data::AbstractData, master::Master; 
-                            customize = customize_sub_model!,
+                            model = customize_sub_model!,
+                            customize = nothing,
                             scen_idx::Int=0, 
                             param::ClassicalOracleParam = ClassicalOracleParam(),
                             optimizer = DEFAULT_OPTIMIZER)
     
             @debug "Building classical oracle"
-            model = Model()
-            set_optimizer_checked!(model, optimizer, "ClassicalOracle subproblem model")
+            model_update = _resolve_model_update_keyword(model, customize)
+            sub_model = Model()
+            set_optimizer_checked!(sub_model, optimizer, "ClassicalOracle subproblem model")
 
             # Copy the master's coupling variables into the submodel (with identical axes and symbols)
-            x_copy = copy_variables!(model, master.x_tuple)
+            x_copy = copy_variables!(sub_model, master.x_tuple)
 
             # Collect all copied master variables and add linking constraint
             x = var_from_tuple(x_copy)
-            @constraint(model, fix_x, x .== 0)
+            @constraint(sub_model, fix_x, x .== 0)
 
-            # Build the submodel using user-defined customization, passing the copied variables
-            result = customize(model, data, scen_idx; x_copy...)
+            # Build the submodel using user-defined model update, passing the copied variables
+            result = model_update(sub_model, data, scen_idx; x_copy...)
             
             # Validate that the subproblem is LP-compatible for typical oracles
-            _validate_lp_compatibility(model)
+            _validate_lp_compatibility(sub_model)
             
             # Parse the result to extract GBC information
             gbc_lhs, gbc_rhs, gbc_sense = _parse_gbc_result(result, x)
 
-            new(param, model, fix_x, gbc_lhs, gbc_rhs, gbc_sense)
+            new(param, sub_model, fix_x, gbc_lhs, gbc_rhs, gbc_sense)
     end
 
     ClassicalOracle() = new()
@@ -71,7 +73,7 @@ end
 """
     _parse_gbc_result(result, x_vars) -> (gbc_lhs, gbc_rhs, gbc_sense)
 
-Parse and validate the value returned by a user `customize` function and
+Parse and validate the value returned by a user model-update function and
 convert it into the internal GBC representation.
 
 # Returns
@@ -91,7 +93,7 @@ convert it into the internal GBC representation.
 
 # Arguments
 - `result` :: Any
-  The raw return value from the user `customize` function. This function must
+  The raw return value from the user model-update function. This function must
   parse and normalize `result` into the three-tuple described above.
 - `x_vars` :: Vector{VariableRef}  
   A vector of submodel variables that are *copies* of the coupling master
@@ -164,7 +166,7 @@ function _parse_gbc_result(result, x_vars::Vector{VariableRef})
                 if !(rhs.index in x_indices)
                     throw(ArgumentError(
                         "gbc_rhs[$i] contains a variable $(rhs) that is not a copied master variable. " *
-                        "gbc_rhs should only reference copied master variables passed to customize(). "
+                        "gbc_rhs should only reference copied master variables passed to the model-update function. "
                     ))
                 end
             elseif rhs isa AffExpr  # AffExpr
@@ -172,7 +174,7 @@ function _parse_gbc_result(result, x_vars::Vector{VariableRef})
                     if !(var.index in x_indices)
                         throw(ArgumentError(
                             "gbc_rhs[$i] contains an AffExpr with a variable $(var) that is not a copied master variable. " *
-                            "gbc_rhs should only reference copied master variables passed to customize(). "
+                            "gbc_rhs should only reference copied master variables passed to the model-update function. "
                         ))
                     end
                 end
@@ -195,7 +197,7 @@ function _parse_gbc_result(result, x_vars::Vector{VariableRef})
     end
     
     throw(ArgumentError(
-        "Invalid return format of `customize` function. Expected nothing or (gbc_lhs, gbc_rhs, gbc_sense). " *
+        "Invalid return format of model-update function. Expected nothing or (gbc_lhs, gbc_rhs, gbc_sense). " *
         "Got $(length(result))."
     ))
 end

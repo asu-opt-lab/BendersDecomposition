@@ -46,7 +46,7 @@ Pkg.instantiate()
 
 ### Minimal workflow
 
-This example shows a minimal end-to-end workflow with a concrete optimizer and the required customization hooks.
+This example shows a minimal end-to-end workflow with a concrete optimizer and the required model-update hooks.
 
 ```julia
 using BendersX, JuMP
@@ -54,11 +54,11 @@ using BendersX, JuMP
 # 1. User-defined data
 data = MyData(...)
 
-# 2. Create master and provide master problem customization
-master = Master(data; customize = customize_master_model!)
+# 2. Create master and provide the master model update
+master = Master(data; model = customize_master_model!)
 
-# 3. Select oracle and provide subproblem customization
-oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+# 3. Select oracle and provide the subproblem model update
+oracle = ClassicalOracle(data, master; model = customize_sub_model!)
 
 # 4. Choose environment
 env = BendersSeq(master, oracle)
@@ -69,9 +69,9 @@ log = solve!(env)
 
 ### Modeling
 
-Users describe a decomposition model by writing ordinary JuMP code in two functions. The master function adds the first-stage variables, constraints, and objective, then returns `(x, t)`, where `x` is a named tuple of master variables and `t` contains the auxiliary variables used in Benders cuts. A model-based oracle uses a subproblem function that adds the recourse variables and constraints; its keyword arguments must match the names returned in `x`.
+Users describe a decomposition model by writing ordinary JuMP code in two functions, one for the master and another for the subproblem. The master function adds the first-stage variables, constraints, and objective, then returns `(x, t)`, where `x` is a named tuple of master variables and `t` contains the auxiliary variables used in Benders cuts. A model-based oracle uses a subproblem function that adds the recourse variables and constraints; its keyword arguments must match the names returned in `x`.
 
-Pass these functions to `Master` and the oracle through the `customize` keyword. If a required modeling function is missing for your `AbstractData` subtype, the default method throws `UndefError`. See the package documentation for complete examples. If you are new to JuMP, start with the JuMP documentation: [https://jump.dev/JuMP.jl/stable/](https://jump.dev/JuMP.jl/stable/).
+Pass these functions to `Master` and the oracle through the `model` keyword. If a required modeling function is missing for your `AbstractData` subtype, the default method throws `UndefError`. See the package documentation for complete examples. If you are new to JuMP, start with the JuMP documentation: [https://jump.dev/JuMP.jl/stable/](https://jump.dev/JuMP.jl/stable/).
 
 ## Built-in variants
 

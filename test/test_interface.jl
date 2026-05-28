@@ -264,6 +264,65 @@ end
     @test occursin("GLPK", solver_name(oracle.model))
 end
 
+@testset "model keyword accepts model-update functions" begin
+    struct ModelKeywordData <: AbstractData
+        n_facilities::Int
+        n_customers::Int
+        capacities::Vector{Float64}
+        demands::Vector{Float64}
+        fixed_costs::Vector{Float64}
+        costs::Matrix{Float64}
+    end
+
+    data = ModelKeywordData(
+        2,
+        1,
+        [2.0, 2.0],
+        [1.0],
+        [1.0, 1.0],
+        reshape([1.0, 2.0], 2, 1),
+    )
+
+    function keyword_master_model!(model::Model, data::ModelKeywordData)
+        @variable(model, x[1:data.n_facilities], Bin)
+        @variable(model, t >= 0)
+        @objective(model, Min, sum(data.fixed_costs[i] * x[i] for i in 1:data.n_facilities) + t)
+        @constraint(model, sum(data.capacities[i] * x[i] for i in 1:data.n_facilities) >= sum(data.demands))
+        return (x = x,), t
+    end
+
+    function keyword_subproblem_model!(model::Model, data::ModelKeywordData, scen_idx::Int; x)
+        @variable(model, y[1:data.n_facilities, 1:data.n_customers] >= 0)
+        @objective(model, Min, sum(data.costs[i, j] * y[i, j] for i in 1:data.n_facilities, j in 1:data.n_customers))
+        @constraint(model, demand[j in 1:data.n_customers], sum(y[:, j]) == data.demands[j])
+        @constraint(model, facility_open[i in 1:data.n_facilities, j in 1:data.n_customers], y[i, j] <= x[i])
+        return nothing
+    end
+
+    optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
+
+    master = Master(data; model = keyword_master_model!, optimizer = optimizer)
+    @test master.dim_x == data.n_facilities
+    @test master.dim_t == 1
+
+    classical = ClassicalOracle(data, master; model = keyword_subproblem_model!, optimizer = optimizer)
+    unified = UnifiedOracle(data, master; model = keyword_subproblem_model!, optimizer = optimizer)
+    pareto = ParetoOracle(data, master, ParetoOracleParam(fill(0.5, data.n_facilities)); model = keyword_subproblem_model!, optimizer = optimizer)
+    separable = SeparableOracle(data, master, ClassicalOracle(), 1; model = keyword_subproblem_model!, optimizer = optimizer)
+    knapsack = CFLKnapsackOracle(data, master; model = keyword_subproblem_model!, optimizer = optimizer)
+
+    @test classical.model isa Model
+    @test unified.model isa Model
+    @test pareto.model isa Model
+    @test length(separable.oracles) == 1
+    @test knapsack.model isa Model
+
+    legacy_master = Master(data; customize = keyword_master_model!, optimizer = optimizer)
+    legacy_oracle = ClassicalOracle(data, legacy_master; customize = keyword_subproblem_model!, optimizer = optimizer)
+    @test legacy_master.dim_x == data.n_facilities
+    @test legacy_oracle.model isa Model
+end
+
 @testset "SeparableOracle works with explicit non-GLPK optimizer" begin
     struct SeparableData <: AbstractData
         n_scenarios::Int

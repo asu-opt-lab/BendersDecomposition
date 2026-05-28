@@ -110,8 +110,8 @@ subproblem_optimizer = optimizer_with_attributes(
     "CPXPARAM_Threads" => 7,
     MOI.Silent() => true,
 )
-master = Master(data; customize = update_master_model!, optimizer = master_optimizer)
-oracle = ClassicalOracle(data, master; customize = update_subproblem_model!, optimizer = subproblem_optimizer)
+master = Master(data; model = update_master_model!, optimizer = master_optimizer)
+oracle = ClassicalOracle(data, master; model = update_subproblem_model!, optimizer = subproblem_optimizer)
 env    = BendersSeq(master, oracle)
 log    = solve!(env)
 ```
@@ -149,7 +149,7 @@ For an example specific to CFLP, see `read_cflp_benchmark_data` in `./src/Bender
 *Defining Master and Subproblem Models in BendersX.jl*
 
 Users provide the master and subproblem formulations through model-update functions written in standard JuMP syntax.
-These functions can have any name; the examples below use `update_*` names and pass them through the `customize` keyword.
+These functions can have any name; the examples below use `update_*` names and pass them through the `model` keyword.
 If you are unfamiliar with JuMP, please refer to the JuMP.jl documentation for an introduction:
 [Julia JuMP](https://jump.dev/JuMP.jl/stable/)
 
@@ -185,7 +185,7 @@ Then attach the optimizer when constructing the master:
 ```julia
 master = Master(
     data;
-    customize = update_master_model!,
+    model = update_master_model!,
     optimizer = optimizer_with_attributes(CPLEX.Optimizer, MOI.Silent() => true),
 )
 ```
@@ -217,7 +217,7 @@ Attach the subproblem optimizer when constructing the oracle:
 oracle = ClassicalOracle(
     data,
     master;
-    customize = update_subproblem_model!,
+    model = update_subproblem_model!,
     optimizer = optimizer_with_attributes(
         CPLEX.Optimizer,
         "CPXPARAM_Threads" => 7,
@@ -278,7 +278,7 @@ end
 
     When defining a subproblem model-update function, keep the following points in mind:
 
-    * **Explicit keyword names**: The keyword argument names in the subproblem function must exactly match the names returned by the master function.
+    * **Explicit keyword names**: The keyword argument names in the subproblem function must exactly match the names returned by the master model-update function.
     * **No redeclaration**: Do not redeclare master variables inside the subproblem; they should only be referenced via keyword arguments.
     * **Indexing with symbolic sets**: When using `DenseAxisArray` or `SparseAxisArray`, ensure that symbolic indices (e.g., `:A`) are used consistently.
     * **Scenario index usage**: If `scen_idx` is unused, it can be safely ignored, but it must still appear in the function signature.

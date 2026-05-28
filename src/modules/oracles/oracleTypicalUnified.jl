@@ -78,7 +78,7 @@ We denote \$-d^{\\top}y + w_0\\sigma \\geq -\\eta^*\$ as an objective bound cons
 # Constructor
 ```julia
 UnifiedOracle(data::AbstractData, master::Master; 
-              customize = customize_sub_model!,
+              model = customize_sub_model!,
               scen_idx::Int = 0, 
               param::UnifiedOracleParam = UnifiedOracleParam())
 ```
@@ -115,31 +115,33 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
     objective_constraint::ConstraintRef
 
     function UnifiedOracle(data::AbstractData, master::Master; 
-                          customize = customize_sub_model!,
+                          model = customize_sub_model!,
+                          customize = nothing,
                           scen_idx::Int = 0, 
                           param::UnifiedOracleParam = UnifiedOracleParam(),
                           optimizer = DEFAULT_OPTIMIZER)
     
         @debug "Building unified oracle"
-        model = Model()
-        set_optimizer_checked!(model, optimizer, "UnifiedOracle subproblem model")
+        model_update = _resolve_model_update_keyword(model, customize)
+        sub_model = Model()
+        set_optimizer_checked!(sub_model, optimizer, "UnifiedOracle subproblem model")
 
         # Copy the master's coupling variables into the submodel (with identical axes and symbols)
-        x_copy = copy_variables!(model, master.x_tuple)
+        x_copy = copy_variables!(sub_model, master.x_tuple)
 
         # Collect all copied master variables
         x = var_from_tuple(x_copy)
 
-        # Build the submodel using user-defined customization, passing the copied variables
-        customize(model, data, scen_idx; x_copy...)
+        # Build the submodel using user-defined model update, passing the copied variables
+        model_update(sub_model, data, scen_idx; x_copy...)
 
         # Validate that the subproblem is LP-compatible for typical oracles
-        _validate_lp_compatibility(model)
+        _validate_lp_compatibility(sub_model)
 
         # Create oracle instance
         oracle = new()
         oracle.param = param
-        oracle.model = model
+        oracle.model = sub_model
         oracle.fixing_lb_constraints = ConstraintRef[]
         oracle.fixing_ub_constraints = ConstraintRef[]
         

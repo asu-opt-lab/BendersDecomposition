@@ -43,11 +43,11 @@ using BendersX, JuMP
 # 1. User-defined data
 data = MyData(...)
 
-# 2. Create master and provide master problem customization
-master = Master(data; customize = customize_master_model!)
+# 2. Create master and provide the master model update
+master = Master(data; model = customize_master_model!)
 
-# 3. Select oracle and provide subproblem customization
-oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+# 3. Select oracle and provide the subproblem model update
+oracle = ClassicalOracle(data, master; model = customize_sub_model!)
 
 # 4. Choose environment
 env = BendersSeq(master, oracle)
@@ -57,7 +57,7 @@ log = solve!(env)
 
 ```
 !!! info "Modeling"
-    Users provide both the master and subproblem formulations through *customization functions* written in standard JuMP syntax.
+    Users provide both the master and subproblem formulations through model-update functions written in standard JuMP syntax.
     See the [Modeling Interface](@ref modeling-interface) for concrete examples.
     If you are unfamiliar with JuMP, please refer to the JuMP.jl documentation for an introduction: [Julia JuMP](https://jump.dev/JuMP.jl/stable/).
 
