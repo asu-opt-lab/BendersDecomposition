@@ -1,9 +1,9 @@
 """
-    AbstractDcglpStrategy
+    AbstractDisjunctiveNormalizationStrategy
 
-Strategy object that captures the per-variant behavior of a [`DcglpOracle`](@ref).
-All four DCGLP variants in this module are instances of `DcglpOracle{S}` for some
-`S <: AbstractDcglpStrategy`. The strategy owns the variant-specific
+Strategy object that captures the per-variant behavior of a [`SplitOracle`](@ref).
+All four split-oracle normalization variants in this module are instances of `SplitOracle{S}` for some
+`S <: AbstractDisjunctiveNormalizationStrategy`. The strategy owns the variant-specific
 configuration (`norm`, `core_point_*`, …) and the dispatch surface listed below.
 
 # Strategy interface (one method per variant)
@@ -24,14 +24,14 @@ configuration (`norm`, `core_point_*`, …) and the dispatch surface listed belo
 - [`build_dcglp_disjunctive_cut`](@ref) — strategy-specific cut extraction.
 - [`print_dcglp_iteration_info`](@ref) — strategy-specific iteration log.
 """
-abstract type AbstractDcglpStrategy end
+abstract type AbstractDisjunctiveNormalizationStrategy end
 
 """
     DistanceNormStrategy(norm, adjust_t_to_fx)
 
 Distance-norm DCGLP strategy. Backs [`DistanceNormOracle`](@ref).
 """
-mutable struct DistanceNormStrategy <: AbstractDcglpStrategy
+mutable struct DistanceNormStrategy <: AbstractDisjunctiveNormalizationStrategy
     norm::AbstractNorm
     adjust_t_to_fx::Bool
 end
@@ -41,14 +41,14 @@ end
 
 Simplex-style DCGLP strategy. Backs [`SimplexNormOracle`](@ref).
 """
-mutable struct SimplexNormStrategy <: AbstractDcglpStrategy end
+mutable struct SimplexNormStrategy <: AbstractDisjunctiveNormalizationStrategy end
 
 """
     VerticalReversePolarStrategy()
 
 Vertical reverse-polar DCGLP strategy. Backs [`VerticalReversePolarOracle`](@ref).
 """
-mutable struct VerticalReversePolarStrategy <: AbstractDcglpStrategy end
+mutable struct VerticalReversePolarStrategy <: AbstractDisjunctiveNormalizationStrategy end
 
 """
     DirectionalPolarStrategy(core_point_x, core_point_t)
@@ -57,7 +57,7 @@ Directional reverse-polar DCGLP strategy. Backs [`DirectionalPolarOracle`](@ref)
 Stores the core point used to compute the directional cut and the direction
 vectors from the most recent `generate_cuts` call (`last_direction_*`).
 """
-mutable struct DirectionalPolarStrategy <: AbstractDcglpStrategy
+mutable struct DirectionalPolarStrategy <: AbstractDisjunctiveNormalizationStrategy
     core_point_x::Vector{Float64}
     core_point_t::Vector{Float64}
     last_direction_x::Vector{Float64}
@@ -72,18 +72,18 @@ end
 
 # Default interface implementations (overridden per strategy where needed).
 
-strategy_label(s::AbstractDcglpStrategy) = string(nameof(typeof(s)))
+strategy_label(s::AbstractDisjunctiveNormalizationStrategy) = string(nameof(typeof(s)))
 
-validate_strategy_specific!(::AbstractDcglpStrategy, ::AbstractMaster) = nothing
+validate_strategy_specific!(::AbstractDisjunctiveNormalizationStrategy, ::AbstractMaster) = nothing
 
-initialize_dcglp_state(::AbstractDcglpStrategy) = DcglpState()
+initialize_dcglp_state(::AbstractDisjunctiveNormalizationStrategy) = DcglpState()
 
-update_dcglp_reference_t!(::AbstractDcglpStrategy, ::AbstractDcglpOracle, ::Vector{Float64}, t_value::Vector{Float64}, ::Float64, ::Float64) = copy(t_value)
+update_dcglp_reference_t!(::AbstractDisjunctiveNormalizationStrategy, ::AbstractSplitOracle, ::Vector{Float64}, t_value::Vector{Float64}, ::Float64, ::Float64) = copy(t_value)
 
-dcglp_sx_value(::AbstractDcglpStrategy, ::Model) = Float64[]
+dcglp_sx_value(::AbstractDisjunctiveNormalizationStrategy, ::Model) = Float64[]
 
-dcglp_lower_bound(::AbstractDcglpStrategy, dcglp::Model) = objective_value(dcglp)
+dcglp_lower_bound(::AbstractDisjunctiveNormalizationStrategy, dcglp::Model) = objective_value(dcglp)
 
-record_dcglp_oracle_result!(::AbstractDcglpStrategy, ::DcglpState, ::Int, ::Vector{Float64}) = nothing
+record_dcglp_oracle_result!(::AbstractDisjunctiveNormalizationStrategy, ::DcglpState, ::Int, ::Vector{Float64}) = nothing
 
-fallback_for_unexpected_dcglp_status(::AbstractDcglpStrategy) = true
+fallback_for_unexpected_dcglp_status(::AbstractDisjunctiveNormalizationStrategy) = true

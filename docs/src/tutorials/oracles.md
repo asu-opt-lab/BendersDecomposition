@@ -106,13 +106,13 @@ required constructor interface can be used as the template.
 
 ---
 
-## Using Disjunctive Oracles (`DistanceNormOracle`)
+## Using Split Oracles (`DistanceNormOracle`)
 For mixed-integer master problems, BendersX provides the
-[`DistanceNormOracle`](@ref), which generates **disjunctive Benders cuts** by solving a
+[`DistanceNormOracle`](@ref), a [`SplitOracle`](@ref) specialization that generates **disjunctive Benders cuts** by solving a
 Dual Cut Generating Linear Program (DCGLP).
 
 A `DistanceNormOracle` is constructed by combining two *typical* oracles (denoted by
-`κ` and `ν`) together with a [`DistanceNormOracleParam`](@ref) object. The latter
+`κ` and `ν`) together with a [`DistanceNormOracleParam`](@ref) object. The latter is a [`SplitOracleParam`](@ref) specialization and
 encapsulates a [`DcglpParam`](@ref), which controls the behavior of the DCGLP.
 
 ```julia

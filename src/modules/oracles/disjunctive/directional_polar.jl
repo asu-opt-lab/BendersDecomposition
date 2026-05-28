@@ -5,7 +5,7 @@ function validate_strategy_specific!(strategy::DirectionalPolarStrategy, master:
         throw(DimensionMismatch("`core_point_t` has length $(length(strategy.core_point_t)) but expected $(master.dim_t)."))
 end
 
-function build_strategy_dcglp(strategy::DirectionalPolarStrategy, master::AbstractMaster, param::DcglpOracleParam{DirectionalPolarStrategy})
+function build_strategy_dcglp(strategy::DirectionalPolarStrategy, master::AbstractMaster, param::SplitOracleParam{DirectionalPolarStrategy})
     dcglp = Model(param.dcglp_param.optimizer)
 
     @variable(dcglp, tau >= 0.0)
@@ -91,7 +91,7 @@ end
 function build_dcglp_disjunctive_cut(
     strategy::DirectionalPolarStrategy,
     dcglp::Model,
-    common::DcglpOracleParam{DirectionalPolarStrategy},
+    common::SplitOracleParam{DirectionalPolarStrategy},
     ::Float64,
     x_value::Vector{Float64},
     t_value::Vector{Float64},

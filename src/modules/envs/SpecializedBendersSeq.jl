@@ -5,20 +5,20 @@
 Specialized sequential environment for split-based disjunctive Benders cuts.
 
 This environment alternates between solving a linearized master relaxation and
-calling an [`AbstractDcglpOracle`](@ref) at carefully chosen fractional vertices. It is
+calling an [`AbstractSplitOracle`](@ref) at carefully chosen fractional vertices. It is
 intended for the split-cut workflow implemented in this package and enforces
 the split-selection and cut-appending rules required by that workflow.
 
 # Fields
 - `master::AbstractMaster`: Master problem, which is relaxed to an LP internally.
-- `oracle::AbstractDcglpOracle`: Disjunctive oracle used to generate split cuts.
+- `oracle::AbstractSplitOracle`: Disjunctive oracle used to generate split cuts.
 - `param::SpecializedBendersSeqParam`: Loop controls for the specialized algorithm.
 - `obj_value::Float64`: Best bound recorded on termination.
 - `termination_status::TerminationStatus`: Final solve status.
 """
 mutable struct SpecializedBendersSeq <: AbstractBendersSeq
     master::AbstractMaster
-    oracle::AbstractDcglpOracle
+    oracle::AbstractSplitOracle
 
     param::SpecializedBendersSeqParam
 
@@ -26,7 +26,7 @@ mutable struct SpecializedBendersSeq <: AbstractBendersSeq
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function SpecializedBendersSeq(master::AbstractMaster, oracle::AbstractDcglpOracle; param::SpecializedBendersSeqParam = SpecializedBendersSeqParam())
+    function SpecializedBendersSeq(master::AbstractMaster, oracle::AbstractSplitOracle; param::SpecializedBendersSeqParam = SpecializedBendersSeqParam())
 
         # Relax integrality in master
         relax_integrality(master.model)

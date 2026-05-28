@@ -7,11 +7,11 @@ using BendersX
         :Master,
         :BendersSeq, :BendersSeqInOut, :SpecializedBendersSeq, :BendersBnB,
         :ClassicalOracle, :UnifiedOracle, :ParetoOracle, :SeparableOracle,
-        :DistanceNormOracle, :SimplexNormOracle, :VerticalReversePolarOracle, :DirectionalPolarOracle,
+        :SplitOracle, :DistanceNormOracle, :SimplexNormOracle, :VerticalReversePolarOracle, :DirectionalPolarOracle,
         :solve!,
         :BasicOracleParam, :ClassicalOracleParam, :UnifiedOracleParam, :ParetoOracleParam,
         :SeparableOracleParam, :DcglpParam,
-        :DistanceNormOracleParam, :SimplexNormOracleParam,
+        :SplitOracleParam, :DistanceNormOracleParam, :SimplexNormOracleParam,
         :VerticalReversePolarOracleParam, :DirectionalPolarOracleParam,
         :BendersSeqParam, :BendersSeqInOutParam, :BendersBnBParam, :SpecializedBendersSeqParam,
         :LazyCallback, :UserCallback, :NoUserCallback, :UserCallbackParam,
@@ -33,7 +33,7 @@ using BendersX
     public_only = [
         :AbstractBendersEnv, :AbstractBendersSeq, :AbstractBendersBnB,
         :AbstractMaster, :AbstractOracle, :AbstractOracleParam, :AbstractTypicalOracle,
-        :AbstractDisjunctiveOracle, :AbstractDcglpOracle,
+        :AbstractDisjunctiveOracle, :AbstractSplitOracle,
         :AbstractRootNodePreprocessing, :AbstractNorm, :StandardNorm,
         :SplitIndexSelectionRule, :DisjunctiveCutsAppendRule,
         :generate_cuts, :Hyperplane, :aggregate, :evaluate_violation,
@@ -53,6 +53,10 @@ using BendersX
         :AbstractBendersSeqState, :AbstractBendersSeqLog, :AbstractBendersSeqParam,
         :AbstractBendersBnBState, :AbstractBendersBnBLog, :AbstractBendersBnBParam,
         :BendersSeqState, :BendersSeqLog, :BendersBnBState, :BendersBnBLog,
+        Symbol("Abstract" * "Dcglp" * "Oracle"),
+        Symbol("Dcglp" * "Oracle"),
+        Symbol("Dcglp" * "OracleParam"),
+        Symbol("Abstract" * "Dcglp" * "Strategy"),
     ]
 
     visible_names = Set(names(BendersX))

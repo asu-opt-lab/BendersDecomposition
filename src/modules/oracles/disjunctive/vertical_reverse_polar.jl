@@ -1,4 +1,4 @@
-function build_strategy_dcglp(::VerticalReversePolarStrategy, master::AbstractMaster, param::DcglpOracleParam{VerticalReversePolarStrategy})
+function build_strategy_dcglp(::VerticalReversePolarStrategy, master::AbstractMaster, param::SplitOracleParam{VerticalReversePolarStrategy})
     dcglp = Model(param.dcglp_param.optimizer)
 
     @variable(dcglp, tau)
@@ -39,7 +39,7 @@ end
 function build_dcglp_disjunctive_cut(
     ::VerticalReversePolarStrategy,
     dcglp::Model,
-    common::DcglpOracleParam{VerticalReversePolarStrategy},
+    common::SplitOracleParam{VerticalReversePolarStrategy},
     ::Float64,
     ::Vector{Float64},
     t_value::Vector{Float64},

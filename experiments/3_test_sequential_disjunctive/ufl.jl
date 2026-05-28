@@ -94,7 +94,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer),
                         ]
                         disjunctive_oracle = oracle_type(master, typical_oracles, oracle_param)
-                        @test disjunctive_oracle isa BendersX.AbstractDcglpOracle
+                        @test disjunctive_oracle isa BendersX.AbstractSplitOracle
 
                         env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                         solve!(env)

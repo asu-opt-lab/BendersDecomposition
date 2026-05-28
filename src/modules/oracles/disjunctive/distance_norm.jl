@@ -1,4 +1,4 @@
-function build_strategy_dcglp(strategy::DistanceNormStrategy, master::AbstractMaster, param::DcglpOracleParam{DistanceNormStrategy})
+function build_strategy_dcglp(strategy::DistanceNormStrategy, master::AbstractMaster, param::SplitOracleParam{DistanceNormStrategy})
     dcglp = Model(param.dcglp_param.optimizer)
 
     @variable(dcglp, tau)
@@ -100,7 +100,7 @@ end
 function build_dcglp_disjunctive_cut(
     strategy::DistanceNormStrategy,
     dcglp::Model,
-    common::DcglpOracleParam{DistanceNormStrategy},
+    common::SplitOracleParam{DistanceNormStrategy},
     ::Float64,
     ::Vector{Float64},
     ::Vector{Float64},

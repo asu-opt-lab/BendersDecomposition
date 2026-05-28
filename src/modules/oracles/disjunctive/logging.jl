@@ -79,7 +79,7 @@ function print_dcglp_iteration_info(::DirectionalPolarStrategy, state::DcglpStat
 end
 
 function print_disjunctive_cut(
-    oracle::DcglpOracle,
+    oracle::SplitOracle,
     cut::Hyperplane,
     x_value::Vector{Float64},
     t_value::Vector{Float64};

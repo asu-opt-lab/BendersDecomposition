@@ -1,4 +1,4 @@
-function build_strategy_dcglp(::SimplexNormStrategy, master::AbstractMaster, param::DcglpOracleParam{SimplexNormStrategy})
+function build_strategy_dcglp(::SimplexNormStrategy, master::AbstractMaster, param::SplitOracleParam{SimplexNormStrategy})
     dcglp = Model(param.dcglp_param.optimizer)
 
     @variable(dcglp, tau[1:master.dim_t])
@@ -38,7 +38,7 @@ end
 function build_dcglp_disjunctive_cut(
     ::SimplexNormStrategy,
     dcglp::Model,
-    common::DcglpOracleParam{SimplexNormStrategy},
+    common::SplitOracleParam{SimplexNormStrategy},
     ::Float64,
     ::Vector{Float64},
     t_value::Vector{Float64},

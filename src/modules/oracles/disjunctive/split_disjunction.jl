@@ -29,7 +29,7 @@ function select_disjunctive_inequality(x_value::Vector{Float64}, ::RandomFractio
     return phi, 0.0
 end
 
-function get_split_index(oracle::AbstractDcglpOracle)
+function get_split_index(oracle::AbstractSplitOracle)
     oracle.param.split_index_selection_rule isa SimpleSplit ||
         throw(AlgorithmException("get_split_index is only valid for simple split rules."))
     isempty(oracle.splits) &&
@@ -37,7 +37,7 @@ function get_split_index(oracle::AbstractDcglpOracle)
     return findfirst(x -> x > 0.5, oracle.splits[end][1])
 end
 
-function replace_disjunctive_inequality!(oracle::AbstractDcglpOracle)
+function replace_disjunctive_inequality!(oracle::AbstractSplitOracle)
     dcglp = oracle.dcglp
     phi, phi_0 = oracle.splits[end]
 
@@ -65,7 +65,7 @@ function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_i
 end
 
 function choose_split_and_update_lifting!(
-    oracle::AbstractDcglpOracle,
+    oracle::AbstractSplitOracle,
     x_value::Vector{Float64},
 )
     push!(

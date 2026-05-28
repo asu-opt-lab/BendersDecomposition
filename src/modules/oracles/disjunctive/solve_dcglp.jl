@@ -1,11 +1,11 @@
 """
-    generate_cuts(oracle::DcglpOracle, x_value, t_value; kwargs...)
+    generate_cuts(oracle::SplitOracle, x_value, t_value; kwargs...)
 
 Single entry point for every DCGLP oracle variant. Per-variant behavior is
 dispatched through the strategy attached to `oracle.param.strategy`.
 """
 function generate_cuts(
-    oracle::DcglpOracle,
+    oracle::SplitOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64};
     time_limit = 3600.0,
@@ -44,10 +44,10 @@ The directional strategy uses this hook both to skip the DCGLP when the
 candidate point coincides with the core point and to cache the direction
 vector for later cut extraction.
 """
-should_fallback_typical(::AbstractDcglpStrategy, ::DcglpOracle, ::Vector{Float64}, ::Vector{Float64}) = false
+should_fallback_typical(::AbstractDisjunctiveNormalizationStrategy, ::SplitOracle, ::Vector{Float64}, ::Vector{Float64}) = false
 
 function solve_dcglp_loop!(
-    oracle::DcglpOracle,
+    oracle::SplitOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
     zero_indices::Vector{Int},
@@ -132,7 +132,7 @@ function solve_dcglp_loop!(
     )
 end
 
-function read_dcglp_solution!(oracle::DcglpOracle, state::DcglpState)
+function read_dcglp_solution!(oracle::SplitOracle, state::DcglpState)
     dcglp = oracle.dcglp
     strategy = oracle.param.strategy
     for i in 1:2
@@ -146,7 +146,7 @@ function read_dcglp_solution!(oracle::DcglpOracle, state::DcglpState)
 end
 
 function collect_dcglp_benders_cuts!(
-    oracle::DcglpOracle,
+    oracle::SplitOracle,
     state::DcglpState,
     benders_cuts::Dict{Int, Vector{AffExpr}},
     hyperplanes::Vector{Hyperplane},
@@ -196,7 +196,7 @@ function collect_dcglp_benders_cuts!(
 end
 
 function append_selected_benders_cuts_to_master!(
-    oracle::DcglpOracle,
+    oracle::SplitOracle,
     hyperplanes::Vector{Hyperplane},
     candidate_hyperplanes::Vector{Hyperplane},
     x_value::Vector{Float64},

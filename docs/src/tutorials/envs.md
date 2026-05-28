@@ -186,7 +186,7 @@ kappa = ClassicalOracle(data, master; model = update_sub_model!)
 nu    = ClassicalOracle(data, master; model = update_sub_model!)
 typical_oracles = [kappa, nu]
 
-# DCGLP and DistanceNormOracle parameters
+# DCGLP and split oracle parameters
 dcglp_optimizer = optimizer_with_attributes(
     CPLEX.Optimizer,
     "CPXPARAM_Threads" => 7,

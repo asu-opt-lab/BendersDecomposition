@@ -168,6 +168,17 @@ end
         )
     end
 
+    @testset "generic split oracle constructor" begin
+        data, master = build_disjunctive_norm_master()
+        param = DistanceNormOracleParam(disjunctive_norm_dcglp_param(); reuse_dcglp = false)
+        oracle = SplitOracle(master, build_typical_pair(data, master), param)
+
+        @test param isa SplitOracleParam
+        @test oracle isa SplitOracle
+        @test oracle isa DistanceNormOracle
+        @test oracle isa BendersX.AbstractSplitOracle
+    end
+
     @testset "direct generate_cuts smoke" begin
         for (oracle_type, param) in [
             (DistanceNormOracle, DistanceNormOracleParam(disjunctive_norm_dcglp_param(); norm = LpNorm(Inf), reuse_dcglp = false)),

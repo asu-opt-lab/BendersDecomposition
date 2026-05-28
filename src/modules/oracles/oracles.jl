@@ -6,9 +6,9 @@ abstract type AbstractTypicalOracle <: AbstractOracle end
 """
 Abstract type for disjunctive oracles used in Benders decomposition.
 
-Disjunctive oracles generate cuts from split-induced subproblems rather than
+Disjunctive oracles generate cuts from disjunction-induced subproblems rather than
 from a single LP subproblem evaluation. They typically maintain additional
-state, such as a DCGLP model and a history of previously generated
+state, such as an auxiliary separation model and a history of previously generated
 disjunctive cuts.
 
 See also: [`DistanceNormOracle`](@ref)
@@ -16,9 +16,9 @@ See also: [`DistanceNormOracle`](@ref)
 abstract type AbstractDisjunctiveOracle <: AbstractOracle end
 
 """
-Abstract supertype for disjunctive oracles implemented with a DCGLP model.
+Abstract supertype for split disjunctive oracles implemented with a DCGLP model.
 """
-abstract type AbstractDcglpOracle <: AbstractDisjunctiveOracle end
+abstract type AbstractSplitOracle <: AbstractDisjunctiveOracle end
 
 """
 Prototype for the `generate_cuts` function.

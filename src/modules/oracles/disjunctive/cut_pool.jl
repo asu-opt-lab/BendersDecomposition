@@ -1,16 +1,16 @@
-function add_disjunctive_cuts!(oracle::AbstractDcglpOracle, rule::DisjunctiveCutsAppendRule)
+function add_disjunctive_cuts!(oracle::AbstractSplitOracle, rule::DisjunctiveCutsAppendRule)
     throw(UndefError("update add_disjunctive_cuts! for $(typeof(rule))"))
 end
 
-function add_disjunctive_cuts!(oracle::AbstractDcglpOracle, ::NoDisjunctiveCuts)
+function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::NoDisjunctiveCuts)
     delete_registered_constraints!(oracle.dcglp, :con_disjunctive)
 end
 
-function add_disjunctive_cuts!(oracle::AbstractDcglpOracle, ::AllDisjunctiveCuts)
+function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::AllDisjunctiveCuts)
     install_disjunctive_cuts!(oracle, oracle.disjunctive_cuts)
 end
 
-function add_disjunctive_cuts!(oracle::AbstractDcglpOracle, ::DisjunctiveCutsSmallerIndices)
+function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::DisjunctiveCutsSmallerIndices)
     oracle.param.split_index_selection_rule isa SimpleSplit ||
         throw(AlgorithmException("DisjunctiveCutsSmallerIndices requires a simple split rule."))
 
@@ -23,7 +23,7 @@ function add_disjunctive_cuts!(oracle::AbstractDcglpOracle, ::DisjunctiveCutsSma
     install_disjunctive_cuts!(oracle, cuts)
 end
 
-function install_disjunctive_cuts!(oracle::AbstractDcglpOracle, cuts::Vector{Hyperplane})
+function install_disjunctive_cuts!(oracle::AbstractSplitOracle, cuts::Vector{Hyperplane})
     dcglp = oracle.dcglp
     delete_registered_constraints!(dcglp, :con_disjunctive)
     isempty(cuts) && return nothing
@@ -44,7 +44,7 @@ function install_disjunctive_cuts!(oracle::AbstractDcglpOracle, cuts::Vector{Hyp
     add_constraints(dcglp, :con_disjunctive, exprs)
 end
 
-function update_dynamic_dcglp_constraints!(oracle::AbstractDcglpOracle)
+function update_dynamic_dcglp_constraints!(oracle::AbstractSplitOracle)
     if !oracle.param.reuse_dcglp
         delete_registered_constraints!(oracle.dcglp, :con_benders)
         delete_registered_constraints!(oracle.dcglp, :con_disjunctive)
@@ -52,7 +52,7 @@ function update_dynamic_dcglp_constraints!(oracle::AbstractDcglpOracle)
     add_disjunctive_cuts!(oracle, oracle.param.disjunctive_cut_append_rule)
 end
 
-function append_current_disjunctive_cut!(oracle::AbstractDcglpOracle, cut::Hyperplane)
+function append_current_disjunctive_cut!(oracle::AbstractSplitOracle, cut::Hyperplane)
     push!(oracle.disjunctive_cuts, cut)
     if oracle.param.split_index_selection_rule isa SimpleSplit
         index = get_split_index(oracle)
@@ -61,7 +61,7 @@ function append_current_disjunctive_cut!(oracle::AbstractDcglpOracle, cut::Hyper
 end
 
 function store_dcglp_disjunctive_cut!(
-    oracle::AbstractDcglpOracle,
+    oracle::AbstractSplitOracle,
     cut::Hyperplane,
     master_hyperplanes::Vector{Hyperplane},
     include_disjunctive_cuts_to_hyperplanes::Bool,
