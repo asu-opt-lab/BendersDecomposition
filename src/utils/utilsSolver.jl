@@ -3,13 +3,15 @@ const DEFAULT_OPTIMIZER = optimizer_with_attributes(GLPK.Optimizer, MOI.Silent()
 default_optimizer() = optimizer_with_attributes(GLPK.Optimizer, MOI.Silent() => true)
 
 function set_optimizer_checked!(model::Model, optimizer, context::AbstractString)
-    if isnothing(optimizer)
+    try
+        set_optimizer(model, optimizer)
+    catch err
         throw(ArgumentError(
-            "$(context) requires a valid optimizer. " *
-            "Omit `optimizer` to use the default GLPK optimizer, or pass a JuMP-compatible optimizer constructor."
+            "$(context) could not attach optimizer $(repr(optimizer)). " *
+            "Omit `optimizer` to use the default GLPK optimizer, or pass a JuMP-compatible optimizer constructor. " *
+            "Original error: $(sprint(showerror, err))"
         ))
     end
-    set_optimizer(model, optimizer)
     return model
 end
 

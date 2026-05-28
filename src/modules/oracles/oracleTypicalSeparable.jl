@@ -52,17 +52,6 @@ mutable struct SeparableOracleParam <: AbstractOracleParam
     # may contain parameters for scenario handling.
 end
 
-function validate_separable_threading(oracles::Vector{<:AbstractTypicalOracle}; thread_count::Int = Threads.nthreads())
-    uses_glpk = any(hasproperty(suboracle, :model) && occursin("GLPK", solver_name(getproperty(suboracle, :model))) for suboracle in oracles)
-    if uses_glpk && length(oracles) > 1
-        throw(ArgumentError(
-            "SeparableOracle with GLPK subproblems is not supported when multiple subproblems are evaluated through the threaded execution path. " *
-            "Current Julia thread count: $(thread_count). Pass a different optimizer via `optimizer = ...`."
-        ))
-    end
-    return nothing
-end
-
 """
     SeparableOracle <: AbstractTypicalOracle
 
@@ -104,7 +93,6 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
         @info "SeparableOracle: N=$N subproblems, $(Threads.nthreads()) threads available for parallel execution"
         # assume each oracle is associated with a single t, that is dim_t = N
         oracles = [T(data, master; customize = customize, scen_idx = j, param = sub_oracle_param, optimizer = optimizer) for j in 1:N]
-        validate_separable_threading(oracles)
 
         new(param, oracles, N)
     end

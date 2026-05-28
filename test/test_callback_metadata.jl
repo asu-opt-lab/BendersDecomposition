@@ -4,7 +4,7 @@ using JuMP
 using HiGHS
 using BendersX
 
-@testset "Callback metadata filters" begin
+@testset "Callback metadata thresholds" begin
     @testset "Unsupported metadata warnings" begin
         model = Model(HiGHS.Optimizer)
 
@@ -18,7 +18,10 @@ using BendersX
         @test occursin("HiGHS", string(logs[1].message))
         @test occursin("depth", string(logs[2].message))
         @test occursin("HiGHS", string(logs[2].message))
+    end
 
+    @testset "Unsupported metadata warnings are throttled" begin
+        model = Model(HiGHS.Optimizer)
         io = IOBuffer()
         logger = ConsoleLogger(io, Logging.Warn)
         with_logger(logger) do

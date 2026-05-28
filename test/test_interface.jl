@@ -196,7 +196,7 @@ end
     end
 end
 
-@testset "Explicit nothing optimizer rejected" begin
+@testset "Invalid optimizer errors include model context" begin
     data = CFLPData(
         2,
         2,
@@ -213,7 +213,18 @@ end
         e
     end
     @test err isa ArgumentError
+    @test occursin("Master model could not attach optimizer nothing", sprint(showerror, err))
     @test occursin("Omit `optimizer` to use the default GLPK optimizer", sprint(showerror, err))
+
+    err = try
+        Master(data; optimizer = :not_an_optimizer)
+        nothing
+    catch e
+        e
+    end
+    @test err isa ArgumentError
+    @test occursin("Master model could not attach optimizer :not_an_optimizer", sprint(showerror, err))
+    @test occursin("Original error:", sprint(showerror, err))
 
     master = Master(data)
     err = try
@@ -223,7 +234,7 @@ end
         e
     end
     @test err isa ArgumentError
-    @test occursin("ClassicalOracle subproblem model requires a valid optimizer", sprint(showerror, err))
+    @test occursin("ClassicalOracle subproblem model could not attach optimizer nothing", sprint(showerror, err))
 end
 
 @testset "Default optimizer is attached before customize hooks run" begin
@@ -284,22 +295,8 @@ end
     @test all(occursin("HiGHS", solver_name(suboracle.model)) for suboracle in oracle.oracles)
 end
 
-@testset "SeparableOracle rejects multi-subproblem GLPK construction" begin
-    data = CFLPData(
-        2,
-        2,
-        [2.0, 2.0],
-        [1.0, 1.0],
-        [3.0, 4.0],
-        [1.0 2.0; 2.0 1.0],
-    )
-
-    master = Master(data)
-    @test_throws ArgumentError SeparableOracle(data, master, ClassicalOracle(), 2)
-end
-
 @testset "transfer_scaled_linear_rows_and_bounds_with_types!" begin
-    function transferred_status(point::Vector{Float64})
+    function transferred_status(point::Vector{Float64}; omega0_value::Float64 = 1.0)
         master = Model()
         @variable(master, x[1:2] >= 0)
         @constraint(master, x[1] + x[2] >= 1.0)
@@ -311,7 +308,7 @@ end
         @variable(dcglp, omega[1:2])
         @objective(dcglp, Min, 0.0)
 
-        fix(omega0, 1.0; force = true)
+        fix(omega0, omega0_value; force = true)
         fix.(omega, point; force = true)
 
         transfer_scaled_linear_rows_and_bounds_with_types!(master, x, dcglp, omega, omega0)
@@ -322,6 +319,7 @@ end
 
     @test transferred_status([0.75, 0.75]) == OPTIMAL
     @test transferred_status([0.2, 0.2]) == INFEASIBLE
+    @test transferred_status([0.2, 0.2]; omega0_value = 0.4) == OPTIMAL
     @test transferred_status([1.0, 1.0]) == INFEASIBLE
 end
 

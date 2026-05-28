@@ -6,8 +6,8 @@ Parameters for user callbacks in the branch-and-bound process.
 
 # Fields
 - `frequency::Int = 50`: How often to process nodes (every N fractional nodes)
-- `node_count::Int = -1`: Minimum node count threshold; only process nodes with `node_count >= threshold` (-1 means process all)
-- `depth::Int = -1`: Only process nodes with depth >= this value (-1 means process all depths)
+- `node_count::Int = -1`: Minimum solver node count to process (-1 means no node-count threshold)
+- `depth::Int = -1`: Minimum solver node depth to process (-1 means no depth threshold)
 """
 Base.@kwdef struct UserCallbackParam <: AbstractUserCallbackParam
     frequency::Int = 50
@@ -53,7 +53,7 @@ Generates and adds Benders cuts at fractional nodes based on the specified frequ
   [`callback_node_count`](@ref) and [`callback_node_depth`](@ref).
 - CPLEX support for these accessors is provided by `BendersXCPLEXExt` when `CPLEX.jl`
   is loaded.
-- If callback metadata is unsupported by the active solver, the fallback metadata accessor emits a warning and the corresponding filter is ignored.
+- If callback metadata is unsupported by the active solver, the fallback metadata accessor emits a warning and the corresponding threshold is not applied.
 """
 
 function user_callback(cb_data, master::Master, log::BendersBnBLog, param::BendersBnBParam, callback::UserCallback)

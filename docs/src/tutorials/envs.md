@@ -218,7 +218,7 @@ env = BendersBnB(
 log = solve!(env)
 ```
 
-The master and DCGLP optimizers should be attached through standard JuMP APIs. BendersX extensions are only used internally when solver-specific callback behavior is needed.
+The master and DCGLP optimizers should be attached through standard JuMP APIs.
 
 ---
 

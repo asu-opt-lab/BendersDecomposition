@@ -52,7 +52,7 @@ Common parameters include:
 ### Example: ClassicalOracle
 
 ```julia
-param = ClasscialOracleParam(rtol = 1e-6, atol = 1e-8)
+param = ClassicalOracleParam(rtol = 1e-6, atol = 1e-8)
 oracle = ClassicalOracle(data, master; customize = customize_sub_model!, param = param)
 ```
 
@@ -89,14 +89,20 @@ implementations:
 oracle = SeparableOracle(
     data,
     master,
-    ClassicalOracle,
+    ClassicalOracle(),
     N;
     sub_oracle_param = ClassicalOracleParam(rtol = 1e-6),
 )
 ```
 
-Any oracle type `T <: AbstractTypicalOracle` that implements the required
-constructor interface can be used.
+Any oracle whose concrete type `T <: AbstractTypicalOracle` implements the
+required constructor interface can be used as the template.
+
+!!! note
+    `SeparableOracle` evaluates subproblems with Julia threads. The default GLPK
+    optimizer is allowed, but GLPK may raise solver-internal errors during
+    threaded subproblem evaluation on some platforms. If that occurs, pass a
+    different LP optimizer with `optimizer = ...` or run Julia with one thread.
 
 ---
 
@@ -132,7 +138,7 @@ split_param = SplitOracleParam(
 
 oracle = SplitOracle(master, [oracle_kappa, oracle_nu], split_param)
 ```
-Attach the DCGLP solver through standard JuMP APIs such as `optimizer_with_attributes(...)`; BendersX extensions are reserved for solver-specific internals.
+Attach the solver for the DCGLP through standard JuMP APIs such as `optimizer_with_attributes(...)`.
 
 The component oracles `oracle_kappa` and `oracle_nu` can be any implementation of typical oracles compatible with the underlying problem.
 

@@ -32,7 +32,7 @@ Install BendersX with the Julia package manager.
 To add the package from GitHub:
 ```julia
 import Pkg
-Pkg.add(url = "https://github.com/asu-opt-lab/BendersDecomposition.git")
+Pkg.add(url = "https://github.com/asu-opt-lab/BendersX.jl.git")
 ```
 
 If you are developing the repository locally:
@@ -69,7 +69,9 @@ log = solve!(env)
 
 ### Modeling
 
-Users provide master and subproblem formulations through *customization functions* written in standard JuMP syntax. `customize_master_model!` must return `(x_namedtuple, t)`, and model-based oracles require a matching `customize_sub_model!`; if either hook is missing for your `AbstractData` subtype, the default methods throw `UndefError`. See the package docs for concrete examples and the full modeling interface. If you are new to JuMP, consult the JuMP documentation: [https://jump.dev/JuMP.jl/stable/](https://jump.dev/JuMP.jl/stable/).
+Users describe a decomposition model by writing ordinary JuMP code in two functions. The master function adds the first-stage variables, constraints, and objective, then returns `(x, t)`, where `x` is a named tuple of master variables and `t` contains the auxiliary variables used in Benders cuts. A model-based oracle uses a subproblem function that adds the recourse variables and constraints; its keyword arguments must match the names returned in `x`.
+
+Pass these functions to `Master` and the oracle through the `customize` keyword. If a required modeling function is missing for your `AbstractData` subtype, the default method throws `UndefError`. See the package documentation for complete examples. If you are new to JuMP, start with the JuMP documentation: [https://jump.dev/JuMP.jl/stable/](https://jump.dev/JuMP.jl/stable/).
 
 ## Built-in variants
 
