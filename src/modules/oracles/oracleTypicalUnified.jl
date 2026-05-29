@@ -116,13 +116,11 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
 
     function UnifiedOracle(data::AbstractData, master::Master; 
                           model = customize_sub_model!,
-                          customize = nothing,
                           scen_idx::Int = 0, 
                           param::UnifiedOracleParam = UnifiedOracleParam(),
                           optimizer = DEFAULT_OPTIMIZER)
     
         @debug "Building unified oracle"
-        model_update = _resolve_model_update_keyword(model, customize)
         sub_model = Model()
         set_optimizer_checked!(sub_model, optimizer, "UnifiedOracle subproblem model")
 
@@ -133,7 +131,7 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
         x = var_from_tuple(x_copy)
 
         # Build the submodel using user-defined model update, passing the copied variables
-        model_update(sub_model, data, scen_idx; x_copy...)
+        model(sub_model, data, scen_idx; x_copy...)
 
         # Validate that the subproblem is LP-compatible for typical oracles
         _validate_lp_compatibility(sub_model)

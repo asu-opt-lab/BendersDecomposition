@@ -86,8 +86,8 @@ end
             return nothing
         end
         
-        master = Master(data; customize = customize_master_unified!)
-        oracle = UnifiedOracle(data, master; customize = customize_sub_basic!)
+        master = Master(data; model = customize_master_unified!)
+        oracle = UnifiedOracle(data, master; model = customize_sub_basic!)
         
         # Verify oracle has all required fields
         @test !isempty(oracle.fixing_lb_constraints)
@@ -118,8 +118,8 @@ end
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
         
         # Test ClassicalOracle
-        master_classical = Master(data; customize = customize_master_unified!)
-        oracle_classical = ClassicalOracle(data, master_classical; customize = customize_sub_compare!)
+        master_classical = Master(data; model = customize_master_unified!)
+        oracle_classical = ClassicalOracle(data, master_classical; model = customize_sub_compare!)
         env_classical = BendersSeq(master_classical, oracle_classical; param = benders_param)
         solve!(env_classical)
         
@@ -127,8 +127,8 @@ end
         @test isapprox(mip_opt, env_classical.obj_value, atol=1e-4)
         
         # Test UnifiedOracle
-        master_unified = Master(data; customize = customize_master_unified!)
-        oracle_unified = UnifiedOracle(data, master_unified; customize = customize_sub_compare!)
+        master_unified = Master(data; model = customize_master_unified!)
+        oracle_unified = UnifiedOracle(data, master_unified; model = customize_sub_compare!)
         env_unified = BendersSeq(master_unified, oracle_unified; param = benders_param)
         solve!(env_unified)
         
@@ -172,8 +172,8 @@ end
             return nothing
         end
         
-        master = Master(data; customize = customize_master_unified!)
-        oracle = UnifiedOracle(data, master; customize = customize_sub_param!, param = param)
+        master = Master(data; model = customize_master_unified!)
+        oracle = UnifiedOracle(data, master; model = customize_sub_param!, param = param)
         
         @test oracle.param.rtol == 1e-8
         @test oracle.param.zero_tol == 1e-5
@@ -203,8 +203,8 @@ end
         
         # Test with w0 = 2.0
         param_w0 = UnifiedOracleParam(w0 = 2.0)
-        master = Master(data; customize = customize_master_unified!)
-        oracle = UnifiedOracle(data, master; customize = customize_sub_w0!, param = param_w0)
+        master = Master(data; model = customize_master_unified!)
+        oracle = UnifiedOracle(data, master; model = customize_sub_w0!, param = param_w0)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
         
@@ -244,9 +244,9 @@ end
             return nothing
         end
 
-        master = Master(data; customize = customize_master_unified!)
+        master = Master(data; model = customize_master_unified!)
         # Should NOT throw
-        oracle = UnifiedOracle(data, master; customize = customize_sub_interval_accept!)
+        oracle = UnifiedOracle(data, master; model = customize_sub_interval_accept!)
         @test oracle.model isa Model
     end
 
@@ -278,8 +278,8 @@ end
             return nothing
         end
 
-        master = Master(data; customize = customize_master_interval_reform!)
-        oracle = UnifiedOracle(data, master; customize = customize_sub_interval_reform!)
+        master = Master(data; model = customize_master_interval_reform!)
+        oracle = UnifiedOracle(data, master; model = customize_sub_interval_reform!)
 
         σ = variable_by_name(oracle.model, "σ")
 
@@ -321,9 +321,9 @@ end
             return nothing
         end
 
-        master = Master(data; customize = customize_master_unified!)
+        master = Master(data; model = customize_master_unified!)
         # Should NOT throw
-        oracle = UnifiedOracle(data, master; customize = customize_sub_vectorized!)
+        oracle = UnifiedOracle(data, master; model = customize_sub_vectorized!)
         @test oracle.model isa Model
     end
 
@@ -356,9 +356,9 @@ end
             return nothing
         end
 
-        master = Master(data; customize = customize_master_unified!)
+        master = Master(data; model = customize_master_unified!)
         # Should NOT throw
-        oracle = UnifiedOracle(data, master; customize = customize_sub_all_patterns!)
+        oracle = UnifiedOracle(data, master; model = customize_sub_all_patterns!)
         @test oracle.model isa Model
     end
 
@@ -385,8 +385,8 @@ end
 
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
 
-        master = Master(data; customize = customize_master_unified!)
-        oracle = UnifiedOracle(data, master; customize = customize_sub_interval_converge!)
+        master = Master(data; model = customize_master_unified!)
+        oracle = UnifiedOracle(data, master; model = customize_sub_interval_converge!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -429,8 +429,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_sigma!)
+            master = Master(data; model = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; model = customize_sub_sigma!)
 
             # Find σ variable by name
             σ = variable_by_name(oracle.model, "σ")
@@ -453,8 +453,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_obj!)
+            master = Master(data; model = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; model = customize_sub_obj!)
 
             # New objective should be just σ
             σ = variable_by_name(oracle.model, "σ")
@@ -478,8 +478,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_fix!)
+            master = Master(data; model = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; model = customize_sub_fix!)
 
             # Should have one lb and one ub constraint per decision variable
             @test length(oracle.fixing_lb_constraints) == data.n
@@ -520,9 +520,9 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
+            master = Master(data; model = customize_master_reform!)
             param = UnifiedOracleParam(w0 = w0)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_objcon!, param = param)
+            oracle = UnifiedOracle(data, master; model = customize_sub_objcon!, param = param)
 
             σ = variable_by_name(oracle.model, "σ")
 
@@ -552,8 +552,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_relax!)
+            master = Master(data; model = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; model = customize_sub_relax!)
 
             σ = variable_by_name(oracle.model, "σ")
 
@@ -584,8 +584,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_eq!)
+            master = Master(data; model = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; model = customize_sub_eq!)
 
             σ = variable_by_name(oracle.model, "σ")
 
@@ -626,8 +626,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_nox!)
+            master = Master(data; model = customize_master_reform!)
+            oracle = UnifiedOracle(data, master; model = customize_sub_nox!)
 
             σ = variable_by_name(oracle.model, "σ")
 

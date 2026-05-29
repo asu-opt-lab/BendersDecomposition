@@ -48,9 +48,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 @testset "NoSeq" begin
                     @info "solving UFLP p$i - classical oracle - no seq..."
                     # This setting can use default initializer
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+                    oracle = ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
                 
                     # root_preprocessing = NoRootNodePreprocessing()
                     # lazy_callback = LazyCallback(oracle)
@@ -67,9 +67,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 @testset "Seq" begin
                     @info "solving UFLP p$i - classical oracle - seq..."
                     
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+                    oracle = ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -90,9 +90,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "SeqInOut" begin
                     @info "solving UFLP p$i - classical oracle - seqinout..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+                    oracle = ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -118,9 +118,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Unified oracle" begin
                 @testset "NoSeq" begin
                     @info "solving UFLP p$i - unified oracle - no seq..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+                    oracle = UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
                     env = BendersBnB(master, oracle; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
@@ -129,9 +129,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "Seq" begin
                     @info "solving UFLP p$i - unified oracle - seq..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+                    oracle = UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -152,9 +152,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "SeqInOut" begin
                     @info "solving UFLP p$i - unified oracle - seqinout..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+                    oracle = UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -180,9 +180,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Classic oracle with GBC" begin
                 @testset "NoSeq" begin
                     @info "solving UFLP p$i - classical oracle with GBC - no seq..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
+                    oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
                     env = BendersBnB(master, oracle; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
@@ -191,9 +191,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "Seq" begin
                     @info "solving UFLP p$i - classical oracle with GBC - seq..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
+                    oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -214,9 +214,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "SeqInOut" begin
                     @info "solving UFLP p$i - classical oracle with GBC - seqinout..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                    oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
+                    oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -242,10 +242,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Pareto oracle" begin
                 @testset "NoSeq" begin
                     @info "solving UFLP p$i - pareto oracle - no seq..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                     pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                    oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)
+                    oracle = ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)
                     env = BendersBnB(master, oracle; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
@@ -254,10 +254,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "Seq" begin
                     @info "solving UFLP p$i - pareto oracle - seq..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                     pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                    oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)
+                    oracle = ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -278,10 +278,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "SeqInOut" begin
                     @info "solving UFLP p$i - pareto oracle - seqinout..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                     pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                    oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)
+                    oracle = ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -319,7 +319,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 @testset "NoSeq" begin
                     @info "solving UFLP p$i - fat knapsack oracle - no seq..."
                     # This setting can use default initializer
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     oracle = UFLKnapsackOracle(data) 
                     set_parameter!(oracle, "add_only_violated_cuts", true)
                     
@@ -336,7 +336,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "Seq" begin
                     @info "solving UFLP p$i - fat knapsack oracle - seq..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     oracle = UFLKnapsackOracle(data) 
                     set_parameter!(oracle, "add_only_violated_cuts", true)
 
@@ -359,7 +359,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "SeqInOut" begin
                     @info "solving UFLP p$i - fat knapsack oracle - seqinout..."
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     oracle = UFLKnapsackOracle(data) 
                     set_parameter!(oracle, "add_only_violated_cuts", true)
 

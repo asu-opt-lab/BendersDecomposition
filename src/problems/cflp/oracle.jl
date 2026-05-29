@@ -43,12 +43,10 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     
     function CFLKnapsackOracle(data::AbstractData, master::Master; 
                             model = customize_sub_model!,
-                            customize = nothing,
                             scen_idx::Int=-1, 
                             param::CFLKnapsackOracleParam = CFLKnapsackOracleParam(),
                             optimizer = DEFAULT_OPTIMIZER)
         @debug "Building knapsack oracle for CFLP"
-        model_update = _resolve_model_update_keyword(model, customize)
         sub_model = Model()
         set_optimizer_checked!(sub_model, optimizer, "CFLKnapsackOracle subproblem model")
 
@@ -60,7 +58,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         @constraint(sub_model, fix_x, x .== 0)
 
         # Build the submodel using user-defined model update, passing the copied variables
-        result = model_update(sub_model, data, scen_idx; x_copy...)
+        result = model(sub_model, data, scen_idx; x_copy...)
         
         # Parse the result to extract GBC information using shared helper
         gbc_lhs, gbc_rhs, gbc_sense = _parse_gbc_result(result, x)

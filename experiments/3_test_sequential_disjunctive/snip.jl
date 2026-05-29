@@ -52,9 +52,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
 
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; customize = customize_sub_model!, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; customize = customize_sub_model!, optimizer = optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = customize_sub_model!, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = customize_sub_model!, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
@@ -83,10 +83,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
 
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             pareto_param = ParetoOracleParam(ones(length(data.D)))
-                            typical_oracle_kappa = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = customize_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = customize_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
@@ -115,10 +115,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
 
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             unified_param = UnifiedOracleParam()
-                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; customize = customize_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = customize_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = customize_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)

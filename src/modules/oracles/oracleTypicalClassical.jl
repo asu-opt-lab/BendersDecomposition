@@ -38,13 +38,11 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
 
     function ClassicalOracle(data::AbstractData, master::Master; 
                             model = customize_sub_model!,
-                            customize = nothing,
                             scen_idx::Int=0, 
                             param::ClassicalOracleParam = ClassicalOracleParam(),
                             optimizer = DEFAULT_OPTIMIZER)
     
             @debug "Building classical oracle"
-            model_update = _resolve_model_update_keyword(model, customize)
             sub_model = Model()
             set_optimizer_checked!(sub_model, optimizer, "ClassicalOracle subproblem model")
 
@@ -56,7 +54,7 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
             @constraint(sub_model, fix_x, x .== 0)
 
             # Build the submodel using user-defined model update, passing the copied variables
-            result = model_update(sub_model, data, scen_idx; x_copy...)
+            result = model(sub_model, data, scen_idx; x_copy...)
             
             # Validate that the subproblem is LP-compatible for typical oracles
             _validate_lp_compatibility(sub_model)

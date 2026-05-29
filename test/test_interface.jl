@@ -237,7 +237,7 @@ end
     @test occursin("ClassicalOracle subproblem model could not attach optimizer nothing", sprint(showerror, err))
 end
 
-@testset "Default optimizer is attached before customize hooks run" begin
+@testset "Default optimizer is attached before model hooks run" begin
     struct AttrData <: AbstractData end
     data = AttrData()
 
@@ -257,8 +257,8 @@ end
         return nothing
     end
 
-    master = Master(data; customize = customize_master_model!)
-    oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+    master = Master(data; model = customize_master_model!)
+    oracle = ClassicalOracle(data, master; model = customize_sub_model!)
 
     @test occursin("GLPK", solver_name(master.model))
     @test occursin("GLPK", solver_name(oracle.model))
@@ -317,10 +317,6 @@ end
     @test length(separable.oracles) == 1
     @test knapsack.model isa Model
 
-    legacy_master = Master(data; customize = keyword_master_model!, optimizer = optimizer)
-    legacy_oracle = ClassicalOracle(data, legacy_master; customize = keyword_subproblem_model!, optimizer = optimizer)
-    @test legacy_master.dim_x == data.n_facilities
-    @test legacy_oracle.model isa Model
 end
 
 @testset "SeparableOracle works with explicit non-GLPK optimizer" begin
@@ -344,8 +340,8 @@ end
     end
 
     optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
-    master = Master(data; customize = customize_master_model!, optimizer = optimizer)
-    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = optimizer)
+    master = Master(data; model = customize_master_model!, optimizer = optimizer)
+    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model!, optimizer = optimizer)
     is_in_L, hyperplanes, f_x = BendersX.generate_cuts(oracle, [0.0, 0.0], [0.0, 0.0])
 
     @test !is_in_L
@@ -382,15 +378,15 @@ end
     @test transferred_status([1.0, 1.0]) == INFEASIBLE
 end
 
-@testset "BendersX customize model functions" begin
+@testset "BendersX model hook functions" begin
     struct EmptyData <: AbstractData end
     data = EmptyData()
 
-    @testset "no customize functions provided (should throw)" begin
-        # Master without customize must throw
+    @testset "no model hook functions provided (should throw)" begin
+        # Master without a model hook must throw
         @test_throws UndefError Master(data)
 
-        # Model-based oracle without customize must throw
+        # Model-based oracle without a subproblem model hook must throw
         function customize_master_model!(model::Model, data::EmptyData)
 
             @variable(model, u[1:10], Bin)
@@ -400,7 +396,7 @@ end
             
             return (u = u, ), t
         end
-        master = Master(data; customize = customize_master_model!)
+        master = Master(data; model = customize_master_model!)
         @test_throws UndefError ClassicalOracle(data, master)
     end
 
@@ -423,8 +419,8 @@ end
             return nothing
         end
 
-        master = Master(data; customize = customize_master_model!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+        master = Master(data; model = customize_master_model!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_model!)
 
         print(master.model)
         print(oracle.model)
@@ -449,8 +445,8 @@ end
             return nothing
         end
 
-        master = Master(data; customize = customize_master_model!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+        master = Master(data; model = customize_master_model!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_model!)
 
         print(master.model)
         print(oracle.model)
@@ -479,8 +475,8 @@ end
             return nothing
         end
 
-        master = Master(data; customize = customize_master_model!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+        master = Master(data; model = customize_master_model!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_model!)
 
         print(master.model)
         print(oracle.model)

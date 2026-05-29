@@ -51,8 +51,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Classic oracle" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle - seqInOut..."
-                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = optimizer)
+                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -61,8 +61,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             
             @testset "Knapsack oracle" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - seqInOut..."
-                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model!, optimizer = optimizer)
+                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = customize_sub_model!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -71,8 +71,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Unified oracle" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - seqInOut..."
-                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
+                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; model = customize_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -81,8 +81,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Classic oracle with GBC" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle with GBC - seqInOut..."
-                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; customize = customize_sub_model_gbc!, optimizer = optimizer)
+                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -91,8 +91,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             
             @testset "Knapsack oracle with GBC" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle with GBC - seqInOut..."
-                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; customize = customize_sub_model_gbc!, optimizer = optimizer)
+                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -101,9 +101,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Pareto oracle" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - pareto oracle - seqInOut..."
-                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                 param = ParetoOracleParam(fill(1.0, data.n_facilities))
-                oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; customize = customize_sub_model!, sub_oracle_param = param, optimizer = optimizer)
+                oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; model = customize_sub_model!, sub_oracle_param = param, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()

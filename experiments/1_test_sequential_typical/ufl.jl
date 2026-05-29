@@ -54,8 +54,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 
                 @info "solving UFLP p$i - classical oracle - seq..."
                 
-                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                oracle = ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -64,8 +64,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Unified oracle" begin
                 @info "solving UFLP p$i - unified oracle - seq..."
-                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                oracle = UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                oracle = UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -76,8 +76,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 
                 @info "solving UFLP p$i - classical oracle with GBC - seq..."
                 
-                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
+                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -100,7 +100,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     
                     @info "solving UFLP p$i - fat knapsack oracle - seq..."
                 
-                    master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                     oracle = UFLKnapsackOracle(data) 
                     set_parameter!(oracle, "add_only_violated_cuts", true)
 
@@ -115,9 +115,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Pareto oracle" begin
                 @info "solving UFLP p$i - pareto oracle - seq..."
-                master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                 param = ParetoOracleParam(fill(1.0, data.n_facilities))
-                oracle = ParetoOracle(data, master, param; customize = customize_sub_model!, optimizer = optimizer)
+                oracle = ParetoOracle(data, master, param; model = customize_sub_model!, optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()

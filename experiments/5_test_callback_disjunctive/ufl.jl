@@ -72,10 +72,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "NoSeq" begin
                             @info "solving UFLP p$i - disjunctive oracle/classical/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)] # for kappa & nu
+                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)] # for kappa & nu
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                     
                             root_preprocessing = NoRootNodePreprocessing()
@@ -95,10 +95,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "Seq" begin
                             @info "solving UFLP p$i - disjunctive oracle/classical/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)] # for kappa & nu
+                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)] # for kappa & nu
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                     
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
@@ -118,10 +118,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "SeqInOut" begin
                             @info "solving UFLP p$i - disjunctive oracle/classical/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)] # for kappa & nu
+                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)] # for kappa & nu
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
@@ -157,10 +157,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "NoSeq" begin
                             @info "solving UFLP p$i - disjunctive oracle/unified/no seq"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)]
+                            lazy_oracle = UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
+                            typical_oracles = [UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
@@ -175,10 +175,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "Seq" begin
                             @info "solving UFLP p$i - disjunctive oracle/unified/seq"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)]
+                            lazy_oracle = UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
+                            typical_oracles = [UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
@@ -193,10 +193,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "SeqInOut" begin
                             @info "solving UFLP p$i - disjunctive oracle/unified/seqinout"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)]
+                            lazy_oracle = UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
+                            typical_oracles = [UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
@@ -227,11 +227,11 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "NoSeq" begin
                             @info "solving UFLP p$i - disjunctive oracle/pareto/no seq"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                            lazy_oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)]
+                            lazy_oracle = ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
@@ -246,11 +246,11 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "Seq" begin
                             @info "solving UFLP p$i - disjunctive oracle/pareto/seq"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                            lazy_oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)]
+                            lazy_oracle = ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
@@ -265,11 +265,11 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "SeqInOut" begin
                             @info "solving UFLP p$i - disjunctive oracle/pareto/seqinout"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                            lazy_oracle = ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)]
+                            lazy_oracle = ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
@@ -291,10 +291,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         oracle_param = SplitOracleParam(dcglp_param; norm = LpNorm(p), split_index_selection_rule = LargestFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 0.05, reuse_dcglp = reuse_dcglp, lift = lift)
                         @testset "NoSeq" begin
                             @info "solving UFLP p$i - disjunctive oracle/classical with GBC/no seq"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer); ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)]
+                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer); ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -307,10 +307,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "Seq" begin
                             @info "solving UFLP p$i - disjunctive oracle/classical with GBC/seq"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer); ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)]
+                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer); ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -323,10 +323,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "SeqInOut" begin
                             @info "solving UFLP p$i - disjunctive oracle/classical with GBC/seqinout"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
-                            lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer); ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)]
+                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer); ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -368,7 +368,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         
                         @testset "NoSeq" begin
                             @info "solving UFLP p$i - disjunctive oracle/fat knapsack/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                             lazy_oracle = UFLKnapsackOracle(data)
                             set_parameter!(lazy_oracle, "add_only_violated_cuts", true)
@@ -395,7 +395,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "Seq" begin
                             @info "solving UFLP p$i - disjunctive oracle/fat knapsack/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                             lazy_oracle = UFLKnapsackOracle(data)
                             set_parameter!(lazy_oracle, "add_only_violated_cuts", true)
@@ -422,7 +422,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "SeqInOut" begin
                             @info "solving UFLP p$i - disjunctive oracle/fat knapsack/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
                             lazy_oracle = UFLKnapsackOracle(data)
                             set_parameter!(lazy_oracle, "add_only_violated_cuts", true)

@@ -104,8 +104,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; customize = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_upper!)
+        master = Master(data; model = customize_master_simple!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_upper!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
         
@@ -165,8 +165,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; customize = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_lower!)
+        master = Master(data; model = customize_master_simple!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_lower!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -223,8 +223,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; customize = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_fixed!)
+        master = Master(data; model = customize_master_simple!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_fixed!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -277,8 +277,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; customize = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_scaled!)
+        master = Master(data; model = customize_master_simple!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_scaled!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -347,8 +347,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; customize = customize_master_pairs!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_affine!)
+        master = Master(data; model = customize_master_pairs!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_affine!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -404,8 +404,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; customize = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_partial!)
+        master = Master(data; model = customize_master_simple!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_partial!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -470,8 +470,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; customize = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_mixed!)
+        master = Master(data; model = customize_master_simple!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_mixed!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -480,7 +480,7 @@ end
     end
 
     @testset "Scenario 8: No GBC (Nothing Returned)" begin
-        # Tests that code works when customize returns nothing
+        # Tests that code works when the model hook returns nothing
         data = create_test_data()
         mip_opt = solve_mip_reference(data)
         
@@ -501,8 +501,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; customize = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_no_gbc!)
+        master = Master(data; model = customize_master_simple!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_no_gbc!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -548,8 +548,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; customize = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; customize = customize_sub_union!)
+        master = Master(data; model = customize_master_simple!)
+        oracle = ClassicalOracle(data, master; model = customize_sub_union!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
         
@@ -568,17 +568,17 @@ end
             return gbc_lhs, gbc_rhs, gbc_sense
         end
         
-        master = Master(data; customize = customize_master_simple!)
+        master = Master(data; model = customize_master_simple!)
         # Helper function to supply Union type
         union_type(v) = Vector{Union{VariableRef, AffExpr}}(v)
 
-        @test_throws DimensionMismatch ClassicalOracle(data, master; customize = customize_sub_dim_error!)
+        @test_throws DimensionMismatch ClassicalOracle(data, master; model = customize_sub_dim_error!)
         
         # 2. Test ArgumentError (Invalid tuple length)
         function customize_sub_arg_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             return ([x[1]], [x[1]]) # Length 2, expected 3
         end
-        @test_throws ArgumentError ClassicalOracle(data, master; customize = customize_sub_arg_error!)
+        @test_throws ArgumentError ClassicalOracle(data, master; model = customize_sub_arg_error!)
 
         # 3. Test Empty LHS Warning
         function customize_sub_empty_warn!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
@@ -587,7 +587,7 @@ end
         
         # Capture warning
         @test_logs (:warn, "GBC tuple returned but gbc_lhs is empty. No GBC constraints will be applied.") begin
-            ClassicalOracle(data, master; customize = customize_sub_empty_warn!)
+            ClassicalOracle(data, master; model = customize_sub_empty_warn!)
         end
 
         # 4. Test ArgumentError: gbc_lhs contains a master variable (from x)
@@ -608,7 +608,7 @@ end
         end
 
         err = try
-            ClassicalOracle(data, master; customize = customize_sub_lhs_master_error!)
+            ClassicalOracle(data, master; model = customize_sub_lhs_master_error!)
             nothing
         catch e
             e
@@ -636,7 +636,7 @@ end
         end
 
         err = try
-            ClassicalOracle(data, master; customize = customize_sub_rhs_nonmaster_error!)
+            ClassicalOracle(data, master; model = customize_sub_rhs_nonmaster_error!)
             nothing
         catch e
             e
@@ -665,7 +665,7 @@ end
         end
         
         err = try
-            ClassicalOracle(data, master; customize = customize_sub_lhs_error!)
+            ClassicalOracle(data, master; model = customize_sub_lhs_error!)
             nothing
         catch e
             e
@@ -693,7 +693,7 @@ end
         end
         
         err = try
-            ClassicalOracle(data, master; customize = customize_sub_rhs_nonaffine_error!)
+            ClassicalOracle(data, master; model = customize_sub_rhs_nonaffine_error!)
             nothing
         catch e
             e
@@ -721,7 +721,7 @@ end
         end
         
         err = try
-            ClassicalOracle(data, master; customize = customize_sub_sense_error!)
+            ClassicalOracle(data, master; model = customize_sub_sense_error!)
             nothing
         catch e
             e
@@ -731,4 +731,3 @@ end
         @test occursin("is not a GBCBoundType", err.msg)
     end
 end
-

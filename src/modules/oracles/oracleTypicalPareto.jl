@@ -116,12 +116,10 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
 
     function ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
                          model = customize_sub_model!,
-                         customize = nothing,
                          scen_idx::Int = 0,
                          optimizer = DEFAULT_OPTIMIZER)
 
         @debug "Building Pareto oracle"
-        model_update = _resolve_model_update_keyword(model, customize)
         sub_model = Model()
         set_optimizer_checked!(sub_model, optimizer, "ParetoOracle standard subproblem model")
 
@@ -138,7 +136,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         end
 
         # Build the submodel using user-defined model update
-        model_update(sub_model, data, scen_idx; x_copy...)
+        model(sub_model, data, scen_idx; x_copy...)
 
         # Validate that the subproblem is LP-compatible for typical oracles
         _validate_lp_compatibility(sub_model)
@@ -154,7 +152,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         pareto_x = var_from_tuple(pareto_x_copy)
 
         # Build pareto model structure
-        model_update(pareto_model, data, scen_idx; pareto_x_copy...)
+        model(pareto_model, data, scen_idx; pareto_x_copy...)
 
         # Apply Magnanti-Wong transformations (add σ, etc.)
         _apply_pareto_transformations!(pareto_model, pareto_x)
@@ -172,12 +170,10 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
 
     function ParetoOracle(data::AbstractData, master::Master;
                           model = customize_sub_model!,
-                          customize = nothing,
                           scen_idx::Int = 0,
         param::ParetoOracleParam,
         optimizer = DEFAULT_OPTIMIZER)
-        model_update = _resolve_model_update_keyword(model, customize)
-        return ParetoOracle(data, master, param; model = model_update, scen_idx = scen_idx, optimizer = optimizer)
+        return ParetoOracle(data, master, param; model = model, scen_idx = scen_idx, optimizer = optimizer)
     end
 end
 

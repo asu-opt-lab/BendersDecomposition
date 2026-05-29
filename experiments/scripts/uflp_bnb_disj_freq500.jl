@@ -105,7 +105,7 @@ oracle_param = SplitOracleParam(dcglp_param;
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
-master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
 set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
 
 # -----------------------------------------------------------------------------

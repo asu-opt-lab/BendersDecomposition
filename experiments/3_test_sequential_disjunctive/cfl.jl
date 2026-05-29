@@ -76,8 +76,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
                                                                     
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)] # for kappa & nu
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)] # for kappa & nu
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
@@ -109,8 +109,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
                                                                     
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer); CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)]
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer); CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                             
@@ -141,8 +141,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
 
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                            typical_oracles = [UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)]
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                            typical_oracles = [UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
@@ -170,9 +170,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
 
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                            typical_oracles = [ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; customize = customize_sub_model!, optimizer = optimizer)]
+                            typical_oracles = [ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
@@ -200,8 +200,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
                                                                     
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer); ClassicalOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)]
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer); ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
@@ -229,8 +229,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
                                                                     
-                            master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer); CFLKnapsackOracle(data, master; customize = customize_sub_model_gbc!, optimizer = optimizer)]
+                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer); CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                             

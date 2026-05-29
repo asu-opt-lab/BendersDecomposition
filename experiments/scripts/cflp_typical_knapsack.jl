@@ -21,12 +21,12 @@ data = read_cfl_file(instance)
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
-master = Master(data; customize = customize_master_model!, optimizer = mip_optimizer)
+master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
 
 # -----------------------------------------------------------------------------
 # typical oracle
 # -----------------------------------------------------------------------------
-typical_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!, optimizer = optimizer)
+typical_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
 
 # -----------------------------------------------------------------------------
 # BendersSeqInOut

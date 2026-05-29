@@ -20,7 +20,6 @@ constructor.
 """
 (::Type{T})(data::AbstractData, master::AbstractMaster;
             model = customize_sub_model!,
-            customize = nothing,
             scen_idx::Int,
             param::AbstractOracleParam,
             optimizer = DEFAULT_OPTIMIZER) where T <: AbstractTypicalOracle =
@@ -87,15 +86,13 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
                             oracle::T, 
                             N::Int; 
                             model = customize_sub_model!,
-                            customize = nothing,
                             sub_oracle_param::AbstractOracleParam = BasicOracleParam(),
                             param::SeparableOracleParam = SeparableOracleParam(),
                             optimizer = DEFAULT_OPTIMIZER) where {T<:AbstractTypicalOracle}
         @debug "Building classical separable oracle"
         @info "SeparableOracle: N=$N subproblems, $(Threads.nthreads()) threads available for parallel execution"
-        model_update = _resolve_model_update_keyword(model, customize)
         # assume each oracle is associated with a single t, that is dim_t = N
-        oracles = [T(data, master; model = model_update, scen_idx = j, param = sub_oracle_param, optimizer = optimizer) for j in 1:N]
+        oracles = [T(data, master; model = model, scen_idx = j, param = sub_oracle_param, optimizer = optimizer) for j in 1:N]
 
         new(param, oracles, N)
     end
