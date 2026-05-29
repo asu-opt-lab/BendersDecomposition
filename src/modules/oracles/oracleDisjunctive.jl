@@ -108,8 +108,8 @@ SplitOracle(master::AbstractMaster, typical_oracles::Vector{T},
 # Examples
 ```julia
 # Create typical oracles
-oracle_kappa = ClassicalOracle(data, master; model = customize_sub_model!)
-oracle_nu = ClassicalOracle(data, master; model = customize_sub_model!)
+oracle_kappa = ClassicalOracle(data, master; model = update_subproblem_model!)
+oracle_nu = ClassicalOracle(data, master; model = update_subproblem_model!)
 disj_param = SplitOracleParam(dcglp_param; strengthened = true, lift = true)
 disj_oracle = SplitOracle(master, [oracle_kappa, oracle_nu]; param = disj_param)
 ```

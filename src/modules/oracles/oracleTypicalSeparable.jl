@@ -7,7 +7,7 @@ with a concrete oracle subtype `T` that does **not** define the required
 type-call constructor:
 
     T(data::AbstractData, master::AbstractMaster;
-      model = customize_sub_model!, scen_idx::Int, param::AbstractOracleParam)
+      model, scen_idx::Int, param::AbstractOracleParam, optimizer = ...)
 
 Calling this fallback indicates that the oracle type `T` has not implemented
 the interface expected by `SeparableOracle`. Any concrete oracle intended for
@@ -31,8 +31,12 @@ constructor.
         Expected constructor signature:
 
           $(T)(data::AbstractData, master::AbstractMaster;
-              model = customize_sub_model!, scen_idx::Int,
-              param::AbstractOracleParam, optimizer = ...)
+              model, scen_idx::Int, param::AbstractOracleParam,
+              optimizer = ...)
+
+        The `model` keyword may receive any subproblem model-update function
+        with the expected signature; the function name is not part of the
+        interface.
 
         Define this constructor for $(T) in order to use it with `SeparableOracle`.
         """
@@ -64,7 +68,7 @@ vector-valued recourse approximation `t`.
 # Constructor
 ```julia
 SeparableOracle(data, master, oracle_template, N;
-                model = customize_sub_model!,
+                model = update_subproblem_model!,
                 sub_oracle_param = BasicOracleParam(),
                 param = SeparableOracleParam())
 ```

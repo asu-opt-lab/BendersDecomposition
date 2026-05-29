@@ -21,8 +21,8 @@ avoiding the need to repeatedly solve the entire master problem.
 
 # Examples
 ```julia
-master = Master(data; model = customize_master_model!)
-oracle = ClassicalOracle(data, master; model = customize_sub_model!)
+master = Master(data; model = update_master_model!)
+oracle = ClassicalOracle(data, master; model = update_subproblem_model!)
 env = BendersBnB(master, oracle)  # Use default setting with no root node preprocessing and no user callback
 obj_value, solve_time = solve!(env)
 ```
@@ -53,6 +53,7 @@ mutable struct BendersBnB <: AbstractBendersBnB
         new(master, param, root_preprocessing, lazy_callback, user_callback, Inf, NotSolved())
     end
 end
+
 
 """
     solve!(env::BendersBnB) -> Tuple{Float64, Float64}
@@ -150,4 +151,3 @@ function solve!(env::BendersBnB)
         return to_dataframe(env, log)
     end
 end
-

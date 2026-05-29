@@ -384,7 +384,26 @@ end
 
     @testset "no model hook functions provided (should throw)" begin
         # Master without a model hook must throw
-        @test_throws UndefError Master(data)
+        master_error = try
+            Master(data)
+            nothing
+        catch e
+            e
+        end
+        @test master_error isa UndefError
+        @test occursin("No default master model hook is available", master_error.msg)
+        @test occursin("model = your_master_model!", master_error.msg)
+        @test occursin("function name is arbitrary", lowercase(master_error.msg))
+
+        mip_error = try
+            customize_mip_model!(Model(), data)
+            nothing
+        catch e
+            e
+        end
+        @test mip_error isa UndefError
+        @test occursin("No default monolithic MIP model hook is available", mip_error.msg)
+        @test occursin("function name is arbitrary", lowercase(mip_error.msg))
 
         # Model-based oracle without a subproblem model hook must throw
         function customize_master_model!(model::Model, data::EmptyData)
@@ -397,7 +416,16 @@ end
             return (u = u, ), t
         end
         master = Master(data; model = customize_master_model!)
-        @test_throws UndefError ClassicalOracle(data, master)
+        subproblem_error = try
+            ClassicalOracle(data, master)
+            nothing
+        catch e
+            e
+        end
+        @test subproblem_error isa UndefError
+        @test occursin("No default subproblem model hook is available", subproblem_error.msg)
+        @test occursin("model = your_subproblem_model!", subproblem_error.msg)
+        @test occursin("function name is arbitrary", lowercase(subproblem_error.msg))
     end
 
     @testset "master variable container Vector{VariableRef}" begin

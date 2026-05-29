@@ -25,10 +25,10 @@ oracle for capacitated facility location problems requires only changing the ora
 
 ```julia
 # Classical Benders oracle
-oracle = ClassicalOracle(data, master; model = customize_sub_model!)
+oracle = ClassicalOracle(data, master; model = update_subproblem_model!)
 
 # Knapsack-based oracle (e.g., CFL)
-oracle = CFLKnapsackOracle(data, master; model = customize_sub_model!)
+oracle = CFLKnapsackOracle(data, master; model = update_subproblem_model!)
 ```
 
 The execution environment (`BendersSeq`, `BendersSeqInOut`, `BendersBnB`, or any variants)
@@ -53,7 +53,7 @@ Common parameters include:
 
 ```julia
 param = ClassicalOracleParam(rtol = 1e-6, atol = 1e-8)
-oracle = ClassicalOracle(data, master; model = customize_sub_model!, param = param)
+oracle = ClassicalOracle(data, master; model = update_subproblem_model!, param = param)
 ```
 
 Some oracles expose **behavioral parameters** in addition to numerical tolerances.

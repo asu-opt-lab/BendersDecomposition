@@ -1,19 +1,23 @@
 """
     customize_master_model!(model::Model, data::AbstractData) -> NamedTuple, Vector{VariableRef}
 
-User-defined hook for constructing the master model.
+Default hook for constructing the master model.
 
-This function is intended to be implemented by users for their specific
-problem. Given a JuMP `model` and an instance `data`,
-the method should:
+This function is the package's conventional default model-update hook. It is
+used when `Master(data)` is called without an explicit `model = ...` keyword.
+Users may either define a method for their specific `AbstractData` subtype or
+pass any function with the same signature through `model = ...`; the function
+name itself is not part of the required interface.
+
+Given a JuMP `model` and an instance `data`, the method should:
 
 1. Add all master-level variables to the model.
 2. Return a `NamedTuple` containing the master decision variables x 
 and a vector of any auxiliary variables t (for use by the oracles).
 
 By default, this function throws an `UndefError`, indicating that no
-implementation exists for the given subtype of `AbstractData`. Users must
-provide a specialized method:
+implementation exists for the given subtype of `AbstractData`. For example,
+users may provide a specialized method:
 
 ```julia
 struct MyDataType <: AbstractData
@@ -38,31 +42,40 @@ Returns
 - A `NamedTuple` mapping variable symbolic names to the JuMP variable containers (e.g., `Vector{VariableRef}`, `DenseAxisArray`, or `SparseAxisArray`) created for the master problem.
 
 Notes
-- This function must be implemented by the user for each concrete
-subtype of `AbstractData`.
+- This default hook is optional for user-defined data types. Passing an explicit
+`model = ...` function to `Master` is sufficient.
 
 """
 function customize_master_model!(model::Model, data::AbstractData)
-    throw(UndefError("update customize_master_model! for $(typeof(data))"))
+    throw(UndefError(
+        "No default master model hook is available for $(typeof(data)). " *
+        "Pass a model-update function with `model = your_master_model!` when constructing `Master`. " *
+        "The function name is arbitrary; it only needs to accept `(model::Model, data::$(typeof(data)))` and return `(x, t)`."
+    ))
 end
 
 """
     customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
 
-User-defined hook for constructing a subproblem model associated with a
-specific scenario.
+Default hook for constructing a subproblem model associated with a specific
+scenario.
 
-This function must be implemented by users for their concrete subtype of
-`AbstractData`. Given a JuMP `model`, a problem instance `data`, and a
-scenario index `scen_idx`, the method should:
+This function is the package's conventional default model-update hook. It is
+used when a model-based oracle is constructed without an explicit `model = ...`
+keyword. Users may either define a method for their specific `AbstractData`
+subtype or pass any function with the same signature through `model = ...`; the
+function name itself is not part of the required interface.
+
+Given a JuMP `model`, a problem instance `data`, and a scenario index
+`scen_idx`, the method should:
 
 1. Add all subproblem variables associated with the given scenario.
 2. Add all subproblem constraints associated with the given scenario,
    using master variables passed through `kwargs`.
 
 By default, this method throws an `UndefError`, indicating that no implementation
-exists for the provided argument types. Users must define their own specialized
-method if they want to use any model-based oracle. For example:
+exists for the provided argument types. For example, users may provide a
+specialized method:
 
 ```julia
 function customize_sub_model!(model::Model, data::MyDataType, scen_idx::Int; u, v)
@@ -85,27 +98,38 @@ subproblem formulation.
 - `kwargs...` Symbolic names of the master variables passed from the master model to the subproblem for use by the oracle.
 
 Notes
-- This function must be implemented by the user to construct model-based oracles.
+- This default hook is optional for user-defined data types. Passing an explicit
+`model = ...` function to a model-based oracle is sufficient.
 """
 function customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
-    throw(UndefError("update customize_sub_model! for $(typeof(data))"))
+    throw(UndefError(
+        "No default subproblem model hook is available for $(typeof(data)). " *
+        "Pass a model-update function with `model = your_subproblem_model!` when constructing the oracle. " *
+        "The function name is arbitrary; it only needs to accept `(model::Model, data::$(typeof(data)), scen_idx::Int; kwargs...)`."
+    ))
 end
 
 """
     customize_mip_model!(model::Model, data::AbstractData)
 
-User-defined hook for constructing a direct monolithic MIP model.
+Default hook for constructing a direct monolithic MIP model.
 
 This interface is useful when you want a baseline full-space formulation in
 addition to a Benders decomposition workflow. Built-in problem libraries provide
 methods for their corresponding data types, and users may add their own
-specialized methods for custom problems.
+specialized methods for custom problems. Users may also call any problem-specific
+MIP model-update function directly; the function name itself is not part of the
+required interface.
 
 The function should fully define the optimization model in place, including the
 optimizer, variables, objective, and constraints.
 """
 function customize_mip_model!(model::Model, data::AbstractData)
-    throw(UndefError("update customize_mip_model! for $(typeof(data))"))
+    throw(UndefError(
+        "No default monolithic MIP model hook is available for $(typeof(data)). " *
+        "Call a problem-specific MIP model-update function for this data type. " *
+        "The function name is arbitrary; it only needs to accept `(model::Model, data::$(typeof(data)))`."
+    ))
 end
 
 """

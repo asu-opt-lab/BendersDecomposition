@@ -46,7 +46,7 @@ Pkg.instantiate()
 
 ### Minimal workflow
 
-This example shows a minimal end-to-end workflow with a concrete optimizer and the required model-update hooks.
+This example shows a minimal end-to-end workflow with a concrete optimizer and explicit model-update functions.
 
 ```julia
 using BendersX, JuMP
@@ -55,10 +55,10 @@ using BendersX, JuMP
 data = MyData(...)
 
 # 2. Create master and provide the master model update
-master = Master(data; model = customize_master_model!)
+master = Master(data; model = update_master_model!)
 
 # 3. Select oracle and provide the subproblem model update
-oracle = ClassicalOracle(data, master; model = customize_sub_model!)
+oracle = ClassicalOracle(data, master; model = update_subproblem_model!)
 
 # 4. Choose environment
 env = BendersSeq(master, oracle)

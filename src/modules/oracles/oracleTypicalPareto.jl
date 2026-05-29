@@ -72,11 +72,11 @@ where:
 # Constructors
 ```julia
 ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
-             model = customize_sub_model!,
+             model = update_subproblem_model!,
              scen_idx::Int = 0)
 
 ParetoOracle(data::AbstractData, master::Master; 
-            model = customize_sub_model!,
+            model = update_subproblem_model!,
             scen_idx::Int = 0,
             param::ParetoOracleParam)
 ```
