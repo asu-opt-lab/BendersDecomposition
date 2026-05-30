@@ -3,15 +3,22 @@
 
 Build the master problem for `data`.
 
-BendersX calls this function when you construct `Master(data)` without passing
-the `model` keyword. For a user-defined data type, either define a method whose
-second argument matches your concrete data type, or pass another function with
-the same signature through `model`.
+This is the BendersX function used by `Master(data)` when no `model = ...`
+function is passed. It is the name to implement if you want BendersX to build
+the master formulation from the data type alone.
+
+For a user-defined data type, defining
+`update_master_model!(model::Model, data::MyDataType)` is optional when you pass
+a model-building function explicitly. The function passed with `model = ...`
+can have any name, for example `Master(data; model = build_master_model!)`, as
+long as it accepts `(model::Model, data::MyDataType)` and returns `(x, t)`.
 
 The function receives an empty JuMP `model` and the instance `data`. It must:
 
 1. Add the master variables, constraints, and objective to `model`.
 2. Return `(x, t)`.
+
+Optimizer attachment stays separate from this function.
 
 `x` must be a `NamedTuple` containing the master variables that may appear in
 subproblems. `t` contains the auxiliary variable or variables used in Benders
@@ -47,9 +54,10 @@ Returns
 function update_master_model!(model::Model, data::AbstractData)
     throw(UndefError(
         "BendersX does not know how to build a master model for $(typeof(data)). " *
-        "Define `update_master_model!(model::Model, data::$(typeof(data)))`, " *
-        "or pass a function with `Master(data; model = build_master_model!)`. " *
-        "The function must return `(x, t)`."
+        "Define `update_master_model!(model::Model, data::$(typeof(data)))` to use " *
+        "`Master(data)` without `model = ...`, or pass your own master-model function " *
+        "with `Master(data; model = build_master_model!)`. The master-model function " *
+        "must return `(x, t)`."
     ))
 end
 
@@ -58,15 +66,23 @@ end
 
 Build one subproblem for `data`.
 
-BendersX calls this function when you construct a model-based oracle without
-passing the `model` keyword. For a user-defined data type, either define a
-method whose second argument matches your concrete data type, or pass another
-function with the same signature through `model`.
+This is the BendersX function used by model-based oracles when no `model = ...`
+function is passed. It is the name to implement if you want BendersX to build
+the subproblem formulation from the data type alone.
+
+For a user-defined data type, defining
+`update_sub_model!(model::Model, data::MyDataType, scen_idx::Int; kwargs...)` is
+optional when you pass a subproblem-building function explicitly. The function
+passed with `model = ...` can have any name, for example
+`ClassicalOracle(data, master; model = build_sub_model!)`, as long as it accepts
+`(model::Model, data::MyDataType, scen_idx::Int; kwargs...)`.
 
 The function receives an empty JuMP `model`, the instance `data`, and a scenario
 index `scen_idx`. It must add the subproblem variables, constraints, and
 objective to `model`. Master variables are available through keyword arguments,
-using the names returned by `update_master_model!`.
+using the names returned by the master-model function.
+
+Optimizer attachment stays separate from this function.
 
 For example:
 
@@ -93,8 +109,9 @@ subproblem formulation.
 function update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
     throw(UndefError(
         "BendersX does not know how to build a subproblem model for $(typeof(data)). " *
-        "Define `update_sub_model!(model::Model, data::$(typeof(data)), scen_idx::Int; kwargs...)`, " *
-        "or pass a function with `model = build_sub_model!` when constructing the oracle."
+        "Define `update_sub_model!(model::Model, data::$(typeof(data)), scen_idx::Int; kwargs...)` " *
+        "to construct a model-based oracle without `model = ...`, or pass your own " *
+        "subproblem-model function with `model = build_sub_model!` when constructing the oracle."
     ))
 end
 
@@ -103,21 +120,24 @@ end
 
 Build a direct monolithic MIP model for `data`.
 
-Use this function when you want a full-space formulation as a baseline in
-addition to a Benders decomposition workflow. Built-in problem data types provide
-their own methods. For a user-defined data type, define a method whose second
-argument matches your concrete data type, or call another MIP-building function
-directly.
+This is the BendersX function for users who want
+`update_mip_model!(model, data)` to build a full-space formulation. It is useful
+for baselines alongside a Benders decomposition workflow, and built-in problem
+data types provide their own methods.
 
-The function should fully define the mathematical formulation in place,
-including variables, objective, and constraints. Optimizer attachment stays
-separate from this function.
+For a user-defined data type, defining
+`update_mip_model!(model::Model, data::MyDataType)` is optional. You may instead
+write a MIP-building function with any name and call it directly, for example
+`build_full_mip!(model, data)`.
+
+The function should add variables, objective, and constraints to `model`.
+Optimizer attachment stays separate from this function.
 """
 function update_mip_model!(model::Model, data::AbstractData)
     throw(UndefError(
         "BendersX does not know how to build a monolithic MIP model for $(typeof(data)). " *
-        "Define `update_mip_model!(model::Model, data::$(typeof(data)))`, " *
-        "or call another MIP-building function directly."
+        "Define `update_mip_model!(model::Model, data::$(typeof(data)))` to use " *
+        "`update_mip_model!(model, data)`, or call your own MIP-building function directly."
     ))
 end
 
