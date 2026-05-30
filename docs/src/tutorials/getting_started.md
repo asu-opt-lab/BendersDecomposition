@@ -93,7 +93,7 @@ function update_master_model!(model::Model, data::CFLPData)
     return (x = x, ), t
 end
 
-function update_subproblem_model!(model::Model, data::CFLPData, scen_idx::Int; x)
+function update_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
     I, J = data.n_facilities, data.n_customers   
     @variable(model, y[1:I, 1:J] >= 0)
     cost_demands = data.costs .* data.demands'
@@ -111,7 +111,7 @@ subproblem_optimizer = optimizer_with_attributes(
     MOI.Silent() => true,
 )
 master = Master(data; model = update_master_model!, optimizer = master_optimizer)
-oracle = ClassicalOracle(data, master; model = update_subproblem_model!, optimizer = subproblem_optimizer)
+oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = subproblem_optimizer)
 env    = BendersSeq(master, oracle)
 log    = solve!(env)
 ```
@@ -163,7 +163,8 @@ The function must return:
 1. a NamedTuple mapping symbolic variable names to non-auxiliary master variables, and
 2. a Vector{VariableRef} containing the auxiliary variables $t$ used for Benders cuts.
 
-All modeling and solver-related decisions are entirely under the user’s control, while the Benders engine itself remains independent of the model and the solver.
+All modeling decisions are expressed in the model-update functions, while solver attachment remains explicit through constructor keywords such as `optimizer`.
+The Benders engine itself remains independent of the model and the solver.
 
 ### Example
 [The CFLP master problem](@ref cflp-master) can be implemented as:
@@ -193,14 +194,14 @@ master = Master(
 ### Subproblem Modeling
 Subproblems are specified by the user through a model-update function:
 ```julia
-update_subproblem_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
+update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
 ```
 Here, `kwargs...` contains the symbolic names of the master variables that appear in the subproblem. This allows users to formulate the subproblem in JuMP **while referencing these master variables directly**, without explicitly adding them to the subproblem model.
 
 ### Example 1
 [The CFLP subproblem](@ref cflp-sub) can be implemented like this:
 ```julia
-function update_subproblem_model!(model::Model, data::CFLPData, scen_idx::Int; x)
+function update_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
     I, J = data.n_facilities, data.n_customers   
     @variable(model, y[1:I, 1:J] >= 0)
     cost_demands = data.costs .* data.demands'
@@ -217,7 +218,7 @@ Attach the subproblem optimizer when constructing the oracle:
 oracle = ClassicalOracle(
     data,
     master;
-    model = update_subproblem_model!,
+    model = update_sub_model!,
     optimizer = optimizer_with_attributes(
         CPLEX.Optimizer,
         "CPXPARAM_Threads" => 7,
@@ -265,7 +266,7 @@ function update_master_model!(model::Model, data::EmptyData)
     return (u = u, v = v, w = w), t
 end
 
-function update_subproblem_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w)
+function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w)
     @variable(model, y[1:10] >= 0)
     @objective(model, Min, sum(y))
     @constraint(model, y .<= u)

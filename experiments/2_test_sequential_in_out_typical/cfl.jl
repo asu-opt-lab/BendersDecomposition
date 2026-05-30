@@ -14,19 +14,19 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
     instances = setdiff(1:71, [67])
 
     # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
-    function customize_sub_model_gbc!(model::Model, data::CFLPData, scen_idx::Int; x) 
+    function update_sub_gbc_model!(model::Model, data::CFLPData, scen_idx::Int; x)
         optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
         set_optimizer(model, optimizer)
 
         I, J = data.n_facilities, data.n_customers
         @variable(model, y[1:I, 1:J] >= 0)
-        
+
         cost_demands = data.costs .* data.demands'
         @objective(model, Min, sum(cost_demands .* y))
-        
+
         @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
         @constraint(model, capacity[i in 1:I], sum(data.demands[:] .* y[i,:]) <= data.capacities[i] * x[i])
-        
+
         # Return GBC tuple: y[i,j] <= x[i]
         gbc_lhs = vec(y)
         gbc_rhs = [x[i] for j in 1:J for i in 1:I]  # j outer, i inner to match vec(y)
@@ -38,7 +38,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
         @testset "Instance: p$i" begin
             # Load problem data
             data = read_cflp_benchmark_data("p$i")
-            
+
             # Loop parameters
             benders_inout_param = BendersSeqInOutParam(;
                             time_limit = 200.0,
@@ -48,25 +48,25 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             α = 0.9,
                             λ = 0.1
                         )
-            
+
             instance_name = "p$i"
             @assert haskey(reference_objectives, instance_name) "Missing CFLP reference objective for $(instance_name) in $(reference_path)"
             mip_opt_val = reference_objectives[instance_name]
 
             @testset "Classic oracle" begin
                 @info "solving CFLP p$i - classical oracle - seqInOut..."
-                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                oracle = ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
+                master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-            end 
-            
+            end
+
             @testset "Knapsack oracle" begin
                 @info "solving CFLP p$i - knapsack oracle - seqInOut..."
-                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                oracle = CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
+                master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -75,8 +75,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Unified oracle" begin
                 @info "solving CFLP p$i - unified oracle - seqInOut..."
-                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                oracle = UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
+                master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                oracle = UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -85,18 +85,18 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Classic oracle with GBC" begin
                 @info "solving CFLP p$i - classical oracle with GBC - seqInOut..."
-                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
+                master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
                 @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
-            end 
+            end
 
             @testset "Knapsack oracle with GBC" begin
                 @info "solving CFLP p$i - knapsack oracle with GBC - seqInOut..."
-                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                oracle = CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
+                master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -105,9 +105,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Pareto oracle" begin
                 @info "solving CFLP p$i - pareto oracle - seqInOut..."
-                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                 param = ParetoOracleParam(fill(1.0, data.n_facilities))
-                oracle = ParetoOracle(data, master, param; model = customize_sub_model!, optimizer = optimizer)
+                oracle = ParetoOracle(data, master, param; model = update_sub_model!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()

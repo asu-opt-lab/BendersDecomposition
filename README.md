@@ -58,7 +58,7 @@ data = MyData(...)
 master = Master(data; model = update_master_model!)
 
 # 3. Select oracle and provide the subproblem model update
-oracle = ClassicalOracle(data, master; model = update_subproblem_model!)
+oracle = ClassicalOracle(data, master; model = update_sub_model!)
 
 # 4. Choose environment
 env = BendersSeq(master, oracle)

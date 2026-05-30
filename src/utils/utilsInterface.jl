@@ -1,38 +1,38 @@
 """
-    customize_master_model!(model::Model, data::AbstractData) -> NamedTuple, Vector{VariableRef}
+    update_master_model!(model::Model, data::AbstractData) -> (x, t)
 
-Default hook for constructing the master model.
+Build the master problem for `data`.
 
-This function is the package's conventional default model-update hook. It is
-used when `Master(data)` is called without an explicit `model = ...` keyword.
-Users may either define a method for their specific `AbstractData` subtype or
-pass any function with the same signature through `model = ...`; the function
-name itself is not part of the required interface.
+BendersX calls this function when you construct `Master(data)` without passing
+the `model` keyword. For a user-defined data type, either define a method whose
+second argument matches your concrete data type, or pass another function with
+the same signature through `model`.
 
-Given a JuMP `model` and an instance `data`, the method should:
+The function receives an empty JuMP `model` and the instance `data`. It must:
 
-1. Add all master-level variables to the model.
-2. Return a `NamedTuple` containing the master decision variables x 
-and a vector of any auxiliary variables t (for use by the oracles).
+1. Add the master variables, constraints, and objective to `model`.
+2. Return `(x, t)`.
 
-By default, this function throws an `UndefError`, indicating that no
-implementation exists for the given subtype of `AbstractData`. For example,
-users may provide a specialized method:
+`x` must be a `NamedTuple` containing the master variables that may appear in
+subproblems. `t` contains the auxiliary variable or variables used in Benders
+cuts.
+
+For example:
 
 ```julia
 struct MyDataType <: AbstractData
     ...
 end
 
-function customize_master_model!(model::Model, data::MyDataType)
-    # build variables and constraints
+function update_master_model!(model::Model, data::MyDataType)
     @variable(model, u[1:10])
     @variable(model, v[1:2, 2:3, [:A,:B], 4:5])
-    @variable(model, t[1:10]) # auxiliary variables for Benders
+    @variable(model, t[1:10])
+    @objective(model, Min, sum(t))
 
-    # return x-variables in a NamedTuple and t-variables in a vector
     return (u = u, v = v), t
 end
+```
 
 Arguments
 - `model::Model`: A JuMP model that will be modified in place.
@@ -40,46 +40,38 @@ Arguments
 
 Returns
 - A `NamedTuple` mapping variable symbolic names to the JuMP variable containers (e.g., `Vector{VariableRef}`, `DenseAxisArray`, or `SparseAxisArray`) created for the master problem.
-
-Notes
-- This default hook is optional for user-defined data types. Passing an explicit
-`model = ...` function to `Master` is sufficient.
+- A master auxiliary variable, or a collection of auxiliary variables, used by
+  Benders cuts.
 
 """
-function customize_master_model!(model::Model, data::AbstractData)
+function update_master_model!(model::Model, data::AbstractData)
     throw(UndefError(
-        "No default master model hook is available for $(typeof(data)). " *
-        "Pass a model-update function with `model = your_master_model!` when constructing `Master`. " *
-        "The function name is arbitrary; it only needs to accept `(model::Model, data::$(typeof(data)))` and return `(x, t)`."
+        "BendersX does not know how to build a master model for $(typeof(data)). " *
+        "Define `update_master_model!(model::Model, data::$(typeof(data)))`, " *
+        "or pass a function with `Master(data; model = build_master_model!)`. " *
+        "The function must return `(x, t)`."
     ))
 end
 
 """
-    customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
+    update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
 
-Default hook for constructing a subproblem model associated with a specific
-scenario.
+Build one subproblem for `data`.
 
-This function is the package's conventional default model-update hook. It is
-used when a model-based oracle is constructed without an explicit `model = ...`
-keyword. Users may either define a method for their specific `AbstractData`
-subtype or pass any function with the same signature through `model = ...`; the
-function name itself is not part of the required interface.
+BendersX calls this function when you construct a model-based oracle without
+passing the `model` keyword. For a user-defined data type, either define a
+method whose second argument matches your concrete data type, or pass another
+function with the same signature through `model`.
 
-Given a JuMP `model`, a problem instance `data`, and a scenario index
-`scen_idx`, the method should:
+The function receives an empty JuMP `model`, the instance `data`, and a scenario
+index `scen_idx`. It must add the subproblem variables, constraints, and
+objective to `model`. Master variables are available through keyword arguments,
+using the names returned by `update_master_model!`.
 
-1. Add all subproblem variables associated with the given scenario.
-2. Add all subproblem constraints associated with the given scenario,
-   using master variables passed through `kwargs`.
-
-By default, this method throws an `UndefError`, indicating that no implementation
-exists for the provided argument types. For example, users may provide a
-specialized method:
+For example:
 
 ```julia
-function customize_sub_model!(model::Model, data::MyDataType, scen_idx::Int; u, v)
-    # Create variables
+function update_sub_model!(model::Model, data::MyDataType, scen_idx::Int; u, v)
     @variable(model, y >= 0)
 
     scen_data = data[scen_idx]
@@ -89,6 +81,7 @@ function customize_sub_model!(model::Model, data::MyDataType, scen_idx::Int; u, 
     @constraint(model, sum(v) == 1)
     @constraint(model, v[2, 3, :A, 4] + y == 1)
 end
+```
 
 Arguments
 - `model::Model` A JuMP model that will be modified in place to represent the subproblem.
@@ -96,39 +89,35 @@ Arguments
 subproblem formulation.
 - `scen_idx::Int` Index of the scenario for which the subproblem is built. This may be -1 if the model does not explicitly use scenarios.
 - `kwargs...` Symbolic names of the master variables passed from the master model to the subproblem for use by the oracle.
-
-Notes
-- This default hook is optional for user-defined data types. Passing an explicit
-`model = ...` function to a model-based oracle is sufficient.
 """
-function customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
+function update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
     throw(UndefError(
-        "No default subproblem model hook is available for $(typeof(data)). " *
-        "Pass a model-update function with `model = your_subproblem_model!` when constructing the oracle. " *
-        "The function name is arbitrary; it only needs to accept `(model::Model, data::$(typeof(data)), scen_idx::Int; kwargs...)`."
+        "BendersX does not know how to build a subproblem model for $(typeof(data)). " *
+        "Define `update_sub_model!(model::Model, data::$(typeof(data)), scen_idx::Int; kwargs...)`, " *
+        "or pass a function with `model = build_sub_model!` when constructing the oracle."
     ))
 end
 
 """
-    customize_mip_model!(model::Model, data::AbstractData)
+    update_mip_model!(model::Model, data::AbstractData)
 
-Default hook for constructing a direct monolithic MIP model.
+Build a direct monolithic MIP model for `data`.
 
-This interface is useful when you want a baseline full-space formulation in
-addition to a Benders decomposition workflow. Built-in problem libraries provide
-methods for their corresponding data types, and users may add their own
-specialized methods for custom problems. Users may also call any problem-specific
-MIP model-update function directly; the function name itself is not part of the
-required interface.
+Use this function when you want a full-space formulation as a baseline in
+addition to a Benders decomposition workflow. Built-in problem data types provide
+their own methods. For a user-defined data type, define a method whose second
+argument matches your concrete data type, or call another MIP-building function
+directly.
 
-The function should fully define the optimization model in place, including the
-optimizer, variables, objective, and constraints.
+The function should fully define the mathematical formulation in place,
+including variables, objective, and constraints. Optimizer attachment stays
+separate from this function.
 """
-function customize_mip_model!(model::Model, data::AbstractData)
+function update_mip_model!(model::Model, data::AbstractData)
     throw(UndefError(
-        "No default monolithic MIP model hook is available for $(typeof(data)). " *
-        "Call a problem-specific MIP model-update function for this data type. " *
-        "The function name is arbitrary; it only needs to accept `(model::Model, data::$(typeof(data)))`."
+        "BendersX does not know how to build a monolithic MIP model for $(typeof(data)). " *
+        "Define `update_mip_model!(model::Model, data::$(typeof(data)))`, " *
+        "or call another MIP-building function directly."
     ))
 end
 

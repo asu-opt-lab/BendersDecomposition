@@ -42,7 +42,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     gbc_sense::Vector{GBCBoundType}
     
     function CFLKnapsackOracle(data::AbstractData, master::Master; 
-                            model = customize_sub_model!,
+                            model = update_sub_model!,
                             scen_idx::Int=-1, 
                             param::CFLKnapsackOracleParam = CFLKnapsackOracleParam(),
                             optimizer = DEFAULT_OPTIMIZER)

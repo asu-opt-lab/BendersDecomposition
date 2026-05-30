@@ -14,19 +14,19 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
     instances = setdiff(1:71, [67])
 
     # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
-    function customize_sub_model_gbc!(model::Model, data::CFLPData, scen_idx::Int; x) 
+    function update_sub_gbc_model!(model::Model, data::CFLPData, scen_idx::Int; x)
         optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
         set_optimizer(model, optimizer)
 
         I, J = data.n_facilities, data.n_customers
         @variable(model, y[1:I, 1:J] >= 0)
-        
+
         cost_demands = data.costs .* data.demands'
         @objective(model, Min, sum(cost_demands .* y))
-        
+
         @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
         @constraint(model, capacity[i in 1:I], sum(data.demands[:] .* y[i,:]) <= data.capacities[i] * x[i])
-        
+
         # Return GBC tuple: y[i,j] <= x[i]
         gbc_lhs = vec(y)
         gbc_rhs = [x[i] for j in 1:J for i in 1:I]  # j outer, i inner to match vec(y)
@@ -38,7 +38,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
         @testset "Instance: p$i" begin
             # Load problem data
             data = read_cflp_benchmark_data("p$i")
-            
+
             # Algorithm parameters
             benders_param = BendersBnBParam(;
                                             time_limit = 200.0,
@@ -53,38 +53,38 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                     iter_limit = 15,
                                     verbose = false
                                     )
-            
+
             user_cb_param = UserCallbackParam(frequency=1)
-            
+
             instance_name = "p$i"
             @assert haskey(reference_objectives, instance_name) "Missing CFLP reference objective for $(instance_name) in $(reference_path)"
             mip_opt_val = reference_objectives[instance_name]
-            
-            @testset "Classic oracle" begin  
+
+            @testset "Classic oracle" begin
                 # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                         oracle_param = SplitOracleParam(dcglp_param;
-                                                                norm = LpNorm(p), 
+                                                                norm = LpNorm(p),
                                                                 split_index_selection_rule = RandomFractional(),
-                                                                disjunctive_cut_append_rule = disjunctive_cut_append_rule, 
-                                                                strengthened = strengthened, 
-                                                                add_benders_cuts_to_master = add_benders_cuts_to_master, 
-                                                                fraction_of_benders_cuts_to_master = 0.5, 
+                                                                disjunctive_cut_append_rule = disjunctive_cut_append_rule,
+                                                                strengthened = strengthened,
+                                                                add_benders_cuts_to_master = add_benders_cuts_to_master,
+                                                                fraction_of_benders_cuts_to_master = 0.5,
                                                                 reuse_dcglp = reuse_dcglp,
                                                                 lift = lift)
 
                         @testset "NoSeq" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-                            
+
                             env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
@@ -97,15 +97,15 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "Seq" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-                            
+
                             env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
@@ -118,15 +118,15 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "SeqInOut" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-                            
+
                             env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
@@ -139,12 +139,12 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     end
                 end
             end
-            
+
             @testset "Knapsack oracle" begin
                 # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; lift $lift; p $p; dcut_append $disjunctive_cut_append_rule" begin
-                        
+
                         oracle_param = SplitOracleParam(dcglp_param;
                                                                 norm = LpNorm(p),
                                                                 split_index_selection_rule = RandomFractional(),
@@ -157,15 +157,15 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "NoSeq" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-                            
+
                             env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
@@ -177,15 +177,15 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         end
                         @testset "Seq" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
-                            
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-                            
+
                             env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
@@ -197,15 +197,15 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         end
                         @testset "SeqInOut" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param) 
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
+                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; params=user_cb_param)
-                            
+
                             env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
@@ -234,9 +234,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "NoSeq" begin
                             @info "solving CFLP p$i - disjunctive oracle/unified/no seq"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
@@ -251,9 +251,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "Seq" begin
                             @info "solving CFLP p$i - disjunctive oracle/unified/seq"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
@@ -268,9 +268,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "SeqInOut" begin
                             @info "solving CFLP p$i - disjunctive oracle/unified/seqinout"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = customize_sub_model!, optimizer = optimizer)]
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
@@ -301,10 +301,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "NoSeq" begin
                             @info "solving CFLP p$i - disjunctive oracle/pareto/no seq"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                            lazy_oracle = ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)]
+                            lazy_oracle = ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
@@ -319,10 +319,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "Seq" begin
                             @info "solving CFLP p$i - disjunctive oracle/pareto/seq"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                            lazy_oracle = ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)]
+                            lazy_oracle = ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
@@ -337,10 +337,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "SeqInOut" begin
                             @info "solving CFLP p$i - disjunctive oracle/pareto/seqinout"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                            lazy_oracle = ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)
-                            typical_oracles = [ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = customize_sub_model!, optimizer = optimizer)]
+                            lazy_oracle = ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
@@ -371,9 +371,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "NoSeq" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical with GBC/no seq"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
@@ -388,9 +388,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "Seq" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical with GBC/seq"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
@@ -405,9 +405,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "SeqInOut" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical with GBC/seqinout"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
@@ -422,7 +422,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     end
                 end
             end
-            
+
             @testset "Knapsack oracle with GBC" begin
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
@@ -438,9 +438,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "NoSeq" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle with GBC/no seq"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
@@ -455,9 +455,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "Seq" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle with GBC/seq"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
@@ -472,9 +472,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                         @testset "SeqInOut" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle with GBC/seqinout"
-                            master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))

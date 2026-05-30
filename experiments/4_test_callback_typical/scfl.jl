@@ -14,7 +14,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
     instances = 1:5
 
     # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
-    function customize_sub_model_gbc!(model::Model, data::SCFLPData, scen_idx::Int; x) 
+    function update_sub_gbc_model!(model::Model, data::SCFLPData, scen_idx::Int; x)
         optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
         set_optimizer(model, optimizer)
         I, J = data.n_facilities, data.n_customers
@@ -27,7 +27,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
         gbc_rhs = [x[i] for j in 1:J for i in 1:I]
         gbc_sense = fill(UpperBound, I*J)
         return gbc_lhs, gbc_rhs, gbc_sense
-    end    
+    end
     for i in instances
         @testset "Instance: f25-c50-s64-r10-$i" begin
             # Load problem data
@@ -39,16 +39,16 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             gap_tolerance = 1e-6,
                             verbose = false
                         )
-            
+
             instance_name = "f25-c50-s64-r10-$i"
             @assert haskey(reference_objectives, instance_name) "Missing SCFLP reference objective for $(instance_name) in $(reference_path)"
             mip_opt_val = reference_objectives[instance_name]
-            
+
             @testset "Classic oracle" begin
                 @testset "NoSeq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle - no seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model!, optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_model!, optimizer = optimizer)
 
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
@@ -62,9 +62,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "Seq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle - seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model!, optimizer = optimizer)
-                    
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_model!, optimizer = optimizer)
+
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
                                 time_limit = 200.0,
@@ -84,8 +84,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "SeqInOut" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle - seqinout..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model!, optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -106,13 +106,13 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                 end
-            end 
-            
+            end
+
             @testset "Knapsack oracle" begin
                 @testset "NoSeq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - no seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = customize_sub_model!, optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = update_sub_model!, optimizer = optimizer)
 
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
@@ -126,8 +126,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "Seq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = customize_sub_model!, optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = update_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -148,8 +148,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "SeqInOut" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle - seqinout..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = customize_sub_model!, optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = update_sub_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -164,7 +164,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     root_preprocessing = RootNodePreprocessing(oracle, root_seq_type, root_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
-                    
+
                     env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
                     log = solve!(env)
                     @test env.termination_status == Optimal()
@@ -175,8 +175,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Unified oracle" begin
                 @testset "NoSeq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - no seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; model = customize_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
 
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
@@ -190,9 +190,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "Seq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; model = customize_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
-                    
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
+
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
                                 time_limit = 200.0,
@@ -212,8 +212,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "SeqInOut" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - seqinout..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; model = customize_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.n_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -239,8 +239,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Classic oracle with GBC" begin
                 @testset "NoSeq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle with GBC - no seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
@@ -252,8 +252,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "Seq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle with GBC - seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -274,8 +274,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "SeqInOut" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - classical oracle with GBC - seqinout..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -297,13 +297,13 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                 end
             end
-            
+
             @testset "Pareto oracle" begin
                 @testset "NoSeq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - pareto oracle - no seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                     pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                    oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; model = customize_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
 
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
@@ -317,9 +317,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "Seq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - pareto oracle - seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                     pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                    oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; model = customize_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -340,9 +340,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "SeqInOut" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - pareto oracle - seqinout..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                     pareto_param = ParetoOracleParam(ones(data.n_facilities))
-                    oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; model = customize_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, ParetoOracle(), data.n_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(
@@ -368,8 +368,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Knapsack oracle with GBC" begin
                 @testset "NoSeq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle with GBC - no seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
                     root_preprocessing = NoRootNodePreprocessing()
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
@@ -381,8 +381,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "Seq" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle with GBC - seq..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeq
                     root_param = BendersSeqParam(;
@@ -403,8 +403,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 @testset "SeqInOut" begin
                     @info "solving SCFLP f25-c50-s64-r10-$i - knapsack oracle with GBC - seqinout..."
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                    oracle = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
 
                     root_seq_type = BendersSeqInOut
                     root_param = BendersSeqInOutParam(

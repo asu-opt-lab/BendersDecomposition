@@ -46,7 +46,7 @@ data = read_Simple_data(instance)
 # MIP model
 # -----------------------------------------------------------------------------
 mip_model = Model(mip_optimizer)
-customize_mip_model!(mip_model, data)
+update_mip_model!(mip_model, data)
 set_optimizer_attribute(mip_model, "CPXPARAM_Threads", threads)
 set_optimizer_attribute(mip_model, "CPX_PARAM_BRDIR", 1)
 set_time_limit_sec(mip_model, time_limit)

@@ -72,11 +72,11 @@ where:
 # Constructors
 ```julia
 ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
-             model = update_subproblem_model!,
+             model = update_sub_model!,
              scen_idx::Int = 0)
 
 ParetoOracle(data::AbstractData, master::Master; 
-            model = update_subproblem_model!,
+            model = update_sub_model!,
             scen_idx::Int = 0,
             param::ParetoOracleParam)
 ```
@@ -115,7 +115,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
     pareto_model::Model
 
     function ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
-                         model = customize_sub_model!,
+                         model = update_sub_model!,
                          scen_idx::Int = 0,
                          optimizer = DEFAULT_OPTIMIZER)
 
@@ -169,7 +169,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
     ParetoOracle() = new()
 
     function ParetoOracle(data::AbstractData, master::Master;
-                          model = customize_sub_model!,
+                          model = update_sub_model!,
                           scen_idx::Int = 0,
         param::ParetoOracleParam,
         optimizer = DEFAULT_OPTIMIZER)

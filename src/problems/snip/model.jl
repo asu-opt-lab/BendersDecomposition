@@ -1,5 +1,5 @@
 
-function customize_mip_model!(model::Model, data::SNIPData)
+function update_mip_model!(model::Model, data::SNIPData)
     K = data.num_scenarios
     @variable(model, x[1:length(data.D)], Bin)
     @variable(model, y[1:data.num_nodes, 1:K] >= 0)
@@ -21,7 +21,7 @@ function customize_mip_model!(model::Model, data::SNIPData)
     @constraint(model, sum(x) <= data.budget)
 end
 
-function customize_master_model!(model::Model, data::SNIPData)
+function update_master_model!(model::Model, data::SNIPData)
     K = data.num_scenarios
     @variable(model, x[1:length(data.D)], Bin)
     @variable(model, t[1:K] >= -1e6)
@@ -33,7 +33,7 @@ function customize_master_model!(model::Model, data::SNIPData)
     return (x = x, ), t
 end
 
-function customize_sub_model!(model::Model, data::SNIPData, scen_idx::Int; x)
+function update_sub_model!(model::Model, data::SNIPData, scen_idx::Int; x)
     @variable(model, y[1:data.num_nodes] >= 0)
     
     @objective(model, Min, y[data.scenarios[scen_idx][1]])

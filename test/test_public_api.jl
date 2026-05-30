@@ -18,7 +18,7 @@ using BendersX
         :LpNorm,
         :RandomFractional, :MostFractional, :LargestFractional,
         :NoDisjunctiveCuts, :AllDisjunctiveCuts, :DisjunctiveCutsSmallerIndices,
-        :set_parameter!, :customize_master_model!, :customize_sub_model!, :customize_mip_model!,
+        :set_parameter!, :update_master_model!, :update_sub_model!, :update_mip_model!,
         :CFLPData, :UFLPData, :SCFLPData, :SNIPData,
         :CFLKnapsackOracle, :CFLKnapsackOracleParam, :UFLKnapsackOracle, :UFLKnapsackOracleParam,
         :read_GK_data, :read_cfl_file, :read_cflp_benchmark_data,

@@ -19,7 +19,7 @@ Throws an error indicating that the subtype `T` must provide the required
 constructor.
 """
 (::Type{T})(data::AbstractData, master::AbstractMaster;
-            model = customize_sub_model!,
+            model = update_sub_model!,
             scen_idx::Int,
             param::AbstractOracleParam,
             optimizer = DEFAULT_OPTIMIZER) where T <: AbstractTypicalOracle =
@@ -68,7 +68,7 @@ vector-valued recourse approximation `t`.
 # Constructor
 ```julia
 SeparableOracle(data, master, oracle_template, N;
-                model = update_subproblem_model!,
+                model = update_sub_model!,
                 sub_oracle_param = BasicOracleParam(),
                 param = SeparableOracleParam())
 ```
@@ -89,7 +89,7 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
                             master::Master,
                             oracle::T, 
                             N::Int; 
-                            model = customize_sub_model!,
+                            model = update_sub_model!,
                             sub_oracle_param::AbstractOracleParam = BasicOracleParam(),
                             param::SeparableOracleParam = SeparableOracleParam(),
                             optimizer = DEFAULT_OPTIMIZER) where {T<:AbstractTypicalOracle}

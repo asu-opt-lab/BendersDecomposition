@@ -35,7 +35,7 @@ data = read_cfl_file(instance)
 # MIP model
 # -----------------------------------------------------------------------------
 mip_model = Model(mip_optimizer)
-customize_mip_model!(mip_model, data)
+update_mip_model!(mip_model, data)
 set_optimizer_attribute(mip_model, "CPXPARAM_Threads", 7)
 set_time_limit_sec(mip_model, 14400.0)
 set_optimizer_attribute(mip_model, MOI.Silent(), false)

@@ -16,7 +16,7 @@ This is the basic Benders decomposition implementation that iteratively solves t
 # Examples
 ```julia
 master = Master(data; model = update_master_model!)
-oracle = ClassicalOracle(data, master; model = update_subproblem_model!)
+oracle = ClassicalOracle(data, master; model = update_sub_model!)
 env = BendersSeq(master, oracle)  # Use default parameters
 df = solve!(env)
 ```

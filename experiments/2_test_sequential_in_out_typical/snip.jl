@@ -31,8 +31,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Classic oracle" begin     
                 @info "solving SNIP instance-$instance snipno-$snipno budget-$budget - classical oracle - seq..."
-                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = customize_sub_model!, optimizer = optimizer)
+                master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -41,9 +41,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Pareto oracle" begin
                 @info "solving SNIP instance-$instance snipno-$snipno budget-$budget - pareto oracle - seqInOut..."
-                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                 param = ParetoOracleParam(fill(1.0, length(data.D)))
-                oracle = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = customize_sub_model!, sub_oracle_param = param, optimizer = optimizer)
+                oracle = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = param, optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -52,8 +52,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "Unified oracle" begin
                 @info "solving SNIP instance-$instance snipno-$snipno budget-$budget - unified oracle - seqInOut..."
-                master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
-                oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = customize_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
+                master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
                 env = BendersSeqInOut(master, oracle; param = benders_inout_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()

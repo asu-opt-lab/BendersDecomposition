@@ -41,7 +41,7 @@ data = read_Simple_data(instance)
 # -----------------------------------------------------------------------------
 # Customize master model function for knapsack oracle (needs t[1:n_customers])
 # -----------------------------------------------------------------------------
-function customize_master_model!(model::Model, data::UFLPData)
+function update_master_model!(model::Model, data::UFLPData)
     optimizer = optimizer_with_attributes(CPLEX.Optimizer,
         "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9,
         "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6,
@@ -67,7 +67,7 @@ benders_param = BendersBnBParam(
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
-master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
 set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
 
 # -----------------------------------------------------------------------------

@@ -49,7 +49,7 @@ public AbstractNorm, StandardNorm
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
 public generate_cuts, callback_node_count, callback_node_depth
 export set_parameter!
-export customize_master_model!, customize_sub_model!, customize_mip_model!
+export update_master_model!, update_sub_model!, update_mip_model!
 
 # Public but not auto-imported advanced utilities and support types
 public Hyperplane, aggregate, evaluate_violation, select_top_fraction

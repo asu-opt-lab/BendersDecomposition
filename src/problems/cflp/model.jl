@@ -1,10 +1,10 @@
 
-function customize_mip_model!(model::Model, data::CFLPData)
+function update_mip_model!(model::Model, data::CFLPData)
     I, J = data.n_facilities, data.n_customers
     @variable(model, x[1:I], Bin)
     @variable(model, y[1:I, 1:J] >= 0)
     @variable(model, t)
-    
+
     cost_demands = data.costs .* data.demands'
     @objective(model, Min, data.fixed_costs'* x + t)
 
@@ -16,7 +16,7 @@ function customize_mip_model!(model::Model, data::CFLPData)
     @constraint(model, capacity_total, sum(data.capacities[i] * x[i] for i in 1:I) >= sum(data.demands))
 end
 
-function customize_master_model!(model::Model, data::CFLPData)
+function update_master_model!(model::Model, data::CFLPData)
     @variable(model, x[1:data.n_facilities], Bin)
     @variable(model, t >= -1e6)
 
@@ -28,7 +28,7 @@ function customize_master_model!(model::Model, data::CFLPData)
     return (x = x, ), t
 end
 
-function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x) 
+function update_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
     I, J = data.n_facilities, data.n_customers
     @variable(model, y[1:I, 1:J] >= 0)
     # Set objective

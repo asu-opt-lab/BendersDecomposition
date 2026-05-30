@@ -37,7 +37,7 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
 
 
     function ClassicalOracle(data::AbstractData, master::Master; 
-                            model = customize_sub_model!,
+                            model = update_sub_model!,
                             scen_idx::Int=0, 
                             param::ClassicalOracleParam = ClassicalOracleParam(),
                             optimizer = DEFAULT_OPTIMIZER)

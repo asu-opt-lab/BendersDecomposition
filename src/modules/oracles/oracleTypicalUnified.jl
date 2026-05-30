@@ -78,7 +78,7 @@ We denote \$-d^{\\top}y + w_0\\sigma \\geq -\\eta^*\$ as an objective bound cons
 # Constructor
 ```julia
 UnifiedOracle(data::AbstractData, master::Master; 
-              model = update_subproblem_model!,
+              model = update_sub_model!,
               scen_idx::Int = 0, 
               param::UnifiedOracleParam = UnifiedOracleParam())
 ```
@@ -115,7 +115,7 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
     objective_constraint::ConstraintRef
 
     function UnifiedOracle(data::AbstractData, master::Master; 
-                          model = customize_sub_model!,
+                          model = update_sub_model!,
                           scen_idx::Int = 0, 
                           param::UnifiedOracleParam = UnifiedOracleParam(),
                           optimizer = DEFAULT_OPTIMIZER)

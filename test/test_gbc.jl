@@ -40,7 +40,7 @@ function create_test_data(n_facilities::Int=3, n_customers::Int=4)
     return SimpleAssignmentData(n_facilities, n_customers, costs)
 end
 
-function customize_master_simple!(model::Model, data::SimpleAssignmentData)
+function update_master_simple_model!(model::Model, data::SimpleAssignmentData)
     optimizer = optimizer_with_attributes(
         CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
     set_optimizer(model, optimizer)
@@ -85,7 +85,7 @@ end
         data = create_test_data()
         mip_opt = solve_mip_reference(data)
         
-        function customize_sub_upper!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_upper_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -104,8 +104,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; model = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_upper!)
+        master = Master(data; model = update_master_simple_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_upper_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
         
@@ -142,7 +142,7 @@ end
 
         mip_opt = solve_mip_scenario_3(data)
         
-        function customize_sub_lower!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_lower_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -165,8 +165,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; model = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_lower!)
+        master = Master(data; model = update_master_simple_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_lower_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -201,7 +201,7 @@ end
 
         mip_opt = solve_mip_scenario_4(data)
         
-        function customize_sub_fixed!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_fixed_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -223,8 +223,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; model = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_fixed!)
+        master = Master(data; model = update_master_simple_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_fixed_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -257,7 +257,7 @@ end
 
         mip_opt = solve_mip_scenario_5(data)
         
-        function customize_sub_scaled!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_scaled_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -277,8 +277,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; model = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_scaled!)
+        master = Master(data; model = update_master_simple_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_scaled_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -312,7 +312,7 @@ end
 
         mip_opt = solve_mip_scenario_6(data)
 
-        function customize_master_pairs!(model::Model, data::SimpleAssignmentData)
+        function update_master_pairs_model!(model::Model, data::SimpleAssignmentData)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -325,7 +325,7 @@ end
             return (x = x, ), t
         end
         
-        function customize_sub_affine!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_affine_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -347,8 +347,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; model = customize_master_pairs!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_affine!)
+        master = Master(data; model = update_master_pairs_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_affine_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -383,7 +383,7 @@ end
 
         mip_opt = solve_mip_scenario_7(data)
         
-        function customize_sub_partial!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_partial_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -404,8 +404,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; model = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_partial!)
+        master = Master(data; model = update_master_simple_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_partial_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -444,7 +444,7 @@ end
 
         mip_opt = solve_mip_scenario_8(data)
         
-        function customize_sub_mixed!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_mixed_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -470,8 +470,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; model = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_mixed!)
+        master = Master(data; model = update_master_simple_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_mixed_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -480,11 +480,11 @@ end
     end
 
     @testset "Scenario 8: No GBC (Nothing Returned)" begin
-        # Tests that code works when the model hook returns nothing
+        # Tests that code works when the model-update function returns nothing
         data = create_test_data()
         mip_opt = solve_mip_reference(data)
         
-        function customize_sub_no_gbc!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_no_gbc_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -501,8 +501,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; model = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_no_gbc!)
+        master = Master(data; model = update_master_simple_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_no_gbc_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -515,7 +515,7 @@ end
         data = create_test_data()
         mip_opt = solve_mip_reference(data)
         
-        function customize_sub_union!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_union_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -548,8 +548,8 @@ end
         end
         
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
-        master = Master(data; model = customize_master_simple!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_union!)
+        master = Master(data; model = update_master_simple_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_union_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
         
@@ -561,37 +561,37 @@ end
         data = create_test_data()
         
         # 1. Test DimensionMismatch
-        function customize_sub_dim_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_dim_error_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             gbc_lhs = [VariableRef(model, MOI.VariableIndex(1))]
             gbc_rhs = union_type([x[1], x[1]]) # Length 2
             gbc_sense = [UpperBound]
             return gbc_lhs, gbc_rhs, gbc_sense
         end
         
-        master = Master(data; model = customize_master_simple!)
+        master = Master(data; model = update_master_simple_model!)
         # Helper function to supply Union type
         union_type(v) = Vector{Union{VariableRef, AffExpr}}(v)
 
-        @test_throws DimensionMismatch ClassicalOracle(data, master; model = customize_sub_dim_error!)
+        @test_throws DimensionMismatch ClassicalOracle(data, master; model = update_sub_dim_error_model!)
         
         # 2. Test ArgumentError (Invalid tuple length)
-        function customize_sub_arg_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_arg_error_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             return ([x[1]], [x[1]]) # Length 2, expected 3
         end
-        @test_throws ArgumentError ClassicalOracle(data, master; model = customize_sub_arg_error!)
+        @test_throws ArgumentError ClassicalOracle(data, master; model = update_sub_arg_error_model!)
 
         # 3. Test Empty LHS Warning
-        function customize_sub_empty_warn!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_empty_warn_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             return VariableRef[], Union{VariableRef, AffExpr}[], GBCBoundType[]
         end
         
         # Capture warning
         @test_logs (:warn, "GBC tuple returned but gbc_lhs is empty. No GBC constraints will be applied.") begin
-            ClassicalOracle(data, master; model = customize_sub_empty_warn!)
+            ClassicalOracle(data, master; model = update_sub_empty_warn_model!)
         end
 
         # 4. Test ArgumentError: gbc_lhs contains a master variable (from x)
-        function customize_sub_lhs_master_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_lhs_master_error_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -608,7 +608,7 @@ end
         end
 
         err = try
-            ClassicalOracle(data, master; model = customize_sub_lhs_master_error!)
+            ClassicalOracle(data, master; model = update_sub_lhs_master_error_model!)
             nothing
         catch e
             e
@@ -618,7 +618,7 @@ end
         @test occursin("should only contain a single subproblem variable", err.msg)
 
         # 5. Test ArgumentError: gbc_rhs contains a non-master variable (subproblem variable)
-        function customize_sub_rhs_nonmaster_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_rhs_nonmaster_error_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -636,7 +636,7 @@ end
         end
 
         err = try
-            ClassicalOracle(data, master; model = customize_sub_rhs_nonmaster_error!)
+            ClassicalOracle(data, master; model = update_sub_rhs_nonmaster_error_model!)
             nothing
         catch e
             e
@@ -647,7 +647,7 @@ end
 
 
         # 6. Test ArgumentError: gbc_lhs contains a non-VariableRef element.
-        function customize_sub_lhs_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_lhs_error_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -665,7 +665,7 @@ end
         end
         
         err = try
-            ClassicalOracle(data, master; model = customize_sub_lhs_error!)
+            ClassicalOracle(data, master; model = update_sub_lhs_error_model!)
             nothing
         catch e
             e
@@ -675,7 +675,7 @@ end
         @test occursin("not a VariableRef", err.msg)
 
         # 7. Test ArgumentError: gbc_rhs contains a non-affine expression.
-        function customize_sub_rhs_nonaffine_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_rhs_nonaffine_error_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -693,7 +693,7 @@ end
         end
         
         err = try
-            ClassicalOracle(data, master; model = customize_sub_rhs_nonaffine_error!)
+            ClassicalOracle(data, master; model = update_sub_rhs_nonaffine_error_model!)
             nothing
         catch e
             e
@@ -703,7 +703,7 @@ end
         @test occursin("contains a non-affine expression", err.msg)
 
         # 8. Test ArgumentError: gbc_sense contains not acceptable value
-        function customize_sub_sense_error!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
+        function update_sub_sense_error_model!(model::Model, data::SimpleAssignmentData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(
                 CPLEX.Optimizer, "CPXPARAM_Threads" => 1, MOI.Silent() => true)
             set_optimizer(model, optimizer)
@@ -721,7 +721,7 @@ end
         end
         
         err = try
-            ClassicalOracle(data, master; model = customize_sub_sense_error!)
+            ClassicalOracle(data, master; model = update_sub_sense_error_model!)
             nothing
         catch e
             e

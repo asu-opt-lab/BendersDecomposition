@@ -124,7 +124,7 @@ oracle as a lazy callback and uses no root preprocessing:
 
 ```julia
 master = Master(data; model = update_master_model!)
-oracle = ClassicalOracle(data, master; model = update_subproblem_model!)
+oracle = ClassicalOracle(data, master; model = update_sub_model!)
 
 env = BendersBnB(master, oracle; param = benders_param)
 log = solve!(env)
@@ -182,8 +182,8 @@ add a **user callback**, for example with a disjunctive oracle.
 using CPLEX
 
 # typical oracles (κ, ν)
-kappa = ClassicalOracle(data, master; model = update_subproblem_model!)
-nu    = ClassicalOracle(data, master; model = update_subproblem_model!)
+kappa = ClassicalOracle(data, master; model = update_sub_model!)
+nu    = ClassicalOracle(data, master; model = update_sub_model!)
 typical_oracles = [kappa, nu]
 
 # DCGLP and SplitOracle parameters
@@ -205,7 +205,7 @@ split_param = SplitOracleParam(
 disjunctive_oracle = SplitOracle(master, typical_oracles, split_param)
 user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = 1))
 
-lazy_oracle = ClassicalOracle(data, master; model = update_subproblem_model!)
+lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!)
 lazy_callback = LazyCallback(lazy_oracle)
 
 env = BendersBnB(

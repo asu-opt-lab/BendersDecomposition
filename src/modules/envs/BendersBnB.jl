@@ -22,7 +22,7 @@ avoiding the need to repeatedly solve the entire master problem.
 # Examples
 ```julia
 master = Master(data; model = update_master_model!)
-oracle = ClassicalOracle(data, master; model = update_subproblem_model!)
+oracle = ClassicalOracle(data, master; model = update_sub_model!)
 env = BendersBnB(master, oracle)  # Use default setting with no root node preprocessing and no user callback
 obj_value, solve_time = solve!(env)
 ```

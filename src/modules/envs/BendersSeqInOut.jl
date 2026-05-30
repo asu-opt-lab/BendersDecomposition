@@ -27,7 +27,7 @@ The stabilization technique requires three parameters (specified in `BendersSeqI
 # Examples
 ```julia
 master = Master(data; model = update_master_model!)
-oracle = ClassicalOracle(data, master; model = update_subproblem_model!)
+oracle = ClassicalOracle(data, master; model = update_sub_model!)
 param = BendersSeqInOutParam(α = 0.8, λ = 0.5, stabilizing_x = zeros(master.dim_x))
 env = BendersSeqInOut(master, oracle; param = param)
 df = solve!(env)

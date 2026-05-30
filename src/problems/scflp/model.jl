@@ -1,8 +1,8 @@
 
-function customize_mip_model!(model::Model, data::SCFLPData)
+function update_mip_model!(model::Model, data::SCFLPData)
     # Extract dimensions
     I, J, N = data.n_facilities, data.n_customers, data.n_scenarios
-    
+
     @variable(model, x[1:I], Bin)
     @variable(model, y[1:I, 1:J, 1:N] >= 0)
 
@@ -18,7 +18,7 @@ function customize_mip_model!(model::Model, data::SCFLPData)
     @constraint(model, capacity[i in 1:I, s in 1:N], sum(data.demands[s][j] * y[i,j,s] for j in 1:J) <= data.capacities[i] * x[i])
 end
 
-function customize_master_model!(model::Model, data::SCFLPData)
+function update_master_model!(model::Model, data::SCFLPData)
     I, N = data.n_facilities, data.n_scenarios
     @variable(model, x[1:I], Bin)
     @variable(model, t[1:N] >= -1e6)
@@ -31,7 +31,7 @@ function customize_master_model!(model::Model, data::SCFLPData)
     return (x = x, ), t
 end
 
-function customize_sub_model!(model::Model, data::SCFLPData, scen_idx::Int; x) 
+function update_sub_model!(model::Model, data::SCFLPData, scen_idx::Int; x)
     I, J = data.n_facilities, data.n_customers
     @variable(model, y[1:I, 1:J] >= 0)
     # Set objective

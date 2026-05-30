@@ -237,11 +237,11 @@ end
     @test occursin("ClassicalOracle subproblem model could not attach optimizer nothing", sprint(showerror, err))
 end
 
-@testset "Default optimizer is attached before model hooks run" begin
+@testset "Default optimizer is attached before model-update functions run" begin
     struct AttrData <: AbstractData end
     data = AttrData()
 
-    function customize_master_model!(model::Model, data::AttrData)
+    function update_master_model!(model::Model, data::AttrData)
         set_optimizer_attribute(model, MOI.Silent(), true)
         @variable(model, x[1:2], Bin)
         @variable(model, t >= 0)
@@ -249,7 +249,7 @@ end
         return (x = x,), t
     end
 
-    function customize_sub_model!(model::Model, data::AttrData, scen_idx::Int; x)
+    function update_sub_model!(model::Model, data::AttrData, scen_idx::Int; x)
         set_optimizer_attribute(model, MOI.Silent(), true)
         @variable(model, y >= 0)
         @objective(model, Min, y)
@@ -257,8 +257,8 @@ end
         return nothing
     end
 
-    master = Master(data; model = customize_master_model!)
-    oracle = ClassicalOracle(data, master; model = customize_sub_model!)
+    master = Master(data; model = update_master_model!)
+    oracle = ClassicalOracle(data, master; model = update_sub_model!)
 
     @test occursin("GLPK", solver_name(master.model))
     @test occursin("GLPK", solver_name(oracle.model))
@@ -325,14 +325,14 @@ end
     end
     data = SeparableData(2)
 
-    function customize_master_model!(model::Model, data::SeparableData)
+    function update_master_model!(model::Model, data::SeparableData)
         @variable(model, x[1:2], Bin)
         @variable(model, t[1:data.n_scenarios] >= 0)
         @objective(model, Min, sum(t))
         return (x = x,), t
     end
 
-    function customize_sub_model!(model::Model, data::SeparableData, scen_idx::Int; x)
+    function update_sub_model!(model::Model, data::SeparableData, scen_idx::Int; x)
         @variable(model, y >= 0)
         @objective(model, Min, y)
         @constraint(model, y >= 1 - x[scen_idx])
@@ -340,8 +340,8 @@ end
     end
 
     optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
-    master = Master(data; model = customize_master_model!, optimizer = optimizer)
-    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model!, optimizer = optimizer)
+    master = Master(data; model = update_master_model!, optimizer = optimizer)
+    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_model!, optimizer = optimizer)
     is_in_L, hyperplanes, f_x = BendersX.generate_cuts(oracle, [0.0, 0.0], [0.0, 0.0])
 
     @test !is_in_L
@@ -378,12 +378,12 @@ end
     @test transferred_status([1.0, 1.0]) == INFEASIBLE
 end
 
-@testset "BendersX model hook functions" begin
+@testset "BendersX model-update functions" begin
     struct EmptyData <: AbstractData end
     data = EmptyData()
 
-    @testset "no model hook functions provided (should throw)" begin
-        # Master without a model hook must throw
+    @testset "no model-update functions provided (should throw)" begin
+        # Master without a model-update function must throw
         master_error = try
             Master(data)
             nothing
@@ -391,31 +391,32 @@ end
             e
         end
         @test master_error isa UndefError
-        @test occursin("No default master model hook is available", master_error.msg)
-        @test occursin("model = your_master_model!", master_error.msg)
-        @test occursin("function name is arbitrary", lowercase(master_error.msg))
+        @test occursin("BendersX does not know how to build a master model", master_error.msg)
+        @test occursin("Define `update_master_model!", master_error.msg)
+        @test occursin("Master(data; model = build_master_model!)", master_error.msg)
 
         mip_error = try
-            customize_mip_model!(Model(), data)
+            update_mip_model!(Model(), data)
             nothing
         catch e
             e
         end
         @test mip_error isa UndefError
-        @test occursin("No default monolithic MIP model hook is available", mip_error.msg)
-        @test occursin("function name is arbitrary", lowercase(mip_error.msg))
+        @test occursin("BendersX does not know how to build a monolithic MIP model", mip_error.msg)
+        @test occursin("Define `update_mip_model!", mip_error.msg)
+        @test occursin("MIP-building function", mip_error.msg)
 
-        # Model-based oracle without a subproblem model hook must throw
-        function customize_master_model!(model::Model, data::EmptyData)
+        # Model-based oracle without a subproblem model-update function must throw
+        function update_master_model!(model::Model, data::EmptyData)
 
             @variable(model, u[1:10], Bin)
             @variable(model, t >= -1e6)
             @constraint(model, sum(u) >= 2)
             @objective(model, Min, 1.0 * t)
-            
+
             return (u = u, ), t
         end
-        master = Master(data; model = customize_master_model!)
+        master = Master(data; model = update_master_model!)
         subproblem_error = try
             ClassicalOracle(data, master)
             nothing
@@ -423,49 +424,49 @@ end
             e
         end
         @test subproblem_error isa UndefError
-        @test occursin("No default subproblem model hook is available", subproblem_error.msg)
-        @test occursin("model = your_subproblem_model!", subproblem_error.msg)
-        @test occursin("function name is arbitrary", lowercase(subproblem_error.msg))
+        @test occursin("BendersX does not know how to build a subproblem model", subproblem_error.msg)
+        @test occursin("Define `update_sub_model!", subproblem_error.msg)
+        @test occursin("model = build_sub_model!", subproblem_error.msg)
     end
 
     @testset "master variable container Vector{VariableRef}" begin
-        function customize_master_model!(model::Model, data::EmptyData)
+        function update_master_model!(model::Model, data::EmptyData)
 
             @variable(model, u[1:10], Bin)
             @variable(model, t >= -1e6)
             @constraint(model, sum(u) >= 2)
             @objective(model, Min, 1.0 * t)
-            
+
             return (u = u, ), t
         end
-        
-        function customize_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u) 
-        
+
+        function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u)
+
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
             @constraint(model, y .<= u)
             return nothing
         end
 
-        master = Master(data; model = customize_master_model!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_model!)
+        master = Master(data; model = update_master_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_model!)
 
         print(master.model)
         print(oracle.model)
     end
     @testset "master variable container Matrix{VariableRef}" begin
-        function customize_master_model!(model::Model, data::EmptyData)
+        function update_master_model!(model::Model, data::EmptyData)
 
             @variable(model, u[1:10,1:3], Bin)
             @variable(model, t >= -1e6)
             @constraint(model, sum(u) >= 2)
             @objective(model, Min, 1.0 * t)
-            
+
             return (u = u, ), t
         end
-        
-        function customize_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u) 
-        
+
+        function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u)
+
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
             @constraint(model, sum(u) == 1)
@@ -473,14 +474,14 @@ end
             return nothing
         end
 
-        master = Master(data; model = customize_master_model!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_model!)
+        master = Master(data; model = update_master_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_model!)
 
         print(master.model)
         print(oracle.model)
     end
     @testset "Multiple master variable containers of varying types" begin
-        function customize_master_model!(model::Model, data::EmptyData)
+        function update_master_model!(model::Model, data::EmptyData)
 
             @variable(model, u[1:10], Bin) # Array
             @variable(model, v[3:10, [:A, :B]], Bin) # DenseAxisArray
@@ -488,12 +489,12 @@ end
             @variable(model, t >= -1e6)
             @constraint(model, sum(u) >= 2)
             @objective(model, Min, 1.0 * t)
-            
+
             return (u = u, v = v, w = w), t
         end
-        
-        function customize_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w) 
-        
+
+        function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w)
+
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
             @constraint(model, y .<= u)
@@ -503,11 +504,11 @@ end
             return nothing
         end
 
-        master = Master(data; model = customize_master_model!)
-        oracle = ClassicalOracle(data, master; model = customize_sub_model!)
+        master = Master(data; model = update_master_model!)
+        oracle = ClassicalOracle(data, master; model = update_sub_model!)
 
         print(master.model)
         print(oracle.model)
     end
-    
+
 end

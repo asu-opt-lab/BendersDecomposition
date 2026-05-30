@@ -31,7 +31,7 @@ function create_pareto_test_data(n_facilities::Int=3, n_customers::Int=4)
     return SimpleParetoTestData(n_facilities, n_customers, costs)
 end
 
-function customize_master_pareto!(model::Model, data::SimpleParetoTestData)
+function update_master_pareto_model!(model::Model, data::SimpleParetoTestData)
     optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
     set_optimizer(model, optimizer)
     
@@ -63,7 +63,7 @@ function solve_mip_pareto_reference(data::SimpleParetoTestData)
     return objective_value(model)
 end
 
-function customize_sub_pareto!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
+function update_sub_pareto_model!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
     optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
     set_optimizer(model, optimizer)
     
@@ -117,11 +117,11 @@ end
     
     @testset "Basic ParetoOracle Construction" begin
         data = create_pareto_test_data()
-        master = Master(data; model = customize_master_pareto!)
+        master = Master(data; model = update_master_pareto_model!)
         
         # core_point dimension must match decision variables
         param = ParetoOracleParam(fill(0.5, data.n_facilities))
-        oracle = ParetoOracle(data, master, param; model = customize_sub_pareto!)
+        oracle = ParetoOracle(data, master, param; model = update_sub_pareto_model!)
         
         # Verify oracle has all required fields
         @test !isempty(oracle.fixed_x_constraints)
@@ -134,20 +134,20 @@ end
     
     @testset "ParetoOracle Dimension Mismatch" begin
         data = create_pareto_test_data()
-        master = Master(data; model = customize_master_pareto!)
+        master = Master(data; model = update_master_pareto_model!)
         
         # Wrong dimension for core_point should throw
         param_wrong = ParetoOracleParam([0.5, 0.5])  # Only 2 elements, but n_facilities = 3
-        @test_throws DimensionMismatch ParetoOracle(data, master, param_wrong; model = customize_sub_pareto!)
+        @test_throws DimensionMismatch ParetoOracle(data, master, param_wrong; model = update_sub_pareto_model!)
     end
     
     @testset "Interval Constraint Accepted" begin
         # Test that interval constraints are properly split and accepted
         data = create_pareto_test_data()
-        master = Master(data; model = customize_master_pareto!)
+        master = Master(data; model = update_master_pareto_model!)
         param = ParetoOracleParam(fill(0.5, data.n_facilities))
 
-        function customize_sub_with_interval!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
+        function update_sub_with_interval_model!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
 
@@ -165,7 +165,7 @@ end
         end
 
         # Should NOT throw
-        oracle = ParetoOracle(data, master, param; model = customize_sub_with_interval!)
+        oracle = ParetoOracle(data, master, param; model = update_sub_with_interval_model!)
         @test oracle.model isa Model
         @test oracle.pareto_model isa Model
     end
@@ -176,7 +176,7 @@ end
             n::Int
         end
 
-        function customize_master_interval_reform!(model::Model, data::ParetoIntervalReformData)
+        function update_master_interval_reform_model!(model::Model, data::ParetoIntervalReformData)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
             @variable(model, x[1:data.n], Bin)
@@ -188,7 +188,7 @@ end
 
         data = ParetoIntervalReformData(2)
 
-        function customize_sub_interval_reform!(model::Model, data::ParetoIntervalReformData, scen_idx::Int; x)
+        function update_sub_interval_reform_model!(model::Model, data::ParetoIntervalReformData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
             @variable(model, y >= 0)
@@ -198,9 +198,9 @@ end
             return nothing
         end
 
-        master = Master(data; model = customize_master_interval_reform!)
+        master = Master(data; model = update_master_interval_reform_model!)
         param = ParetoOracleParam(fill(0.5, data.n))
-        oracle = ParetoOracle(data, master, param; model = customize_sub_interval_reform!)
+        oracle = ParetoOracle(data, master, param; model = update_sub_interval_reform_model!)
 
         σ = oracle.pareto_model[:σ]
 
@@ -217,10 +217,10 @@ end
     @testset "Vectorized Constraints Accepted" begin
         # Test that vectorized constraints (A*y == b form) are properly split and accepted
         data = create_pareto_test_data()
-        master = Master(data; model = customize_master_pareto!)
+        master = Master(data; model = update_master_pareto_model!)
         param = ParetoOracleParam(fill(0.5, data.n_facilities))
 
-        function customize_sub_vectorized!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
+        function update_sub_vectorized_model!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
 
@@ -245,17 +245,17 @@ end
         end
 
         # Should NOT throw
-        oracle = ParetoOracle(data, master, param; model = customize_sub_vectorized!)
+        oracle = ParetoOracle(data, master, param; model = update_sub_vectorized_model!)
         @test oracle.model isa Model
     end
 
     @testset "All Allowed Model Patterns" begin
         # Test with ALL valid patterns from test_validate_LP.jl
         data = create_pareto_test_data()
-        master = Master(data; model = customize_master_pareto!)
+        master = Master(data; model = update_master_pareto_model!)
         param = ParetoOracleParam(fill(0.5, data.n_facilities))
 
-        function customize_sub_all_patterns!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
+        function update_sub_all_patterns_model!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
 
@@ -281,7 +281,7 @@ end
         end
 
         # Should NOT throw
-        oracle = ParetoOracle(data, master, param; model = customize_sub_all_patterns!)
+        oracle = ParetoOracle(data, master, param; model = update_sub_all_patterns_model!)
         @test oracle.model isa Model
         @test oracle.pareto_model isa Model
     end
@@ -291,7 +291,7 @@ end
         data = create_pareto_test_data()
         mip_opt = solve_mip_pareto_reference(data)
 
-        function customize_sub_interval_converge!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
+        function update_sub_interval_converge_model!(model::Model, data::SimpleParetoTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
 
@@ -309,9 +309,9 @@ end
 
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
 
-        master = Master(data; model = customize_master_pareto!)
+        master = Master(data; model = update_master_pareto_model!)
         param = ParetoOracleParam(fill(0.5, data.n_facilities))
-        oracle = ParetoOracle(data, master, param; model = customize_sub_interval_converge!)
+        oracle = ParetoOracle(data, master, param; model = update_sub_interval_converge_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -327,8 +327,8 @@ end
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
         
         # Test ClassicalOracle
-        master_classical = Master(data; model = customize_master_pareto!)
-        oracle_classical = ClassicalOracle(data, master_classical; model = customize_sub_pareto!)
+        master_classical = Master(data; model = update_master_pareto_model!)
+        oracle_classical = ClassicalOracle(data, master_classical; model = update_sub_pareto_model!)
         env_classical = BendersSeq(master_classical, oracle_classical; param = benders_param)
         solve!(env_classical)
         
@@ -336,9 +336,9 @@ end
         @test isapprox(mip_opt, env_classical.obj_value, atol=1e-4)
         
         # Test ParetoOracle
-        master_pareto = Master(data; model = customize_master_pareto!)
+        master_pareto = Master(data; model = update_master_pareto_model!)
         pareto_param = ParetoOracleParam(fill(0.5, data.n_facilities))
-        oracle_pareto = ParetoOracle(data, master_pareto, pareto_param; model = customize_sub_pareto!)
+        oracle_pareto = ParetoOracle(data, master_pareto, pareto_param; model = update_sub_pareto_model!)
         env_pareto = BendersSeq(master_pareto, oracle_pareto; param = benders_param)
         solve!(env_pareto)
         
@@ -360,9 +360,9 @@ end
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
         
         # Test with core_point = [0.5, 0.5, 0.5] (interior point)
-        master1 = Master(data; model = customize_master_pareto!)
+        master1 = Master(data; model = update_master_pareto_model!)
         param1 = ParetoOracleParam(fill(0.5, data.n_facilities))
-        oracle1 = ParetoOracle(data, master1, param1; model = customize_sub_pareto!)
+        oracle1 = ParetoOracle(data, master1, param1; model = update_sub_pareto_model!)
         env1 = BendersSeq(master1, oracle1; param = benders_param)
         solve!(env1)
         
@@ -370,9 +370,9 @@ end
         @test isapprox(mip_opt, env1.obj_value, atol=1e-4)
         
         # Test with core_point = [0.8, 0.8, 0.8] (another interior point)
-        master2 = Master(data; model = customize_master_pareto!)
+        master2 = Master(data; model = update_master_pareto_model!)
         param2 = ParetoOracleParam(fill(0.8, data.n_facilities))
-        oracle2 = ParetoOracle(data, master2, param2; model = customize_sub_pareto!)
+        oracle2 = ParetoOracle(data, master2, param2; model = update_sub_pareto_model!)
         env2 = BendersSeq(master2, oracle2; param = benders_param)
         solve!(env2)
         
@@ -380,9 +380,9 @@ end
         @test isapprox(mip_opt, env2.obj_value, atol=1e-4)
         
         # Test with asymmetric interior core_point (sum = 1.5 > 1)
-        master3 = Master(data; model = customize_master_pareto!)
+        master3 = Master(data; model = update_master_pareto_model!)
         param3 = ParetoOracleParam([0.4, 0.5, 0.6])
-        oracle3 = ParetoOracle(data, master3, param3; model = customize_sub_pareto!)
+        oracle3 = ParetoOracle(data, master3, param3; model = update_sub_pareto_model!)
         env3 = BendersSeq(master3, oracle3; param = benders_param)
         solve!(env3)
         
@@ -392,9 +392,9 @@ end
     
     @testset "ParetoOracle generate_cuts Basic" begin
         data = create_pareto_test_data()
-        master = Master(data; model = customize_master_pareto!)
+        master = Master(data; model = update_master_pareto_model!)
         param = ParetoOracleParam(fill(0.5, data.n_facilities))
-        oracle = ParetoOracle(data, master, param; model = customize_sub_pareto!)
+        oracle = ParetoOracle(data, master, param; model = update_sub_pareto_model!)
         
         # Test generate_cuts with a feasible point
         x_value = [1.0, 0.0, 0.0]  # Only facility 1 open
@@ -415,12 +415,12 @@ end
     @testset "ParetoOracle Dynamic Core Point Update (λ parameter)" begin
         # Test that λ < 1 updates core_point after each generate_cuts call
         data = create_pareto_test_data()
-        master = Master(data; model = customize_master_pareto!)
+        master = Master(data; model = update_master_pareto_model!)
         
         # Test with λ = 0.5 (core_point should move towards x_value)
         initial_core = fill(0.5, data.n_facilities)
         param = ParetoOracleParam(copy(initial_core); λ = 0.5)
-        oracle = ParetoOracle(data, master, param; model = customize_sub_pareto!)
+        oracle = ParetoOracle(data, master, param; model = update_sub_pareto_model!)
         
         # Verify initial core_point
         @test oracle.param.core_point == initial_core
@@ -446,11 +446,11 @@ end
     @testset "ParetoOracle with λ = 1.0 (no update)" begin
         # Test that λ = 1.0 keeps core_point unchanged (classical behavior)
         data = create_pareto_test_data()
-        master = Master(data; model = customize_master_pareto!)
+        master = Master(data; model = update_master_pareto_model!)
         
         initial_core = fill(0.5, data.n_facilities)
         param = ParetoOracleParam(copy(initial_core); λ = 1.0)  # Default: no update
-        oracle = ParetoOracle(data, master, param; model = customize_sub_pareto!)
+        oracle = ParetoOracle(data, master, param; model = update_sub_pareto_model!)
         
         # Verify initial core_point
         @test oracle.param.core_point == initial_core
@@ -468,11 +468,11 @@ end
     @testset "ParetoOracle with λ = 0.0 (full update)" begin
         # Test that λ = 0.0 replaces core_point with x_value entirely
         data = create_pareto_test_data()
-        master = Master(data; model = customize_master_pareto!)
+        master = Master(data; model = update_master_pareto_model!)
         
         initial_core = fill(0.5, data.n_facilities)
         param = ParetoOracleParam(copy(initial_core); λ = 0.0)  # Full update
-        oracle = ParetoOracle(data, master, param; model = customize_sub_pareto!)
+        oracle = ParetoOracle(data, master, param; model = update_sub_pareto_model!)
         
         # Call generate_cuts
         x_value = [1.0, 0.0, 0.0]
@@ -491,9 +491,9 @@ end
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
 
         # Test with λ = 0.8 (gradual update)
-        master = Master(data; model = customize_master_pareto!)
+        master = Master(data; model = update_master_pareto_model!)
         param = ParetoOracleParam(fill(0.5, data.n_facilities); λ = 0.8)
-        oracle = ParetoOracle(data, master, param; model = customize_sub_pareto!)
+        oracle = ParetoOracle(data, master, param; model = update_sub_pareto_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -509,7 +509,7 @@ end
             n::Int  # number of decision variables
         end
 
-        function customize_master_pareto_reform!(model::Model, data::ParetoReformTestData)
+        function update_master_pareto_reform_model!(model::Model, data::ParetoReformTestData)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
 
@@ -525,7 +525,7 @@ end
             # Test that σ variable is added with correct bounds (σ <= 0)
             data = ParetoReformTestData(2)
 
-            function customize_sub_sigma!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+            function update_sub_sigma_model!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -536,9 +536,9 @@ end
                 return nothing
             end
 
-            master = Master(data; model = customize_master_pareto_reform!)
+            master = Master(data; model = update_master_pareto_reform_model!)
             param = ParetoOracleParam(fill(0.5, data.n))
-            oracle = ParetoOracle(data, master, param; model = customize_sub_sigma!)
+            oracle = ParetoOracle(data, master, param; model = update_sub_sigma_model!)
 
             # σ is stored as oracle.pareto_model[:σ]
             σ = oracle.pareto_model[:σ]
@@ -551,7 +551,7 @@ end
             # Verify fixing constraints: x + x*·σ = x_0 exist for each decision variable
             data = ParetoReformTestData(2)
 
-            function customize_sub_fix!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+            function update_sub_fix_model!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -562,9 +562,9 @@ end
                 return nothing
             end
 
-            master = Master(data; model = customize_master_pareto_reform!)
+            master = Master(data; model = update_master_pareto_reform_model!)
             param = ParetoOracleParam(fill(0.5, data.n))
-            oracle = ParetoOracle(data, master, param; model = customize_sub_fix!)
+            oracle = ParetoOracle(data, master, param; model = update_sub_fix_model!)
 
             # Should have one fixing constraint per decision variable
             @test length(oracle.pareto_model[:pareto_fixing_constraints]) == data.n
@@ -584,7 +584,7 @@ end
             # Test that problem constraints get b*σ added (where b is RHS)
             data = ParetoReformTestData(2)
 
-            function customize_sub_bsigma!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+            function update_sub_bsigma_model!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -598,9 +598,9 @@ end
                 return nothing
             end
 
-            master = Master(data; model = customize_master_pareto_reform!)
+            master = Master(data; model = update_master_pareto_reform_model!)
             param = ParetoOracleParam(fill(0.5, data.n))
-            oracle = ParetoOracle(data, master, param; model = customize_sub_bsigma!)
+            oracle = ParetoOracle(data, master, param; model = update_sub_bsigma_model!)
 
             σ = oracle.pareto_model[:σ]
 
@@ -619,7 +619,7 @@ end
             # Test that σ is added to objective (initially with 0 coefficient)
             data = ParetoReformTestData(2)
 
-            function customize_sub_objsigma!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+            function update_sub_objsigma_model!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -630,9 +630,9 @@ end
                 return nothing
             end
 
-            master = Master(data; model = customize_master_pareto_reform!)
+            master = Master(data; model = update_master_pareto_reform_model!)
             param = ParetoOracleParam(fill(0.5, data.n))
-            oracle = ParetoOracle(data, master, param; model = customize_sub_objsigma!)
+            oracle = ParetoOracle(data, master, param; model = update_sub_objsigma_model!)
 
             σ = oracle.pareto_model[:σ]
             obj = objective_function(oracle.pareto_model)
@@ -652,7 +652,7 @@ end
             # Verify standard model has fix_x constraints
             data = ParetoReformTestData(2)
 
-            function customize_sub_stdfix!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+            function update_sub_stdfix_model!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -663,9 +663,9 @@ end
                 return nothing
             end
 
-            master = Master(data; model = customize_master_pareto_reform!)
+            master = Master(data; model = update_master_pareto_reform_model!)
             param = ParetoOracleParam(fill(0.5, data.n))
-            oracle = ParetoOracle(data, master, param; model = customize_sub_stdfix!)
+            oracle = ParetoOracle(data, master, param; model = update_sub_stdfix_model!)
 
             # Standard model should have fixing constraints
             @test length(oracle.fixed_x_constraints) == data.n
@@ -681,7 +681,7 @@ end
             # Test that == constraints also get b*σ term
             data = ParetoReformTestData(2)
 
-            function customize_sub_eq!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+            function update_sub_eq_model!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -692,9 +692,9 @@ end
                 return nothing
             end
 
-            master = Master(data; model = customize_master_pareto_reform!)
+            master = Master(data; model = update_master_pareto_reform_model!)
             param = ParetoOracleParam(fill(0.5, data.n))
-            oracle = ParetoOracle(data, master, param; model = customize_sub_eq!)
+            oracle = ParetoOracle(data, master, param; model = update_sub_eq_model!)
 
             σ = oracle.pareto_model[:σ]
 
@@ -708,7 +708,7 @@ end
             # Test constraint with RHS = 0 gets σ coefficient = 0
             data = ParetoReformTestData(2)
 
-            function customize_sub_zero!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
+            function update_sub_zero_model!(model::Model, data::ParetoReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -719,9 +719,9 @@ end
                 return nothing
             end
 
-            master = Master(data; model = customize_master_pareto_reform!)
+            master = Master(data; model = update_master_pareto_reform_model!)
             param = ParetoOracleParam(fill(0.5, data.n))
-            oracle = ParetoOracle(data, master, param; model = customize_sub_zero!)
+            oracle = ParetoOracle(data, master, param; model = update_sub_zero_model!)
 
             σ = oracle.pareto_model[:σ]
 

@@ -24,7 +24,7 @@ mutable struct Master <: AbstractMaster
     c_x::Vector{Float64}
     c_t::Vector{Float64}
 
-    function Master(data::AbstractData; model=customize_master_model!, optimizer = DEFAULT_OPTIMIZER)
+    function Master(data::AbstractData; model=update_master_model!, optimizer = DEFAULT_OPTIMIZER)
 
         @debug "Building Master module"
 

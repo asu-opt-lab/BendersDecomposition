@@ -8,7 +8,7 @@ const OUTPUT_DIR = @__DIR__
 
 function solve_reference_objective(data, instance_name::AbstractString)
     mip_model = Model(mip_optimizer)
-    customize_mip_model!(mip_model, data)
+    update_mip_model!(mip_model, data)
     optimize!(mip_model)
     termination_status(mip_model) == OPTIMAL || error("Reference MILP for $(instance_name) did not terminate optimally: $(termination_status(mip_model))")
     return objective_value(mip_model)
