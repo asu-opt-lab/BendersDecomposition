@@ -96,10 +96,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         zero_tol = 1e-9,
                     )
 
-                    master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                    master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                     typical_oracles = [
-                        ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer),
-                        ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer),
+                        ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer),
+                        ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer),
                     ]
                     disjunctive_oracle = DirectionalPolarOracle(master, typical_oracles, oracle_param)
                     @test disjunctive_oracle isa BendersX.AbstractSplitOracle

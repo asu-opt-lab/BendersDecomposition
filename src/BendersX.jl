@@ -30,7 +30,7 @@ export solve!
 # User-facing parameter and configuration types
 export BasicOracleParam, ClassicalOracleParam, UnifiedOracleParam, ParetoOracleParam
 export SeparableOracleParam, DcglpParam
-export SplitOracleParam, DistanceNormOracleParam, SimplexNormOracleParam, VerticalReversePolarOracleParam, DirectionalPolarOracleParam
+export DistanceNormOracleParam, SimplexNormOracleParam, VerticalReversePolarOracleParam, DirectionalPolarOracleParam
 export BendersSeqParam, BendersSeqInOutParam, BendersBnBParam, SpecializedBendersSeqParam
 export LazyCallback, UserCallback, NoUserCallback, UserCallbackParam
 export RootNodePreprocessing, NoRootNodePreprocessing, DisjunctiveRootNodePreprocessing

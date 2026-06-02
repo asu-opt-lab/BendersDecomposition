@@ -173,7 +173,7 @@ end
         param = DistanceNormOracleParam(disjunctive_norm_dcglp_param(); reuse_dcglp = false)
         oracle = SplitOracle(master, build_typical_pair(data, master), param)
 
-        @test param isa SplitOracleParam
+        @test param isa DistanceNormOracleParam
         @test oracle isa SplitOracle
         @test oracle isa DistanceNormOracle
         @test oracle isa BendersX.AbstractSplitOracle

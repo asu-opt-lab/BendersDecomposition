@@ -88,10 +88,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 for (strategy_name, oracle_type, oracle_param) in strategy_specs
                     @info "solving UFLP p$i - $strategy_name/classical - benders2master false reuse false lift false"
                     @testset "$strategy_name with ClassicalOracle" begin
-                        master = Master(data; model = customize_master_model!, optimizer = mip_optimizer)
+                        master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                         typical_oracles = [
-                            ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer),
-                            ClassicalOracle(data, master; model = customize_sub_model!, optimizer = optimizer),
+                            ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer),
+                            ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer),
                         ]
                         disjunctive_oracle = oracle_type(master, typical_oracles, oracle_param)
                         @test disjunctive_oracle isa BendersX.AbstractSplitOracle

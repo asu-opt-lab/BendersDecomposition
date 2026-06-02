@@ -112,8 +112,8 @@ For mixed-integer master problems, BendersX provides the
 Dual Cut Generating Linear Program (DCGLP).
 
 A `DistanceNormOracle` is constructed by combining two *typical* oracles (denoted by
-`κ` and `ν`) together with a [`DistanceNormOracleParam`](@ref) object. The latter is a [`SplitOracleParam`](@ref) specialization and
-encapsulates a [`DcglpParam`](@ref), which controls the behavior of the DCGLP.
+`κ` and `ν`) together with a [`DistanceNormOracleParam`](@ref) object, which
+encapsulates a [`DcglpParam`](@ref) controlling the behavior of the DCGLP.
 
 ```julia
 using CPLEX
