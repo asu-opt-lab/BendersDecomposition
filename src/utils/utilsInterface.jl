@@ -3,15 +3,15 @@
 
 Build the master problem for `data`.
 
-This is the BendersX function used by `Master(data)` when no `model = ...`
-function is passed. It is the name to implement if you want BendersX to build
-the master formulation from the data type alone.
+For a user-defined data structure such as `MyDataType`, there are two ways to
+provide the master formulation to BendersX:
 
-For a user-defined data type, defining
-`update_master_model!(model::Model, data::MyDataType)` is optional when you pass
-a model-building function explicitly. The function passed with `model = ...`
-can have any name, for example `Master(data; model = build_master_model!)`, as
-long as it accepts `(model::Model, data::MyDataType)` and returns `(x, t)`.
+1. Define `update_master_model!(model::Model, data::MyDataType)`. Then
+   `Master(data)` can call this method as its default master-model builder.
+2. Pass a builder explicitly, for example
+   `Master(data; model = build_master_model!)`. The builder can have any
+   function name as long as it accepts `(model::Model, data::MyDataType)` and
+   returns `(x, t)`.
 
 The function receives an empty JuMP `model` and the instance `data`. It must:
 
@@ -22,7 +22,7 @@ Optimizer attachment stays separate from this function.
 
 `x` must be a `NamedTuple` containing the master variables that may appear in
 subproblems. `t` contains the auxiliary variable or variables used in Benders
-cuts.
+cuts. The local variable returned as `t` may have any name in the builder.
 
 For example:
 
@@ -34,7 +34,7 @@ end
 function update_master_model!(model::Model, data::MyDataType)
     @variable(model, u[1:10])
     @variable(model, v[1:2, 2:3, [:A,:B], 4:5])
-    @variable(model, t[1:10])
+    @variable(model, t[1:10]) # auxiliary variables for Benders
     @objective(model, Min, sum(t))
 
     return (u = u, v = v), t
@@ -54,10 +54,10 @@ Returns
 function update_master_model!(model::Model, data::AbstractData)
     throw(UndefError(
         "BendersX does not know how to build a master model for $(typeof(data)). " *
-        "Define `update_master_model!(model::Model, data::$(typeof(data)))` to use " *
-        "`Master(data)` without `model = ...`, or pass your own master-model function " *
-        "with `Master(data; model = build_master_model!)`. The master-model function " *
-        "must return `(x, t)`."
+        "Define `update_master_model!(model::Model, data::$(typeof(data)))` so " *
+        "`Master(data)` can use it as the default builder, or pass a builder " *
+        "explicitly with `Master(data; model = build_master_model!)`. The builder " *
+        "can have any name, but it must accept `(model, data)` and return `(x, t)`."
     ))
 end
 
