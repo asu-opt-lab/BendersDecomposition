@@ -4,14 +4,8 @@
 Build one master problem formulation in `model`.
 
 This function tells BendersX how to build the master problem for your data type.
-Define one method for your custom data type:
-
-```julia
-function update_master_model!(model::Model, data::MyDataType)
-    # Add variables, constraints, and objective.
-    return x, t
-end
-```
+Define a method with this signature for your custom data type:
+`update_master_model!(model::Model, data::MyDataType) -> (x, t)`.
 
 The function receives an empty JuMP `model`. It should:
 
