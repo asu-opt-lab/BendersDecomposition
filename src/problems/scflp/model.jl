@@ -1,23 +1,3 @@
-
-function update_mip_model!(model::Model, data::SCFLPData)
-    # Extract dimensions
-    I, J, N = data.n_facilities, data.n_customers, data.n_scenarios
-
-    @variable(model, x[1:I], Bin)
-    @variable(model, y[1:I, 1:J, 1:N] >= 0)
-
-    # Set objective
-    @objective(model, Min,
-        (1/N) * sum(data.costs[i,j] * data.demands[s][j] * y[i,j,s] for i in 1:I, j in 1:J, s in 1:N) +
-        data.fixed_costs' * x
-    )
-
-    # Add constraints
-    @constraint(model, demand[j in 1:J, s in 1:N], sum(y[:,j,s]) == 1)
-    @constraint(model, facility_open[i in 1:I, j in 1:J, s in 1:N], y[i,j,s] <= x[i])
-    @constraint(model, capacity[i in 1:I, s in 1:N], sum(data.demands[s][j] * y[i,j,s] for j in 1:J) <= data.capacities[i] * x[i])
-end
-
 function update_master_model!(model::Model, data::SCFLPData)
     I, N = data.n_facilities, data.n_scenarios
     @variable(model, x[1:I], Bin)

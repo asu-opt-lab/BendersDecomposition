@@ -116,32 +116,6 @@ function update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwar
 end
 
 """
-    update_mip_model!(model::Model, data::AbstractData)
-
-Build a direct monolithic MIP model for `data`.
-
-This is the BendersX function for users who want
-`update_mip_model!(model, data)` to build a full-space formulation. It is useful
-for baselines alongside a Benders decomposition workflow, and built-in problem
-data types provide their own methods.
-
-For a user-defined data type, defining
-`update_mip_model!(model::Model, data::MyDataType)` is optional. You may instead
-write a MIP-building function with any name and call it directly, for example
-`build_full_mip!(model, data)`.
-
-The function should add variables, objective, and constraints to `model`.
-Optimizer attachment stays separate from this function.
-"""
-function update_mip_model!(model::Model, data::AbstractData)
-    throw(UndefError(
-        "BendersX does not know how to build a monolithic MIP model for $(typeof(data)). " *
-        "Define `update_mip_model!(model::Model, data::$(typeof(data)))` to use " *
-        "`update_mip_model!(model, data)`, or call your own MIP-building function directly."
-    ))
-end
-
-"""
     copy_variables!(model::Model, x::NamedTuple) -> NamedTuple
 
 Create JuMP variables inside `model` that mirror the structure of the NamedTuple `x`.

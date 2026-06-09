@@ -395,17 +395,6 @@ end
         @test occursin("Define `update_master_model!", master_error.msg)
         @test occursin("Master(data; model = build_master_model!)", master_error.msg)
 
-        mip_error = try
-            update_mip_model!(Model(), data)
-            nothing
-        catch e
-            e
-        end
-        @test mip_error isa UndefError
-        @test occursin("BendersX does not know how to build a monolithic MIP model", mip_error.msg)
-        @test occursin("Define `update_mip_model!", mip_error.msg)
-        @test occursin("MIP-building function", mip_error.msg)
-
         # Model-based oracle without a subproblem model-update function must throw
         function update_master_model!(model::Model, data::EmptyData)
 
