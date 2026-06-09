@@ -1,55 +1,60 @@
 """
     update_master_model!(model::Model, data::AbstractData) -> (x, t)
 
-Build the master problem for `data`.
+Build one master problem formulation in `model`.
 
-For a user-defined data structure such as `MyDataType`, there are two ways to
-provide the master formulation to BendersX:
-
-1. Define `update_master_model!(model::Model, data::MyDataType)`. Then
-   `Master(data)` can call this method as its default master-model builder.
-2. Pass a builder explicitly, for example
-   `Master(data; model = build_master_model!)`. The builder can have any
-   function name as long as it accepts `(model::Model, data::MyDataType)` and
-   returns `(x, t)`.
-
-The function receives an empty JuMP `model` and the instance `data`. It must:
-
-1. Add the master variables, constraints, and objective to `model`.
-2. Return `(x, t)`.
-
-Optimizer attachment stays separate from this function.
-
-`x` must be a `NamedTuple` containing the master variables that may appear in
-subproblems. `t` contains the auxiliary variable or variables used in Benders
-cuts. The local variable returned as `t` may have any name in the builder.
-
-For example:
+This function tells BendersX how to build the master problem for your data type.
+Define one method for your custom data type:
 
 ```julia
-struct MyDataType <: AbstractData
-    ...
-end
-
 function update_master_model!(model::Model, data::MyDataType)
-    @variable(model, u[1:10])
-    @variable(model, v[1:2, 2:3, [:A,:B], 4:5])
-    @variable(model, t[1:10]) # auxiliary variables for Benders
-    @objective(model, Min, sum(t))
-
-    return (u = u, v = v), t
+    # Add variables, constraints, and objective.
+    return x, t
 end
 ```
 
-Arguments
-- `model::Model`: A JuMP model that will be modified in place.
-- `data::MyDataType`: A user-defined data object describing the instance required to build the formulation.
+The function receives an empty JuMP `model`. It should:
 
-Returns
-- A `NamedTuple` mapping variable symbolic names to the JuMP variable containers (e.g., `Vector{VariableRef}`, `DenseAxisArray`, or `SparseAxisArray`) created for the master problem.
-- A master auxiliary variable, or a collection of auxiliary variables, used by
-  Benders cuts.
+1. Create the master variables.
+2. Add the master constraints and objective.
+3. Return `(x, t)`.
 
+`x` must be a `NamedTuple` containing the master variables that subproblems may
+need to read. The field names in `x` are the names subproblems use.
+
+`t` is the auxiliary variable, or collection of variables, that BendersX uses
+when adding Benders cuts. The variable does not have to be named `t` in your
+model; only the returned value matters.
+
+Optimizer selection is handled elsewhere. Do not attach an optimizer in this
+function.
+
+# Example
+
+```julia
+struct MyDataType <: AbstractData
+    n::Int
+end
+
+function update_master_model!(model::Model, data::MyDataType)
+    @variable(model, u[1:data.n])
+    @variable(model, theta)
+
+    @constraint(model, sum(u) >= 1)
+    @objective(model, Min, theta)
+
+    return (u = u,), theta
+end
+```
+
+You may also pass a custom builder directly:
+
+```julia
+Master(data; model = build_master_model!)
+```
+
+In that case, `build_master_model!(model, data)` must follow the same rule:
+modify `model` and return `(x, t)`.
 """
 function update_master_model!(model::Model, data::AbstractData)
     throw(UndefError(
@@ -64,47 +69,67 @@ end
 """
     update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
 
-Build one subproblem for `data`.
+Build one subproblem formulation in `model`.
 
-This is the BendersX function used by model-based oracles when no `model = ...`
-function is passed. It is the name to implement if you want BendersX to build
-the subproblem formulation from the data type alone.
-
-For a user-defined data type, defining
-`update_sub_model!(model::Model, data::MyDataType, scen_idx::Int; kwargs...)` is
-optional when you pass a subproblem-building function explicitly. The function
-passed with `model = ...` can have any name, for example
-`ClassicalOracle(data, master; model = build_sub_model!)`, as long as it accepts
-`(model::Model, data::MyDataType, scen_idx::Int; kwargs...)`.
-
-The function receives an empty JuMP `model`, the instance `data`, and a scenario
-index `scen_idx`. It must add the subproblem variables, constraints, and
-objective to `model`. Master variables are available through keyword arguments,
-using the names returned by the master-model function.
-
-Optimizer attachment stays separate from this function.
-
-For example:
+This function tells BendersX how to build a subproblem for your data type.
+Define one method for your custom data type:
 
 ```julia
-function update_sub_model!(model::Model, data::MyDataType, scen_idx::Int; u, v)
-    @variable(model, y >= 0)
-
-    scen_data = data[scen_idx]
-
-    # Add constraints based on scenario data, referencing master variables u and v
-    @constraint(model, sum(u) + y == 1)
-    @constraint(model, sum(v) == 1)
-    @constraint(model, v[2, 3, :A, 4] + y == 1)
+function update_sub_model!(model::Model, data::MyDataType, scen_idx::Int; x)
+    # Add variables, constraints, and objective.
+    return nothing
 end
 ```
 
-Arguments
-- `model::Model` A JuMP model that will be modified in place to represent the subproblem.
-- `data::AbstractData` A user-defined data object describing the information required to build the
-subproblem formulation.
-- `scen_idx::Int` Index of the scenario for which the subproblem is built. This may be -1 if the model does not explicitly use scenarios.
-- `kwargs...` Symbolic names of the master variables passed from the master model to the subproblem for use by the oracle.
+The function receives an empty JuMP `model`. It should:
+
+1. Create the subproblem variables.
+2. Add the subproblem constraints and objective.
+3. Use the master variables passed as keyword arguments when the subproblem
+   depends on the master solution.
+
+`scen_idx` identifies which scenario is being built. If your model is not
+scenario-based, you can ignore this argument.
+
+The keyword arguments are the master variables returned by
+`update_master_model!`. For example, if the master returns `(x = x,)`, then the
+subproblem can accept `; x` and use `x` directly in JuMP expressions.
+
+Most subproblem builders return `nothing`. If you need generalized bound
+constraints, return `(gbc_lhs, gbc_rhs, gbc_sense)`, where each relation has the
+form `subproblem_variable <=/>=/== affine_expression_of_master_variables`.
+
+Optimizer selection is handled elsewhere. Do not attach an optimizer in this
+function.
+
+# Example
+
+```julia
+struct MyDataType <: AbstractData
+    demand::Vector{Float64}
+    cost::Vector{Float64}
+end
+
+function update_sub_model!(model::Model, data::MyDataType, scen_idx::Int; x)
+    @variable(model, y[eachindex(data.demand)] >= 0)
+
+    @constraint(model, demand[j in eachindex(data.demand)], y[j] == data.demand[j])
+    @constraint(model, linking[j in eachindex(data.demand)], y[j] <= x[j])
+    @objective(model, Min, sum(data.cost[j] * y[j] for j in eachindex(data.demand)))
+
+    return nothing
+end
+```
+
+You may also pass a custom builder directly:
+
+```julia
+ClassicalOracle(data, master; model = build_sub_model!)
+```
+
+In that case, `build_sub_model!(model, data, scen_idx; kwargs...)` must follow
+the same rule: modify `model` and return `nothing`, or return generalized bound
+constraint data when needed.
 """
 function update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
     throw(UndefError(
