@@ -13,8 +13,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
     reference_objectives = Dict(String(row.instance_name) => Float64(row.objective_value) for row in eachrow(reference_df))
     instances = setdiff(1:71, [67])
 
-    # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
-    function customize_sub_model_gbc!(model::Model, data::CFLPData, scen_idx::Int; x)
+    # GBC-enabled subproblem model update (y[i,j] <= x[i] via GBC)
+    function update_sub_gbc_model!(model::Model, data::CFLPData, scen_idx::Int; x)
         optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
         set_optimizer(model, optimizer)
 
@@ -372,8 +372,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "NoSeq" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical with GBC/no seq"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
@@ -389,8 +389,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "Seq" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical with GBC/seq"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
@@ -406,8 +406,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "SeqInOut" begin
                             @info "solving CFLP p$i - disjunctive oracle/classical with GBC/seqinout"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), ClassicalOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
@@ -439,8 +439,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "NoSeq" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle with GBC/no seq"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
@@ -456,8 +456,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "Seq" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle with GBC/seq"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
@@ -473,8 +473,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "SeqInOut" begin
                             @info "solving CFLP p$i - disjunctive oracle/knapsack oracle with GBC/seqinout"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracles = [CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = customize_sub_model_gbc!, optimizer = optimizer)]
+                            lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))

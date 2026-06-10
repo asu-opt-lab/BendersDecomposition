@@ -26,7 +26,7 @@ function disjunctive_norm_data()
     ])
 end
 
-function customize_disjunctive_norm_master!(model::Model, data::DisjunctiveNormTestData)
+function update_disjunctive_norm_master!(model::Model, data::DisjunctiveNormTestData)
     set_optimizer(model, disjunctive_norm_optimizer())
     n_facilities = size(data.costs, 1)
 
@@ -38,7 +38,7 @@ function customize_disjunctive_norm_master!(model::Model, data::DisjunctiveNormT
     return (x = x,), t
 end
 
-function customize_continuous_disjunctive_norm_master!(model::Model, data::DisjunctiveNormTestData)
+function update_continuous_disjunctive_norm_master!(model::Model, data::DisjunctiveNormTestData)
     set_optimizer(model, disjunctive_norm_optimizer())
     n_facilities = size(data.costs, 1)
 
@@ -50,7 +50,7 @@ function customize_continuous_disjunctive_norm_master!(model::Model, data::Disju
     return (x = x,), t
 end
 
-function customize_disjunctive_norm_sub!(model::Model, data::DisjunctiveNormTestData, scen_idx::Int; x)
+function update_disjunctive_norm_sub!(model::Model, data::DisjunctiveNormTestData, scen_idx::Int; x)
     set_optimizer(model, disjunctive_norm_optimizer())
     n_facilities, n_customers = size(data.costs)
 
@@ -64,14 +64,14 @@ end
 
 function build_disjunctive_norm_master(; continuous::Bool = false)
     data = disjunctive_norm_data()
-    model_hook = continuous ? customize_continuous_disjunctive_norm_master! : customize_disjunctive_norm_master!
+    model_hook = continuous ? update_continuous_disjunctive_norm_master! : update_disjunctive_norm_master!
     return data, Master(data; model = model_hook, optimizer = disjunctive_norm_optimizer())
 end
 
 function build_typical_pair(data, master)
     return [
-        ClassicalOracle(data, master; model = customize_disjunctive_norm_sub!, optimizer = disjunctive_norm_optimizer()),
-        ClassicalOracle(data, master; model = customize_disjunctive_norm_sub!, optimizer = disjunctive_norm_optimizer()),
+        ClassicalOracle(data, master; model = update_disjunctive_norm_sub!, optimizer = disjunctive_norm_optimizer()),
+        ClassicalOracle(data, master; model = update_disjunctive_norm_sub!, optimizer = disjunctive_norm_optimizer()),
     ]
 end
 
@@ -86,7 +86,7 @@ function disjunctive_norm_dcglp_param(; verbose::Bool = false)
     )
 end
 
-function customize_directional_vector_t_master!(model::Model, ::DirectionalVectorTTestData)
+function update_directional_vector_t_master!(model::Model, ::DirectionalVectorTTestData)
     set_optimizer(model, disjunctive_norm_optimizer())
 
     @variable(model, x[1:2], Bin)
@@ -211,8 +211,8 @@ end
         )
 
         @test length(oracle.splits) == 1
-        @test length(oracle.disjunctive_cuts) >= 0
-        @test all(h -> h in hyperplanes, oracle.disjunctive_cuts) == false || isempty(oracle.disjunctive_cuts)
+        @test !isempty(oracle.disjunctive_cuts)
+        @test all(cut -> !(cut in hyperplanes), oracle.disjunctive_cuts)
     end
 
     @testset "directional core point update" begin
@@ -231,7 +231,7 @@ end
 
     @testset "directional lift cut normalization" begin
         data = DirectionalVectorTTestData()
-        master = Master(data; model = customize_directional_vector_t_master!, optimizer = disjunctive_norm_optimizer())
+        master = Master(data; model = update_directional_vector_t_master!, optimizer = disjunctive_norm_optimizer())
         param = DirectionalPolarOracleParam(
             disjunctive_norm_dcglp_param(),
             [0.5, 0.5],

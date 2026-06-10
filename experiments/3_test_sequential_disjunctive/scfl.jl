@@ -13,8 +13,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
     reference_objectives = Dict(String(row.instance_name) => Float64(row.objective_value) for row in eachrow(reference_df))
     instances = 1:5
 
-    # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
-    function customize_sub_model_gbc!(model::Model, data::SCFLPData, scen_idx::Int; x)
+    # GBC-enabled subproblem model update (y[i,j] <= x[i] via GBC)
+    function update_sub_gbc_model!(model::Model, data::SCFLPData, scen_idx::Int; x)
         optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
         set_optimizer(model, optimizer)
         I, J = data.n_facilities, data.n_customers
@@ -193,8 +193,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                             oracle_param = DistanceNormOracleParam(dcglp_param; norm = LpNorm(p), split_index_selection_rule = RandomFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 1.0, reuse_dcglp = reuse_dcglp, lift = lift)
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
@@ -213,8 +213,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                             oracle_param = DistanceNormOracleParam(dcglp_param; norm = LpNorm(p), split_index_selection_rule = RandomFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 1.0, reuse_dcglp = reuse_dcglp, lift = lift)
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = customize_sub_model_gbc!, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
