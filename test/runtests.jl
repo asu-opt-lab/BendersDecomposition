@@ -3,6 +3,8 @@ using BendersX
 
 @testset "BendersX.jl" begin
     include("test_public_api.jl")
+    include("test_solver_extensions.jl")
+    include("test_callback_metadata.jl")
     include("test_scalarize_constraints.jl")
     include("test_validate_LP.jl")
     include("test_interface.jl")

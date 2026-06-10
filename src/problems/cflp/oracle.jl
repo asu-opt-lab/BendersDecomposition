@@ -28,7 +28,7 @@ and then computes facility-wise knapsack values to form a strengthened
 classical Benders cut for the CFLP structure.
 
 Like [`ClassicalOracle`](@ref), it also supports generalized bound constraints
-returned by the user customization function.
+returned by the user model-update function.
 """
 mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     param::CFLKnapsackOracleParam
@@ -42,28 +42,30 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     gbc_sense::Vector{GBCBoundType}
     
     function CFLKnapsackOracle(data::AbstractData, master::Master; 
-                            customize = customize_sub_model!,
+                            model = update_sub_model!,
                             scen_idx::Int=-1, 
-                            param::CFLKnapsackOracleParam = CFLKnapsackOracleParam())
+                            param::CFLKnapsackOracleParam = CFLKnapsackOracleParam(),
+                            optimizer = DEFAULT_OPTIMIZER)
         @debug "Building knapsack oracle for CFLP"
-        model = Model()
+        sub_model = Model()
+        set_optimizer_checked!(sub_model, optimizer, "CFLKnapsackOracle subproblem model")
 
         # Copy the master's coupling variables into the submodel (with identical axes and symbols)
-        x_copy = copy_variables!(model, master.x_tuple)
+        x_copy = copy_variables!(sub_model, master.x_tuple)
 
         # Collect all copied master variables and add linking constraint
         x = var_from_tuple(x_copy)
-        @constraint(model, fix_x, x .== 0)
+        @constraint(sub_model, fix_x, x .== 0)
 
-        # Build the submodel using user-defined customization, passing the copied variables
-        result = customize(model, data, scen_idx; x_copy...)
+        # Build the submodel using user-defined model update, passing the copied variables
+        result = model(sub_model, data, scen_idx; x_copy...)
         
         # Parse the result to extract GBC information using shared helper
         gbc_lhs, gbc_rhs, gbc_sense = _parse_gbc_result(result, x)
 
         facility_knapsack_info = scen_idx == -1 ? FacilityKnapsackInfo(data.costs, data.demands, data.capacities) : FacilityKnapsackInfo(data.costs, data.demands[scen_idx], data.capacities)
 
-        new(param, model, fix_x, facility_knapsack_info, gbc_lhs, gbc_rhs, gbc_sense)
+        new(param, sub_model, fix_x, facility_knapsack_info, gbc_lhs, gbc_rhs, gbc_sense)
     end
     
     CFLKnapsackOracle() = new()

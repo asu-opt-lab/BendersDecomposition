@@ -7,7 +7,7 @@ with a concrete oracle subtype `T` that does **not** define the required
 type-call constructor:
 
     T(data::AbstractData, master::AbstractMaster;
-      customize = customize_sub_model!, scen_idx::Int, param::AbstractOracleParam)
+      model, scen_idx::Int, param::AbstractOracleParam, optimizer = ...)
 
 Calling this fallback indicates that the oracle type `T` has not implemented
 the interface expected by `SeparableOracle`. Any concrete oracle intended for
@@ -19,9 +19,10 @@ Throws an error indicating that the subtype `T` must provide the required
 constructor.
 """
 (::Type{T})(data::AbstractData, master::AbstractMaster;
-            customize = customize_sub_model!,
+            model = update_sub_model!,
             scen_idx::Int,
-            param::AbstractOracleParam) where T <: AbstractTypicalOracle =
+            param::AbstractOracleParam,
+            optimizer = DEFAULT_OPTIMIZER) where T <: AbstractTypicalOracle =
     throw(UndefError(
         """
         Oracle subtype $(T) does not implement the required constructor
@@ -30,7 +31,12 @@ constructor.
         Expected constructor signature:
 
           $(T)(data::AbstractData, master::AbstractMaster;
-              customize = customize_sub_model!, scen_idx::Int, param::AbstractOracleParam)
+              model, scen_idx::Int, param::AbstractOracleParam,
+              optimizer = ...)
+
+        The `model` keyword may receive any subproblem model-update function
+        with the expected signature; the function name is not part of the
+        interface.
 
         Define this constructor for $(T) in order to use it with `SeparableOracle`.
         """
@@ -62,7 +68,7 @@ vector-valued recourse approximation `t`.
 # Constructor
 ```julia
 SeparableOracle(data, master, oracle_template, N;
-                customize = customize_sub_model!,
+                model = update_sub_model!,
                 sub_oracle_param = BasicOracleParam(),
                 param = SeparableOracleParam())
 ```
@@ -83,13 +89,14 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
                             master::Master,
                             oracle::T, 
                             N::Int; 
-                            customize = customize_sub_model!,
+                            model = update_sub_model!,
                             sub_oracle_param::AbstractOracleParam = BasicOracleParam(),
-                            param::SeparableOracleParam = SeparableOracleParam()) where {T<:AbstractTypicalOracle}
+                            param::SeparableOracleParam = SeparableOracleParam(),
+                            optimizer = DEFAULT_OPTIMIZER) where {T<:AbstractTypicalOracle}
         @debug "Building classical separable oracle"
         @info "SeparableOracle: N=$N subproblems, $(Threads.nthreads()) threads available for parallel execution"
         # assume each oracle is associated with a single t, that is dim_t = N
-        oracles = [T(data, master; customize = customize, scen_idx=j, param = sub_oracle_param) for j=1:N] 
+        oracles = [T(data, master; model = model, scen_idx = j, param = sub_oracle_param, optimizer = optimizer) for j in 1:N]
 
         new(param, oracles, N)
     end
@@ -119,6 +126,3 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
         return true, [Hyperplane(length(x_value), length(t_value))], deepcopy(t_value)
     end
 end
-
-
-

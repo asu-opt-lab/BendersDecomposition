@@ -25,10 +25,10 @@ oracle for capacitated facility location problems requires only changing the ora
 
 ```julia
 # Classical Benders oracle
-oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+oracle = ClassicalOracle(data, master; model = update_sub_model!)
 
 # Knapsack-based oracle (e.g., CFL)
-oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!)
+oracle = CFLKnapsackOracle(data, master; model = update_sub_model!)
 ```
 
 The execution environment (`BendersSeq`, `BendersSeqInOut`, `BendersBnB`, or any variants)
@@ -52,8 +52,8 @@ Common parameters include:
 ### Example: ClassicalOracle
 
 ```julia
-param = ClasscialOracleParam(rtol = 1e-6, atol = 1e-8)
-oracle = ClassicalOracle(data, master; customize = customize_sub_model!, param = param)
+param = ClassicalOracleParam(rtol = 1e-6, atol = 1e-8)
+oracle = ClassicalOracle(data, master; model = update_sub_model!, param = param)
 ```
 
 Some oracles expose **behavioral parameters** in addition to numerical tolerances.
@@ -89,14 +89,20 @@ implementations:
 oracle = SeparableOracle(
     data,
     master,
-    ClassicalOracle,
+    ClassicalOracle(),
     N;
     sub_oracle_param = ClassicalOracleParam(rtol = 1e-6),
 )
 ```
 
-Any oracle type `T <: AbstractTypicalOracle` that implements the required
-constructor interface can be used.
+Any oracle whose concrete type `T <: AbstractTypicalOracle` implements the
+required constructor interface can be used as the template.
+
+!!! note
+    `SeparableOracle` evaluates subproblems with Julia threads. The default GLPK
+    optimizer is allowed, but GLPK may raise solver-internal errors during
+    threaded subproblem evaluation on some platforms. If that occurs, pass a
+    different LP optimizer with `optimizer = ...` or run Julia with one thread.
 
 ---
 
@@ -110,16 +116,18 @@ A `SplitOracle` is constructed by combining two *typical* oracles (denoted by
 encapsulates a [`DcglpParam`](@ref), which controls the behavior of the DCGLP.
 
 ```julia
+using CPLEX
+
 oracle_kappa = ClassicalOracle(data, master)
 oracle_nu    = ClassicalOracle(data, master)
 
 dcglp_optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, 
-        "CPX_PARAM_EPRHS" => 1e-9, 
-        "CPX_PARAM_NUMERICALEMPHASIS" => 1, 
-        "CPX_PARAM_EPOPT" => 1e-9, 
-        MOI.Silent() => true
-    )
+    CPLEX.Optimizer,
+    "CPX_PARAM_EPRHS" => 1e-9,
+    "CPX_PARAM_NUMERICALEMPHASIS" => 1,
+    "CPX_PARAM_EPOPT" => 1e-9,
+    MOI.Silent() => true,
+)
 dcglp_param = DcglpParam(dcglp_optimizer)
 split_param = SplitOracleParam(
         dcglp_param;
@@ -130,6 +138,8 @@ split_param = SplitOracleParam(
 
 oracle = SplitOracle(master, [oracle_kappa, oracle_nu], split_param)
 ```
+Attach the solver for the DCGLP through standard JuMP APIs such as `optimizer_with_attributes(...)`.
+
 The component oracles `oracle_kappa` and `oracle_nu` can be any implementation of typical oracles compatible with the underlying problem.
 
 ### Configuring `SplitOracle` Behavior

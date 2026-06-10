@@ -1,3 +1,6 @@
 [deps]
 BendersX = "e6515e7d-f2f3-4cbe-b502-b49d10f04732"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+
+[compat]
+Documenter = "1.17"

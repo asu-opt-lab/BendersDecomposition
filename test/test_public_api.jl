@@ -18,6 +18,12 @@ using BendersX
         :LpNorm,
         :RandomFractional, :MostFractional, :LargestFractional,
         :NoDisjunctiveCuts, :AllDisjunctiveCuts, :DisjunctiveCutsSmallerIndices,
+        :set_parameter!, :update_master_model!, :update_sub_model!,
+        :CFLPData, :UFLPData, :SCFLPData, :SNIPData,
+        :CFLKnapsackOracle, :CFLKnapsackOracleParam, :UFLKnapsackOracle, :UFLKnapsackOracleParam,
+        :read_GK_data, :read_cfl_file, :read_cflp_benchmark_data,
+        :read_uflp_benchmark_data, :read_Simple_data,
+        :read_stochastic_capacited_facility_location_problem, :read_snip_data,
     ]
 
     public_only = [
@@ -25,18 +31,12 @@ using BendersX
         :AbstractMaster, :AbstractOracle, :AbstractOracleParam, :AbstractTypicalOracle,
         :AbstractRootNodePreprocessing, :AbstractNorm, :StandardNorm,
         :SplitIndexSelectionRule, :DisjunctiveCutsAppendRule,
-        :generate_cuts, :set_parameter!, :customize_master_model!, :customize_sub_model!,
-        :customize_mip_model!, :Hyperplane, :aggregate, :evaluate_violation,
+        :generate_cuts, :Hyperplane, :aggregate, :evaluate_violation,
         :select_top_fraction, :hyperplanes_to_expression, :add_constraints,
         :copy_variables!, :var_from_tuple, :transfer_scaled_linear_rows_and_bounds_with_types!,
-        :assign_attributes!, :infeasibility_report,
+        :infeasibility_report,
         :TimeLimitException, :UnexpectedModelStatusException, :UndefError,
         :AlgorithmException, :UnsupportedModelException,
-        :CFLPData, :UFLPData, :SCFLPData, :SNIPData,
-        :CFLKnapsackOracle, :CFLKnapsackOracleParam, :UFLKnapsackOracle, :UFLKnapsackOracleParam,
-        :read_GK_data, :read_cfl_file, :read_cflp_benchmark_data,
-        :read_uflp_benchmark_data, :read_Simple_data,
-        :read_stochastic_capacited_facility_location_problem, :read_snip_data,
     ]
 
     private_symbols = [

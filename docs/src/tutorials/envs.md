@@ -123,8 +123,8 @@ The short form `BendersBnB(master, oracle; param = benders_param)` wires the
 oracle as a lazy callback and uses no root preprocessing:
 
 ```julia
-master = Master(data; customize = customize_master_model!)
-oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+master = Master(data; model = update_master_model!)
+oracle = ClassicalOracle(data, master; model = update_sub_model!)
 
 env = BendersBnB(master, oracle; param = benders_param)
 log = solve!(env)
@@ -179,13 +179,19 @@ When stronger cuts are needed—such as separating fractional solutions—users 
 add a **user callback**, for example with a disjunctive oracle.
 
 ```julia
+using CPLEX
+
 # typical oracles (κ, ν)
-kappa = ClassicalOracle(data, master; customize = customize_sub_model!)
-nu    = ClassicalOracle(data, master; customize = customize_sub_model!)
+kappa = ClassicalOracle(data, master; model = update_sub_model!)
+nu    = ClassicalOracle(data, master; model = update_sub_model!)
 typical_oracles = [kappa, nu]
 
 # DCGLP and SplitOracle parameters
-dcglp_optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
+dcglp_optimizer = optimizer_with_attributes(
+    CPLEX.Optimizer,
+    "CPXPARAM_Threads" => 7,
+    MOI.Silent() => true,
+)
 dcglp_param = DcglpParam(dcglp_optimizer; time_limit = 200.0)
 split_param = SplitOracleParam(
     dcglp_param;
@@ -199,7 +205,7 @@ split_param = SplitOracleParam(
 disjunctive_oracle = SplitOracle(master, typical_oracles, split_param)
 user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = 1))
 
-lazy_oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!)
 lazy_callback = LazyCallback(lazy_oracle)
 
 env = BendersBnB(
@@ -211,6 +217,8 @@ env = BendersBnB(
 )
 log = solve!(env)
 ```
+
+The master and DCGLP optimizers should be attached through standard JuMP APIs.
 
 ---
 

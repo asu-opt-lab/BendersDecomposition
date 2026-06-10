@@ -6,6 +6,7 @@ using Printf
 using LinearAlgebra
 using SparseArrays
 using DataFrames
+using GLPK
 
 const MOI = MathOptInterface
 
@@ -46,15 +47,15 @@ public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle
 public AbstractRootNodePreprocessing
 public AbstractNorm, StandardNorm
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
-public generate_cuts
+public generate_cuts, callback_node_count, callback_node_depth
 export set_parameter!
-export customize_master_model!, customize_sub_model!, customize_mip_model!
+export update_master_model!, update_sub_model!
 
 # Public but not auto-imported advanced utilities and support types
 public Hyperplane, aggregate, evaluate_violation, select_top_fraction
 public hyperplanes_to_expression, add_constraints
 public copy_variables!, var_from_tuple, transfer_scaled_linear_rows_and_bounds_with_types!
-public assign_attributes!, infeasibility_report
+public infeasibility_report
 public TimeLimitException, UnexpectedModelStatusException, UndefError
 public AlgorithmException, UnsupportedModelException
 

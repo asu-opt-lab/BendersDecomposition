@@ -6,8 +6,8 @@ Parameters for user callbacks in the branch-and-bound process.
 
 # Fields
 - `frequency::Int = 50`: How often to process nodes (every N fractional nodes)
-- `node_count::Int = -1`: Only process nodes after this node count (-1 means process all)
-- `depth::Int = -1`: Only process nodes with depth >= this value (-1 means process all depths)
+- `node_count::Int = -1`: Maximum solver node count to process (-1 means no node-count limit)
+- `depth::Int = -1`: Maximum solver node depth to process (-1 means no depth limit)
 """
 Base.@kwdef struct UserCallbackParam <: AbstractUserCallbackParam
     frequency::Int = 50
@@ -47,7 +47,15 @@ Generates and adds Benders cuts at fractional nodes based on the specified frequ
 - `log::BendersBnBLog`: Log object to record statistics
 - `param::BendersBnBParam`: Parameters for the branch-and-bound process
 - `callback::UserCallback`: Configuration for the user callback with parameters controlling when cuts are generated
+
+# Notes
+- Solver-specific callback metadata such as node count and depth is resolved through
+  [`callback_node_count`](@ref) and [`callback_node_depth`](@ref).
+- CPLEX support for these accessors is provided by `BendersXCPLEXExt` when `CPLEX.jl`
+  is loaded.
+- If callback metadata is unsupported by the active solver, the fallback metadata accessor emits a warning and the corresponding threshold is not applied.
 """
+
 function user_callback(cb_data, master::Master, log::BendersBnBLog, param::BendersBnBParam, callback::UserCallback)
     status = JuMP.callback_node_status(cb_data, master.model)
     
@@ -58,22 +66,14 @@ function user_callback(cb_data, master::Master, log::BendersBnBLog, param::Bende
         if log.num_of_fraction_node >= callback.params.frequency
             log.num_of_fraction_node = 0
             
-            # Get node information if using CPLEX
-            process_node = true
-            if solver_name(master.model) == "CPLEX" && (callback.params.node_count != -1 || callback.params.depth != -1)
-                n_count = Ref{CPXINT}()
-                node_depth = Ref{CPXINT}()
-                CPXcallbackgetinfoint(cb_data, CPXCALLBACKINFO_NODECOUNT, n_count)
-                CPXcallbackgetinfoint(cb_data, CPXCALLBACKINFO_NODEDEPTH, node_depth)
-                
-                # Check if node meets criteria
-                if (callback.params.node_count != -1 && n_count[] > callback.params.node_count) || 
-                   (callback.params.depth != -1 && node_depth[] < callback.params.depth)
-                    process_node = false
-                end
-            elseif (callback.params.node_count != -1 || callback.params.depth != -1) && solver_name(master.model) != "CPLEX"
-                @warn "node_count and depth parameters are not supported for $(solver_name(master.model)) solver"
-            end
+            node_count = callback.params.node_count == -1 ? nothing :
+                callback_node_count(cb_data, master.model)
+            node_depth = callback.params.depth == -1 ? nothing :
+                callback_node_depth(cb_data, master.model)
+
+            process_node =
+                (isnothing(node_count) || node_count <= callback.params.node_count) &&
+                (isnothing(node_depth) || node_depth <= callback.params.depth)
             
             if process_node
                 # Create state and get current variable values

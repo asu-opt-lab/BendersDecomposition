@@ -3,6 +3,7 @@ using BendersX
 using Printf
 using Statistics
 using CPLEX
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
 # load settings
 # args = parse_commandline()
@@ -51,15 +52,15 @@ oracle_param = SplitOracleParam(dcglp_param;
 # -----------------------------------------------------------------------------
 # master model
 # -----------------------------------------------------------------------------
-master = Master(data; customize = customize_master_model!)
+master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
 
 # -----------------------------------------------------------------------------
 # typical oracles
 # -----------------------------------------------------------------------------
 # Create two oracles for kappa & nu
 typical_oracles = [
-    CFLKnapsackOracle(data, master; customize = customize_sub_model!),
-    CFLKnapsackOracle(data, master; customize = customize_sub_model!)
+    CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer),
+    CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
 ]
 
 # -----------------------------------------------------------------------------
@@ -70,7 +71,7 @@ disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
 # -----------------------------------------------------------------------------
 # root node preprocessing
 # -----------------------------------------------------------------------------
-lazy_oracle = CFLKnapsackOracle(data, master; customize = customize_sub_model!)
+lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
 
 root_seq_type = BendersSeqInOut
 root_param = BendersSeqInOutParam(

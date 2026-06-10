@@ -2,12 +2,88 @@ using BendersX
 using CSV
 using DataFrames
 using JuMP
+include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
 const OUTPUT_DIR = @__DIR__
 
+function create_mip_model(data::UFLPData)
+    model = Model(mip_optimizer)
+    I, J = data.n_facilities, data.n_customers
+    @variable(model, x[1:I], Bin)
+    @variable(model, y[1:I, 1:J] >= 0)
+    @variable(model, t[1:J] >= 0)
+
+    cost_demands = data.costs .* data.demands'
+    @objective(model, Min, data.fixed_costs' * x + sum(t))
+
+    @constraint(model, obj[j in 1:J], t[j] >= sum(cost_demands[:, j] .* y[:, j]))
+    @constraint(model, demand[j in 1:J], sum(y[:, j]) == 1)
+    @constraint(model, facility_open, y .<= x)
+    return model
+end
+
+function create_mip_model(data::CFLPData)
+    model = Model(mip_optimizer)
+    I, J = data.n_facilities, data.n_customers
+    @variable(model, x[1:I], Bin)
+    @variable(model, y[1:I, 1:J] >= 0)
+    @variable(model, t)
+
+    cost_demands = data.costs .* data.demands'
+    @objective(model, Min, data.fixed_costs' * x + t)
+
+    @constraint(model, t >= sum(cost_demands .* y))
+    @constraint(model, demand[j in 1:J], sum(y[:, j]) == 1)
+    @constraint(model, facility_open, y .<= x)
+    @constraint(model, capacity[i in 1:I], sum(data.demands .* y[i, :]) <= data.capacities[i] * x[i])
+    @constraint(model, capacity_total, sum(data.capacities[i] * x[i] for i in 1:I) >= sum(data.demands))
+    return model
+end
+
+function create_mip_model(data::SCFLPData)
+    model = Model(mip_optimizer)
+    I, J, N = data.n_facilities, data.n_customers, data.n_scenarios
+
+    @variable(model, x[1:I], Bin)
+    @variable(model, y[1:I, 1:J, 1:N] >= 0)
+
+    @objective(model, Min,
+        (1 / N) * sum(data.costs[i, j] * data.demands[s][j] * y[i, j, s] for i in 1:I, j in 1:J, s in 1:N) +
+        data.fixed_costs' * x
+    )
+
+    @constraint(model, demand[j in 1:J, s in 1:N], sum(y[:, j, s]) == 1)
+    @constraint(model, facility_open[i in 1:I, j in 1:J, s in 1:N], y[i, j, s] <= x[i])
+    @constraint(model, capacity[i in 1:I, s in 1:N], sum(data.demands[s][j] * y[i, j, s] for j in 1:J) <= data.capacities[i] * x[i])
+    return model
+end
+
+function create_mip_model(data::SNIPData)
+    model = Model(mip_optimizer)
+    K = data.num_scenarios
+    @variable(model, x[1:length(data.D)], Bin)
+    @variable(model, y[1:data.num_nodes, 1:K] >= 0)
+
+    @objective(model, Min, sum(data.scenarios[k][3] * y[data.scenarios[k][1], k] for k in 1:K))
+
+    @constraint(model, [k in 1:K], y[data.scenarios[k][2], k] == 1)
+
+    for k in 1:K
+        for (idx, (from, to, r, q)) in enumerate(data.D)
+            @constraint(model, y[from, k] - q * y[to, k] >= 0)
+            @constraint(model, y[from, k] - r * y[to, k] >= -(r - q) * data.ψ[k][to] * x[idx])
+        end
+        for (from, to, r) in data.A_minus_D
+            @constraint(model, y[from, k] - r * y[to, k] >= 0)
+        end
+    end
+
+    @constraint(model, sum(x) <= data.budget)
+    return model
+end
+
 function solve_reference_objective(data, instance_name::AbstractString)
-    mip_model = Model()
-    customize_mip_model!(mip_model, data)
+    mip_model = create_mip_model(data)
     optimize!(mip_model)
     termination_status(mip_model) == OPTIMAL || error("Reference MILP for $(instance_name) did not terminate optimally: $(termination_status(mip_model))")
     return objective_value(mip_model)

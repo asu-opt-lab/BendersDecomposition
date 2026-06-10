@@ -72,11 +72,11 @@ where:
 # Constructors
 ```julia
 ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
-             customize = customize_sub_model!,
+             model = update_sub_model!,
              scen_idx::Int = 0)
 
 ParetoOracle(data::AbstractData, master::Master; 
-            customize = customize_sub_model!,
+            model = update_sub_model!,
             scen_idx::Int = 0,
             param::ParetoOracleParam)
 ```
@@ -115,14 +115,16 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
     pareto_model::Model
 
     function ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
-                         customize = customize_sub_model!,
-                         scen_idx::Int = 0)
+                         model = update_sub_model!,
+                         scen_idx::Int = 0,
+                         optimizer = DEFAULT_OPTIMIZER)
 
         @debug "Building Pareto oracle"
-        model = Model()
+        sub_model = Model()
+        set_optimizer_checked!(sub_model, optimizer, "ParetoOracle standard subproblem model")
 
         # Copy the master's coupling variables into the submodel (with identical axes and symbols)
-        x_copy = copy_variables!(model, master.x_tuple)
+        x_copy = copy_variables!(sub_model, master.x_tuple)
 
         # Collect all copied master variables
         x = var_from_tuple(x_copy)
@@ -133,23 +135,24 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
             throw(DimensionMismatch("core_point has length $(length(param.core_point)) but expected $dim_x"))
         end
 
-        # Build the submodel using user-defined customization
-        customize(model, data, scen_idx; x_copy...)
+        # Build the submodel using user-defined model update
+        model(sub_model, data, scen_idx; x_copy...)
 
         # Validate that the subproblem is LP-compatible for typical oracles
-        _validate_lp_compatibility(model)
+        _validate_lp_compatibility(sub_model)
 
         # ---------------------------------------------------------
         # Build Pareto Model (Re-run construction instead of copying)
         # ---------------------------------------------------------
         pareto_model = Model()
+        set_optimizer_checked!(pareto_model, optimizer, "ParetoOracle pareto subproblem model")
 
         # Copy master variables for pareto model
         pareto_x_copy = copy_variables!(pareto_model, master.x_tuple)
         pareto_x = var_from_tuple(pareto_x_copy)
 
         # Build pareto model structure
-        customize(pareto_model, data, scen_idx; pareto_x_copy...)
+        model(pareto_model, data, scen_idx; pareto_x_copy...)
 
         # Apply Magnanti-Wong transformations (add σ, etc.)
         _apply_pareto_transformations!(pareto_model, pareto_x)
@@ -158,18 +161,19 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         # Finalize Standard Model
         # ---------------------------------------------------------
         # NOW add fixing constraints to standard model
-        @constraint(model, fix_x, x .== 0)
+        @constraint(sub_model, fix_x, x .== 0)
 
-        new(param, model, fix_x, pareto_model)
+        new(param, sub_model, fix_x, pareto_model)
     end
 
     ParetoOracle() = new()
 
     function ParetoOracle(data::AbstractData, master::Master;
-                          customize = customize_sub_model!,
+                          model = update_sub_model!,
                           scen_idx::Int = 0,
-        param::ParetoOracleParam)
-        return ParetoOracle(data, master, param; customize = customize, scen_idx = scen_idx)
+        param::ParetoOracleParam,
+        optimizer = DEFAULT_OPTIMIZER)
+        return ParetoOracle(data, master, param; model = model, scen_idx = scen_idx, optimizer = optimizer)
     end
 end
 
@@ -205,7 +209,6 @@ Generate Pareto-optimal cuts using the Magnanti-Wong method.
 """
 function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::Vector{Float64};
                        tol_normalize = 1.0, time_limit = 3600)
-
     λ = oracle.param.λ
     oracle.param.core_point .= λ .* oracle.param.core_point .+ (1 - λ) .* x_value
     t0 = time()
@@ -226,9 +229,9 @@ function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::
 
         sub_obj_val = objective_value(oracle.model)
 
-        # if sub_obj_val < t_value[1] * (1 + oracle.param.rtol) + oracle.param.atol / tol_normalize
-        #     return true, [Hyperplane(length(x_value), length(t_value))], [sub_obj_val]
-        # end
+        if sub_obj_val < t_value[1] * (1 + oracle.param.rtol) + oracle.param.atol / tol_normalize
+            return true, [Hyperplane(length(x_value), length(t_value))], [sub_obj_val]
+        end
 
         set_objective_coefficient(oracle.pareto_model, oracle.pareto_model[:σ], sub_obj_val - oracle.param.pareto_tol)
 

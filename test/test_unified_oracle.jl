@@ -30,7 +30,7 @@ function create_unified_test_data(n_facilities::Int=3, n_customers::Int=4)
     return SimpleUnifiedTestData(n_facilities, n_customers, costs)
 end
 
-function customize_master_unified!(model::Model, data::SimpleUnifiedTestData)
+function update_master_unified_model!(model::Model, data::SimpleUnifiedTestData)
     optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
     set_optimizer(model, optimizer)
     
@@ -72,7 +72,7 @@ end
         # Test that UnifiedOracle can be constructed
         data = create_unified_test_data()
         
-        function customize_sub_basic!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+        function update_sub_basic_model!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
             
@@ -86,8 +86,8 @@ end
             return nothing
         end
         
-        master = Master(data; customize = customize_master_unified!)
-        oracle = UnifiedOracle(data, master; customize = customize_sub_basic!)
+        master = Master(data; model = update_master_unified_model!)
+        oracle = UnifiedOracle(data, master; model = update_sub_basic_model!)
         
         # Verify oracle has all required fields
         @test !isempty(oracle.fixing_lb_constraints)
@@ -101,7 +101,7 @@ end
         data = create_unified_test_data()
         mip_opt = solve_mip_unified_reference(data)
         
-        function customize_sub_compare!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+        function update_sub_compare_model!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
             
@@ -118,8 +118,8 @@ end
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
         
         # Test ClassicalOracle
-        master_classical = Master(data; customize = customize_master_unified!)
-        oracle_classical = ClassicalOracle(data, master_classical; customize = customize_sub_compare!)
+        master_classical = Master(data; model = update_master_unified_model!)
+        oracle_classical = ClassicalOracle(data, master_classical; model = update_sub_compare_model!)
         env_classical = BendersSeq(master_classical, oracle_classical; param = benders_param)
         solve!(env_classical)
         
@@ -127,8 +127,8 @@ end
         @test isapprox(mip_opt, env_classical.obj_value, atol=1e-4)
         
         # Test UnifiedOracle
-        master_unified = Master(data; customize = customize_master_unified!)
-        oracle_unified = UnifiedOracle(data, master_unified; customize = customize_sub_compare!)
+        master_unified = Master(data; model = update_master_unified_model!)
+        oracle_unified = UnifiedOracle(data, master_unified; model = update_sub_compare_model!)
         env_unified = BendersSeq(master_unified, oracle_unified; param = benders_param)
         solve!(env_unified)
         
@@ -158,7 +158,7 @@ end
         
         data = create_unified_test_data()
         
-        function customize_sub_param!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+        function update_sub_param_model!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
             
@@ -172,8 +172,8 @@ end
             return nothing
         end
         
-        master = Master(data; customize = customize_master_unified!)
-        oracle = UnifiedOracle(data, master; customize = customize_sub_param!, param = param)
+        master = Master(data; model = update_master_unified_model!)
+        oracle = UnifiedOracle(data, master; model = update_sub_param_model!, param = param)
         
         @test oracle.param.rtol == 1e-8
         @test oracle.param.zero_tol == 1e-5
@@ -185,7 +185,7 @@ end
         data = create_unified_test_data()
         mip_opt = solve_mip_unified_reference(data)
         
-        function customize_sub_w0!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+        function update_sub_w0_model!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
             
@@ -203,8 +203,8 @@ end
         
         # Test with w0 = 2.0
         param_w0 = UnifiedOracleParam(w0 = 2.0)
-        master = Master(data; customize = customize_master_unified!)
-        oracle = UnifiedOracle(data, master; customize = customize_sub_w0!, param = param_w0)
+        master = Master(data; model = update_master_unified_model!)
+        oracle = UnifiedOracle(data, master; model = update_sub_w0_model!, param = param_w0)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
         
@@ -227,7 +227,7 @@ end
         # Test that interval constraints are properly split and accepted
         data = create_unified_test_data()
 
-        function customize_sub_interval_accept!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+        function update_sub_interval_accept_model!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
 
@@ -244,9 +244,9 @@ end
             return nothing
         end
 
-        master = Master(data; customize = customize_master_unified!)
+        master = Master(data; model = update_master_unified_model!)
         # Should NOT throw
-        oracle = UnifiedOracle(data, master; customize = customize_sub_interval_accept!)
+        oracle = UnifiedOracle(data, master; model = update_sub_interval_accept_model!)
         @test oracle.model isa Model
     end
 
@@ -256,7 +256,7 @@ end
             n::Int
         end
 
-        function customize_master_interval_reform!(model::Model, data::UnifiedIntervalReformData)
+        function update_master_interval_reform_model!(model::Model, data::UnifiedIntervalReformData)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
             @variable(model, x[1:data.n], Bin)
@@ -268,7 +268,7 @@ end
 
         data = UnifiedIntervalReformData(2)
 
-        function customize_sub_interval_reform!(model::Model, data::UnifiedIntervalReformData, scen_idx::Int; x)
+        function update_sub_interval_reform_model!(model::Model, data::UnifiedIntervalReformData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
             @variable(model, y >= 0)
@@ -278,8 +278,8 @@ end
             return nothing
         end
 
-        master = Master(data; customize = customize_master_interval_reform!)
-        oracle = UnifiedOracle(data, master; customize = customize_sub_interval_reform!)
+        master = Master(data; model = update_master_interval_reform_model!)
+        oracle = UnifiedOracle(data, master; model = update_sub_interval_reform_model!)
 
         σ = variable_by_name(oracle.model, "σ")
 
@@ -297,7 +297,7 @@ end
         # Test that vectorized constraints (A*y == b form) are properly split and accepted
         data = create_unified_test_data()
 
-        function customize_sub_vectorized!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+        function update_sub_vectorized_model!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
 
@@ -321,9 +321,9 @@ end
             return nothing
         end
 
-        master = Master(data; customize = customize_master_unified!)
+        master = Master(data; model = update_master_unified_model!)
         # Should NOT throw
-        oracle = UnifiedOracle(data, master; customize = customize_sub_vectorized!)
+        oracle = UnifiedOracle(data, master; model = update_sub_vectorized_model!)
         @test oracle.model isa Model
     end
 
@@ -331,7 +331,7 @@ end
         # Test with ALL valid patterns from test_validate_LP.jl
         data = create_unified_test_data()
 
-        function customize_sub_all_patterns!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+        function update_sub_all_patterns_model!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
 
@@ -356,9 +356,9 @@ end
             return nothing
         end
 
-        master = Master(data; customize = customize_master_unified!)
+        master = Master(data; model = update_master_unified_model!)
         # Should NOT throw
-        oracle = UnifiedOracle(data, master; customize = customize_sub_all_patterns!)
+        oracle = UnifiedOracle(data, master; model = update_sub_all_patterns_model!)
         @test oracle.model isa Model
     end
 
@@ -367,7 +367,7 @@ end
         data = create_unified_test_data()
         mip_opt = solve_mip_unified_reference(data)
 
-        function customize_sub_interval_converge!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
+        function update_sub_interval_converge_model!(model::Model, data::SimpleUnifiedTestData, scen_idx::Int; x)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
 
@@ -385,8 +385,8 @@ end
 
         benders_param = BendersSeqParam(time_limit = 60.0, gap_tolerance = 1e-6, verbose = false)
 
-        master = Master(data; customize = customize_master_unified!)
-        oracle = UnifiedOracle(data, master; customize = customize_sub_interval_converge!)
+        master = Master(data; model = update_master_unified_model!)
+        oracle = UnifiedOracle(data, master; model = update_sub_interval_converge_model!)
         env = BendersSeq(master, oracle; param = benders_param)
         solve!(env)
 
@@ -402,7 +402,7 @@ end
             n::Int  # number of decision variables
         end
 
-        function customize_master_reform!(model::Model, data::ReformTestData)
+        function update_master_reform_model!(model::Model, data::ReformTestData)
             optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
             set_optimizer(model, optimizer)
 
@@ -418,7 +418,7 @@ end
             # Test that σ variable is free (no lower/upper bound)
             data = ReformTestData(2)
 
-            function customize_sub_sigma!(model::Model, data::ReformTestData, scen_idx::Int; x)
+            function update_sub_sigma_model!(model::Model, data::ReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -429,8 +429,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_sigma!)
+            master = Master(data; model = update_master_reform_model!)
+            oracle = UnifiedOracle(data, master; model = update_sub_sigma_model!)
 
             # Find σ variable by name
             σ = variable_by_name(oracle.model, "σ")
@@ -442,7 +442,7 @@ end
         @testset "Objective becomes min σ" begin
             data = ReformTestData(2)
 
-            function customize_sub_obj!(model::Model, data::ReformTestData, scen_idx::Int; x)
+            function update_sub_obj_model!(model::Model, data::ReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -453,8 +453,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_obj!)
+            master = Master(data; model = update_master_reform_model!)
+            oracle = UnifiedOracle(data, master; model = update_sub_obj_model!)
 
             # New objective should be just σ
             σ = variable_by_name(oracle.model, "σ")
@@ -467,7 +467,7 @@ end
             # Verify lb (x + σ >= value) and ub (x - σ <= value) constraints
             data = ReformTestData(2)
 
-            function customize_sub_fix!(model::Model, data::ReformTestData, scen_idx::Int; x)
+            function update_sub_fix_model!(model::Model, data::ReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -478,8 +478,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_fix!)
+            master = Master(data; model = update_master_reform_model!)
+            oracle = UnifiedOracle(data, master; model = update_sub_fix_model!)
 
             # Should have one lb and one ub constraint per decision variable
             @test length(oracle.fixing_lb_constraints) == data.n
@@ -509,7 +509,7 @@ end
             data = ReformTestData(2)
             w0 = 2.5
 
-            function customize_sub_objcon!(model::Model, data::ReformTestData, scen_idx::Int; x)
+            function update_sub_objcon_model!(model::Model, data::ReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -520,9 +520,9 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
+            master = Master(data; model = update_master_reform_model!)
             param = UnifiedOracleParam(w0 = w0)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_objcon!, param = param)
+            oracle = UnifiedOracle(data, master; model = update_sub_objcon_model!, param = param)
 
             σ = variable_by_name(oracle.model, "σ")
 
@@ -538,7 +538,7 @@ end
             # Test that problem constraints are correctly modified with ±σ
             data = ReformTestData(2)
 
-            function customize_sub_relax!(model::Model, data::ReformTestData, scen_idx::Int; x)
+            function update_sub_relax_model!(model::Model, data::ReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -552,8 +552,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_relax!)
+            master = Master(data; model = update_master_reform_model!)
+            oracle = UnifiedOracle(data, master; model = update_sub_relax_model!)
 
             σ = variable_by_name(oracle.model, "σ")
 
@@ -572,7 +572,7 @@ end
             # Test that == constraints are split into >= and <= with ±σ
             data = ReformTestData(2)
 
-            function customize_sub_eq!(model::Model, data::ReformTestData, scen_idx::Int; x)
+            function update_sub_eq_model!(model::Model, data::ReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -584,8 +584,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_eq!)
+            master = Master(data; model = update_master_reform_model!)
+            oracle = UnifiedOracle(data, master; model = update_sub_eq_model!)
 
             σ = variable_by_name(oracle.model, "σ")
 
@@ -611,7 +611,7 @@ end
             # Constraints not containing x should NOT have σ added
             data = ReformTestData(2)
 
-            function customize_sub_nox!(model::Model, data::ReformTestData, scen_idx::Int; x)
+            function update_sub_nox_model!(model::Model, data::ReformTestData, scen_idx::Int; x)
                 optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
                 set_optimizer(model, optimizer)
 
@@ -626,8 +626,8 @@ end
                 return nothing
             end
 
-            master = Master(data; customize = customize_master_reform!)
-            oracle = UnifiedOracle(data, master; customize = customize_sub_nox!)
+            master = Master(data; model = update_master_reform_model!)
+            oracle = UnifiedOracle(data, master; model = update_sub_nox_model!)
 
             σ = variable_by_name(oracle.model, "σ")
 

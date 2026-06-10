@@ -24,23 +24,23 @@ mutable struct Master <: AbstractMaster
     c_x::Vector{Float64}
     c_t::Vector{Float64}
 
-    function Master(data::AbstractData; customize=customize_master_model!)
+    function Master(data::AbstractData; model=update_master_model!, optimizer = DEFAULT_OPTIMIZER)
 
         @debug "Building Master module"
 
-        model = Model()
+        jump_model = Model()
+        set_optimizer_checked!(jump_model, optimizer, "Master model")
 
-        x_tuple, t = customize(model, data)
+        x_tuple, t = model(jump_model, data)
         t = t isa VariableRef ? [t] : t
         x = var_from_tuple(x_tuple)
 
         dim_x = length(x)
-        obj = objective_function(model)
+        obj = objective_function(jump_model)
         c_x = [coefficient(obj, x[i]) for i in 1:dim_x]
         dim_t = length(t)
         c_t = [coefficient(obj, t[i]) for i in 1:dim_t]
 
-        new(model, x_tuple, x, t, dim_x, dim_t, c_x, c_t)
+        new(jump_model, x_tuple, x, t, dim_x, dim_t, c_x, c_t)
     end
 end
-

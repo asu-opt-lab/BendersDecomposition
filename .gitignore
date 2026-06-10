@@ -9,3 +9,6 @@ src/BendersLibrary/src/problems/*/data/
 
 # Generated artifact archives
 artifacts_output/
+
+# Generated documentation site
+docs/build/

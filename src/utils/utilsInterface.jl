@@ -1,112 +1,137 @@
-
 """
-    customize_master_model!(model::Model, data::AbstractData) -> NamedTuple, Vector{VariableRef}
+    update_master_model!(model::Model, data::AbstractData) -> (x, t)
 
-User-defined hook for constructing the master model.
+Formulate the master problem for `data` in `model`.
 
-This function is intended to be implemented by users for their specific
-problem. Given a JuMP `model` and an instance `data`,
-the method should:
+When `Master(data)` is called, BendersX searches for an `update_master_model!` method defined for the type of `data`. This fallback method is called only if no such method exists.
 
-1. Add all master-level variables to the model.
-2. Return a `NamedTuple` containing the master decision variables x 
-and a vector of any auxiliary variables t (for use by the oracles).
+To use `Master(data)` with a custom data type, define
 
-By default, this function throws an `UndefError`, indicating that no
-implementation exists for the given subtype of `AbstractData`. Users must
-provide a specialized method:
+    update_master_model!(model::Model, data::MyDataType) -> (x, t)
+
+where `MyDataType` is the concrete subtype of [`AbstractData`](@ref) that represents your problem data.
+
+The function must:
+1. Add the master variables, constraints, and objective to `model`.
+2. Return `(x, t)`.
+
+`x` must be a `NamedTuple` containing the master variables that appear in subproblems. 
+The field names of `x` determine the keyword arguments passed to
+[`update_sub_model!`](@ref).
+
+`t` must be a `VariableRef` or `Vector{VariableRef}` representing the auxiliary
+variable(s) used to approximate the subproblem objective value.
+
+Optimizer selection is handled elsewhere. Do not attach an optimizer in this
+function.
+
+# Example
 
 ```julia
 struct MyDataType <: AbstractData
-    ...
+    n::Int
 end
 
-function customize_master_model!(model::Model, data::MyDataType)
-    # build variables and constraints
-    @variable(model, u[1:10])
-    @variable(model, v[1:2, 2:3, [:A,:B], 4:5])
-    @variable(model, t[1:10]) # auxiliary variables for Benders
+function update_master_model!(model::Model, data::MyDataType)
+    @variable(model, u[1:data.n])
+    @variable(model, v[1:data.n])
+    @variable(model, theta)
 
-    # return x-variables in a NamedTuple and t-variables in a vector
-    return (u = u, v = v), t
+    @constraint(model, sum(u) >= 1)
+    @objective(model, Min, theta)
+
+    return (u = u, v = v), theta
 end
+```
 
-Arguments
-- `model::Model`: A JuMP model that will be modified in place.
-- `data::MyDataType`: A user-defined data object describing the instance required to build the formulation.
-
-Returns
-- A `NamedTuple` mapping variable symbolic names to the JuMP variable containers (e.g., `Vector{VariableRef}`, `DenseAxisArray`, or `SparseAxisArray`) created for the master problem.
-
-Notes
-- This function must be implemented by the user for each concrete
-subtype of `AbstractData`.
-
-"""
-function customize_master_model!(model::Model, data::AbstractData)
-    throw(UndefError("update customize_master_model! for $(typeof(data))"))
-end
-
-"""
-    customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
-
-User-defined hook for constructing a subproblem model associated with a
-specific scenario.
-
-This function must be implemented by users for their concrete subtype of
-`AbstractData`. Given a JuMP `model`, a problem instance `data`, and a
-scenario index `scen_idx`, the method should:
-
-1. Add all subproblem variables associated with the given scenario.
-2. Add all subproblem constraints associated with the given scenario,
-   using master variables passed through `kwargs`.
-
-By default, this method throws an `UndefError`, indicating that no implementation
-exists for the provided argument types. Users must define their own specialized
-method if they want to use any model-based oracle. For example:
+You may also pass a custom builder directly:
 
 ```julia
-function customize_sub_model!(model::Model, data::MyDataType, scen_idx::Int; u, v)
-    # Create variables
-    @variable(model, y >= 0)
+Master(data; model = build_master_model!)
+```
 
-    scen_data = data[scen_idx]
-
-    # Add constraints based on scenario data, referencing master variables u and v
-    @constraint(model, sum(u) + y == 1)
-    @constraint(model, sum(v) == 1)
-    @constraint(model, v[2, 3, :A, 4] + y == 1)
-end
-
-Arguments
-- `model::Model` A JuMP model that will be modified in place to represent the subproblem.
-- `data::AbstractData` A user-defined data object describing the information required to build the
-subproblem formulation.
-- `scen_idx::Int` Index of the scenario for which the subproblem is built. This may be -1 if the model does not explicitly use scenarios.
-- `kwargs...` Symbolic names of the master variables passed from the master model to the subproblem for use by the oracle.
-
-Notes
-- This function must be implemented by the user to construct model-based oracles.
+In that case, `build_master_model!(model, data)` must follow the same interface.
 """
-function customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
-    throw(UndefError("update customize_sub_model! for $(typeof(data))"))
+function update_master_model!(model::Model, data::AbstractData)
+    throw(UndefError(
+        "BendersX does not know how to formulate a master problem for " * "$(typeof(data)). Define " * "`update_master_model!(model::Model, data::$(typeof(data)))`, " * "or pass a custom model-building function with " * "`Master(data; model = your_builder!)`."
+))
 end
 
 """
-    customize_mip_model!(model::Model, data::AbstractData)
+    update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
 
-User-defined hook for constructing a direct monolithic MIP model.
+Formulate the subproblem for scenario `scen_idx` and `data` in `model`.
 
-This interface is useful when you want a baseline full-space formulation in
-addition to a Benders decomposition workflow. Built-in problem libraries provide
-methods for their corresponding data types, and users may add their own
-specialized methods for custom problems.
+When a model-based oracle is constructed, BendersX searches for an `update_sub_model!` method defined for the type of `data`. This fallback method is called only if no such method exists.
 
-The function should fully define the optimization model in place, including the
-optimizer, variables, objective, and constraints.
+To use a model-based oracle with a custom data type, 
+
+    update_sub_model!(model::Model, data::MyDataType, scen_idx::Int; kwargs...)
+
+where `MyDataType` is a concrete subtype of [`AbstractData`](@ref) that represents your problem data.
+
+The function must:
+
+1. Add the subproblem variables, constraints, and objective to `model`.
+2. Use the master variables passed as keyword arguments, if needed.
+
+The keyword arguments correspond to the fields of the `NamedTuple` returned by
+[`update_master_model!`](@ref). For example, if the master-model builder returns
+
+```julia
+(x = x, y = y)
+```
+
+then the subproblem builder may be written as
+```julia
+function update_sub_model!(model, data, scen_idx; x, y)
+    ...
+end
+```
+
+`scen_idx` identifies the scenario being formulated. It may be ignored for
+deterministic models.
+
+Most implementations return `nothing`. To define generalized bound
+constraints, return `(gbc_lhs, gbc_rhs, gbc_sense)`, representing relations of the form
+ `subproblem_variable <=/>=/== affine_expression_of_master_variables`.
+
+Optimizer selection is handled elsewhere. Do not attach an optimizer in this
+function.
+
+# Example
+
+```julia
+struct MyDataType <: AbstractData
+    demand::Vector{Float64}
+    cost::Vector{Float64}
+end
+
+function update_sub_model!(model::Model, data::MyDataType, scen_idx::Int; x)
+    @variable(model, y[eachindex(data.demand)] >= 0)
+
+    @constraint(model, demand[j in eachindex(data.demand)], y[j] == data.demand[j])
+    @constraint(model, linking[j in eachindex(data.demand)], y[j] <= x[j])
+    @objective(model, Min, sum(data.cost[j] * y[j] for j in eachindex(data.demand)))
+
+    return nothing
+end
+```
+
+You may pass a custom builder directly:
+
+```julia
+ClassicalOracle(data, master; model = build_sub_model!)
+```
+
+In that case, `build_sub_model!(model, data, scen_idx; kwargs...)` must follow
+the same interface.
 """
-function customize_mip_model!(model::Model, data::AbstractData)
-    throw(UndefError("update customize_mip_model! for $(typeof(data))"))
+function update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...) 
+    throw(UndefError( 
+        "BendersX does not know how to formulate a subproblem for " * "$(typeof(data)). Define " * "`update_sub_model!(model::Model, data::$(typeof(data)), " * "scen_idx::Int; kwargs...)`, or pass a custom model-building " * 
+        "function with `Oracle(...; model = your_builder!)`." )) 
 end
 
 """
@@ -294,15 +319,17 @@ function transfer_scaled_linear_rows_and_bounds_with_types!(
 
             expr = sum(a * omega[j] for (a, j) in terms)
 
+            # MOI stores scalar affine constraints as `constant + expr in set`.
+            # The lifted point (omega / omega0) must satisfy the same relation.
             if S == MOI.GreaterThan{Float64}
-                @constraint(dcglp, set.lower * omega0 - expr >= constant * omega0)
+                @constraint(dcglp, expr + constant * omega0 >= set.lower * omega0)
             elseif S == MOI.LessThan{Float64}
-                @constraint(dcglp, expr - set.upper * omega0 >= -constant * omega0)
+                @constraint(dcglp, expr + constant * omega0 <= set.upper * omega0)
             elseif S == MOI.EqualTo{Float64}
-                @constraint(dcglp, expr - set.value * omega0 == -constant * omega0)
+                @constraint(dcglp, expr + constant * omega0 == set.value * omega0)
             elseif S == MOI.Interval{Float64}
-                @constraint(dcglp, expr - set.upper * omega0 >= -constant * omega0)
-                @constraint(dcglp, set.lower * omega0 - expr >= constant * omega0)
+                @constraint(dcglp, expr + constant * omega0 <= set.upper * omega0)
+                @constraint(dcglp, expr + constant * omega0 >= set.lower * omega0)
             end
         end
     end

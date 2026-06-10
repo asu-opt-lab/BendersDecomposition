@@ -5,7 +5,7 @@
     GBCBoundType
 
 Enumeration describing the sense of a generalized bound constraint returned by
-[`customize_sub_model!`](@ref).
+a subproblem model-update function.
 
 - `UpperBound`: interpret the relation as `lhs <= rhs`
 - `LowerBound`: interpret the relation as `lhs >= rhs`
@@ -65,7 +65,7 @@ Concrete subtypes store the coefficients, dimensions, and any scenario data
 needed to build the master and subproblem models. Users are expected to define
 their own `AbstractData` subtype for each application.
 
-See also: [`customize_master_model!`](@ref), [`customize_sub_model!`](@ref)
+See also: [`Master`](@ref), [`AbstractOracle`](@ref)
 """
 abstract type AbstractData end
 

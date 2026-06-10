@@ -83,11 +83,7 @@ function read_cflp_benchmark_data(path_to_raw_data)
     """
 end
 
-function customize_master_model!(model::Model, data::CFLPData)
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
+function update_master_model!(model::Model, data::CFLPData)
     I = data.n_facilities
     @variable(model, x[1:I], Bin)
     @variable(model, t >= -1e6)
@@ -97,11 +93,7 @@ function customize_master_model!(model::Model, data::CFLPData)
     return (x = x, ), t
 end
 
-function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x) 
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
+function update_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
     I, J = data.n_facilities, data.n_customers   
     @variable(model, y[1:I, 1:J] >= 0)
     cost_demands = data.costs .* data.demands'
@@ -112,11 +104,19 @@ function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
 end
 
 data   = read_cflp_benchmark_data("p1")
-master = Master(data; customize = customize_master_model!)
-oracle = ClassicalOracle(data, master; customize = customize_sub_model!)
+master_optimizer = optimizer_with_attributes(CPLEX.Optimizer, MOI.Silent() => true)
+subproblem_optimizer = optimizer_with_attributes(
+    CPLEX.Optimizer,
+    "CPXPARAM_Threads" => 7,
+    MOI.Silent() => true,
+)
+master = Master(data; model = update_master_model!, optimizer = master_optimizer)
+oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = subproblem_optimizer)
 env    = BendersSeq(master, oracle)
 log    = solve!(env)
 ```
+
+Attach solvers through standard JuMP APIs such as `optimizer_with_attributes(...)`.
 
 
 
@@ -148,31 +148,29 @@ For an example specific to CFLP, see `read_cflp_benchmark_data` in `./src/Bender
 ## [3. Modeling Interface](@id modeling-interface)
 *Defining Master and Subproblem Models in BendersX.jl*
 
-Users provide the master and subproblem formulations through *customization functions* written in standard JuMP syntax.
+Users provide the master and subproblem formulations through model-update functions written in standard JuMP syntax.
+These functions can have any name; the examples below use `update_*` names and pass them through the `model` keyword.
 If you are unfamiliar with JuMP, please refer to the JuMP.jl documentation for an introduction:
 [Julia JuMP](https://jump.dev/JuMP.jl/stable/)
 
 ### Master Modeling
 Users specify the master formulation by implementing a function of the form:
 ```julia
-customize_master_model!(model::Model, data::AbstractData) -> NamedTuple, Vector{VariableRef}
+update_master_model!(model::Model, data::AbstractData) -> NamedTuple, Vector{VariableRef}
 ```
-Within this function, users use standard JuMP commands to declare master-level variables, constraints, and the objective, as well as configure the optimizer.
+Within this function, users use standard JuMP commands to declare master-level variables, constraints, and the objective.
 The function must return:
 1. a NamedTuple mapping symbolic variable names to non-auxiliary master variables, and
 2. a Vector{VariableRef} containing the auxiliary variables $t$ used for Benders cuts.
 
-All modeling and solver-related decisions are entirely under the user’s control, while the Benders engine itself remains independent of the model and the solver.
+All modeling decisions are expressed in the model-update functions, while solver attachment remains explicit through constructor keywords such as `optimizer`.
+The Benders engine itself remains independent of the model and the solver.
 
 ### Example
 [The CFLP master problem](@ref cflp-master) can be implemented as:
 
 ```julia
-function customize_master_model!(model::Model, data::CFLPData)
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
+function update_master_model!(model::Model, data::CFLPData)
     I = data.n_facilities
     @variable(model, x[1:I], Bin)
     @variable(model, t >= -1e6)
@@ -183,21 +181,27 @@ function customize_master_model!(model::Model, data::CFLPData)
 end
 ```
 
-### Subproblem Modeling
-Subproblems are specified by the user through:
+Then attach the optimizer when constructing the master:
+
 ```julia
-customize_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
+master = Master(
+    data;
+    model = update_master_model!,
+    optimizer = optimizer_with_attributes(CPLEX.Optimizer, MOI.Silent() => true),
+)
+```
+
+### Subproblem Modeling
+Subproblems are specified by the user through a model-update function:
+```julia
+update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
 ```
 Here, `kwargs...` contains the symbolic names of the master variables that appear in the subproblem. This allows users to formulate the subproblem in JuMP **while referencing these master variables directly**, without explicitly adding them to the subproblem model.
 
 ### Example 1
 [The CFLP subproblem](@ref cflp-sub) can be implemented like this:
 ```julia
-function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x) 
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
+function update_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
     I, J = data.n_facilities, data.n_customers   
     @variable(model, y[1:I, 1:J] >= 0)
     cost_demands = data.costs .* data.demands'
@@ -206,6 +210,21 @@ function customize_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
     @constraint(model, facility_open, y .<= x)
     @constraint(model, capacity[i in 1:I], sum(data.demands[:] .* y[i,:]) <= data.capacities[i] * x[i])
 end
+```
+
+Attach the subproblem optimizer when constructing the oracle:
+
+```julia
+oracle = ClassicalOracle(
+    data,
+    master;
+    model = update_sub_model!,
+    optimizer = optimizer_with_attributes(
+        CPLEX.Optimizer,
+        "CPXPARAM_Threads" => 7,
+        MOI.Silent() => true,
+    ),
+)
 ```
 
 ### Example 2
@@ -236,12 +255,7 @@ Consider the following master and subproblem formulations:
 
 These problems can be implemented as follows:
 ```julia
-function customize_master_model!(model::Model, data::EmptyData)
-
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
+function update_master_model!(model::Model, data::EmptyData)
     @variable(model, u[1:10], Bin) # Array
     @variable(model, v[3:10, [:A, :B]], Bin) # DenseAxisArray
     @variable(model, w[i=1:3,j=i:10], Bin) # SparseAxisArray
@@ -252,12 +266,7 @@ function customize_master_model!(model::Model, data::EmptyData)
     return (u = u, v = v, w = w), t
 end
 
-function customize_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w) 
-
-    optimizer = optimizer_with_attributes(
-        CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
-    set_optimizer(model, optimizer)
-
+function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w)
     @variable(model, y[1:10] >= 0)
     @objective(model, Min, sum(y))
     @constraint(model, y .<= u)
@@ -268,9 +277,9 @@ end
 
 !!! tip "Common Pitfalls"
 
-    When defining `customize_sub_model!`, keep the following points in mind:
+    When defining a subproblem model-update function, keep the following points in mind:
 
-    * **Explicit keyword names**: The keyword argument names in `customize_sub_model!` must exactly match the names returned by `customize_master_model!`.
+    * **Explicit keyword names**: The keyword argument names in the subproblem function must exactly match the names returned by the master model-update function.
     * **No redeclaration**: Do not redeclare master variables inside the subproblem; they should only be referenced via keyword arguments.
     * **Indexing with symbolic sets**: When using `DenseAxisArray` or `SparseAxisArray`, ensure that symbolic indices (e.g., `:A`) are used consistently.
     * **Scenario index usage**: If `scen_idx` is unused, it can be safely ignored, but it must still appear in the function signature.
@@ -287,6 +296,3 @@ Both oracles and environments can be further customized using dedicated paramete
     - Refer to **Tutorials / Swapping Oracles and Adjusting Their Behaviors** for oracle configuration and customization.
     - Refer to **Tutorials / Swapping Environments and Adjusting Their Behaviors** for execution logic customization.
     - Refer to **Tutorials / Examples** for a collection of worked examples.
-
-
-

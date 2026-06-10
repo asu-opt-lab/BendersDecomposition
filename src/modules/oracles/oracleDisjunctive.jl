@@ -24,8 +24,14 @@ This structure contains all the parameters needed to control the behavior of the
 
 # Examples
 ```julia
+using CPLEX
+
 # Create with default optimal parameters
-dcglp_optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, MOI.Silent() => true)
+dcglp_optimizer = optimizer_with_attributes(
+    CPLEX.Optimizer,
+    "CPXPARAM_Threads" => 7,
+    MOI.Silent() => true,
+)
 dcglp_param = DcglpParam(dcglp_optimizer;
                         time_limit = 1000.0, 
                         gap_tolerance = 1e-3, 
@@ -102,8 +108,8 @@ SplitOracle(master::AbstractMaster, typical_oracles::Vector{T},
 # Examples
 ```julia
 # Create typical oracles
-oracle_kappa = ClassicalOracle(data, master; customize = customize_sub_model!)
-oracle_nu = ClassicalOracle(data, master; customize = customize_sub_model!)
+oracle_kappa = ClassicalOracle(data, master; model = update_sub_model!)
+oracle_nu = ClassicalOracle(data, master; model = update_sub_model!)
 disj_param = SplitOracleParam(dcglp_param; strengthened = true, lift = true)
 disj_oracle = SplitOracle(master, [oracle_kappa, oracle_nu]; param = disj_param)
 ```

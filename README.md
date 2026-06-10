@@ -1,116 +1,161 @@
 # BendersX.jl
 
+Welcome to **BendersX.jl** — a modular, plug-and-play framework for Benders decomposition algorithms in Julia.
+
 [![Julia](https://img.shields.io/badge/julia-v1.11%2B-blue.svg)](https://julialang.org/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-source-blue.svg)](docs/)
 
-A Julia framework for Benders decomposition research and experimentation, with modular Master, Oracle, and Environment components and built-in support for classical, unified, Pareto, separable, and disjunctive variants.
+---
 
-## Overview
+## Introduction
 
-This repository contains the source code, benchmark problem loaders, tutorials, and computational experiments for the `BendersX` package. The codebase is organized as a single Julia package rooted at `src/BendersX.jl`, with package internals grouped under `src/modules/`, `src/problems/`, and `src/utils/`.
+**BendersX.jl** is a modular and extensible framework for Benders decomposition in Julia. It supports both standard implementations and experimental extensions within a unified, principled design.
 
-## Key Features
+The **“X”** in BendersX signals extension and exploration: new application domains and methodological extensions beyond classical Benders decomposition — including alternative cut-generation strategies, stabilization mechanisms, and execution logic. The framework’s plug-and-play architecture makes it easy to implement, combine, and evaluate these techniques with minimal boilerplate.
 
-- **Multiple Algorithm Variants**: Implementation of sequential and callback-based Benders decomposition algorithms
-- **Disjunctive Cuts**: Integration of disjunctive programming techniques for enhanced cut generation
-- **Flexible Oracle System**: Modular oracle design supporting different subproblem types (typical, disjunctive, separable)
-- **Comprehensive Testing**: Extensive test suite with multiple problem instances
-- **Multiple Problem Types**: Support for facility location problems (UFLP, CFLP, SCFLP), network design (MCNDP), and other optimization problems
+---
 
-## Algorithm Implementations
+> **Quick overview**
+>
+> - **Components:** Master · Oracle (cut generator) · Environment (execution controller)
+> - **Architecture:** JuMP-based modeling with a modular, hierarchical algorithmic framework
+> - **Design goal:** Plug-and-play extensibility for rapid prototyping and reproducible experimentation
+> - **Repository layout:** package source in `src/`, docs in `docs/`, and benchmark scripts in `experiments/`
 
-### Core Algorithms
-- `BendersSeq`: Sequential Benders decomposition
-- `BendersSeqInOut`: Sequential variant with in-out technique
-- `BendersBnB`: Branch-and-bound Benders decomposition  
-- `Dcglp`: Split Cut Generating Linear Program
-- `SpecializedBendersSeq`: Specialized sequential implementation
-
-### Oracle Types
-- `ClassicalOracle`: Traditional Benders subproblem oracle
-- `UnifiedOracle`: Unified treatment of feasibility and optimality cuts
-- `ParetoOracle`: Pareto-optimal cut generation
-- `KnapsackOracle`: Knapsack technique based oracle
-- `SplitOracle`: Disjunctive programming-based oracle
-- `SeparableOracle`: Oracle for separable subproblems
-
-## Built-in Problem Loaders
-
-The `src/problems/` directory contains benchmark readers and helpers for:
-- **UFLP**: Uncapacitated Facility Location Problem
-- **CFLP**: Capacitated Facility Location Problem  
-- **SCFLP**: Stochastic Capacitated Facility Location Problem
-- **MCNDP**: Multi-Commodity Network Design Problem
-- **SNIP**: Stochastic Network Interdiction Problem
-
-The `experiments/` directory contains scripts used to benchmark these formulations under different oracle and environment choices.
+---
 
 ## Installation
 
-To work from a local clone:
+Install BendersX with the Julia package manager.
+
+To add the package from GitHub:
 ```julia
-using Pkg
+import Pkg
+Pkg.add(url = "https://github.com/asu-opt-lab/BendersX.jl.git")
+```
+
+If you are developing the repository locally:
+```julia
+import Pkg
 Pkg.activate(".")
 Pkg.instantiate()
 ```
 
-To add the package from GitHub:
+## Quick start
+
+### Minimal workflow
+
+This example shows a minimal end-to-end workflow with a concrete optimizer and explicit model-update functions.
+
 ```julia
-using Pkg
-Pkg.add(url = "https://github.com/asu-opt-lab/BendersX.jl")
+using BendersX, JuMP
+
+# 1. User-defined data
+data = MyData(...)
+
+# 2. Create master and provide the master model update
+master = Master(data; model = update_master_model!)
+
+# 3. Select oracle and provide the subproblem model update
+oracle = ClassicalOracle(data, master; model = update_sub_model!)
+
+# 4. Choose environment
+env = BendersSeq(master, oracle)
+
+# 5. Solve
+log = solve!(env)
 ```
 
-## Usage
+### Modeling
 
-The package entry point is `using BendersX` for the core workflow (`Master`, the standard oracle/environment constructors, and `solve!`). Advanced extension hooks and problem-specific helpers remain public APIs, but may require either `import BendersX: ...` or explicit qualification such as `BendersX.read_cflp_benchmark_data`.
+Users describe a decomposition model by writing ordinary JuMP code in two functions, one for the master and another for the subproblem. The master function adds the first-stage variables, constraints, and objective, then returns `(x, t)`, where `x` is a named tuple of master variables and `t` contains the auxiliary variables used in Benders cuts. A model-based oracle uses a subproblem function that adds the recourse variables and constraints; its keyword arguments must match the names returned in `x`.
 
-Tutorials and worked examples live under `docs/src/tutorials/`, and benchmark scripts live under `experiments/`.
+Pass these functions to `Master` and the oracle through the `model` keyword. If a required modeling function is missing for your `AbstractData` subtype, the default method throws `UndefError`. See the package documentation for complete examples. If you are new to JuMP, start with the JuMP documentation: [https://jump.dev/JuMP.jl/stable/](https://jump.dev/JuMP.jl/stable/).
 
-## Testing
+## Built-in variants
+
+### Oracle variants (examples)
+
+| Oracle type         | Description                                                          |
+| ------------------- | -------------------------------------------------------------------- |
+| `ClassicalOracle`   | Standard Benders cut generation based on dual information            |
+| `UnifiedOracle`     | Unified handling of feasibility and optimality cuts                  |
+| `ParetoOracle`      | Produces Pareto-optimal Benders cuts                                 |
+| `SeparableOracle`   | Wrapper oracle for separable subproblems                             |
+| `UFLKnapsackOracle` | Knapsack-based oracle for uncapacitated facility location            |
+| `CFLKnapsackOracle` | Knapsack-based oracle for capacitated facility location              |
+| `SplitOracle`       | Generates split cuts to strengthen the master relaxation             |
+
+`ClassicalOracle`, `UnifiedOracle`, and `ParetoOracle` are general model-based oracles. `SeparableOracle`, `SplitOracle`, `UFLKnapsackOracle`, and `CFLKnapsackOracle` are specialized constructors with different signatures and setup requirements; refer to the corresponding docs/API before swapping them into a workflow.
+
+### Environment variants (examples)
+
+| Environment type        | Execution strategy                                |
+| ----------------------- | ------------------------------------------------- |
+| `BendersSeq`            | Classical sequential Benders decomposition        |
+| `BendersSeqInOut`       | Sequential Benders with in-out stabilization      |
+| `SpecializedBendersSeq` | Specialized sequential workflow for split cuts    |
+| `BendersBnB`            | Branch-and-bound integrated with Benders cuts     |
+
+> These are representative built-ins. See the documentation for the full list and configuration options.
+
+---
+
+## Repository layout
+
+This repository contains the package source code, benchmark loaders, documentation, and computational experiments for `BendersX`.
+
+- `src/BendersX.jl` centralizes the package public API and exports
+- `src/modules/` contains masters, environments, oracles, and callback logic
+- `src/problems/` contains benchmark readers, problem models, and specialized problem-specific oracles
+- `src/artifact_utils.jl` and `Artifacts.toml` manage artifact-backed benchmark datasets downloaded on demand
+- `docs/` contains the standalone Documenter site, tutorials, and API pages
+- `experiments/` contains experiment scripts and reference objectives used for benchmarking
+- `test/` contains public API and unit tests
+
+---
+
+## Key features
+
+- **Plug-and-play architecture:** swap or extend Master, Oracle, and Environment components without rewriting models.
+- **JuMP-native modeling:** define master and subproblems using standard JuMP expressions and containers.
+- **Algorithmic variants:** support for classical, unified, Pareto, split cuts, in-out stabilization, branch-and-bound integration, and more.
+- **Artifact-backed benchmark data:** built-in readers for CFLP, UFLP, SCFLP, and SNIP obtain packaged datasets lazily when needed.
+- **Benchmark-ready workflow:** tutorials, docs, and experiment suites are organized for reproducible experimentation.
+
+---
+
+## Testing and docs
 
 Run the test suite:
+
 ```bash
 julia --project=. test/runtests.jl
 ```
 
 Build the documentation locally:
+
 ```bash
 julia --project=docs docs/make.jl
 ```
 
-The test suite includes:
-1. Sequential typical Benders decomposition
-2. Sequential in-out typical Benders decomposition  
-3. Sequential disjunctive Benders decomposition
-4. Callback typical Benders decomposition
-5. Callback disjunctive Benders decomposition
-6. Specialized sequential Benders decomposition
+Benchmark and algorithm comparison scripts live under `experiments/`, including sequential, in-out, callback, and disjunctive experiment setups.
 
-## Project Structure
+---
 
-```
-├── src/
-│   ├── BendersX.jl         # Package entry point and exports
-│   ├── modules/            # Masters, environments, oracles, and callbacks
-│   ├── problems/           # Benchmark data readers and problem-specific helpers
-│   ├── utils/              # Modeling and algorithm utilities
-│   ├── artifact_utils.jl   # Artifact-backed data access helpers
-│   └── types.jl            # Core type definitions and parameters
-├── docs/                   # Standalone Documenter site and tutorials
-├── experiments/            # Experiment and benchmarking scripts
-├── test/                   # Comprehensive test suite
-└── Project.toml           # Julia project configuration
-```
+## Next steps
+
+- Refer to the **Tutorials** documentation for worked examples and step-by-step guides.
+- Refer to the **User Guide** for advanced usage patterns and customization guidance.
+- Consult the **API** documentation for detailed descriptions of the Master, Oracle, and Environment interfaces.
 
 ## Contributing
 
-This repository is actively under development and we welcome contributions! Feel free to submit issues for bugs or feature requests, and pull requests for code changes. For major modifications, please open an issue first to discuss your proposal. We appreciate all contributions, from bug fixes to documentation improvements.
+Contributions, bug reports, and enhancements are welcome. Please open issues or pull requests on GitHub. Follow the repository's coding guidelines and run the test suite locally before submitting PRs.
+
+---
 
 ## License
 
-Copyright © 2025 Arizona State University.
-Released under the MIT License (see [LICENSE](LICENSE) file for details).
-
-
-
-
+BendersX.jl is released under the **MIT License**. See [LICENSE](LICENSE) for details.
