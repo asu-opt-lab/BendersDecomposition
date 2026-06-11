@@ -391,9 +391,9 @@ end
             e
         end
         @test master_error isa UndefError
-        @test occursin("BendersX does not know how to build a master model", master_error.msg)
+        @test occursin("BendersX does not know how to formulate a master problem", master_error.msg)
         @test occursin("Define `update_master_model!", master_error.msg)
-        @test occursin("Master(data; model = build_master_model!)", master_error.msg)
+        @test occursin("Master(data; model = your_builder!)", master_error.msg)
 
         # Model-based oracle without a subproblem model-update function must throw
         function update_master_model!(model::Model, data::EmptyData)
@@ -413,9 +413,9 @@ end
             e
         end
         @test subproblem_error isa UndefError
-        @test occursin("BendersX does not know how to build a subproblem model", subproblem_error.msg)
+        @test occursin("BendersX does not know how to formulate a subproblem", subproblem_error.msg)
         @test occursin("Define `update_sub_model!", subproblem_error.msg)
-        @test occursin("model = build_sub_model!", subproblem_error.msg)
+        @test occursin("Oracle(...; model = your_builder!)", subproblem_error.msg)
     end
 
     @testset "master variable container Vector{VariableRef}" begin

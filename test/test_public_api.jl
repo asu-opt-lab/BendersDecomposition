@@ -7,11 +7,11 @@ using BendersX
         :Master,
         :BendersSeq, :BendersSeqInOut, :SpecializedBendersSeq, :BendersBnB,
         :ClassicalOracle, :UnifiedOracle, :ParetoOracle, :SeparableOracle,
-        :SplitOracle, :DistanceNormOracle, :SimplexNormOracle, :VerticalReversePolarOracle, :DirectionalPolarOracle,
+        :SplitOracle,
         :solve!,
         :BasicOracleParam, :ClassicalOracleParam, :UnifiedOracleParam, :ParetoOracleParam,
         :SeparableOracleParam, :DcglpParam,
-        :DistanceNormOracleParam, :SimplexNormOracleParam, :VerticalReversePolarOracleParam, :DirectionalPolarOracleParam,
+        :SplitOracleParam, :LpDistanceNormalization, :EpigraphSumNormalization, :VerticalReversePolarNormalization, :DirectionalReversePolarNormalization,
         :BendersSeqParam, :BendersSeqInOutParam, :BendersBnBParam, :SpecializedBendersSeqParam,
         :LazyCallback, :UserCallback, :NoUserCallback, :UserCallbackParam,
         :RootNodePreprocessing, :NoRootNodePreprocessing, :DisjunctiveRootNodePreprocessing,
@@ -34,6 +34,7 @@ using BendersX
         :AbstractMaster, :AbstractOracle, :AbstractOracleParam, :AbstractTypicalOracle,
         :AbstractDisjunctiveOracle, :AbstractSplitOracle,
         :AbstractRootNodePreprocessing, :AbstractNorm, :StandardNorm,
+        :AbstractDisjunctiveNormalization,
         :SplitIndexSelectionRule, :DisjunctiveCutsAppendRule,
         :generate_cuts, :Hyperplane, :aggregate, :evaluate_violation,
         :select_top_fraction, :hyperplanes_to_expression, :add_constraints,
@@ -52,11 +53,9 @@ using BendersX
         :AbstractBendersSeqState, :AbstractBendersSeqLog, :AbstractBendersSeqParam,
         :AbstractBendersBnBState, :AbstractBendersBnBLog, :AbstractBendersBnBParam,
         :BendersSeqState, :BendersSeqLog, :BendersBnBState, :BendersBnBLog,
-        :SplitOracleParam,
         Symbol("Abstract" * "Dcglp" * "Oracle"),
         Symbol("Dcglp" * "Oracle"),
         Symbol("Dcglp" * "OracleParam"),
-        Symbol("Abstract" * "Dcglp" * "Strategy"),
     ]
 
     visible_names = Set(names(BendersX))

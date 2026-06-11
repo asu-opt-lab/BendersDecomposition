@@ -60,7 +60,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                 # for strengthened in [false], add_benders_cuts_to_master in [false], reuse_dcglp in [true], p in [1.0] #fail
                     @info "solving p$i - begin oracle - Specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = DistanceNormOracleParam(dcglp_param;
+                        oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
                                                                 norm = LpNorm(p),
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
@@ -72,7 +72,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                         master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                         set_optimizer_attribute(master.model, "CPX_PARAM_LPMETHOD", 1)
                         typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)] # for kappa & nu
-                        disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
+                        disjunctive_oracle = SplitOracle{LpDistanceNormalization}(master, typical_oracles, oracle_param)
                         env = SpecializedBendersSeq(master, disjunctive_oracle; param = specialized_benders_param)
 
                         log = solve!(env)
@@ -96,7 +96,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                 # for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf]
                     @info "solving p$i - fat Knapsack oracle - Specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = DistanceNormOracleParam(dcglp_param;
+                        oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
                                                                 norm = LpNorm(p),
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
@@ -108,7 +108,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                         master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                         set_optimizer_attribute(master.model, "CPX_PARAM_LPMETHOD", 1)
                         typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
-                        disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
+                        disjunctive_oracle = SplitOracle{LpDistanceNormalization}(master, typical_oracles, oracle_param)
                         env = SpecializedBendersSeq(master, disjunctive_oracle; param = specialized_benders_param)
 
                         log = solve!(env)
@@ -145,7 +145,7 @@ end
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [false], p in [1.0]
                     @info "solving CFLP p$i - disjunctive oracle/classical - specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = DistanceNormOracleParam(dcglp_param;
+                        oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
                                                                 norm = LpNorm(p),
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
@@ -156,7 +156,7 @@ end
 
                         master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                         typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)] # for kappa & nu
-                        disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
+                        disjunctive_oracle = SplitOracle{LpDistanceNormalization}(master, typical_oracles, oracle_param)
                         env = SpecializedBendersSeq(master, disjunctive_oracle; param = specialized_benders_param)
 
                         log = solve!(env)
@@ -170,7 +170,7 @@ end
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [false], p in [1.0]
                     @info "solving CFLP p$i - disjunctive oracle/knapsack- specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                            oracle_param = DistanceNormOracleParam(dcglp_param;
+                            oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
                                                                 norm = LpNorm(p),
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
@@ -181,7 +181,7 @@ end
 
                                                                 master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer); CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = SplitOracle{LpDistanceNormalization}(master, typical_oracles, oracle_param)
                             env = SpecializedBendersSeq(master, disjunctive_oracle; param = specialized_benders_param)
                         log = solve!(env)
                         @test env.termination_status == Optimal() ? isapprox(mip_opt_val, env.obj_value, atol=1e-5) : false

@@ -193,7 +193,7 @@ dcglp_optimizer = optimizer_with_attributes(
     MOI.Silent() => true,
 )
 dcglp_param = DcglpParam(dcglp_optimizer; time_limit = 200.0)
-split_param = DistanceNormOracleParam(
+split_param = SplitOracleParam{LpDistanceNormalization}(
     dcglp_param;
     norm = LpNorm(1.0),
     strengthened = true,
@@ -202,7 +202,7 @@ split_param = DistanceNormOracleParam(
 )
 
 # disjunctive oracle and callbacks
-disjunctive_oracle = DistanceNormOracle(master, typical_oracles, split_param)
+disjunctive_oracle = SplitOracle{LpDistanceNormalization}(master, typical_oracles, split_param)
 user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = 1))
 
 lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!)

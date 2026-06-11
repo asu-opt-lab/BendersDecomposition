@@ -1,4 +1,4 @@
-function build_strategy_dcglp(::VerticalReversePolarStrategy, master::AbstractMaster, param::SplitOracleParam{VerticalReversePolarStrategy})
+function build_normalization_dcglp(::VerticalReversePolarNormalization, master::AbstractMaster, param::SplitOracleParam{VerticalReversePolarNormalization})
     dcglp = Model(param.dcglp_param.optimizer)
 
     @variable(dcglp, tau)
@@ -13,15 +13,15 @@ function build_strategy_dcglp(::VerticalReversePolarStrategy, master::AbstractMa
     return dcglp
 end
 
-function update_dcglp_for_candidate!(::VerticalReversePolarStrategy, oracle::VerticalReversePolarOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
+function update_dcglp_for_candidate!(::VerticalReversePolarNormalization, oracle::SplitOracle{VerticalReversePolarNormalization}, x_value::Vector{Float64}, t_value::Vector{Float64})
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 end
 
-dcglp_tau_value(::VerticalReversePolarStrategy, dcglp::Model) = value(dcglp[:tau])
+dcglp_tau_value(::VerticalReversePolarNormalization, dcglp::Model) = value(dcglp[:tau])
 
 function update_dcglp_upper_bound_and_gap!(
-    ::VerticalReversePolarStrategy,
+    ::VerticalReversePolarNormalization,
     state::DcglpState,
     log::DcglpLog,
     ::Vector{Float64},
@@ -32,14 +32,14 @@ function update_dcglp_upper_bound_and_gap!(
     update_upper_bound_and_gap!(state, log, (t1, t2) -> maximum(t1 .+ t2))
 end
 
-function has_dcglp_disjunctive_cut(::VerticalReversePolarStrategy, current_lb::Float64, ::Vector{Float64}, zero_tol::Float64)
+function has_dcglp_disjunctive_cut(::VerticalReversePolarNormalization, current_lb::Float64, ::Vector{Float64}, zero_tol::Float64)
     return current_lb >= zero_tol
 end
 
 function build_dcglp_disjunctive_cut(
-    ::VerticalReversePolarStrategy,
+    ::VerticalReversePolarNormalization,
     dcglp::Model,
-    common::SplitOracleParam{VerticalReversePolarStrategy},
+    common::SplitOracleParam{VerticalReversePolarNormalization},
     ::Float64,
     ::Vector{Float64},
     t_value::Vector{Float64},

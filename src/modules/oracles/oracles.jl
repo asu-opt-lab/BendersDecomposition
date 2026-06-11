@@ -11,7 +11,7 @@ from a single LP subproblem evaluation. They typically maintain additional
 state, such as an auxiliary separation model and a history of previously generated
 disjunctive cuts.
 
-See also: [`DistanceNormOracle`](@ref)
+See also: [`SplitOracle`](@ref)
 """
 abstract type AbstractDisjunctiveOracle <: AbstractOracle end
 

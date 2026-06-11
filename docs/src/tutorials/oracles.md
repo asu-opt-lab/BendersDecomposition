@@ -10,7 +10,7 @@ This section explains:
 
 1. How to replace one oracle with another
 2. How oracle parameters affect cut generation
-3. How disjunctive (`DistanceNormOracle`) oracles fit into the workflow
+3. How disjunctive (`SplitOracle{LpDistanceNormalization}`) oracles fit into the workflow
 
 ---
 
@@ -40,7 +40,8 @@ remains unchanged.
 
 Each oracle in BendersX owns a `param` field of type `<: AbstractOracleParam`,
 which controls numerical tolerances and cut-generation behavior. By convention,
-an oracle named `XOracle` uses a parameter type named `XOracleParam`. See
+an oracle named `XOracle` uses a parameter type named `XOracleParam`; split
+oracles use `SplitOracleParam{<:AbstractDisjunctiveNormalization}`. See
 [`API`](@ref api) for detailed descriptions of oracle-specific parameters.
 
 Common parameters include:
@@ -106,13 +107,13 @@ required constructor interface can be used as the template.
 
 ---
 
-## Using Split Oracles (`DistanceNormOracle`)
+## Using Split Oracles (`SplitOracle{LpDistanceNormalization}`)
 For mixed-integer master problems, BendersX provides the
-[`DistanceNormOracle`](@ref), a [`SplitOracle`](@ref) specialization that generates **disjunctive Benders cuts** by solving a
+`SplitOracle{LpDistanceNormalization}`, a [`SplitOracle`](@ref) specialization that generates **disjunctive Benders cuts** by solving a
 Dual Cut Generating Linear Program (DCGLP).
 
-A `DistanceNormOracle` is constructed by combining two *typical* oracles (denoted by
-`κ` and `ν`) together with a [`DistanceNormOracleParam`](@ref) object, which
+A `SplitOracle{LpDistanceNormalization}` is constructed by combining two *typical* oracles (denoted by
+`κ` and `ν`) together with a `SplitOracleParam{LpDistanceNormalization}` object, which
 encapsulates a [`DcglpParam`](@ref) controlling the behavior of the DCGLP.
 
 ```julia
@@ -129,22 +130,22 @@ dcglp_optimizer = optimizer_with_attributes(
     MOI.Silent() => true,
 )
 dcglp_param = DcglpParam(dcglp_optimizer)
-split_param = DistanceNormOracleParam(
+split_param = SplitOracleParam{LpDistanceNormalization}(
         dcglp_param;
         split_index_selection_rule = MostFractional(),
         strengthened = true,
         lift = true,
     )
 
-oracle = DistanceNormOracle(master, [oracle_kappa, oracle_nu], split_param)
+oracle = SplitOracle{LpDistanceNormalization}(master, [oracle_kappa, oracle_nu], split_param)
 ```
 Attach the solver for the DCGLP through standard JuMP APIs such as `optimizer_with_attributes(...)`.
 
 The component oracles `oracle_kappa` and `oracle_nu` can be any implementation of typical oracles compatible with the underlying problem.
 
-### Configuring `DistanceNormOracle` Behavior
-The behavior of a `DistanceNormOracle` is controlled entirely through
-[`DistanceNormOracleParam`](@ref). Key options include:
+### Configuring `SplitOracle{LpDistanceNormalization}` Behavior
+The behavior of a `SplitOracle{LpDistanceNormalization}` is controlled entirely through
+`SplitOracleParam{LpDistanceNormalization}`. Key options include:
 - Split selection
     - `split_index_selection_rule`: determines which fractional master variable is selected to form the disjunction.
 - Cut management
@@ -170,7 +171,7 @@ robustness.
 | `ClassicalOracle`, `UnifiedOracle`, `ParetoOracle` | General-purpose Benders decomposition                                      |
 | `CFLKnapsackOracle`                           | Capacitated facility location problems                                      |
 | `UFLKnapsackOracle`                           | Uncapacitated facility location problems                                    |
-| `DistanceNormOracle`                                | General-purpose Benders decomposition for problems with an MILP master      |
+| `SplitOracle{LpDistanceNormalization}`                                | General-purpose Benders decomposition for problems with an MILP master      |
 | `SeparableOracle`                            | General-purpose Benders decomposition for problems with multi-scenario or separable recourse |
 | Custom `AbstractOracle` | Research and prototyping |
 

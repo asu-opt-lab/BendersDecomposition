@@ -24,13 +24,15 @@ export AbstractData
 export Master
 export BendersSeq, BendersSeqInOut, SpecializedBendersSeq, BendersBnB
 export ClassicalOracle, UnifiedOracle, ParetoOracle, SeparableOracle
-export SplitOracle, DistanceNormOracle, SimplexNormOracle, VerticalReversePolarOracle, DirectionalPolarOracle
+export SplitOracle
 export solve!
 
 # User-facing parameter and configuration types
 export BasicOracleParam, ClassicalOracleParam, UnifiedOracleParam, ParetoOracleParam
 export SeparableOracleParam, DcglpParam
-export DistanceNormOracleParam, SimplexNormOracleParam, VerticalReversePolarOracleParam, DirectionalPolarOracleParam
+export SplitOracleParam
+export LpDistanceNormalization, EpigraphSumNormalization
+export VerticalReversePolarNormalization, DirectionalReversePolarNormalization
 export BendersSeqParam, BendersSeqInOutParam, BendersBnBParam, SpecializedBendersSeqParam
 export LazyCallback, UserCallback, NoUserCallback, UserCallbackParam
 export RootNodePreprocessing, NoRootNodePreprocessing, DisjunctiveRootNodePreprocessing
@@ -48,6 +50,7 @@ public AbstractMaster
 public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, AbstractDisjunctiveOracle, AbstractSplitOracle
 public AbstractRootNodePreprocessing
 public AbstractNorm, StandardNorm
+public AbstractDisjunctiveNormalization
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
 public generate_cuts, callback_node_count, callback_node_depth
 export set_parameter!

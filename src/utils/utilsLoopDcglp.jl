@@ -54,7 +54,7 @@ end
 Parameter container for the disjunctive cut generating LP cutting-plane loop.
 
 These settings control how aggressively the DCGLP is solved each time a
-[`DistanceNormOracle`](@ref) and other DCGLP oracles attempt to generate a disjunctive cut.
+[`SplitOracle`](@ref) attempts to generate a disjunctive cut.
 
 # Fields
 - `optimizer::MOI.OptimizerWithAttributes`: Optimizer used to build the DCGLP model.

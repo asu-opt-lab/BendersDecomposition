@@ -39,7 +39,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
     verbose = true
 )
 
-oracle_param = DistanceNormOracleParam(dcglp_param;
+oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
     norm = LpNorm(1.0),
     split_index_selection_rule = RandomFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -66,7 +66,7 @@ typical_oracles = [
 # -----------------------------------------------------------------------------
 # disjunctive oracle
 # -----------------------------------------------------------------------------
-disjunctive_oracle = DistanceNormOracle(master, typical_oracles, oracle_param)
+disjunctive_oracle = SplitOracle{LpDistanceNormalization}(master, typical_oracles, oracle_param)
 
 # -----------------------------------------------------------------------------
 # root node preprocessing

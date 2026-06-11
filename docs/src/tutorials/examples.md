@@ -13,9 +13,9 @@ each suite, experiments are run on multiple benchmark problems:
 | --- | --- | --- | --- |
 | **Sequential (typical)** | `1_test_sequential_typical/` | Typical oracles, including `ClassicalOracle`, problem-specific knapsack oracles, and `SeparableOracle` (for SCFLP and SNIP) | `BendersSeq` |
 | **Sequential In-Out (typical)** | `2_test_sequential_in_out_typical/` | Typical oracles (same as above) | `BendersSeqInOut` |
-| **Sequential (disjunctive)** | `3_test_sequential_disjunctive/` | `DistanceNormOracle` combined with typical oracles | `BendersSeq` |
+| **Sequential (disjunctive)** | `3_test_sequential_disjunctive/` | `SplitOracle{LpDistanceNormalization}` combined with typical oracles | `BendersSeq` |
 | **Callback (typical)** | `4_test_callback_typical/` | Typical oracles (classical, knapsack-based, and separable) | `BendersBnB` with lazy callbacks and varying root preprocessing via subtypes of `AbstractBendersSeq` |
-| **Callback (disjunctive)** | `5_test_callback_disjunctive/` | `DistanceNormOracle` combined with typical oracles | Same as above, additionally including user callbacks |
+| **Callback (disjunctive)** | `5_test_callback_disjunctive/` | `SplitOracle{LpDistanceNormalization}` combined with typical oracles | Same as above, additionally including user callbacks |
 
 ---
 

@@ -1,4 +1,4 @@
-function build_strategy_dcglp(strategy::DistanceNormStrategy, master::AbstractMaster, param::SplitOracleParam{DistanceNormStrategy})
+function build_normalization_dcglp(normalization::LpDistanceNormalization, master::AbstractMaster, param::SplitOracleParam{LpDistanceNormalization})
     dcglp = Model(param.dcglp_param.optimizer)
 
     @variable(dcglp, tau)
@@ -13,7 +13,7 @@ function build_strategy_dcglp(strategy::DistanceNormStrategy, master::AbstractMa
     @constraint(dcglp, cont[j = 1:master.dim_t], dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] - st[j] == 0)
 
     var_vec = [tau; sx; st]
-    norm = strategy.norm
+    norm = normalization.norm
     norm isa LpNorm || throw(UndefError("Unsupported norm type: $(typeof(norm))"))
     if norm.p == 1.0
         @constraint(dcglp, concone, var_vec in MOI.NormOneCone(length(var_vec)))
@@ -27,25 +27,25 @@ function build_strategy_dcglp(strategy::DistanceNormStrategy, master::AbstractMa
     return dcglp
 end
 
-function update_dcglp_for_candidate!(::DistanceNormStrategy, oracle::DistanceNormOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
+function update_dcglp_for_candidate!(::LpDistanceNormalization, oracle::SplitOracle{LpDistanceNormalization}, x_value::Vector{Float64}, t_value::Vector{Float64})
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 end
 
-dcglp_tau_value(::DistanceNormStrategy, dcglp::Model) = value(dcglp[:tau])
-dcglp_sx_value(::DistanceNormStrategy, dcglp::Model) = value.(dcglp[:sx])
-dcglp_lower_bound(::DistanceNormStrategy, dcglp::Model) = value(dcglp[:tau])
+dcglp_tau_value(::LpDistanceNormalization, dcglp::Model) = value(dcglp[:tau])
+dcglp_sx_value(::LpDistanceNormalization, dcglp::Model) = value.(dcglp[:sx])
+dcglp_lower_bound(::LpDistanceNormalization, dcglp::Model) = value(dcglp[:tau])
 
 function update_dcglp_reference_t!(
-    ::DistanceNormStrategy,
-    oracle::DistanceNormOracle,
+    ::LpDistanceNormalization,
+    oracle::SplitOracle{LpDistanceNormalization},
     x_value::Vector{Float64},
     t_value::Vector{Float64},
     start_time::Float64,
     time_limit::Float64,
 )
     reference_t = copy(t_value)
-    oracle.param.strategy.adjust_t_to_fx || return reference_t
+    oracle.param.normalization.adjust_t_to_fx || return reference_t
 
     dcglp = oracle.dcglp
     delete_registered_constraints!(dcglp, :initial_L)
@@ -78,7 +78,7 @@ function update_dcglp_reference_t!(
 end
 
 function update_dcglp_upper_bound_and_gap!(
-    strategy::DistanceNormStrategy,
+    normalization::LpDistanceNormalization,
     state::DcglpState,
     log::DcglpLog,
     reference_t::Vector{Float64},
@@ -89,18 +89,18 @@ function update_dcglp_upper_bound_and_gap!(
     update_upper_bound_and_gap!(
         state,
         log,
-        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], strategy.norm.p),
+        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], normalization.norm.p),
     )
 end
 
-function has_dcglp_disjunctive_cut(::DistanceNormStrategy, current_lb::Float64, ::Vector{Float64}, zero_tol::Float64)
+function has_dcglp_disjunctive_cut(::LpDistanceNormalization, current_lb::Float64, ::Vector{Float64}, zero_tol::Float64)
     return current_lb >= zero_tol
 end
 
 function build_dcglp_disjunctive_cut(
-    strategy::DistanceNormStrategy,
+    normalization::LpDistanceNormalization,
     dcglp::Model,
-    common::SplitOracleParam{DistanceNormStrategy},
+    common::SplitOracleParam{LpDistanceNormalization},
     ::Float64,
     ::Vector{Float64},
     ::Vector{Float64},
@@ -118,7 +118,7 @@ function build_dcglp_disjunctive_cut(
     )
 
     if common.lift && (!isempty(zero_indices) || !isempty(one_indices))
-        norm_value = compute_norm_value(gamma_x, gamma_t, strategy.norm)
+        norm_value = compute_norm_value(gamma_x, gamma_t, normalization.norm)
         return Hyperplane(gamma_x ./ norm_value, gamma_t ./ norm_value, gamma_0 / norm_value)
     end
 

@@ -49,7 +49,7 @@ abstract type AbstractOracle end
 """
 Supertype for parameter containers attached to concrete oracle types.
 
-Oracle parameters collect the tolerance values and strategy switches that may
+Oracle parameters collect the tolerance values and behavior switches that may
 be adjusted without rebuilding the oracle object itself. Concrete oracles
 typically store one field `param <: AbstractOracleParam`.
 
@@ -141,7 +141,7 @@ Lp normalization used by the disjunctive cut generating LP.
 The value `p` specifies the norm order used in normalization constraints for
 the DCGLP. Typical choices are `1.0`, `2.0`, and `Inf`.
 
-See also: [`DistanceNormOracleParam`](@ref), `add_normalization_constraint`
+See also: `SplitOracleParam{LpDistanceNormalization}`, `add_normalization_constraint`
 """
 mutable struct LpNorm <: AbstractNorm
     p::Float64

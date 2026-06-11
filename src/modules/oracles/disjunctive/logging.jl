@@ -22,11 +22,11 @@ function format_hyperplane(h::Hyperplane; zero_tol::Float64 = 1.0e-10)
     return join(pieces, " ") * " <= 0"
 end
 
-function print_dcglp_iteration_info(::DistanceNormStrategy, state::DcglpState, log::DcglpLog)
+function print_dcglp_iteration_info(::LpDistanceNormalization, state::DcglpState, log::DcglpLog)
     print_iteration_info(state, log)
 end
 
-function print_dcglp_iteration_info(::SimplexNormStrategy, state::DcglpState, log::DcglpLog)
+function print_dcglp_iteration_info(::EpigraphSumNormalization, state::DcglpState, log::DcglpLog)
     @printf(
         "   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | UB_k: %8.2f | UB_v: %8.2f | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
         log.n_iter,
@@ -41,7 +41,7 @@ function print_dcglp_iteration_info(::SimplexNormStrategy, state::DcglpState, lo
     )
 end
 
-function print_dcglp_iteration_info(::VerticalReversePolarStrategy, state::DcglpState, log::DcglpLog)
+function print_dcglp_iteration_info(::VerticalReversePolarNormalization, state::DcglpState, log::DcglpLog)
     @printf(
         "   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | UB_k: %8.2f | UB_v: %8.2f | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
         log.n_iter,
@@ -56,7 +56,7 @@ function print_dcglp_iteration_info(::VerticalReversePolarStrategy, state::Dcglp
     )
 end
 
-function print_dcglp_iteration_info(::DirectionalPolarStrategy, state::DcglpState, log::DcglpLog)
+function print_dcglp_iteration_info(::DirectionalReversePolarNormalization, state::DcglpState, log::DcglpLog)
     @printf(
         "   Iter: %4d | LB: %12.8f | UB: %12.8f | Gap: %8.4f%% | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
         log.n_iter,

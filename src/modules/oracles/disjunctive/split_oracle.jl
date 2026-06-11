@@ -1,21 +1,21 @@
 """
-    SplitOracleParam{S<:AbstractDisjunctiveNormalizationStrategy}
+    SplitOracleParam{S<:AbstractDisjunctiveNormalization}
 
 Single parameter container for every split-oracle DCGLP normalization variant. The variant-specific
-configuration (`norm`, `core_point_*`, …) lives on the strategy object; this
+configuration (`norm`, `core_point_*`, …) lives on the normalization object; this
 struct holds the configuration that is shared across all variants plus a
 reference to the DCGLP loop settings.
 
-For read ergonomics the strategy fields are transparently forwarded via
+For read ergonomics the normalization fields are transparently forwarded via
 `getproperty`, so existing code can still read `param.norm` or
 `param.core_point_x`. Writes are not forwarded: per the package policy
-split oracle parameters are fixed at construction. Mutating strategy state
+split oracle parameters are fixed at construction. Mutating normalization state
 that must stay in sync with the DCGLP (e.g. the directional core point)
 goes through dedicated APIs such as [`set_core_point!`](@ref).
 """
-mutable struct SplitOracleParam{S<:AbstractDisjunctiveNormalizationStrategy} <: AbstractOracleParam
+mutable struct SplitOracleParam{S<:AbstractDisjunctiveNormalization} <: AbstractOracleParam
     dcglp_param::DcglpParam
-    strategy::S
+    normalization::S
     split_index_selection_rule::SplitIndexSelectionRule
     disjunctive_cut_append_rule::DisjunctiveCutsAppendRule
     add_benders_cuts_to_master::Int
@@ -26,31 +26,22 @@ mutable struct SplitOracleParam{S<:AbstractDisjunctiveNormalizationStrategy} <: 
     zero_tol::Float64
 end
 
-"""Parameter container for [`DistanceNormOracle`](@ref)."""
-const DistanceNormOracleParam         = SplitOracleParam{DistanceNormStrategy}
-"""Parameter container for [`SimplexNormOracle`](@ref)."""
-const SimplexNormOracleParam          = SplitOracleParam{SimplexNormStrategy}
-"""Parameter container for [`VerticalReversePolarOracle`](@ref)."""
-const VerticalReversePolarOracleParam = SplitOracleParam{VerticalReversePolarStrategy}
-"""Parameter container for [`DirectionalPolarOracle`](@ref)."""
-const DirectionalPolarOracleParam     = SplitOracleParam{DirectionalPolarStrategy}
-
 function Base.getproperty(p::SplitOracleParam, name::Symbol)
     name in fieldnames(SplitOracleParam) ?
         getfield(p, name) :
-        getproperty(getfield(p, :strategy), name)
+        getproperty(getfield(p, :normalization), name)
 end
 
 function Base.propertynames(p::SplitOracleParam, private::Bool = false)
-    return (fieldnames(SplitOracleParam)..., propertynames(getfield(p, :strategy), private)...)
+    return (fieldnames(SplitOracleParam)..., propertynames(getfield(p, :normalization), private)...)
 end
 
 """
-    DistanceNormOracleParam(dcglp_param; kwargs...)
+    SplitOracleParam{LpDistanceNormalization}(dcglp_param; kwargs...)
 
-Construct the parameters for a [`DistanceNormOracle`](@ref).
+Construct the parameters for a `SplitOracle{LpDistanceNormalization}`.
 """
-function SplitOracleParam{DistanceNormStrategy}(
+function SplitOracleParam{LpDistanceNormalization}(
     dcglp_param::DcglpParam;
     norm::AbstractNorm = LpNorm(Inf),
     adjust_t_to_fx::Bool = false,
@@ -65,7 +56,7 @@ function SplitOracleParam{DistanceNormStrategy}(
 )
     return SplitOracleParam(
         dcglp_param,
-        DistanceNormStrategy(norm, adjust_t_to_fx),
+        LpDistanceNormalization(norm, adjust_t_to_fx),
         split_index_selection_rule,
         disjunctive_cut_append_rule,
         normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
@@ -78,11 +69,11 @@ function SplitOracleParam{DistanceNormStrategy}(
 end
 
 """
-    SimplexNormOracleParam(dcglp_param; kwargs...)
+    SplitOracleParam{EpigraphSumNormalization}(dcglp_param; kwargs...)
 
-Construct the parameters for a [`SimplexNormOracle`](@ref).
+Construct the parameters for a `SplitOracle{EpigraphSumNormalization}`.
 """
-function SplitOracleParam{SimplexNormStrategy}(
+function SplitOracleParam{EpigraphSumNormalization}(
     dcglp_param::DcglpParam;
     split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(),
     disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
@@ -95,7 +86,7 @@ function SplitOracleParam{SimplexNormStrategy}(
 )
     return SplitOracleParam(
         dcglp_param,
-        SimplexNormStrategy(),
+        EpigraphSumNormalization(),
         split_index_selection_rule,
         disjunctive_cut_append_rule,
         normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
@@ -108,11 +99,11 @@ function SplitOracleParam{SimplexNormStrategy}(
 end
 
 """
-    VerticalReversePolarOracleParam(dcglp_param; kwargs...)
+    SplitOracleParam{VerticalReversePolarNormalization}(dcglp_param; kwargs...)
 
-Construct the parameters for a [`VerticalReversePolarOracle`](@ref).
+Construct the parameters for a `SplitOracle{VerticalReversePolarNormalization}`.
 """
-function SplitOracleParam{VerticalReversePolarStrategy}(
+function SplitOracleParam{VerticalReversePolarNormalization}(
     dcglp_param::DcglpParam;
     split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(),
     disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
@@ -125,7 +116,7 @@ function SplitOracleParam{VerticalReversePolarStrategy}(
 )
     return SplitOracleParam(
         dcglp_param,
-        VerticalReversePolarStrategy(),
+        VerticalReversePolarNormalization(),
         split_index_selection_rule,
         disjunctive_cut_append_rule,
         normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
@@ -138,11 +129,11 @@ function SplitOracleParam{VerticalReversePolarStrategy}(
 end
 
 """
-    DirectionalPolarOracleParam(dcglp_param, core_point_x, core_point_t; kwargs...)
+    SplitOracleParam{DirectionalReversePolarNormalization}(dcglp_param, core_point_x, core_point_t; kwargs...)
 
-Construct the parameters for a [`DirectionalPolarOracle`](@ref).
+Construct the parameters for a `SplitOracle{DirectionalReversePolarNormalization}`.
 """
-function SplitOracleParam{DirectionalPolarStrategy}(
+function SplitOracleParam{DirectionalReversePolarNormalization}(
     dcglp_param::DcglpParam,
     core_point_x::Vector{Float64},
     core_point_t::Vector{Float64};
@@ -157,7 +148,7 @@ function SplitOracleParam{DirectionalPolarStrategy}(
 )
     return SplitOracleParam(
         dcglp_param,
-        DirectionalPolarStrategy(core_point_x, core_point_t),
+        DirectionalReversePolarNormalization(core_point_x, core_point_t),
         split_index_selection_rule,
         disjunctive_cut_append_rule,
         normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
@@ -170,15 +161,12 @@ function SplitOracleParam{DirectionalPolarStrategy}(
 end
 
 """
-    SplitOracle{S<:AbstractDisjunctiveNormalizationStrategy}
+    SplitOracle{S<:AbstractDisjunctiveNormalization}
 
 Single struct that backs all four split-oracle DCGLP normalization variants. The variant identity
-is carried by the `S` type parameter; the four user-facing names
-[`DistanceNormOracle`](@ref), [`SimplexNormOracle`](@ref),
-[`VerticalReversePolarOracle`](@ref), [`DirectionalPolarOracle`](@ref) are
-`const` aliases for the corresponding parameterization.
+is carried by the `S` type parameter.
 """
-mutable struct SplitOracle{S<:AbstractDisjunctiveNormalizationStrategy} <: AbstractSplitOracle
+mutable struct SplitOracle{S<:AbstractDisjunctiveNormalization} <: AbstractSplitOracle
     param::SplitOracleParam{S}
     dcglp::Model
     typical_oracles::Vector{AbstractTypicalOracle}
@@ -187,26 +175,17 @@ mutable struct SplitOracle{S<:AbstractDisjunctiveNormalizationStrategy} <: Abstr
     splits::Vector{Tuple{SparseVector{Float64, Int}, Float64}}
 end
 
-"""Split oracle with distance-norm normalization (`tau ≥ ‖·‖_p`)."""
-const DistanceNormOracle        = SplitOracle{DistanceNormStrategy}
-"""Split oracle with simplex-style objective `sum(tau)`."""
-const SimplexNormOracle         = SplitOracle{SimplexNormStrategy}
-"""Vertical reverse-polar split oracle (scalar `tau`, componentwise UB)."""
-const VerticalReversePolarOracle = SplitOracle{VerticalReversePolarStrategy}
-"""Directional reverse-polar split oracle with configurable core point."""
-const DirectionalPolarOracle    = SplitOracle{DirectionalPolarStrategy}
-
 function SplitOracle{S}(
     master::AbstractMaster,
     typical_oracles::Vector{T},
     param::SplitOracleParam{S},
-) where {S <: AbstractDisjunctiveNormalizationStrategy, T <: AbstractTypicalOracle}
-    label = strategy_label(param.strategy)
+) where {S <: AbstractDisjunctiveNormalization, T <: AbstractTypicalOracle}
+    label = normalization_label(param.normalization)
     validate_two_typical_oracles!(typical_oracles, label)
     validate_binary_master!(master, label)
-    validate_strategy_specific!(param.strategy, master)
+    validate_normalization_specific!(param.normalization, master)
 
-    dcglp = build_strategy_dcglp(param.strategy, master, param)
+    dcglp = build_normalization_dcglp(param.normalization, master, param)
     cuts_by_index, cuts, splits = initialize_disjunctive_cut_storage(master)
 
     return SplitOracle{S}(
@@ -223,6 +202,6 @@ function SplitOracle(
     master::AbstractMaster,
     typical_oracles::Vector{T},
     param::SplitOracleParam{S},
-) where {S <: AbstractDisjunctiveNormalizationStrategy, T <: AbstractTypicalOracle}
+) where {S <: AbstractDisjunctiveNormalization, T <: AbstractTypicalOracle}
     return SplitOracle{S}(master, typical_oracles, param)
 end

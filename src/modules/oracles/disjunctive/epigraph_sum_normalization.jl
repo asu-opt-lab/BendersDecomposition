@@ -1,4 +1,4 @@
-function build_strategy_dcglp(::SimplexNormStrategy, master::AbstractMaster, param::SplitOracleParam{SimplexNormStrategy})
+function build_normalization_dcglp(::EpigraphSumNormalization, master::AbstractMaster, param::SplitOracleParam{EpigraphSumNormalization})
     dcglp = Model(param.dcglp_param.optimizer)
 
     @variable(dcglp, tau[1:master.dim_t])
@@ -13,14 +13,14 @@ function build_strategy_dcglp(::SimplexNormStrategy, master::AbstractMaster, par
     return dcglp
 end
 
-function update_dcglp_for_candidate!(::SimplexNormStrategy, oracle::SimplexNormOracle, x_value::Vector{Float64}, ::Vector{Float64})
+function update_dcglp_for_candidate!(::EpigraphSumNormalization, oracle::SplitOracle{EpigraphSumNormalization}, x_value::Vector{Float64}, ::Vector{Float64})
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
 end
 
-dcglp_tau_value(::SimplexNormStrategy, dcglp::Model) = value.(dcglp[:tau])
+dcglp_tau_value(::EpigraphSumNormalization, dcglp::Model) = value.(dcglp[:tau])
 
 function update_dcglp_upper_bound_and_gap!(
-    ::SimplexNormStrategy,
+    ::EpigraphSumNormalization,
     state::DcglpState,
     log::DcglpLog,
     ::Vector{Float64},
@@ -31,14 +31,14 @@ function update_dcglp_upper_bound_and_gap!(
     update_upper_bound_and_gap!(state, log, (t1, t2) -> sum(t1) + sum(t2))
 end
 
-function has_dcglp_disjunctive_cut(::SimplexNormStrategy, current_lb::Float64, t_value::Vector{Float64}, zero_tol::Float64)
+function has_dcglp_disjunctive_cut(::EpigraphSumNormalization, current_lb::Float64, t_value::Vector{Float64}, zero_tol::Float64)
     return current_lb >= sum(t_value) + zero_tol
 end
 
 function build_dcglp_disjunctive_cut(
-    ::SimplexNormStrategy,
+    ::EpigraphSumNormalization,
     dcglp::Model,
-    common::SplitOracleParam{SimplexNormStrategy},
+    common::SplitOracleParam{EpigraphSumNormalization},
     ::Float64,
     ::Vector{Float64},
     t_value::Vector{Float64},
