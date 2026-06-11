@@ -7,22 +7,22 @@ All four split-oracle normalization variants in this module are instances of `Sp
 configuration (`norm`, `core_point_*`, …) and the dispatch surface listed below.
 
 # Normalization interface (one method per variant)
-- [`build_normalization_dcglp`](@ref) — build the JuMP model from `master` / `param`.
-- [`update_dcglp_for_candidate!`](@ref) — per-call setup for the current
+- `build_normalization_dcglp` — build the JuMP model from `master` / `param`.
+- `update_dcglp_for_candidate!` — per-call setup for the current
   candidate point (RHS, direction).
-- [`validate_normalization_specific!`](@ref) — extra construction-time validation.
-- [`normalization_label`](@ref) — human-readable name used in error messages.
-- [`dcglp_tau_value`](@ref), [`dcglp_sx_value`](@ref),
-  [`dcglp_lower_bound`](@ref) — solution reads after each DCGLP solve.
-- [`initialize_dcglp_state`](@ref) — normalization-aware state initialization.
-- [`update_dcglp_reference_t!`](@ref) — normalizations may override to adjust the
+- `validate_normalization_specific!` — extra construction-time validation.
+- `normalization_label` — human-readable name used in error messages.
+- `dcglp_tau_value`, `dcglp_sx_value`, `dcglp_lower_bound` — solution reads
+  after each DCGLP solve.
+- `initialize_dcglp_state` — normalization-aware state initialization.
+- `update_dcglp_reference_t!` — normalizations may override to adjust the
   reference epigraph used by the UB recomputation.
-- [`record_dcglp_oracle_result!`](@ref) — normalizations may record subproblem
+- `record_dcglp_oracle_result!` — normalizations may record subproblem
   results into the state.
-- [`update_dcglp_upper_bound_and_gap!`](@ref) — normalization-specific UB/gap rule.
-- [`has_dcglp_disjunctive_cut`](@ref) — normalization-specific cut threshold.
-- [`build_dcglp_disjunctive_cut`](@ref) — normalization-specific cut extraction.
-- [`print_dcglp_iteration_info`](@ref) — normalization-specific iteration log.
+- `update_dcglp_upper_bound_and_gap!` — normalization-specific UB/gap rule.
+- `has_dcglp_disjunctive_cut` — normalization-specific cut threshold.
+- `build_dcglp_disjunctive_cut` — normalization-specific cut extraction.
+- `print_dcglp_iteration_info` — normalization-specific iteration log.
 """
 abstract type AbstractDisjunctiveNormalization end
 
