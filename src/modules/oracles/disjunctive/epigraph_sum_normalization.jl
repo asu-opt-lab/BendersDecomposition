@@ -1,16 +1,15 @@
-function build_normalization_dcglp(::EpigraphSumNormalization, master::AbstractMaster, param::SplitOracleParam{EpigraphSumNormalization})
-    dcglp = Model(param.dcglp_param.optimizer)
-
+function add_normalization_constraint!(
+    dcglp::Model,
+    ::EpigraphSumNormalization,
+    master::AbstractMaster,
+    ::SplitOracleParam{EpigraphSumNormalization},
+)
     @variable(dcglp, tau[1:master.dim_t])
 
     @objective(dcglp, Min, sum(tau))
 
-    build_dcglp_skeleton!(dcglp, master)
-
     @constraint(dcglp, conx[j in 1:master.dim_x], dcglp[:omega_x][1, j] + dcglp[:omega_x][2, j] == 0.0)
     @constraint(dcglp, cont[j in 1:master.dim_t], dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] - tau[j] == 0.0)
-
-    return dcglp
 end
 
 function update_dcglp_for_candidate!(::EpigraphSumNormalization, oracle::SplitOracle{EpigraphSumNormalization}, x_value::Vector{Float64}, ::Vector{Float64})

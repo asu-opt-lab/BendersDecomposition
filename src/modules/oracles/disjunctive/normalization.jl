@@ -6,8 +6,10 @@ All four split-oracle normalization variants in this module are instances of `Sp
 `S <: AbstractDisjunctiveNormalization`. The normalization owns the variant-specific
 configuration (`norm`, `core_point_*`, …) and the dispatch surface listed below.
 
-# Normalization interface (one method per variant)
-- `build_normalization_dcglp` — build the JuMP model from `master` / `param`.
+# Normalization interface
+- `build_dcglp` — shared DCGLP builder for all normalizations.
+- `add_normalization_constraint!` — add normalization-specific variables,
+  objective, and linking constraints.
 - `update_dcglp_for_candidate!` — per-call setup for the current
   candidate point (RHS, direction).
 - `validate_normalization_specific!` — extra construction-time validation.

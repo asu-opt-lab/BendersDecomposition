@@ -1,13 +1,14 @@
-function build_normalization_dcglp(normalization::LpDistanceNormalization, master::AbstractMaster, param::SplitOracleParam{LpDistanceNormalization})
-    dcglp = Model(param.dcglp_param.optimizer)
-
+function add_normalization_constraint!(
+    dcglp::Model,
+    normalization::LpDistanceNormalization,
+    master::AbstractMaster,
+    ::SplitOracleParam{LpDistanceNormalization},
+)
     @variable(dcglp, tau)
     @variable(dcglp, sx[1:master.dim_x])
     @variable(dcglp, st[1:master.dim_t])
 
     @objective(dcglp, Min, tau)
-
-    build_dcglp_skeleton!(dcglp, master)
 
     @constraint(dcglp, conx, dcglp[:omega_x][1, :] + dcglp[:omega_x][2, :] - sx .== 0)
     @constraint(dcglp, cont[j = 1:master.dim_t], dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] - st[j] == 0)
@@ -24,7 +25,6 @@ function build_normalization_dcglp(normalization::LpDistanceNormalization, maste
     else
         throw(UndefError("Unsupported LpNorm: p=$(norm.p)"))
     end
-    return dcglp
 end
 
 function update_dcglp_for_candidate!(::LpDistanceNormalization, oracle::SplitOracle{LpDistanceNormalization}, x_value::Vector{Float64}, t_value::Vector{Float64})

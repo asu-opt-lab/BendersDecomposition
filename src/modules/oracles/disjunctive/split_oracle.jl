@@ -161,6 +161,23 @@ function SplitOracleParam{DirectionalReversePolarNormalization}(
 end
 
 """
+    build_dcglp(normalization, master, param)
+
+Build the DCGLP model shared by every split-oracle normalization. Variant
+behavior is supplied only through `add_normalization_constraint!`.
+"""
+function build_dcglp(
+    normalization::S,
+    master::AbstractMaster,
+    param::SplitOracleParam{S},
+) where {S <: AbstractDisjunctiveNormalization}
+    dcglp = Model(param.dcglp_param.optimizer)
+    build_dcglp_skeleton!(dcglp, master)
+    add_normalization_constraint!(dcglp, normalization, master, param)
+    return dcglp
+end
+
+"""
     SplitOracle{S<:AbstractDisjunctiveNormalization}
 
 Single struct that backs all four split-oracle DCGLP normalization variants. The variant identity
@@ -185,7 +202,7 @@ function SplitOracle{S}(
     validate_binary_master!(master, label)
     validate_normalization_specific!(param.normalization, master)
 
-    dcglp = build_normalization_dcglp(param.normalization, master, param)
+    dcglp = build_dcglp(param.normalization, master, param)
     cuts_by_index, cuts, splits = initialize_disjunctive_cut_storage(master)
 
     return SplitOracle{S}(

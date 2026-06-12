@@ -5,14 +5,15 @@ function validate_normalization_specific!(normalization::DirectionalReversePolar
         throw(DimensionMismatch("`core_point_t` has length $(length(normalization.core_point_t)) but expected $(master.dim_t)."))
 end
 
-function build_normalization_dcglp(normalization::DirectionalReversePolarNormalization, master::AbstractMaster, param::SplitOracleParam{DirectionalReversePolarNormalization})
-    dcglp = Model(param.dcglp_param.optimizer)
-
+function add_normalization_constraint!(
+    dcglp::Model,
+    normalization::DirectionalReversePolarNormalization,
+    master::AbstractMaster,
+    ::SplitOracleParam{DirectionalReversePolarNormalization},
+)
     @variable(dcglp, tau >= 0.0)
 
     @objective(dcglp, Min, tau)
-
-    build_dcglp_skeleton!(dcglp, master)
 
     # The `tau` coefficient on `conx`/`cont` is updated each call via
     # `set_normalized_coefficient!`. Declaring it explicitly here registers
@@ -27,8 +28,6 @@ function build_normalization_dcglp(normalization::DirectionalReversePolarNormali
         cont[j in 1:master.dim_t],
         dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] + 0.0 * tau == normalization.core_point_t[j],
     )
-
-    return dcglp
 end
 
 function initialize_dcglp_state(::DirectionalReversePolarNormalization)

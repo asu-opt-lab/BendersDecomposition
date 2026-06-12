@@ -141,7 +141,7 @@ Lp normalization used by the disjunctive cut generating LP.
 The value `p` specifies the norm order used in normalization constraints for
 the DCGLP. Typical choices are `1.0`, `2.0`, and `Inf`.
 
-See also: `SplitOracleParam{LpDistanceNormalization}`, `add_normalization_constraint`
+See also: `SplitOracleParam{LpDistanceNormalization}`, `add_normalization_constraint!`
 """
 mutable struct LpNorm <: AbstractNorm
     p::Float64
