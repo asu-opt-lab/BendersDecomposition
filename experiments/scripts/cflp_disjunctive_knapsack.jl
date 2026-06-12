@@ -39,8 +39,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
     verbose = true
 )
 
-oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
-    norm = LpNorm(1.0),
+oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(1.0)); dcglp_param = dcglp_param,
     split_index_selection_rule = RandomFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
     strengthened = true,

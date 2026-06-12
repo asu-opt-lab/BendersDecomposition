@@ -38,6 +38,10 @@ mutable struct LpDistanceNormalization <: AbstractDisjunctiveNormalization
     adjust_t_to_fx::Bool
 end
 
+function LpDistanceNormalization(norm::AbstractNorm = LpNorm(Inf); adjust_t_to_fx::Bool = false)
+    return LpDistanceNormalization(norm, adjust_t_to_fx)
+end
+
 """
     EpigraphSumNormalization()
 

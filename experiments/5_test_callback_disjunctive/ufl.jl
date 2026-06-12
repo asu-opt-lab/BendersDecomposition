@@ -60,8 +60,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                         @info "solving UFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
 
-                        oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
-                                                            norm = LpNorm(p),
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                             strengthened = strengthened,
@@ -145,8 +144,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Unified oracle" begin
                 for strengthened in [true], add_benders_cuts_to_master in [2], reuse_dcglp in [false], p in [1.0], lift in [false], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
-                        oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
-                                                            norm = LpNorm(p),
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                             strengthened = strengthened,
@@ -215,8 +213,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Pareto oracle" begin
                 for strengthened in [true], add_benders_cuts_to_master in [2], reuse_dcglp in [false], p in [1.0], lift in [false], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
-                        oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
-                                                            norm = LpNorm(p),
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                             strengthened = strengthened,
@@ -288,7 +285,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Classic oracle with GBC" begin
                 for strengthened in [true], add_benders_cuts_to_master in [2], reuse_dcglp in [false], p in [1.0], lift in [false], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
-                        oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param; norm = LpNorm(p), split_index_selection_rule = LargestFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 0.05, reuse_dcglp = reuse_dcglp, lift = lift)
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param, split_index_selection_rule = LargestFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 0.05, reuse_dcglp = reuse_dcglp, lift = lift)
                         @testset "NoSeq" begin
                             @info "solving UFLP p$i - disjunctive oracle/classical with GBC/no seq"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
@@ -356,8 +353,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
                         @info "solving UFLP p$i - disjunctive oracle/fat knapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
 
-                        oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
-                                                            norm = LpNorm(p),
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                             strengthened = strengthened,

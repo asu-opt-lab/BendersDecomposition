@@ -48,7 +48,7 @@ mutable struct DcglpLog <: AbstractDcglpLog
 end
 
 """
-    DcglpParam(optimizer; time_limit = 1000.0, gap_tolerance = 1e-3,
+    DcglpParam([optimizer]; time_limit = 1000.0, gap_tolerance = 1e-3,
                halt_limit = 3, iter_limit = 250, verbose = true)
 
 Parameter container for the disjunctive cut generating LP cutting-plane loop.
@@ -73,14 +73,14 @@ mutable struct DcglpParam <: AbstractDcglpParam
     iter_limit::Int
     verbose::Bool
 
-    function DcglpParam(optimizer::MOI.OptimizerWithAttributes; 
-                        time_limit::Float64 = 1000.0, 
-                        gap_tolerance::Float64 = 1e-3, 
-                        halt_limit::Int = 3, 
-                        iter_limit::Int = 250,
-                        verbose::Bool = true
-                        ) 
-        
+    function DcglpParam(
+        optimizer::MOI.OptimizerWithAttributes = default_optimizer();
+        time_limit::Float64 = 1000.0,
+        gap_tolerance::Float64 = 1e-3,
+        halt_limit::Int = 3,
+        iter_limit::Int = 250,
+        verbose::Bool = true,
+    )
         new(optimizer, time_limit, gap_tolerance, halt_limit, iter_limit, verbose)
     end
 end

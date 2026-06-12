@@ -37,44 +37,14 @@ function Base.propertynames(p::SplitOracleParam, private::Bool = false)
 end
 
 """
-    SplitOracleParam{LpDistanceNormalization}(dcglp_param; kwargs...)
+    SplitOracleParam(disjunctive_norm_param; dcglp_param = DcglpParam(), kwargs...)
 
-Construct the parameters for a `SplitOracle{LpDistanceNormalization}`.
+Construct split-oracle parameters from a normalization parameter object, such as
+`LpDistanceNormalization(LpNorm(Inf))` or `EpigraphSumNormalization()`.
 """
-function SplitOracleParam{LpDistanceNormalization}(
-    dcglp_param::DcglpParam;
-    norm::AbstractNorm = LpNorm(Inf),
-    adjust_t_to_fx::Bool = false,
-    split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(),
-    disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
-    strengthened::Bool = true,
-    add_benders_cuts_to_master::Union{Bool, Int} = 1,
-    fraction_of_benders_cuts_to_master::Float64 = 1.0,
-    reuse_dcglp::Bool = true,
-    lift::Bool = false,
-    zero_tol::Float64 = 1.0e-9,
-)
-    return SplitOracleParam(
-        dcglp_param,
-        LpDistanceNormalization(norm, adjust_t_to_fx),
-        split_index_selection_rule,
-        disjunctive_cut_append_rule,
-        normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
-        validate_fraction_of_benders_cuts_to_master(fraction_of_benders_cuts_to_master),
-        reuse_dcglp,
-        strengthened,
-        lift,
-        zero_tol,
-    )
-end
-
-"""
-    SplitOracleParam{EpigraphSumNormalization}(dcglp_param; kwargs...)
-
-Construct the parameters for a `SplitOracle{EpigraphSumNormalization}`.
-"""
-function SplitOracleParam{EpigraphSumNormalization}(
-    dcglp_param::DcglpParam;
+function SplitOracleParam(
+    normalization::S;
+    dcglp_param::DcglpParam = DcglpParam(),
     split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(),
     disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
     add_benders_cuts_to_master::Union{Bool, Int} = 1,
@@ -83,72 +53,10 @@ function SplitOracleParam{EpigraphSumNormalization}(
     strengthened::Bool = true,
     lift::Bool = false,
     zero_tol::Float64 = 1.0e-9,
-)
+) where {S <: AbstractDisjunctiveNormalization}
     return SplitOracleParam(
         dcglp_param,
-        EpigraphSumNormalization(),
-        split_index_selection_rule,
-        disjunctive_cut_append_rule,
-        normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
-        validate_fraction_of_benders_cuts_to_master(fraction_of_benders_cuts_to_master),
-        reuse_dcglp,
-        strengthened,
-        lift,
-        zero_tol,
-    )
-end
-
-"""
-    SplitOracleParam{VerticalReversePolarNormalization}(dcglp_param; kwargs...)
-
-Construct the parameters for a `SplitOracle{VerticalReversePolarNormalization}`.
-"""
-function SplitOracleParam{VerticalReversePolarNormalization}(
-    dcglp_param::DcglpParam;
-    split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(),
-    disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
-    add_benders_cuts_to_master::Union{Bool, Int} = 1,
-    fraction_of_benders_cuts_to_master::Float64 = 1.0,
-    reuse_dcglp::Bool = true,
-    strengthened::Bool = true,
-    lift::Bool = false,
-    zero_tol::Float64 = 1.0e-9,
-)
-    return SplitOracleParam(
-        dcglp_param,
-        VerticalReversePolarNormalization(),
-        split_index_selection_rule,
-        disjunctive_cut_append_rule,
-        normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
-        validate_fraction_of_benders_cuts_to_master(fraction_of_benders_cuts_to_master),
-        reuse_dcglp,
-        strengthened,
-        lift,
-        zero_tol,
-    )
-end
-
-"""
-    SplitOracleParam{DirectionalReversePolarNormalization}(dcglp_param, core_point_x, core_point_t; kwargs...)
-
-Construct the parameters for a `SplitOracle{DirectionalReversePolarNormalization}`.
-"""
-function SplitOracleParam{DirectionalReversePolarNormalization}(
-    dcglp_param::DcglpParam,
-    core_point_x::Vector{Float64},
-    core_point_t::Vector{Float64};
-    split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(),
-    disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
-    add_benders_cuts_to_master::Union{Bool, Int} = 1,
-    fraction_of_benders_cuts_to_master::Float64 = 1.0,
-    reuse_dcglp::Bool = true,
-    strengthened::Bool = true,
-    lift::Bool = false,
-    zero_tol::Float64 = 1.0e-9,
-)
-    return SplitOracleParam(
-        dcglp_param,
-        DirectionalReversePolarNormalization(core_point_x, core_point_t),
+        normalization,
         split_index_selection_rule,
         disjunctive_cut_append_rule,
         normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),

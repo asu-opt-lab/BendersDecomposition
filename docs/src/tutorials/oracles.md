@@ -113,8 +113,8 @@ For mixed-integer master problems, BendersX provides the
 Dual Cut Generating Linear Program (DCGLP).
 
 A `SplitOracle{LpDistanceNormalization}` is constructed by combining two *typical* oracles (denoted by
-`κ` and `ν`) together with a `SplitOracleParam{LpDistanceNormalization}` object, which
-encapsulates a [`DcglpParam`](@ref) controlling the behavior of the DCGLP.
+`κ` and `ν`) together with a `SplitOracleParam` object built from a disjunctive
+normalization parameter and a [`DcglpParam`](@ref) controlling the DCGLP.
 
 ```julia
 using CPLEX
@@ -130,8 +130,10 @@ dcglp_optimizer = optimizer_with_attributes(
     MOI.Silent() => true,
 )
 dcglp_param = DcglpParam(dcglp_optimizer)
-split_param = SplitOracleParam{LpDistanceNormalization}(
-        dcglp_param;
+disjunctive_norm_param = LpDistanceNormalization()
+split_param = SplitOracleParam(
+        disjunctive_norm_param;
+        dcglp_param = dcglp_param,
         split_index_selection_rule = MostFractional(),
         strengthened = true,
         lift = true,
@@ -145,7 +147,7 @@ The component oracles `oracle_kappa` and `oracle_nu` can be any implementation o
 
 ### Configuring `SplitOracle{LpDistanceNormalization}` Behavior
 The behavior of a `SplitOracle{LpDistanceNormalization}` is controlled entirely through
-`SplitOracleParam{LpDistanceNormalization}`. Key options include:
+`SplitOracleParam(disjunctive_norm_param; ...)`. Key options include:
 - Split selection
     - `split_index_selection_rule`: determines which fractional master variable is selected to form the disjunction.
 - Cut management

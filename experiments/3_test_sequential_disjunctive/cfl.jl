@@ -83,10 +83,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     core_x = ones(data.n_facilities)
                     recourse_value = solve_cflp_recourse_value(data, core_x, optimizer)
                     core_t = [recourse_value + max(1.0, 0.05 * abs(recourse_value))]
-                    oracle_param = SplitOracleParam{DirectionalReversePolarNormalization}(
-                        dcglp_param,
-                        core_x,
-                        core_t;
+                    oracle_param = SplitOracleParam(DirectionalReversePolarNormalization(core_x, core_t); dcglp_param = dcglp_param,
                         split_index_selection_rule = RandomFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
                         strengthened = true,
@@ -118,8 +115,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving CFLP p$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
-                                                                norm = LpNorm(p),
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                                 strengthened = strengthened,
@@ -151,8 +147,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving CFLP p$i - disjunctive oracle/knapsack oracle - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
-                                                                norm = LpNorm(p),
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                                 strengthened = strengthened,
@@ -183,8 +178,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving CFLP p$i - disjunctive oracle/unified - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
-                                                                norm = LpNorm(p),
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                                 strengthened = strengthened,
@@ -212,8 +206,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving CFLP p$i - disjunctive oracle/pareto - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
-                                                                norm = LpNorm(p),
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                                 strengthened = strengthened,
@@ -242,8 +235,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving CFLP p$i - disjunctive oracle/classical with GBC - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
-                                                                norm = LpNorm(p),
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                                 strengthened = strengthened,
@@ -271,8 +263,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving CFLP p$i - disjunctive oracle/knapsack oracle with GBC - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam{LpDistanceNormalization}(dcglp_param;
-                                                                norm = LpNorm(p),
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                                 strengthened = strengthened,

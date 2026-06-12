@@ -193,9 +193,10 @@ dcglp_optimizer = optimizer_with_attributes(
     MOI.Silent() => true,
 )
 dcglp_param = DcglpParam(dcglp_optimizer; time_limit = 200.0)
-split_param = SplitOracleParam{LpDistanceNormalization}(
-    dcglp_param;
-    norm = LpNorm(1.0),
+disjunctive_norm_param = LpDistanceNormalization(LpNorm(1.0))
+split_param = SplitOracleParam(
+    disjunctive_norm_param;
+    dcglp_param = dcglp_param,
     strengthened = true,
     lift = true,
     add_benders_cuts_to_master = 1,
