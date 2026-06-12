@@ -194,16 +194,17 @@ dcglp_optimizer = optimizer_with_attributes(
 )
 dcglp_param = DcglpParam(dcglp_optimizer; time_limit = 200.0)
 disjunctive_norm_param = LpDistanceNormalization(LpNorm(1.0))
-split_param = SplitOracleParam(
+
+# disjunctive oracle and callbacks
+disjunctive_oracle = SplitOracle(
+    master,
+    typical_oracles,
     disjunctive_norm_param;
     dcglp_param = dcglp_param,
     strengthened = true,
     lift = true,
     add_benders_cuts_to_master = 1,
 )
-
-# disjunctive oracle and callbacks
-disjunctive_oracle = SplitOracle{LpDistanceNormalization}(master, typical_oracles, split_param)
 user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = 1))
 
 lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!)

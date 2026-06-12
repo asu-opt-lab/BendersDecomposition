@@ -131,15 +131,15 @@ dcglp_optimizer = optimizer_with_attributes(
 )
 dcglp_param = DcglpParam(dcglp_optimizer)
 disjunctive_norm_param = LpDistanceNormalization()
-split_param = SplitOracleParam(
-        disjunctive_norm_param;
-        dcglp_param = dcglp_param,
-        split_index_selection_rule = MostFractional(),
-        strengthened = true,
-        lift = true,
-    )
-
-oracle = SplitOracle{LpDistanceNormalization}(master, [oracle_kappa, oracle_nu], split_param)
+oracle = SplitOracle(
+    master,
+    [oracle_kappa, oracle_nu],
+    disjunctive_norm_param;
+    dcglp_param = dcglp_param,
+    split_index_selection_rule = MostFractional(),
+    strengthened = true,
+    lift = true,
+)
 ```
 Attach the solver for the DCGLP through standard JuMP APIs such as `optimizer_with_attributes(...)`.
 

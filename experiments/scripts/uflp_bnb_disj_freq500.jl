@@ -123,7 +123,7 @@ end
 # -----------------------------------------------------------------------------
 # disjunctive oracle
 # -----------------------------------------------------------------------------
-disjunctive_oracle = SplitOracle{LpDistanceNormalization}(master, typical_oracles, oracle_param)
+disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
 
 # -----------------------------------------------------------------------------
 # root node preprocessing

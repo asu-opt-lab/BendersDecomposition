@@ -100,17 +100,19 @@ mutable struct SplitOracle{S<:AbstractDisjunctiveNormalization} <: AbstractSplit
     splits::Vector{Tuple{SparseVector{Float64, Int}, Float64}}
 end
 
-function SplitOracle{S}(
+function SplitOracle(
     master::AbstractMaster,
     typical_oracles::Vector{T},
-    param::SplitOracleParam{S},
+    normalization::S;
+    kwargs...,
 ) where {S <: AbstractDisjunctiveNormalization, T <: AbstractTypicalOracle}
-    label = normalization_label(param.normalization)
+    param = SplitOracleParam(normalization; kwargs...)
+    label = normalization_label(normalization)
     validate_two_typical_oracles!(typical_oracles, label)
     validate_binary_master!(master, label)
-    validate_normalization_specific!(param.normalization, master)
+    validate_normalization_specific!(normalization, master)
 
-    dcglp = build_dcglp(param.normalization, master, param)
+    dcglp = build_dcglp(normalization, master, param)
     cuts_by_index, cuts, splits = initialize_disjunctive_cut_storage(master)
 
     return SplitOracle{S}(
@@ -121,12 +123,4 @@ function SplitOracle{S}(
         cuts,
         splits,
     )
-end
-
-function SplitOracle(
-    master::AbstractMaster,
-    typical_oracles::Vector{T},
-    param::SplitOracleParam{S},
-) where {S <: AbstractDisjunctiveNormalization, T <: AbstractTypicalOracle}
-    return SplitOracle{S}(master, typical_oracles, param)
 end

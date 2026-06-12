@@ -174,64 +174,75 @@ end
         typical_oracles = build_typical_pair(data, master)
         dcglp_param = disjunctive_norm_dcglp_param()
 
-        @test_throws ArgumentError SplitOracle{LpDistanceNormalization}(
+        @test_throws ArgumentError SplitOracle(
             master,
             typical_oracles[1:1],
-            SplitOracleParam(LpDistanceNormalization(); dcglp_param = dcglp_param),
+            LpDistanceNormalization();
+            dcglp_param = dcglp_param,
         )
-        @test_throws DimensionMismatch SplitOracle{DirectionalReversePolarNormalization}(
+        @test_throws DimensionMismatch SplitOracle(
             master,
             typical_oracles,
-            SplitOracleParam(DirectionalReversePolarNormalization([0.25], [0.0]); dcglp_param = dcglp_param),
+            DirectionalReversePolarNormalization([0.25], [0.0]);
+            dcglp_param = dcglp_param,
         )
 
         data_cont, continuous_master = build_disjunctive_norm_master(; continuous = true)
         continuous_typical_oracles = build_typical_pair(data_cont, continuous_master)
-        @test_throws ArgumentError SplitOracle{EpigraphSumNormalization}(
+        @test_throws ArgumentError SplitOracle(
             continuous_master,
             continuous_typical_oracles,
-            SplitOracleParam(EpigraphSumNormalization(); dcglp_param = dcglp_param),
+            EpigraphSumNormalization();
+            dcglp_param = dcglp_param,
         )
     end
 
     @testset "generic split oracle constructor" begin
         data, master = build_disjunctive_norm_master()
-        param = SplitOracleParam(
+        oracle = SplitOracle(
+            master,
+            build_typical_pair(data, master),
             LpDistanceNormalization();
             dcglp_param = disjunctive_norm_dcglp_param(),
             reuse_dcglp = false,
         )
-        oracle = SplitOracle(master, build_typical_pair(data, master), param)
 
-        @test param isa SplitOracleParam{LpDistanceNormalization}
         @test oracle isa SplitOracle
         @test oracle isa SplitOracle{LpDistanceNormalization}
         @test oracle isa BendersX.AbstractSplitOracle
+        @test !oracle.param.reuse_dcglp
     end
 
     @testset "direct generate_cuts smoke" begin
-        for (oracle_type, param) in [
-            (SplitOracle{LpDistanceNormalization}, SplitOracleParam(LpDistanceNormalization(LpNorm(Inf)); dcglp_param = disjunctive_norm_dcglp_param(), reuse_dcglp = false)),
-            (SplitOracle{EpigraphSumNormalization}, SplitOracleParam(EpigraphSumNormalization(); dcglp_param = disjunctive_norm_dcglp_param(), reuse_dcglp = false)),
-            (SplitOracle{VerticalReversePolarNormalization}, SplitOracleParam(VerticalReversePolarNormalization(); dcglp_param = disjunctive_norm_dcglp_param(), reuse_dcglp = false)),
-            (SplitOracle{DirectionalReversePolarNormalization}, SplitOracleParam(DirectionalReversePolarNormalization([0.25, 0.25], [0.0]); dcglp_param = disjunctive_norm_dcglp_param(), reuse_dcglp = false)),
+        for normalization in [
+            LpDistanceNormalization(LpNorm(Inf)),
+            EpigraphSumNormalization(),
+            VerticalReversePolarNormalization(),
+            DirectionalReversePolarNormalization([0.25, 0.25], [0.0]),
         ]
             data, master = build_disjunctive_norm_master()
-            oracle = oracle_type(master, build_typical_pair(data, master), param)
+            oracle = SplitOracle(
+                master,
+                build_typical_pair(data, master),
+                normalization;
+                dcglp_param = disjunctive_norm_dcglp_param(),
+                reuse_dcglp = false,
+            )
             run_direct_cut_smoke(oracle)
         end
     end
 
     @testset "cut history and include flag" begin
         data, master = build_disjunctive_norm_master()
-        param = SplitOracleParam(
+        oracle = SplitOracle(
+            master,
+            build_typical_pair(data, master),
             VerticalReversePolarNormalization();
             dcglp_param = disjunctive_norm_dcglp_param(),
             split_index_selection_rule = LargestFractional(),
             disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
             reuse_dcglp = false,
         )
-        oracle = SplitOracle{VerticalReversePolarNormalization}(master, build_typical_pair(data, master), param)
 
         _, hyperplanes, _ = BendersX.generate_cuts(
             oracle,
@@ -248,13 +259,11 @@ end
 
     @testset "directional core point update" begin
         data, master = build_disjunctive_norm_master()
-        oracle = SplitOracle{DirectionalReversePolarNormalization}(
+        oracle = SplitOracle(
             master,
             build_typical_pair(data, master),
-            SplitOracleParam(
-                DirectionalReversePolarNormalization([0.25, 0.25], [0.0]);
-                dcglp_param = disjunctive_norm_dcglp_param(),
-            ),
+            DirectionalReversePolarNormalization([0.25, 0.25], [0.0]);
+            dcglp_param = disjunctive_norm_dcglp_param(),
         )
 
         set_core_point!(oracle, [0.2, 0.3], [0.1])
@@ -266,7 +275,9 @@ end
     @testset "directional lift cut normalization" begin
         data = DirectionalVectorTTestData()
         master = Master(data; model = update_directional_vector_t_master!, optimizer = disjunctive_norm_optimizer())
-        param = SplitOracleParam(
+        oracle = SplitOracle(
+            master,
+            [DirectionalVectorTTestOracle(), DirectionalVectorTTestOracle()],
             DirectionalReversePolarNormalization([0.5, 0.5], [0.75, 0.75]);
             dcglp_param = disjunctive_norm_dcglp_param(),
             split_index_selection_rule = MostFractional(),
@@ -276,7 +287,6 @@ end
             strengthened = false,
             lift = true,
         )
-        oracle = SplitOracle{DirectionalReversePolarNormalization}(master, [DirectionalVectorTTestOracle(), DirectionalVectorTTestOracle()], param)
 
         x_value = [0.5, 0.5]
         t_value = [0.0, 0.0]
@@ -293,16 +303,14 @@ end
 
     @testset "BendersSeq solve smoke" begin
         data, master = build_disjunctive_norm_master()
-        oracle = SplitOracle{VerticalReversePolarNormalization}(
+        oracle = SplitOracle(
             master,
             build_typical_pair(data, master),
-            SplitOracleParam(
-                VerticalReversePolarNormalization();
-                dcglp_param = disjunctive_norm_dcglp_param(),
-                split_index_selection_rule = LargestFractional(),
-                reuse_dcglp = false,
-                add_benders_cuts_to_master = 2,
-            ),
+            VerticalReversePolarNormalization();
+            dcglp_param = disjunctive_norm_dcglp_param(),
+            split_index_selection_rule = LargestFractional(),
+            reuse_dcglp = false,
+            add_benders_cuts_to_master = 2,
         )
         env = BendersSeq(master, oracle; param = BendersSeqParam(time_limit = 30.0, gap_tolerance = 1.0e-5, verbose = false))
         solve!(env)
