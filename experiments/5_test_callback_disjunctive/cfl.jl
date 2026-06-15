@@ -78,7 +78,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -99,7 +99,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -120,7 +120,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -158,7 +158,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -178,7 +178,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -198,7 +198,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -234,7 +234,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -251,7 +251,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -268,7 +268,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer), UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -301,7 +301,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
                             lazy_oracle = ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -319,7 +319,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
                             lazy_oracle = ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -337,7 +337,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
                             lazy_oracle = ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer), ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -369,7 +369,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -386,7 +386,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -403,7 +403,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -435,7 +435,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = NoRootNodePreprocessing()
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -452,7 +452,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
@@ -469,7 +469,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer), CFLKnapsackOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param.normalization; dcglp_param = oracle_param.dcglp_param, split_index_selection_rule = oracle_param.split_index_selection_rule, disjunctive_cut_append_rule = oracle_param.disjunctive_cut_append_rule, add_benders_cuts_to_master = oracle_param.add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = oracle_param.fraction_of_benders_cuts_to_master, reuse_dcglp = oracle_param.reuse_dcglp, strengthened = oracle_param.strengthened, lift = oracle_param.lift, zero_tol = oracle_param.zero_tol)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
 
                             root_preprocessing = RootNodePreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)

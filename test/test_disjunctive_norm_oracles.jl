@@ -69,10 +69,10 @@ function build_disjunctive_norm_master(; continuous::Bool = false)
 end
 
 function build_typical_pair(data, master)
-    return [
+    return (
         ClassicalOracle(data, master; model = update_disjunctive_norm_sub!, optimizer = disjunctive_norm_optimizer()),
         ClassicalOracle(data, master; model = update_disjunctive_norm_sub!, optimizer = disjunctive_norm_optimizer()),
-    ]
+    )
 end
 
 function disjunctive_norm_dcglp_param(; verbose::Bool = false)
@@ -174,17 +174,15 @@ end
         typical_oracles = build_typical_pair(data, master)
         dcglp_param = disjunctive_norm_dcglp_param()
 
-        @test_throws ArgumentError SplitOracle(
+        @test_throws MethodError SplitOracle(
             master,
-            typical_oracles[1:1],
-            LpDistanceNormalization();
-            dcglp_param = dcglp_param,
+            collect(typical_oracles),
+            SplitOracleParam(LpDistanceNormalization(); dcglp_param = dcglp_param),
         )
         @test_throws DimensionMismatch SplitOracle(
             master,
             typical_oracles,
-            DirectionalReversePolarNormalization([0.25], [0.0]);
-            dcglp_param = dcglp_param,
+            SplitOracleParam(DirectionalReversePolarNormalization([0.25], [0.0]); dcglp_param = dcglp_param),
         )
 
         data_cont, continuous_master = build_disjunctive_norm_master(; continuous = true)
@@ -192,8 +190,7 @@ end
         @test_throws ArgumentError SplitOracle(
             continuous_master,
             continuous_typical_oracles,
-            EpigraphSumNormalization();
-            dcglp_param = dcglp_param,
+            SplitOracleParam(EpigraphSumNormalization(); dcglp_param = dcglp_param),
         )
     end
 
@@ -202,9 +199,11 @@ end
         oracle = SplitOracle(
             master,
             build_typical_pair(data, master),
-            LpDistanceNormalization();
-            dcglp_param = disjunctive_norm_dcglp_param(),
-            reuse_dcglp = false,
+            SplitOracleParam(
+                LpDistanceNormalization();
+                dcglp_param = disjunctive_norm_dcglp_param(),
+                reuse_dcglp = false,
+            ),
         )
 
         @test oracle isa SplitOracle
@@ -224,9 +223,11 @@ end
             oracle = SplitOracle(
                 master,
                 build_typical_pair(data, master),
-                normalization;
-                dcglp_param = disjunctive_norm_dcglp_param(),
-                reuse_dcglp = false,
+                SplitOracleParam(
+                    normalization;
+                    dcglp_param = disjunctive_norm_dcglp_param(),
+                    reuse_dcglp = false,
+                ),
             )
             run_direct_cut_smoke(oracle)
         end
@@ -237,11 +238,13 @@ end
         oracle = SplitOracle(
             master,
             build_typical_pair(data, master),
-            VerticalReversePolarNormalization();
-            dcglp_param = disjunctive_norm_dcglp_param(),
-            split_index_selection_rule = LargestFractional(),
-            disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
-            reuse_dcglp = false,
+            SplitOracleParam(
+                VerticalReversePolarNormalization();
+                dcglp_param = disjunctive_norm_dcglp_param(),
+                split_index_selection_rule = LargestFractional(),
+                disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
+                reuse_dcglp = false,
+            ),
         )
 
         _, hyperplanes, _ = BendersX.generate_cuts(
@@ -262,8 +265,10 @@ end
         oracle = SplitOracle(
             master,
             build_typical_pair(data, master),
-            DirectionalReversePolarNormalization([0.25, 0.25], [0.0]);
-            dcglp_param = disjunctive_norm_dcglp_param(),
+            SplitOracleParam(
+                DirectionalReversePolarNormalization([0.25, 0.25], [0.0]);
+                dcglp_param = disjunctive_norm_dcglp_param(),
+            ),
         )
 
         set_core_point!(oracle, [0.2, 0.3], [0.1])
@@ -277,15 +282,17 @@ end
         master = Master(data; model = update_directional_vector_t_master!, optimizer = disjunctive_norm_optimizer())
         oracle = SplitOracle(
             master,
-            [DirectionalVectorTTestOracle(), DirectionalVectorTTestOracle()],
-            DirectionalReversePolarNormalization([0.5, 0.5], [0.75, 0.75]);
-            dcglp_param = disjunctive_norm_dcglp_param(),
-            split_index_selection_rule = MostFractional(),
-            disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-            add_benders_cuts_to_master = 2,
-            reuse_dcglp = true,
-            strengthened = false,
-            lift = true,
+            (DirectionalVectorTTestOracle(), DirectionalVectorTTestOracle()),
+            SplitOracleParam(
+                DirectionalReversePolarNormalization([0.5, 0.5], [0.75, 0.75]);
+                dcglp_param = disjunctive_norm_dcglp_param(),
+                split_index_selection_rule = MostFractional(),
+                disjunctive_cut_append_rule = AllDisjunctiveCuts(),
+                add_benders_cuts_to_master = 2,
+                reuse_dcglp = true,
+                strengthened = false,
+                lift = true,
+            ),
         )
 
         x_value = [0.5, 0.5]
@@ -306,11 +313,13 @@ end
         oracle = SplitOracle(
             master,
             build_typical_pair(data, master),
-            VerticalReversePolarNormalization();
-            dcglp_param = disjunctive_norm_dcglp_param(),
-            split_index_selection_rule = LargestFractional(),
-            reuse_dcglp = false,
-            add_benders_cuts_to_master = 2,
+            SplitOracleParam(
+                VerticalReversePolarNormalization();
+                dcglp_param = disjunctive_norm_dcglp_param(),
+                split_index_selection_rule = LargestFractional(),
+                reuse_dcglp = false,
+                add_benders_cuts_to_master = 2,
+            ),
         )
         env = BendersSeq(master, oracle; param = BendersSeqParam(time_limit = 30.0, gap_tolerance = 1.0e-5, verbose = false))
         solve!(env)

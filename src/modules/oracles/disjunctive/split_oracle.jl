@@ -133,11 +133,10 @@ end
 
 function SplitOracle(
     master::AbstractMaster,
-    typical_oracles::Vector{T},
-    normalization::S;
-    kwargs...,
-) where {S <: AbstractDisjunctiveNormalization, T <: AbstractTypicalOracle}
-    param = SplitOracleParam(normalization; kwargs...)
+    typical_oracles::NTuple{2, <:AbstractTypicalOracle},
+    param::SplitOracleParam{S},
+) where {S <: AbstractDisjunctiveNormalization}
+    normalization = param.normalization
     label = normalization_label(normalization)
     validate_two_typical_oracles!(typical_oracles, label)
     validate_binary_master!(master, label)
@@ -149,7 +148,7 @@ function SplitOracle(
     return SplitOracle{S}(
         param,
         dcglp,
-        Vector{AbstractTypicalOracle}(typical_oracles),
+        AbstractTypicalOracle[typical_oracles...],
         cuts_by_index,
         cuts,
         splits,
@@ -191,4 +190,3 @@ function generate_cuts(
         include_disjunctive_cuts_to_hyperplanes = include_disjunctive_cuts_to_hyperplanes,
     )
 end
-
