@@ -190,7 +190,7 @@ end
 function build_dcglp_disjunctive_cut(
     ::AbstractDisjunctiveNormalization,
     dcglp::Model,
-    common::SplitOracleParam{VerticalReversePolarNormalization},
+    common::SplitOracleParam{<:AbstractDisjunctiveNormalization},
     ::Float64,
     ::Vector{Float64},
     t_value::Vector{Float64},
