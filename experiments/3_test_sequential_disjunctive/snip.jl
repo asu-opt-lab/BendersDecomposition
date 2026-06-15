@@ -55,7 +55,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
                             typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
-                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
                             log = solve!(env)
@@ -86,7 +86,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             typical_oracle_kappa = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
                             typical_oracle_nu = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
-                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
                             log = solve!(env)
@@ -117,7 +117,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
                             typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
-                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
 
                             log = solve!(env)

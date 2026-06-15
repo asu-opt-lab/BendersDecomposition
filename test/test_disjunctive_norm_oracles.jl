@@ -176,30 +176,35 @@ end
 
         @test_throws MethodError SplitOracle(
             master,
-            collect(typical_oracles),
-            SplitOracleParam(LpDistanceNormalization(); dcglp_param = dcglp_param),
+            collect(typical_oracles);
+            param = SplitOracleParam(LpDistanceNormalization(); dcglp_param = dcglp_param),
         )
         @test_throws DimensionMismatch SplitOracle(
             master,
-            typical_oracles,
-            SplitOracleParam(DirectionalReversePolarNormalization([0.25], [0.0]); dcglp_param = dcglp_param),
+            typical_oracles;
+            param = SplitOracleParam(DirectionalReversePolarNormalization([0.25], [0.0]); dcglp_param = dcglp_param),
         )
 
         data_cont, continuous_master = build_disjunctive_norm_master(; continuous = true)
         continuous_typical_oracles = build_typical_pair(data_cont, continuous_master)
         @test_throws ArgumentError SplitOracle(
             continuous_master,
-            continuous_typical_oracles,
-            SplitOracleParam(EpigraphSumNormalization(); dcglp_param = dcglp_param),
+            continuous_typical_oracles;
+            param = SplitOracleParam(EpigraphSumNormalization(); dcglp_param = dcglp_param),
         )
     end
 
     @testset "generic split oracle constructor" begin
         data, master = build_disjunctive_norm_master()
+        default_oracle = SplitOracle(master, build_typical_pair(data, master))
+        @test default_oracle isa SplitOracle{LpDistanceNormalization}
+        @test default_oracle.param.norm isa LpNorm
+        @test default_oracle.param.norm.p == Inf
+
         oracle = SplitOracle(
             master,
-            build_typical_pair(data, master),
-            SplitOracleParam(
+            build_typical_pair(data, master);
+            param = SplitOracleParam(
                 LpDistanceNormalization();
                 dcglp_param = disjunctive_norm_dcglp_param(),
                 reuse_dcglp = false,
@@ -222,8 +227,8 @@ end
             data, master = build_disjunctive_norm_master()
             oracle = SplitOracle(
                 master,
-                build_typical_pair(data, master),
-                SplitOracleParam(
+                build_typical_pair(data, master);
+                param = SplitOracleParam(
                     normalization;
                     dcglp_param = disjunctive_norm_dcglp_param(),
                     reuse_dcglp = false,
@@ -237,8 +242,8 @@ end
         data, master = build_disjunctive_norm_master()
         oracle = SplitOracle(
             master,
-            build_typical_pair(data, master),
-            SplitOracleParam(
+            build_typical_pair(data, master);
+            param = SplitOracleParam(
                 VerticalReversePolarNormalization();
                 dcglp_param = disjunctive_norm_dcglp_param(),
                 split_index_selection_rule = LargestFractional(),
@@ -264,8 +269,8 @@ end
         data, master = build_disjunctive_norm_master()
         oracle = SplitOracle(
             master,
-            build_typical_pair(data, master),
-            SplitOracleParam(
+            build_typical_pair(data, master);
+            param = SplitOracleParam(
                 DirectionalReversePolarNormalization([0.25, 0.25], [0.0]);
                 dcglp_param = disjunctive_norm_dcglp_param(),
             ),
@@ -282,8 +287,8 @@ end
         master = Master(data; model = update_directional_vector_t_master!, optimizer = disjunctive_norm_optimizer())
         oracle = SplitOracle(
             master,
-            (DirectionalVectorTTestOracle(), DirectionalVectorTTestOracle()),
-            SplitOracleParam(
+            (DirectionalVectorTTestOracle(), DirectionalVectorTTestOracle());
+            param = SplitOracleParam(
                 DirectionalReversePolarNormalization([0.5, 0.5], [0.75, 0.75]);
                 dcglp_param = disjunctive_norm_dcglp_param(),
                 split_index_selection_rule = MostFractional(),
@@ -312,8 +317,8 @@ end
         data, master = build_disjunctive_norm_master()
         oracle = SplitOracle(
             master,
-            build_typical_pair(data, master),
-            SplitOracleParam(
+            build_typical_pair(data, master);
+            param = SplitOracleParam(
                 VerticalReversePolarNormalization();
                 dcglp_param = disjunctive_norm_dcglp_param(),
                 split_index_selection_rule = LargestFractional(),

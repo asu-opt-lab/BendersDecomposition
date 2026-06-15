@@ -133,8 +133,8 @@ end
 
 function SplitOracle(
     master::AbstractMaster,
-    typical_oracles::NTuple{2, <:AbstractTypicalOracle},
-    param::SplitOracleParam{S},
+    typical_oracles::NTuple{2, <:AbstractTypicalOracle};
+    param::SplitOracleParam{S} = SplitOracleParam(LpDistanceNormalization()),
 ) where {S <: AbstractDisjunctiveNormalization}
     normalization = param.normalization
     label = normalization_label(normalization)

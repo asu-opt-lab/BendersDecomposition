@@ -123,7 +123,7 @@ end
 # -----------------------------------------------------------------------------
 # disjunctive oracle
 # -----------------------------------------------------------------------------
-disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles), oracle_param)
+disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
 # -----------------------------------------------------------------------------
 # root node preprocessing
