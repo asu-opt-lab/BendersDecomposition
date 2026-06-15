@@ -69,19 +69,50 @@ function SplitOracleParam(
 end
 
 """
-    build_dcglp(normalization, master, param)
+    build_dcglp(master, param)
 
-Build the DCGLP model shared by every split-oracle normalization. Variant
-behavior is supplied only through `add_normalization_constraint!`.
+Build the DCGLP model for a split-oracle normalization. The fallback builder
+uses the shared distance-normalization layout and delegates the normalization
+cone to `add_normalization_constraint!`; other normalizations may provide a
+more specific method.
 """
 function build_dcglp(
-    normalization::S,
     master::AbstractMaster,
     param::SplitOracleParam{S},
 ) where {S <: AbstractDisjunctiveNormalization}
+    normalization = param.normalization
     dcglp = Model(param.dcglp_param.optimizer)
-    build_dcglp_skeleton!(dcglp, master)
-    add_normalization_constraint!(dcglp, normalization, master, param)
+    @variable(dcglp, omega_0[1:2] >= 0)
+
+    @variable(dcglp, omega_x[1:2, 1:master.dim_x])
+    @variable(dcglp, omega_t[1:2, 1:master.dim_t])
+
+    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= DCGLP_OMEGA_T_LOWER_BOUND .* omega_0[i])
+    @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i, j])
+    @constraint(dcglp, condelta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_x[i, j])
+
+    @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
+
+    for i in 1:2
+        transfer_scaled_linear_rows_and_bounds_with_types!(
+            master.model,
+            master.x,
+            dcglp,
+            omega_x[i, :],
+            omega_0[i],
+        )
+    end
+
+    @variable(dcglp, tau)
+    @variable(dcglp, sx[1:master.dim_x])
+    @variable(dcglp, st[1:master.dim_t])
+
+    @objective(dcglp, Min, tau)
+
+    @constraint(dcglp, conx, dcglp[:omega_x][1, :] + dcglp[:omega_x][2, :] - sx .== 0)
+    @constraint(dcglp, cont[j = 1:master.dim_t], dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] - st[j] == 0)
+
+    add_normalization_constraint!(normalization, dcglp, tau, sx, st)
     return dcglp
 end
 
@@ -112,7 +143,7 @@ function SplitOracle(
     validate_binary_master!(master, label)
     validate_normalization_specific!(normalization, master)
 
-    dcglp = build_dcglp(normalization, master, param)
+    dcglp = build_dcglp(master, param)
     cuts_by_index, cuts, splits = initialize_disjunctive_cut_storage(master)
 
     return SplitOracle{S}(
@@ -124,3 +155,40 @@ function SplitOracle(
         splits,
     )
 end
+"""
+    generate_cuts(oracle::SplitOracle, x_value, t_value; kwargs...)
+
+Single entry point for every DCGLP oracle variant. Per-variant behavior is
+dispatched through the normalization attached to `oracle.param.normalization`.
+"""
+function generate_cuts(
+    oracle::SplitOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64};
+    time_limit = 3600.0,
+    throw_typical_cuts_for_errors::Bool = true,
+    include_disjunctive_cuts_to_hyperplanes::Bool = true,
+)
+    normalization = oracle.param.normalization
+
+    should_fallback_typical(normalization, oracle, x_value, t_value) &&
+        return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = Float64(time_limit))
+
+    start_time = time()
+    zero_indices, one_indices = choose_split_and_update_lifting!(oracle, x_value)
+    update_dynamic_dcglp_constraints!(oracle)
+    update_dcglp_for_candidate!(normalization, oracle, x_value, t_value)
+
+    return solve_dcglp_loop!(
+        oracle,
+        x_value,
+        t_value,
+        zero_indices,
+        one_indices;
+        start_time = start_time,
+        time_limit = Float64(time_limit),
+        throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
+        include_disjunctive_cuts_to_hyperplanes = include_disjunctive_cuts_to_hyperplanes,
+    )
+end
+

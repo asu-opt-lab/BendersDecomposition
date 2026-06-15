@@ -1,41 +1,4 @@
 """
-    generate_cuts(oracle::SplitOracle, x_value, t_value; kwargs...)
-
-Single entry point for every DCGLP oracle variant. Per-variant behavior is
-dispatched through the normalization attached to `oracle.param.normalization`.
-"""
-function generate_cuts(
-    oracle::SplitOracle,
-    x_value::Vector{Float64},
-    t_value::Vector{Float64};
-    time_limit = 3600.0,
-    throw_typical_cuts_for_errors::Bool = true,
-    include_disjunctive_cuts_to_hyperplanes::Bool = true,
-)
-    normalization = oracle.param.normalization
-
-    should_fallback_typical(normalization, oracle, x_value, t_value) &&
-        return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = Float64(time_limit))
-
-    start_time = time()
-    zero_indices, one_indices = choose_split_and_update_lifting!(oracle, x_value)
-    update_dynamic_dcglp_constraints!(oracle)
-    update_dcglp_for_candidate!(normalization, oracle, x_value, t_value)
-
-    return solve_dcglp_loop!(
-        oracle,
-        x_value,
-        t_value,
-        zero_indices,
-        one_indices;
-        start_time = start_time,
-        time_limit = Float64(time_limit),
-        throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
-        include_disjunctive_cuts_to_hyperplanes = include_disjunctive_cuts_to_hyperplanes,
-    )
-end
-
-"""
     should_fallback_typical(normalization, oracle, x_value, t_value) -> Bool
 
 If `true`, `generate_cuts` short-circuits and delegates to the first typical
@@ -223,4 +186,24 @@ function fill_dcglp_omega_t_estimates!(state::DcglpState, t_value::Vector{Float6
             any(isnan, state.f_x[i]) ? fill(NaN, length(t_value)) :
             state.f_x[i] * state.values[:ω_0][i]
     end
+end
+function build_dcglp_disjunctive_cut(
+    ::AbstractDisjunctiveNormalization,
+    dcglp::Model,
+    common::SplitOracleParam{VerticalReversePolarNormalization},
+    ::Float64,
+    ::Vector{Float64},
+    t_value::Vector{Float64},
+    zero_indices::Vector{Int},
+    one_indices::Vector{Int},
+)
+    gamma_x = dual.(dcglp[:conx])
+    gamma_t = dual.(dcglp[:cont])
+    gamma_0 = dual(dcglp[:con0])
+    gamma_x, gamma_0 = apply_lift_or_strengthen(
+        dcglp, gamma_x, zero_indices, one_indices;
+        lift = common.lift, strengthen = common.strengthened,
+        zero_tol = common.zero_tol, gamma_0 = gamma_0,
+    )
+    return Hyperplane(gamma_x, gamma_t, gamma_0)
 end

@@ -5,12 +5,33 @@ function validate_normalization_specific!(normalization::DirectionalReversePolar
         throw(DimensionMismatch("`core_point_t` has length $(length(normalization.core_point_t)) but expected $(master.dim_t)."))
 end
 
-function add_normalization_constraint!(
-    dcglp::Model,
-    normalization::DirectionalReversePolarNormalization,
+function build_dcglp(
     master::AbstractMaster,
-    ::SplitOracleParam{DirectionalReversePolarNormalization},
+    param::SplitOracleParam{DirectionalReversePolarNormalization},
 )
+    normalization = param.normalization
+    dcglp = Model(param.dcglp_param.optimizer)
+    @variable(dcglp, omega_0[1:2] >= 0)
+
+    @variable(dcglp, omega_x[1:2, 1:master.dim_x])
+    @variable(dcglp, omega_t[1:2, 1:master.dim_t])
+
+    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= DCGLP_OMEGA_T_LOWER_BOUND .* omega_0[i])
+    @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i, j])
+    @constraint(dcglp, condelta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_x[i, j])
+
+    @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
+
+    for i in 1:2
+        transfer_scaled_linear_rows_and_bounds_with_types!(
+            master.model,
+            master.x,
+            dcglp,
+            omega_x[i, :],
+            omega_0[i],
+        )
+    end
+
     @variable(dcglp, tau >= 0.0)
 
     @objective(dcglp, Min, tau)
@@ -28,6 +49,8 @@ function add_normalization_constraint!(
         cont[j in 1:master.dim_t],
         dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] + 0.0 * tau == normalization.core_point_t[j],
     )
+
+    return dcglp
 end
 
 function initialize_dcglp_state(::DirectionalReversePolarNormalization)

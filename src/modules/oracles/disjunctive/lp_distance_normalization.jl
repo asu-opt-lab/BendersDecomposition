@@ -1,17 +1,10 @@
 function add_normalization_constraint!(
-    dcglp::Model,
     normalization::LpDistanceNormalization,
-    master::AbstractMaster,
-    ::SplitOracleParam{LpDistanceNormalization},
+    dcglp::Model,
+    tau::VariableRef,
+    sx::AbstractVector{VariableRef},
+    st::AbstractVector{VariableRef},
 )
-    @variable(dcglp, tau)
-    @variable(dcglp, sx[1:master.dim_x])
-    @variable(dcglp, st[1:master.dim_t])
-
-    @objective(dcglp, Min, tau)
-
-    @constraint(dcglp, conx, dcglp[:omega_x][1, :] + dcglp[:omega_x][2, :] - sx .== 0)
-    @constraint(dcglp, cont[j = 1:master.dim_t], dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] - st[j] == 0)
 
     var_vec = [tau; sx; st]
     norm = normalization.norm

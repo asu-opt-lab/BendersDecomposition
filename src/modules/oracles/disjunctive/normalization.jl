@@ -7,9 +7,10 @@ All four split-oracle normalization variants in this module are instances of `Sp
 configuration (`norm`, `core_point_*`, …) and the dispatch surface listed below.
 
 # Normalization interface
-- `build_dcglp` — shared DCGLP builder for all normalizations.
-- `add_normalization_constraint!` — add normalization-specific variables,
-  objective, and linking constraints.
+- `build_dcglp` — construct the DCGLP for a normalization. Normalizations with
+  distinct linking constraints provide their own method.
+- `add_normalization_constraint!` — fallback hook for normalizations that use
+  the shared distance-normalization DCGLP layout.
 - `update_dcglp_for_candidate!` — per-call setup for the current
   candidate point (RHS, direction).
 - `validate_normalization_specific!` — extra construction-time validation.

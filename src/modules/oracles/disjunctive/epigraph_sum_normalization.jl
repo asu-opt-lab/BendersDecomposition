@@ -1,15 +1,37 @@
-function add_normalization_constraint!(
-    dcglp::Model,
-    ::EpigraphSumNormalization,
+function build_dcglp(
     master::AbstractMaster,
-    ::SplitOracleParam{EpigraphSumNormalization},
+    param::SplitOracleParam{EpigraphSumNormalization},
 )
+    dcglp = Model(param.dcglp_param.optimizer)
+    @variable(dcglp, omega_0[1:2] >= 0)
+
+    @variable(dcglp, omega_x[1:2, 1:master.dim_x])
+    @variable(dcglp, omega_t[1:2, 1:master.dim_t])
+
+    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= DCGLP_OMEGA_T_LOWER_BOUND .* omega_0[i])
+    @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i, j])
+    @constraint(dcglp, condelta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_x[i, j])
+
+    @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
+
+    for i in 1:2
+        transfer_scaled_linear_rows_and_bounds_with_types!(
+            master.model,
+            master.x,
+            dcglp,
+            omega_x[i, :],
+            omega_0[i],
+        )
+    end
+
     @variable(dcglp, tau[1:master.dim_t])
 
     @objective(dcglp, Min, sum(tau))
 
     @constraint(dcglp, conx[j in 1:master.dim_x], dcglp[:omega_x][1, j] + dcglp[:omega_x][2, j] == 0.0)
     @constraint(dcglp, cont[j in 1:master.dim_t], dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] - tau[j] == 0.0)
+
+    return dcglp
 end
 
 function update_dcglp_for_candidate!(::EpigraphSumNormalization, oracle::SplitOracle{EpigraphSumNormalization}, x_value::Vector{Float64}, ::Vector{Float64})
@@ -34,22 +56,3 @@ function has_dcglp_disjunctive_cut(::EpigraphSumNormalization, current_lb::Float
     return current_lb >= sum(t_value) + zero_tol
 end
 
-function build_dcglp_disjunctive_cut(
-    ::EpigraphSumNormalization,
-    dcglp::Model,
-    common::SplitOracleParam{EpigraphSumNormalization},
-    ::Float64,
-    ::Vector{Float64},
-    t_value::Vector{Float64},
-    zero_indices::Vector{Int},
-    one_indices::Vector{Int},
-)
-    gamma_x = dual.(dcglp[:conx])
-    gamma_0 = dual(dcglp[:con0])
-    gamma_x, gamma_0 = apply_lift_or_strengthen(
-        dcglp, gamma_x, zero_indices, one_indices;
-        lift = common.lift, strengthen = common.strengthened,
-        zero_tol = common.zero_tol, gamma_0 = gamma_0,
-    )
-    return Hyperplane(gamma_x, fill(-1.0, length(t_value)), gamma_0)
-end

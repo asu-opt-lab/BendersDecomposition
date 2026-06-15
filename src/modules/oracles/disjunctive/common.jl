@@ -42,41 +42,6 @@ function delete_registered_constraints!(model::Model, sym::Symbol)
     unregister(model, sym)
 end
 
-"""
-    build_dcglp_skeleton!(dcglp::Model, master::AbstractMaster)
-
-Create the shared DCGLP variables and constraints that every disjunctive oracle
-relies on: `omega_0`, `omega_x`, `omega_t`, the `con0` simplex constraint, the
-`coneta`/`condelta` cut, the `omega_t` lower-bound row, and the two
-`transfer_scaled_linear_rows_and_bounds_with_types!` blocks.
-
-Caller is responsible for the oracle-specific `tau`, objective, `conx`/`cont`
-constraints (which involve RHS), and any normalization constraint.
-"""
-function build_dcglp_skeleton!(dcglp::Model, master::AbstractMaster)
-    @variable(dcglp, omega_0[1:2] >= 0)
-
-    @variable(dcglp, omega_x[1:2, 1:master.dim_x])
-    @variable(dcglp, omega_t[1:2, 1:master.dim_t])
-
-    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= DCGLP_OMEGA_T_LOWER_BOUND .* omega_0[i])
-    @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i, j])
-    @constraint(dcglp, condelta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_x[i, j])
-
-    @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
-
-    for i in 1:2
-        transfer_scaled_linear_rows_and_bounds_with_types!(
-            master.model,
-            master.x,
-            dcglp,
-            omega_x[i, :],
-            omega_0[i],
-        )
-    end
-
-    return dcglp
-end
 
 function fallback_typical_or_throw(
     oracle::AbstractDisjunctiveOracle,
