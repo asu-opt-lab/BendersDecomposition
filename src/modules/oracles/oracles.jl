@@ -270,4 +270,4 @@ function set_parameter!(oracle::AbstractDisjunctiveOracle, args...)
 end
 
 include("oracleDisjunctiveSplit.jl")
-include("disjunctive/disjunctive.jl")
+include("oracleDisjunctiveUtils.jl")

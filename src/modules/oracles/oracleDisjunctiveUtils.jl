@@ -1,0 +1,923 @@
+# Utilities and normalization-specific methods for SplitOracle.
+# Load order follows the dependencies between helper methods.
+
+# -----------------------------------------------------------------------------
+# Shared DCGLP helpers
+# -----------------------------------------------------------------------------
+
+function delete_registered_constraints!(model::Model, sym::Symbol)
+    haskey(model, sym) || return nothing
+    registered = model[sym]
+    if registered isa AbstractArray
+        delete.(Ref(model), registered)
+    else
+        delete(model, registered)
+    end
+    unregister(model, sym)
+end
+
+
+function fallback_typical_or_throw(
+    oracle::AbstractDisjunctiveOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    start_time::Float64,
+    time_limit::Float64,
+    msg::String;
+    throw_typical_cuts_for_errors::Bool,
+)
+    if throw_typical_cuts_for_errors
+        @warn msg
+        return generate_cuts(
+            oracle.typical_oracles[1],
+            x_value,
+            t_value;
+            time_limit = get_sec_remaining(start_time, time_limit),
+        )
+    end
+    throw(UnexpectedModelStatusException(msg))
+end
+
+# -----------------------------------------------------------------------------
+# Split selection and split constraints
+# -----------------------------------------------------------------------------
+
+function select_disjunctive_inequality(x_value::Vector{Float64}, split_selection_rule::SplitIndexSelectionRule; zero_tol = 1.0e-2)
+    throw(UndefError("update select_disjunctive_inequality for $(typeof(split_selection_rule))"))
+end
+
+function select_disjunctive_inequality(x_value::Vector{Float64}, ::LargestFractional; zero_tol = 1.0e-9)
+    frac_indices = filter(i -> zero_tol <= x_value[i] <= 1.0 - zero_tol, eachindex(x_value))
+    index = isempty(frac_indices) ? rand(collect(eachindex(x_value))) : maximum(frac_indices)
+
+    phi = spzeros(length(x_value))
+    phi[index] = 1.0
+    return phi, 0.0
+end
+
+function select_disjunctive_inequality(x_value::Vector{Float64}, ::MostFractional; zero_tol = 1.0e-9)
+    frac_indices = filter(i -> zero_tol <= x_value[i] <= 1.0 - zero_tol, eachindex(x_value))
+    index = isempty(frac_indices) ? rand(collect(eachindex(x_value))) : frac_indices[argmin(abs.(x_value[frac_indices] .- 0.5))]
+
+    phi = spzeros(length(x_value))
+    phi[index] = 1.0
+    return phi, 0.0
+end
+
+function select_disjunctive_inequality(x_value::Vector{Float64}, ::RandomFractional; zero_tol = 1.0e-9)
+    frac_indices = filter(i -> zero_tol <= x_value[i] <= 1.0 - zero_tol, eachindex(x_value))
+    index = isempty(frac_indices) ? rand(collect(eachindex(x_value))) : rand(frac_indices)
+
+    phi = spzeros(length(x_value))
+    phi[index] = 1.0
+    return phi, 0.0
+end
+
+function get_split_index(oracle::AbstractSplitOracle)
+    oracle.param.split_index_selection_rule isa SimpleSplit ||
+        throw(AlgorithmException("get_split_index is only valid for simple split rules."))
+    isempty(oracle.splits) &&
+        throw(AlgorithmException("get_split_index requires at least one selected split."))
+    return findfirst(x -> x > 0.5, oracle.splits[end][1])
+end
+
+function replace_disjunctive_inequality!(oracle::AbstractSplitOracle)
+    dcglp = oracle.dcglp
+    phi, phi_0 = oracle.splits[end]
+
+    delete_registered_constraints!(dcglp, :con_split_kappa)
+    delete_registered_constraints!(dcglp, :con_split_nu)
+
+    @constraint(dcglp, con_split_kappa, 0 >= dcglp[:omega_0][1] * (phi_0 + 1.0) - phi' * dcglp[:omega_x][1, :])
+    @constraint(dcglp, con_split_nu, 0 >= -dcglp[:omega_0][2] * phi_0 + phi' * dcglp[:omega_x][2, :])
+end
+
+function retrieve_zero_one(x_value::Vector{Float64}, zero_tol)
+    zero_indices = findall(x -> isapprox(x, 0.0; atol = zero_tol), x_value)
+    one_indices = findall(x -> isapprox(x, 1.0; atol = zero_tol), x_value)
+    return zero_indices, one_indices
+end
+
+function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_indices::Vector{Int})
+    delete_registered_constraints!(dcglp, :con_zeta)
+    delete_registered_constraints!(dcglp, :con_xi)
+
+    !isempty(zero_indices) &&
+        @constraint(dcglp, con_zeta[i in 1:2, j in eachindex(zero_indices)], 0 >= dcglp[:omega_x][i, zero_indices[j]])
+    !isempty(one_indices) &&
+        @constraint(dcglp, con_xi[i in 1:2, j in eachindex(one_indices)], 0 >= dcglp[:omega_0][i] - dcglp[:omega_x][i, one_indices[j]])
+end
+
+function choose_split_and_update_lifting!(
+    oracle::AbstractSplitOracle,
+    x_value::Vector{Float64},
+)
+    push!(
+        oracle.splits,
+        select_disjunctive_inequality(
+            x_value,
+            oracle.param.split_index_selection_rule;
+            zero_tol = oracle.param.zero_tol,
+        ),
+    )
+    replace_disjunctive_inequality!(oracle)
+
+    zero_indices, one_indices = oracle.param.lift ? retrieve_zero_one(x_value, oracle.param.zero_tol) : (Int[], Int[])
+    add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices)
+    return zero_indices, one_indices
+end
+
+# -----------------------------------------------------------------------------
+# Disjunctive cut pool management
+# -----------------------------------------------------------------------------
+
+function add_disjunctive_cuts!(oracle::AbstractSplitOracle, rule::DisjunctiveCutsAppendRule)
+    throw(UndefError("update add_disjunctive_cuts! for $(typeof(rule))"))
+end
+
+function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::NoDisjunctiveCuts)
+    delete_registered_constraints!(oracle.dcglp, :con_disjunctive)
+end
+
+function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::AllDisjunctiveCuts)
+    install_disjunctive_cuts!(oracle, oracle.disjunctive_cuts)
+end
+
+function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::DisjunctiveCutsSmallerIndices)
+    oracle.param.split_index_selection_rule isa SimpleSplit ||
+        throw(AlgorithmException("DisjunctiveCutsSmallerIndices requires a simple split rule."))
+
+    index = get_split_index(oracle)
+    cuts = if index > 1
+        reduce(vcat, oracle.disjunctive_cuts_by_index[1:index-1]; init = Hyperplane[])
+    else
+        Hyperplane[]
+    end
+    install_disjunctive_cuts!(oracle, cuts)
+end
+
+function install_disjunctive_cuts!(oracle::AbstractSplitOracle, cuts::Vector{Hyperplane})
+    dcglp = oracle.dcglp
+    delete_registered_constraints!(dcglp, :con_disjunctive)
+    isempty(cuts) && return nothing
+
+    exprs = AffExpr[]
+    for k in 1:2
+        append!(
+            exprs,
+            hyperplanes_to_expression(
+                dcglp,
+                cuts,
+                dcglp[:omega_x][k, :],
+                dcglp[:omega_t][k, :],
+                dcglp[:omega_0][k],
+            ),
+        )
+    end
+    add_constraints(dcglp, :con_disjunctive, exprs)
+end
+
+function update_dynamic_dcglp_constraints!(oracle::AbstractSplitOracle)
+    if !oracle.param.reuse_dcglp
+        delete_registered_constraints!(oracle.dcglp, :con_benders)
+        delete_registered_constraints!(oracle.dcglp, :con_disjunctive)
+    end
+    add_disjunctive_cuts!(oracle, oracle.param.disjunctive_cut_append_rule)
+end
+
+function append_current_disjunctive_cut!(oracle::AbstractSplitOracle, cut::Hyperplane)
+    push!(oracle.disjunctive_cuts, cut)
+    if oracle.param.split_index_selection_rule isa SimpleSplit
+        index = get_split_index(oracle)
+        push!(oracle.disjunctive_cuts_by_index[index], cut)
+    end
+end
+
+function store_dcglp_disjunctive_cut!(
+    oracle::AbstractSplitOracle,
+    cut::Hyperplane,
+    master_hyperplanes::Vector{Hyperplane},
+    include_disjunctive_cuts_to_hyperplanes::Bool,
+)
+    append_current_disjunctive_cut!(oracle, cut)
+    include_disjunctive_cuts_to_hyperplanes && push!(master_hyperplanes, cut)
+end
+
+# -----------------------------------------------------------------------------
+# Cut lifting, strengthening, and normalization
+# -----------------------------------------------------------------------------
+
+"""
+    apply_lift_or_strengthen(dcglp, gamma_x, zero_indices, one_indices; lift, strengthen, zero_tol, gamma_0=0.0)
+
+Apply lifting (preferred if `lift` and any zero/one index exists) or pure
+strengthening to the cut coefficients. Returns the (possibly modified)
+`(gamma_x, gamma_0)` pair.
+"""
+function apply_lift_or_strengthen(
+    dcglp::Model,
+    gamma_x::Vector{Float64},
+    zero_indices::Vector{Int},
+    one_indices::Vector{Int};
+    lift::Bool,
+    strengthen::Bool,
+    zero_tol::Float64,
+    gamma_0::Float64 = 0.0,
+)
+    if lift && (!isempty(zero_indices) || !isempty(one_indices))
+        return lift_x_coefficients(
+            dcglp, gamma_x, gamma_0, zero_indices, one_indices;
+            strengthen = strengthen, zero_tol = zero_tol,
+        )
+    elseif strengthen
+        sigma, delta = read_strengthening_duals(dcglp)
+        return -strengthen_coefficients(-gamma_x, sigma, delta; zero_tol = zero_tol), gamma_0
+    end
+    return gamma_x, gamma_0
+end
+
+read_strengthening_duals(dcglp::Model) = (
+    Dict(1 => dual(dcglp[:con_split_kappa]), 2 => dual(dcglp[:con_split_nu])),
+    Dict(1 => dual.(dcglp[:condelta][1, :]), 2 => dual.(dcglp[:condelta][2, :])),
+)
+
+"""
+    lift_x_coefficients(dcglp, gamma_x, gamma_0, zero_indices, one_indices; strengthen, zero_tol)
+
+Apply lifting (and optional strengthening) to `gamma_x`. Returns the lifted
+`(gamma_x, gamma_0)` pair in the common cut orientation.
+"""
+function lift_x_coefficients(
+    dcglp::Model,
+    gamma_x::Vector{Float64},
+    gamma_0::Float64,
+    zero_indices::Vector{Int},
+    one_indices::Vector{Int};
+    strengthen::Bool,
+    zero_tol::Float64,
+)
+    zeta_k = !isempty(zero_indices) ? dual.(dcglp[:con_zeta][1, :]) : Float64[]
+    zeta_v = !isempty(zero_indices) ? dual.(dcglp[:con_zeta][2, :]) : Float64[]
+    xi_k = !isempty(one_indices) ? dual.(dcglp[:con_xi][1, :]) : Float64[]
+    xi_v = !isempty(one_indices) ? dual.(dcglp[:con_xi][2, :]) : Float64[]
+
+    lifted_gamma_0 = gamma_0 - sum(max.(xi_k, xi_v))
+    lifted_gamma_x = -gamma_x
+    lifted_gamma_x[zero_indices] .= -gamma_x[zero_indices] .+ max.(zeta_k, zeta_v)
+    lifted_gamma_x[one_indices] .= -gamma_x[one_indices] .- max.(xi_k, xi_v)
+
+    if strengthen
+        sigma, base_delta = read_strengthening_duals(dcglp)
+        delta_1 = copy(base_delta[1])
+        delta_2 = copy(base_delta[2])
+        delta_1[zero_indices] .+= -zeta_k .+ max.(zeta_k, zeta_v)
+        delta_2[zero_indices] .+= -zeta_v .+ max.(zeta_k, zeta_v)
+        lifted_gamma_x = strengthen_coefficients(lifted_gamma_x, sigma, Dict(1 => delta_1, 2 => delta_2); zero_tol = zero_tol)
+    end
+
+    return -lifted_gamma_x, lifted_gamma_0
+end
+
+function normalize_directional_duals!(
+    gamma_x::AbstractVector{Float64},
+    gamma_t::AbstractVector{Float64},
+    direction_x::Vector{Float64},
+    direction_t::Vector{Float64};
+    zero_tol::Float64,
+)
+    direction_value = dot(gamma_x, direction_x) + dot(gamma_t, direction_t)
+    abs(direction_value) > zero_tol ||
+        throw(AlgorithmException("ReversePolarNormalization cut normalization failed because the directional support is numerically zero."))
+    gamma_x ./= direction_value
+    gamma_t ./= direction_value
+    return direction_value
+end
+
+function strengthen_coefficients(gamma_x, sigma, delta; zero_tol = 1.0e-9)
+    a_1 = gamma_x .- delta[1]
+    a_2 = gamma_x .- delta[2]
+    sigma_sum = sigma[1] + sigma[2]
+    sigma_sum < zero_tol && return copy(gamma_x)
+    m = (a_1 .- a_2) ./ sigma_sum
+    return min.(a_1 .- sigma[1] .* floor.(m), a_2 .+ sigma[2] .* ceil.(m))
+end
+
+function compute_norm_value(gamma_x, gamma_t, norm::AbstractNorm)
+    if norm.p == 1.0
+        norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), Inf)
+    elseif norm.p == 2.0
+        norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), 2.0)
+    elseif norm.p == Inf
+        norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), 1.0)
+    else
+        throw(UndefError("Unsupported norm type: $(typeof(norm))"))
+    end
+    return max(1.0, norm_value)
+end
+
+# -----------------------------------------------------------------------------
+# Lp-distance normalization
+# -----------------------------------------------------------------------------
+
+function add_normalization_constraint!(
+    normalization::LpDistanceNormalization,
+    dcglp::Model,
+    tau::VariableRef,
+    sx::AbstractVector{VariableRef},
+    st::AbstractVector{VariableRef},
+)
+
+    var_vec = [tau; sx; st]
+    norm = normalization.norm
+    norm isa LpNorm || throw(UndefError("Unsupported norm type: $(typeof(norm))"))
+    if norm.p == 1.0
+        @constraint(dcglp, concone, var_vec in MOI.NormOneCone(length(var_vec)))
+    elseif norm.p == 2.0
+        @constraint(dcglp, concone, var_vec in MOI.SecondOrderCone(length(var_vec)))
+    elseif norm.p == Inf
+        @constraint(dcglp, concone, var_vec in MOI.NormInfinityCone(length(var_vec)))
+    else
+        throw(UndefError("Unsupported LpNorm: p=$(norm.p)"))
+    end
+end
+
+function update_dcglp_reference_t!(
+    ::LpDistanceNormalization,
+    oracle::SplitOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    start_time::Float64,
+    time_limit::Float64,
+)
+    reference_t = copy(t_value)
+    oracle.param.normalization.adjust_t_to_fx || return reference_t
+
+    dcglp = oracle.dcglp
+    delete_registered_constraints!(dcglp, :initial_L)
+
+    _, initial_hyperplanes, f_x = generate_cuts(
+        oracle.typical_oracles[1],
+        x_value,
+        t_value;
+        time_limit = get_sec_remaining(start_time, time_limit),
+    )
+    any(isnan, f_x) &&
+        throw(AlgorithmException("solve_dcglp!: `t_value` cannot be adjusted to `f(x)` since $(typeof(oracle.typical_oracles[1])) does not compute `f(x)`."))
+
+    initial_benders_cuts = AffExpr[]
+    for k in 1:2
+        append!(
+            initial_benders_cuts,
+            hyperplanes_to_expression(
+                dcglp,
+                initial_hyperplanes,
+                dcglp[:omega_x][k, :],
+                dcglp[:omega_t][k, :],
+                dcglp[:omega_0][k],
+            ),
+        )
+    end
+    dcglp[:initial_L] = @constraint(dcglp, 0 .>= initial_benders_cuts)
+    set_normalized_rhs.(dcglp[:cont], f_x)
+    return copy(f_x)
+end
+
+function update_dcglp_upper_bound_and_gap!(
+    normalization::LpDistanceNormalization,
+    state::DcglpState,
+    log::DcglpLog,
+    reference_t::Vector{Float64},
+    t_value::Vector{Float64},
+)
+    fill_dcglp_omega_t_estimates!(state, t_value)
+    all(f_i -> !any(isnan, f_i), state.f_x) || return nothing
+    update_upper_bound_and_gap!(
+        state,
+        log,
+        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], normalization.norm.p),
+    )
+end
+
+function build_dcglp_disjunctive_cut(
+    normalization::LpDistanceNormalization,
+    dcglp::Model,
+    common::SplitOracleParam,
+    ::Float64,
+    ::Vector{Float64},
+    ::Vector{Float64},
+    zero_indices::Vector{Int},
+    one_indices::Vector{Int},
+)
+    gamma_x = dual.(dcglp[:conx])
+    gamma_t = dual.(dcglp[:cont])
+    gamma_0 = dual(dcglp[:con0])
+
+    gamma_x, gamma_0 = apply_lift_or_strengthen(
+        dcglp, gamma_x, zero_indices, one_indices;
+        lift = common.lift, strengthen = common.strengthened,
+        zero_tol = common.zero_tol, gamma_0 = gamma_0,
+    )
+
+    if common.lift && (!isempty(zero_indices) || !isempty(one_indices))
+        norm_value = compute_norm_value(gamma_x, gamma_t, normalization.norm)
+        return Hyperplane(gamma_x ./ norm_value, gamma_t ./ norm_value, gamma_0 / norm_value)
+    end
+
+    return Hyperplane(gamma_x, gamma_t, gamma_0)
+end
+
+# -----------------------------------------------------------------------------
+# Reverse-polar normalization
+# -----------------------------------------------------------------------------
+
+has_core_point(normalization::ReversePolarNormalization) = normalization.core_point_x !== nothing
+
+function add_normalization_constraint!(
+    ::ReversePolarNormalization,
+    dcglp::Model,
+    tau::VariableRef,
+    sx::AbstractVector{VariableRef},
+    st::AbstractVector{VariableRef},
+)
+    @constraint(dcglp, con_reverse_polar_x[j in eachindex(sx)], sx[j] + 0.0 * tau == 0.0)
+    @constraint(dcglp, con_reverse_polar_t[j in eachindex(st)], st[j] + 0.0 * tau == 0.0)
+end
+
+function initialize_dcglp_state(normalization::ReversePolarNormalization)
+    state = DcglpState()
+    if has_core_point(normalization)
+        state.values[:oracle_statuses] = fill(:inactive, 2)
+        state.values[:oracle_gaps] = fill(0.0, 2)
+        state.values[:oracle_scaled_gaps] = fill(0.0, 2)
+    end
+    return state
+end
+
+function should_fallback_typical(normalization::ReversePolarNormalization, oracle::SplitOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
+    has_core_point(normalization) || return false
+
+    direction_x = x_value .- normalization.core_point_x
+    direction_t = t_value .- normalization.core_point_t
+
+    if LinearAlgebra.norm(vcat(direction_x, direction_t), Inf) <= oracle.param.zero_tol
+        return true
+    end
+
+    normalization.last_direction_x = direction_x
+    normalization.last_direction_t = direction_t
+    return false
+end
+
+function update_dcglp_for_candidate!(normalization::ReversePolarNormalization, oracle::SplitOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
+    set_normalized_rhs.(oracle.dcglp[:conx], x_value)
+    set_normalized_rhs.(oracle.dcglp[:cont], t_value)
+
+    if has_core_point(normalization)
+        update_reverse_polar_constraints!(oracle, normalization.last_direction_x, normalization.last_direction_t)
+    else
+        update_reverse_polar_constraints!(oracle, zeros(length(x_value)), fill(-1.0, length(t_value)))
+    end
+end
+
+function record_dcglp_oracle_result!(normalization::ReversePolarNormalization, state::DcglpState, i::Int, t_block::Vector{Float64})
+    has_core_point(normalization) || return nothing
+
+    state.values[:oracle_statuses][i] = state.is_in_L[i] ? :feasible : :infeasible
+    state.values[:oracle_gaps][i], state.values[:oracle_scaled_gaps][i] = compute_directional_oracle_gap(
+        state.is_in_L[i],
+        t_block,
+        state.f_x[i],
+        state.values[:ω_0][i],
+    )
+end
+
+function update_dcglp_upper_bound_and_gap!(
+    ::ReversePolarNormalization,
+    state::DcglpState,
+    log::DcglpLog,
+    ::Vector{Float64},
+    t_value::Vector{Float64},
+)
+    fill_dcglp_omega_t_estimates!(state, t_value)
+    previous_ub = log.n_iter >= 1 ? log.iterations[end].UB : Inf
+    state.UB = state.is_in_L[1] && state.is_in_L[2] ? min(previous_ub, state.LB) : previous_ub
+    state.gap =
+        isfinite(state.UB) ?
+        max(state.UB - state.LB, 0.0) / max(abs(state.UB), 1.0) * 100 :
+        Inf
+end
+
+function build_dcglp_disjunctive_cut(
+    normalization::ReversePolarNormalization,
+    dcglp::Model,
+    common::SplitOracleParam,
+    current_lb::Float64,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    zero_indices::Vector{Int},
+    one_indices::Vector{Int},
+)
+    if !has_core_point(normalization)
+        gamma_x = dual.(dcglp[:conx])
+        gamma_t = dual.(dcglp[:cont])
+        gamma_0 = dual(dcglp[:con0])
+        gamma_x, gamma_0 = apply_lift_or_strengthen(
+            dcglp, gamma_x, zero_indices, one_indices;
+            lift = common.lift, strengthen = common.strengthened,
+            zero_tol = common.zero_tol, gamma_0 = gamma_0,
+        )
+        return Hyperplane(gamma_x, gamma_t, gamma_0)
+    end
+
+    isempty(normalization.last_direction_x) &&
+        throw(AlgorithmException("ReversePolarNormalization: no direction vector cached. Call update_dcglp_for_candidate! first."))
+
+    gamma_x = dual.(dcglp[:conx])
+    gamma_t = dual.(dcglp[:cont])
+    direction_value = normalize_directional_duals!(
+        gamma_x,
+        gamma_t,
+        normalization.last_direction_x,
+        normalization.last_direction_t;
+        zero_tol = common.zero_tol,
+    )
+
+    gamma_0 = dual(dcglp[:con0]) / direction_value
+    gamma_x, gamma_0 = apply_lift_or_strengthen(
+        dcglp, gamma_x, zero_indices, one_indices;
+        lift = common.lift, strengthen = common.strengthened,
+        zero_tol = common.zero_tol, gamma_0 = gamma_0,
+    )
+    return Hyperplane(gamma_x, gamma_t, gamma_0)
+end
+
+"""
+    set_core_point!(oracle::SplitOracle, core_point_x, core_point_t)
+
+Update the core point used by a directional reverse-polar `SplitOracle`. The supplied
+vectors must have the same dimensions as the oracle's existing core point.
+"""
+function set_core_point!(oracle::SplitOracle, core_point_x::Vector{Float64}, core_point_t::Vector{Float64})
+    return set_core_point!(oracle.param.normalization, core_point_x, core_point_t)
+end
+
+function set_core_point!(normalization::ReversePolarNormalization, core_point_x::Vector{Float64}, core_point_t::Vector{Float64})
+    has_core_point(normalization) ||
+        throw(ArgumentError("`set_core_point!` requires a directional ReversePolarNormalization."))
+    length(core_point_x) == length(normalization.core_point_x) ||
+        throw(DimensionMismatch("`core_point_x` has length $(length(core_point_x)) but expected $(length(normalization.core_point_x))."))
+    length(core_point_t) == length(normalization.core_point_t) ||
+        throw(DimensionMismatch("`core_point_t` has length $(length(core_point_t)) but expected $(length(normalization.core_point_t))."))
+
+    normalization.core_point_x .= core_point_x
+    normalization.core_point_t .= core_point_t
+end
+
+function update_reverse_polar_constraints!(
+    oracle::SplitOracle,
+    direction_x::Vector{Float64},
+    direction_t::Vector{Float64},
+)
+    dcglp = oracle.dcglp
+
+    if haskey(dcglp, :con_reverse_polar_x) && haskey(dcglp, :con_reverse_polar_t) &&
+       length(dcglp[:con_reverse_polar_x]) == length(direction_x) && length(dcglp[:con_reverse_polar_t]) == length(direction_t)
+        tau = dcglp[:tau]
+        for j in eachindex(direction_x)
+            set_normalized_coefficient(dcglp[:con_reverse_polar_x][j], tau, direction_x[j])
+        end
+        for j in eachindex(direction_t)
+            set_normalized_coefficient(dcglp[:con_reverse_polar_t][j], tau, direction_t[j])
+        end
+        return nothing
+    end
+
+    delete_registered_constraints!(dcglp, :con_reverse_polar_x)
+    delete_registered_constraints!(dcglp, :con_reverse_polar_t)
+
+    @constraint(
+        dcglp,
+        con_reverse_polar_x[j in eachindex(direction_x)],
+        dcglp[:sx][j] + direction_x[j] * dcglp[:tau] == 0.0,
+    )
+    @constraint(
+        dcglp,
+        con_reverse_polar_t[j in eachindex(direction_t)],
+        dcglp[:st][j] + direction_t[j] * dcglp[:tau] == 0.0,
+    )
+end
+
+function compute_directional_oracle_gap(
+    is_in_L::Bool,
+    t_block::Vector{Float64},
+    f_x_i::Vector{Float64},
+    omega_0::Float64,
+)
+    if is_in_L
+        return 0.0, 0.0
+    elseif any(isnan, f_x_i)
+        return NaN, NaN
+    end
+
+    gap = maximum(max.(f_x_i .- t_block, 0.0))
+    return gap, omega_0 * gap
+end
+
+# -----------------------------------------------------------------------------
+# DCGLP logging
+# -----------------------------------------------------------------------------
+
+function format_sparse_terms(coeffs::SparseVector{Float64, Int}, var_name::String; zero_tol::Float64 = 1.0e-10)
+    terms = String[]
+    for p in sortperm(coeffs.nzind)
+        idx = coeffs.nzind[p]
+        val = coeffs.nzval[p]
+        abs(val) <= zero_tol && continue
+        sign = val >= 0 ? "+" : "-"
+        push!(terms, @sprintf("%s %.6g %s[%d]", sign, abs(val), var_name, idx))
+    end
+    return terms
+end
+
+function format_hyperplane(h::Hyperplane; zero_tol::Float64 = 1.0e-10)
+    pieces = String[]
+    if abs(h.a_0) > zero_tol || (nnz(h.a_x) == 0 && nnz(h.a_t) == 0)
+        push!(pieces, @sprintf("%.6g", h.a_0))
+    else
+        push!(pieces, "0")
+    end
+    append!(pieces, format_sparse_terms(h.a_x, "x"; zero_tol = zero_tol))
+    append!(pieces, format_sparse_terms(h.a_t, "t"; zero_tol = zero_tol))
+    return join(pieces, " ") * " <= 0"
+end
+
+function print_dcglp_iteration_info(::LpDistanceNormalization, state::DcglpState, log::DcglpLog)
+    print_iteration_info(state, log)
+end
+
+function print_dcglp_iteration_info(normalization::ReversePolarNormalization, state::DcglpState, log::DcglpLog)
+    if has_core_point(normalization)
+        @printf(
+            "   Iter: %4d | LB: %12.8f | UB: %12.8f | Gap: %8.4f%% | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
+            log.n_iter,
+            state.LB,
+            state.UB,
+            state.gap,
+            state.master_time,
+            state.oracle_times[1],
+            state.oracle_times[2],
+        )
+        @printf(
+            "      Oracle status | k: %-10s gap: %8.4f scaled: %8.4f | v: %-10s gap: %8.4f scaled: %8.4f\n",
+            String(state.values[:oracle_statuses][1]),
+            state.values[:oracle_gaps][1],
+            state.values[:oracle_scaled_gaps][1],
+            String(state.values[:oracle_statuses][2]),
+            state.values[:oracle_gaps][2],
+            state.values[:oracle_scaled_gaps][2],
+        )
+        return nothing
+    end
+
+    @printf(
+        "   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | UB_k: %8.2f | UB_v: %8.2f | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
+        log.n_iter,
+        state.LB,
+        state.UB,
+        state.gap,
+        maximum(state.omega_t_[1]),
+        maximum(state.omega_t_[2]),
+        state.master_time,
+        state.oracle_times[1],
+        state.oracle_times[2],
+    )
+end
+
+function print_disjunctive_cut(
+    oracle::SplitOracle,
+    cut::Hyperplane,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64};
+    zero_tol::Float64 = 1.0e-10,
+)
+    println("   Disjunctive cut:")
+    println("      " * format_hyperplane(cut; zero_tol = zero_tol))
+    if oracle.param.split_index_selection_rule isa SimpleSplit
+        @printf("   Split index: x[%d]\n", get_split_index(oracle))
+    end
+    @printf("   Cut violation at current point: %.6f\n", evaluate_violation(cut, x_value, t_value))
+end
+
+# -----------------------------------------------------------------------------
+# DCGLP solve loop
+# -----------------------------------------------------------------------------
+
+"""
+    should_fallback_typical(normalization, oracle, x_value, t_value) -> Bool
+
+If `true`, `generate_cuts` short-circuits and delegates to the first typical
+oracle without solving the DCGLP. Default implementation returns `false`.
+The directional normalization uses this hook both to skip the DCGLP when the
+candidate point coincides with the core point and to cache the direction
+vector for later cut extraction.
+"""
+should_fallback_typical(::AbstractDisjunctiveNormalization, ::SplitOracle, ::Vector{Float64}, ::Vector{Float64}) = false
+
+function solve_dcglp_loop!(
+    oracle::SplitOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    zero_indices::Vector{Int},
+    one_indices::Vector{Int};
+    start_time::Float64,
+    time_limit::Float64,
+    throw_typical_cuts_for_errors::Bool,
+    include_disjunctive_cuts_to_hyperplanes::Bool,
+)
+    normalization = oracle.param.normalization
+    normalization_name = string(nameof(typeof(normalization)))
+    log = DcglpLog()
+    log.start_time = start_time
+
+    dcglp = oracle.dcglp
+    hyperplanes = Hyperplane[]
+    reference_t = update_dcglp_reference_t!(normalization, oracle, x_value, t_value, start_time, time_limit)
+
+    while true
+        state = initialize_dcglp_state(normalization)
+        benders_cuts = Dict(1 => AffExpr[], 2 => AffExpr[])
+
+        state.total_time = @elapsed begin
+            state.master_time = @elapsed begin
+                set_time_limit_sec(dcglp, get_sec_remaining(log.start_time, time_limit))
+                try
+                    optimize!(dcglp)
+                catch err
+                    return fallback_typical_or_throw(
+                        oracle, x_value, t_value, start_time, time_limit,
+                        "$(normalization_name) master: unexpected error encountered when optimizing dcglp master: $(err)";
+                        throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
+                    )
+                end
+
+                if is_solved_and_feasible(dcglp; allow_local = false, dual = true)
+                    read_dcglp_solution!(oracle, state)
+                elseif termination_status(dcglp) == ALMOST_INFEASIBLE
+                    return fallback_typical_or_throw(
+                        oracle, x_value, t_value, start_time, time_limit,
+                        "$(normalization_name) master: unexpected dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue";
+                        throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
+                    )
+                elseif termination_status(dcglp) == TIME_LIMIT
+                    throw(TimeLimitException("Time limit reached during $(normalization_name) solving"))
+                else
+                    return fallback_typical_or_throw(
+                        oracle, x_value, t_value, start_time, time_limit,
+                        "$(normalization_name) master: termination status is $(termination_status(dcglp))";
+                        throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
+                    )
+                end
+            end
+
+            collect_dcglp_benders_cuts!(oracle, state, benders_cuts, hyperplanes, x_value, t_value, log, time_limit)
+            update_dcglp_upper_bound_and_gap!(normalization, state, log, reference_t, t_value)
+            record_iteration!(log, state)
+        end
+
+        oracle.param.dcglp_param.verbose && print_dcglp_iteration_info(normalization, state, log)
+        check_lb_improvement!(state, log; zero_tol = oracle.param.zero_tol)
+        is_terminated(state, log, oracle.param.dcglp_param, time_limit) && break
+
+        cuts_to_add = [benders_cuts[1]; benders_cuts[2]]
+        !isempty(cuts_to_add) && add_constraints(dcglp, :con_benders, cuts_to_add)
+    end
+
+    current_lb = log.iterations[end].LB
+    if current_lb >= oracle.param.zero_tol
+        cut = build_dcglp_disjunctive_cut(normalization, dcglp, oracle.param, current_lb, x_value, t_value, zero_indices, one_indices)
+        oracle.param.dcglp_param.verbose && print_disjunctive_cut(oracle, cut, x_value, t_value; zero_tol = oracle.param.zero_tol)
+        store_dcglp_disjunctive_cut!(oracle, cut, hyperplanes, include_disjunctive_cuts_to_hyperplanes)
+        return false, hyperplanes, fill(Inf, length(t_value))
+    end
+
+    return generate_cuts(
+        oracle.typical_oracles[1],
+        x_value,
+        t_value;
+        time_limit = get_sec_remaining(start_time, time_limit),
+    )
+end
+
+function read_dcglp_solution!(oracle::SplitOracle, state::DcglpState)
+    dcglp = oracle.dcglp
+    for i in 1:2
+        state.values[:ω_x][i] = value.(dcglp[:omega_x][i, :])
+        state.values[:ω_t][i] = value.(dcglp[:omega_t][i, :])
+        state.values[:ω_0][i] = value(dcglp[:omega_0][i])
+    end
+    tau_value = value(dcglp[:tau])
+    state.values[:tau] = tau_value
+    state.values[:sx] = value.(dcglp[:sx])
+    state.LB = tau_value
+end
+
+function collect_dcglp_benders_cuts!(
+    oracle::SplitOracle,
+    state::DcglpState,
+    benders_cuts::Dict{Int, Vector{AffExpr}},
+    hyperplanes::Vector{Hyperplane},
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    log::DcglpLog,
+    time_limit::Float64,
+)
+    dcglp = oracle.dcglp
+    normalization = oracle.param.normalization
+    for i in 1:2
+        state.oracle_times[i] = @elapsed begin
+            if state.values[:ω_0][i] >= oracle.param.zero_tol
+                t_block = state.values[:ω_t][i] ./ state.values[:ω_0][i]
+                state.is_in_L[i], hyperplanes_i, state.f_x[i] = generate_cuts(
+                    oracle.typical_oracles[i],
+                    clamp.(state.values[:ω_x][i] ./ state.values[:ω_0][i], 0.0, 1.0),
+                    t_block;
+                    tol_normalize = state.values[:ω_0][i],
+                    time_limit = get_sec_remaining(log.start_time, time_limit),
+                )
+                record_dcglp_oracle_result!(normalization, state, i, t_block)
+
+                if !state.is_in_L[i]
+                    for k in 1:2
+                        append!(
+                            benders_cuts[i],
+                            hyperplanes_to_expression(
+                                dcglp,
+                                hyperplanes_i,
+                                dcglp[:omega_x][k, :],
+                                dcglp[:omega_t][k, :],
+                                dcglp[:omega_0][k],
+                            ),
+                        )
+                    end
+                    append_selected_benders_cuts_to_master!(
+                        oracle, hyperplanes, hyperplanes_i, x_value, t_value,
+                    )
+                end
+            else
+                state.is_in_L[i] = true
+                state.f_x[i] = zeros(length(t_value))
+            end
+        end
+    end
+end
+
+function append_selected_benders_cuts_to_master!(
+    oracle::SplitOracle,
+    hyperplanes::Vector{Hyperplane},
+    candidate_hyperplanes::Vector{Hyperplane},
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+)
+    oracle.param.add_benders_cuts_to_master == 0 && return nothing
+
+    add_violated = oracle.param.add_benders_cuts_to_master == 2
+    append!(
+        hyperplanes,
+        select_top_fraction(
+            candidate_hyperplanes,
+            h -> evaluate_violation(h, x_value, t_value),
+            oracle.param.fraction_of_benders_cuts_to_master;
+            add_only_violated_cuts = add_violated,
+        ),
+    )
+end
+
+function fill_dcglp_omega_t_estimates!(state::DcglpState, t_value::Vector{Float64})
+    for i in 1:2
+        state.omega_t_[i] =
+            state.is_in_L[i] ? state.values[:ω_t][i] :
+            any(isnan, state.f_x[i]) ? fill(NaN, length(t_value)) :
+            state.f_x[i] * state.values[:ω_0][i]
+    end
+end
+function build_dcglp_disjunctive_cut(
+    ::AbstractDisjunctiveNormalization,
+    dcglp::Model,
+    common::SplitOracleParam,
+    ::Float64,
+    ::Vector{Float64},
+    t_value::Vector{Float64},
+    zero_indices::Vector{Int},
+    one_indices::Vector{Int},
+)
+    gamma_x = dual.(dcglp[:conx])
+    gamma_t = dual.(dcglp[:cont])
+    gamma_0 = dual(dcglp[:con0])
+    gamma_x, gamma_0 = apply_lift_or_strengthen(
+        dcglp, gamma_x, zero_indices, one_indices;
+        lift = common.lift, strengthen = common.strengthened,
+        zero_tol = common.zero_tol, gamma_0 = gamma_0,
+    )
+    return Hyperplane(gamma_x, gamma_t, gamma_0)
+end
+
