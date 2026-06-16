@@ -15,6 +15,8 @@ struct DirectionalVectorTTestData <: AbstractData end
 
 struct DirectionalVectorTTestOracle <: BendersX.AbstractTypicalOracle end
 
+struct ExtensionContractNormalization <: BendersX.AbstractDisjunctiveNormalization end
+
 function disjunctive_norm_optimizer()
     return optimizer_with_attributes(HiGHS.Optimizer, DNO_MOI.Silent() => true)
 end
@@ -115,6 +117,33 @@ function BendersX.generate_cuts(
     f_x = 1.0 .- x_value[1:length(t_value)]
     is_in_L = all(f_x .<= t_value .+ 1.0e-9)
     return is_in_L, hyperplanes, f_x
+end
+
+function BendersX.add_normalization_constraint!(
+    ::ExtensionContractNormalization,
+    dcglp::Model,
+    tau::VariableRef,
+    sx::AbstractVector{VariableRef},
+    st::AbstractVector{VariableRef},
+)
+    var_vec = [tau; sx; st]
+    @constraint(dcglp, con_extension_norm, var_vec in DNO_MOI.NormInfinityCone(length(var_vec)))
+end
+
+function BendersX.update_dcglp_upper_bound_and_gap!(
+    ::ExtensionContractNormalization,
+    state,
+    log,
+    reference_t::Vector{Float64},
+    t_value::Vector{Float64},
+)
+    BendersX.fill_dcglp_omega_t_estimates!(state, t_value)
+    all(f_i -> !any(isnan, f_i), state.f_x) || return nothing
+    BendersX.update_upper_bound_and_gap!(
+        state,
+        log,
+        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], Inf),
+    )
 end
 
 function run_direct_cut_smoke(oracle)
@@ -223,6 +252,34 @@ end
                 ),
             )
             run_direct_cut_smoke(oracle)
+        end
+    end
+
+    @testset "normalization extension defaults" begin
+        data, master = build_disjunctive_norm_master()
+        oracle = SplitOracle(
+            master,
+            build_typical_pair(data, master);
+            param = SplitOracleParam(
+                ExtensionContractNormalization();
+                dcglp_param = disjunctive_norm_dcglp_param(),
+                reuse_dcglp = false,
+            ),
+        )
+
+        run_direct_cut_smoke(oracle)
+
+        state = BendersX.DcglpState()
+        state.omega_t_[1] = [1.0]
+        state.omega_t_[2] = [2.0]
+        state.LB = 1.0
+        state.UB = 2.0
+        state.gap = 50.0
+        log = BendersX.DcglpLog()
+        log.n_iter = 1
+
+        redirect_stdout(devnull) do
+            @test BendersX.print_dcglp_iteration_info(ExtensionContractNormalization(), state, log) === nothing
         end
     end
 

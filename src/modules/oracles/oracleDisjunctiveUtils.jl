@@ -651,7 +651,7 @@ function format_hyperplane(h::Hyperplane; zero_tol::Float64 = 1.0e-10)
     return join(pieces, " ") * " <= 0"
 end
 
-function print_dcglp_iteration_info(::LpDistanceNormalization, state::DcglpState, log::DcglpLog)
+function print_dcglp_iteration_info(::AbstractDisjunctiveNormalization, state::DcglpState, log::DcglpLog)
     print_iteration_info(state, log)
 end
 
@@ -900,6 +900,7 @@ function fill_dcglp_omega_t_estimates!(state::DcglpState, t_value::Vector{Float6
             state.f_x[i] * state.values[:ω_0][i]
     end
 end
+
 function build_dcglp_disjunctive_cut(
     ::AbstractDisjunctiveNormalization,
     dcglp::Model,
@@ -920,4 +921,3 @@ function build_dcglp_disjunctive_cut(
     )
     return Hyperplane(gamma_x, gamma_t, gamma_0)
 end
-

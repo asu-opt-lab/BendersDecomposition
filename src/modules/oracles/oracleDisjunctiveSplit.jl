@@ -175,6 +175,57 @@ mutable struct SplitOracleParam <: AbstractOracleParam
 end
 
 """
+    build_dcglp(master, param)
+
+Build the DCGLP model for a split-oracle normalization. The fallback builder
+uses a shared slack layout with `tau`, `sx`, and `st`, then delegates the
+normalization-specific connection to `add_normalization_constraint!`.
+"""
+function build_dcglp(master::AbstractMaster, param::SplitOracleParam)
+    return build_dcglp(master, param, param.normalization)
+end
+
+function build_dcglp(
+    master::AbstractMaster,
+    param::SplitOracleParam,
+    normalization::AbstractDisjunctiveNormalization,
+)
+    dcglp = Model(param.dcglp_param.optimizer)
+    @variable(dcglp, omega_0[1:2] >= 0)
+
+    @variable(dcglp, omega_x[1:2, 1:master.dim_x])
+    @variable(dcglp, omega_t[1:2, 1:master.dim_t])
+
+    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= -1.0e6 .* omega_0[i])
+    @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i, j])
+    @constraint(dcglp, condelta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_x[i, j])
+
+    @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
+
+    for i in 1:2
+        transfer_scaled_linear_rows_and_bounds_with_types!(
+            master.model,
+            master.x,
+            dcglp,
+            omega_x[i, :],
+            omega_0[i],
+        )
+    end
+
+    @variable(dcglp, tau)
+    @variable(dcglp, sx[1:master.dim_x])
+    @variable(dcglp, st[1:master.dim_t])
+
+    @objective(dcglp, Min, tau)
+
+    @constraint(dcglp, conx, dcglp[:omega_x][1, :] + dcglp[:omega_x][2, :] - sx .== 0)
+    @constraint(dcglp, cont[j = 1:master.dim_t], dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] - st[j] == 0)
+
+    add_normalization_constraint!(normalization, dcglp, tau, sx, st)
+    return dcglp
+end
+
+"""
     SplitOracle
 
 Single struct that backs all split-oracle DCGLP normalization variants. The variant identity
@@ -253,55 +304,4 @@ function generate_cuts(
         throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
         include_disjunctive_cuts_to_hyperplanes = include_disjunctive_cuts_to_hyperplanes,
     )
-end
-
-"""
-    build_dcglp(master, param)
-
-Build the DCGLP model for a split-oracle normalization. The fallback builder
-uses a shared slack layout with `tau`, `sx`, and `st`, then delegates the
-normalization-specific connection to `add_normalization_constraint!`.
-"""
-function build_dcglp(master::AbstractMaster, param::SplitOracleParam)
-    return build_dcglp(master, param, param.normalization)
-end
-
-function build_dcglp(
-    master::AbstractMaster,
-    param::SplitOracleParam,
-    normalization::AbstractDisjunctiveNormalization,
-)
-    dcglp = Model(param.dcglp_param.optimizer)
-    @variable(dcglp, omega_0[1:2] >= 0)
-
-    @variable(dcglp, omega_x[1:2, 1:master.dim_x])
-    @variable(dcglp, omega_t[1:2, 1:master.dim_t])
-
-    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= -1.0e6 .* omega_0[i])
-    @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i, j])
-    @constraint(dcglp, condelta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_x[i, j])
-
-    @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
-
-    for i in 1:2
-        transfer_scaled_linear_rows_and_bounds_with_types!(
-            master.model,
-            master.x,
-            dcglp,
-            omega_x[i, :],
-            omega_0[i],
-        )
-    end
-
-    @variable(dcglp, tau)
-    @variable(dcglp, sx[1:master.dim_x])
-    @variable(dcglp, st[1:master.dim_t])
-
-    @objective(dcglp, Min, tau)
-
-    @constraint(dcglp, conx, dcglp[:omega_x][1, :] + dcglp[:omega_x][2, :] - sx .== 0)
-    @constraint(dcglp, cont[j = 1:master.dim_t], dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] - st[j] == 0)
-
-    add_normalization_constraint!(normalization, dcglp, tau, sx, st)
-    return dcglp
 end
