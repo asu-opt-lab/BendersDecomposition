@@ -56,18 +56,6 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "DCGLP normalization oracles" begin
                 normalization_specs = [
                     (
-                        "SplitOracle/EpigraphSumNormalization",
-                        SplitOracleParam(EpigraphSumNormalization(); dcglp_param = dcglp_param,
-                            split_index_selection_rule = LargestFractional(),
-                            disjunctive_cut_append_rule = AllDisjunctiveCuts(),
-                            strengthened = true,
-                            add_benders_cuts_to_master = false,
-                            reuse_dcglp = false,
-                            lift = false,
-                            zero_tol = 1e-9,
-                        ),
-                    ),
-                    (
                         "SplitOracle/VerticalReversePolarNormalization",
                         SplitOracleParam(VerticalReversePolarNormalization(); dcglp_param = dcglp_param,
                             split_index_selection_rule = LargestFractional(),

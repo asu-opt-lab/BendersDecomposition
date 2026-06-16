@@ -97,15 +97,15 @@ end
 
 function read_dcglp_solution!(oracle::SplitOracle, state::DcglpState)
     dcglp = oracle.dcglp
-    normalization = oracle.param.normalization
     for i in 1:2
         state.values[:ω_x][i] = value.(dcglp[:omega_x][i, :])
         state.values[:ω_t][i] = value.(dcglp[:omega_t][i, :])
         state.values[:ω_0][i] = value(dcglp[:omega_0][i])
     end
-    state.values[:tau] = dcglp_tau_value(normalization, dcglp)
-    state.values[:sx] = dcglp_sx_value(normalization, dcglp)
-    state.LB = dcglp_lower_bound(normalization, dcglp)
+    tau_value = value(dcglp[:tau])
+    state.values[:tau] = tau_value
+    state.values[:sx] = dcglp_sx_value(oracle.param.normalization, dcglp)
+    state.LB = tau_value
 end
 
 function collect_dcglp_benders_cuts!(

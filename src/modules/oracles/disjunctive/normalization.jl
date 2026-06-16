@@ -9,21 +9,19 @@ configuration (`norm`, `core_point_*`, …) and the dispatch surface listed belo
 # Normalization interface
 - `build_dcglp` — construct the DCGLP for a normalization. Normalizations with
   distinct linking constraints provide their own method.
-- `add_normalization_constraint!` — fallback hook for normalizations that use
-  the shared distance-normalization DCGLP layout.
+- `add_normalization_constraint!` — connect the shared `tau`, `sx`, and `st`
+  variables according to the normalization.
 - `update_dcglp_for_candidate!` — per-call setup for the current
   candidate point (RHS, direction).
-- `validate_normalization_specific!` — extra construction-time validation.
 - `normalization_label` — human-readable name used in error messages.
-- `dcglp_tau_value`, `dcglp_sx_value`, `dcglp_lower_bound` — solution reads
-  after each DCGLP solve.
+- `dcglp_sx_value` — normalization-specific solution reads after each DCGLP solve.
 - `initialize_dcglp_state` — normalization-aware state initialization.
 - `update_dcglp_reference_t!` — normalizations may override to adjust the
   reference epigraph used by the UB recomputation.
 - `record_dcglp_oracle_result!` — normalizations may record subproblem
   results into the state.
 - `update_dcglp_upper_bound_and_gap!` — normalization-specific UB/gap rule.
-- `has_dcglp_disjunctive_cut` — normalization-specific cut threshold.
+- `has_dcglp_disjunctive_cut` — cut threshold rule.
 - `build_dcglp_disjunctive_cut` — normalization-specific cut extraction.
 - `print_dcglp_iteration_info` — normalization-specific iteration log.
 """
@@ -42,13 +40,6 @@ end
 function LpDistanceNormalization(norm::AbstractNorm = LpNorm(Inf); adjust_t_to_fx::Bool = false)
     return LpDistanceNormalization(norm, adjust_t_to_fx)
 end
-
-"""
-    EpigraphSumNormalization()
-
-Epigraph-sum DCGLP normalization for `SplitOracle`.
-"""
-mutable struct EpigraphSumNormalization <: AbstractDisjunctiveNormalization end
 
 """
     VerticalReversePolarNormalization()
@@ -81,16 +72,14 @@ end
 
 normalization_label(s::AbstractDisjunctiveNormalization) = string(nameof(typeof(s)))
 
-validate_normalization_specific!(::AbstractDisjunctiveNormalization, ::AbstractMaster) = nothing
-
 initialize_dcglp_state(::AbstractDisjunctiveNormalization) = DcglpState()
 
 update_dcglp_reference_t!(::AbstractDisjunctiveNormalization, ::AbstractSplitOracle, ::Vector{Float64}, t_value::Vector{Float64}, ::Float64, ::Float64) = copy(t_value)
 
 dcglp_sx_value(::AbstractDisjunctiveNormalization, ::Model) = Float64[]
 
-dcglp_lower_bound(::AbstractDisjunctiveNormalization, dcglp::Model) = objective_value(dcglp)
-
 record_dcglp_oracle_result!(::AbstractDisjunctiveNormalization, ::DcglpState, ::Int, ::Vector{Float64}) = nothing
+
+has_dcglp_disjunctive_cut(::AbstractDisjunctiveNormalization, current_lb::Float64, ::Vector{Float64}, zero_tol::Float64) = current_lb >= zero_tol
 
 fallback_for_unexpected_dcglp_status(::AbstractDisjunctiveNormalization) = true

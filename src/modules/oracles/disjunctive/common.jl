@@ -13,18 +13,6 @@ function validate_fraction_of_benders_cuts_to_master(fraction::Float64)
     return fraction
 end
 
-function validate_two_typical_oracles!(typical_oracles, oracle_name::String)
-    length(typical_oracles) == 2 ||
-        throw(ArgumentError("$oracle_name requires exactly two typical oracles."))
-end
-
-function validate_binary_master!(master::AbstractMaster, oracle_name::String)
-    for xi in master.x
-        is_binary(xi) ||
-            throw(ArgumentError("$oracle_name requires all master variables to be binary."))
-    end
-end
-
 function initialize_disjunctive_cut_storage(master::AbstractMaster)
     return [Vector{Hyperplane}() for _ in 1:master.dim_x],
            Hyperplane[],

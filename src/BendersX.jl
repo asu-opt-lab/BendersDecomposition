@@ -31,7 +31,7 @@ export solve!
 export BasicOracleParam, ClassicalOracleParam, UnifiedOracleParam, ParetoOracleParam
 export SeparableOracleParam, DcglpParam
 export SplitOracleParam
-export LpDistanceNormalization, EpigraphSumNormalization
+export LpDistanceNormalization
 export VerticalReversePolarNormalization, DirectionalReversePolarNormalization
 export BendersSeqParam, BendersSeqInOutParam, BendersBnBParam, SpecializedBendersSeqParam
 export LazyCallback, UserCallback, NoUserCallback, UserCallbackParam

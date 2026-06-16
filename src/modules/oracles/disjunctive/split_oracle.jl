@@ -55,7 +55,7 @@ mutable struct SplitOracleParam <: AbstractOracleParam
         SplitOracleParam(disjunctive_norm_param; dcglp_param = DcglpParam(), kwargs...)
 
     Construct split-oracle parameters from a normalization parameter object, such as
-    `LpDistanceNormalization(LpNorm(Inf))` or `EpigraphSumNormalization()`.
+    `LpDistanceNormalization(LpNorm(Inf))` or `VerticalReversePolarNormalization()`.
     """
     function SplitOracleParam(
         normalization::AbstractDisjunctiveNormalization;
@@ -98,9 +98,8 @@ end
     build_dcglp(master, param)
 
 Build the DCGLP model for a split-oracle normalization. The fallback builder
-uses the shared distance-normalization layout and delegates the normalization
-cone to `add_normalization_constraint!`; other normalizations may provide a
-more specific method.
+uses a shared slack layout with `tau`, `sx`, and `st`, then delegates the
+normalization-specific connection to `add_normalization_constraint!`.
 """
 function build_dcglp(master::AbstractMaster, param::SplitOracleParam)
     return build_dcglp(master, param, param.normalization)

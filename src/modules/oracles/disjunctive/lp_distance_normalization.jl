@@ -25,9 +25,7 @@ function update_dcglp_for_candidate!(::LpDistanceNormalization, oracle::SplitOra
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 end
 
-dcglp_tau_value(::LpDistanceNormalization, dcglp::Model) = value(dcglp[:tau])
 dcglp_sx_value(::LpDistanceNormalization, dcglp::Model) = value.(dcglp[:sx])
-dcglp_lower_bound(::LpDistanceNormalization, dcglp::Model) = value(dcglp[:tau])
 
 function update_dcglp_reference_t!(
     ::LpDistanceNormalization,
@@ -84,10 +82,6 @@ function update_dcglp_upper_bound_and_gap!(
         log,
         (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], normalization.norm.p),
     )
-end
-
-function has_dcglp_disjunctive_cut(::LpDistanceNormalization, current_lb::Float64, ::Vector{Float64}, zero_tol::Float64)
-    return current_lb >= zero_tol
 end
 
 function build_dcglp_disjunctive_cut(

@@ -142,7 +142,6 @@ end
     @testset "parameter validation" begin
         dcglp_param = disjunctive_norm_dcglp_param()
         @test_throws ArgumentError SplitOracleParam(LpDistanceNormalization(); dcglp_param = dcglp_param, add_benders_cuts_to_master = 3)
-        @test_throws ArgumentError SplitOracleParam(EpigraphSumNormalization(); dcglp_param = dcglp_param, fraction_of_benders_cuts_to_master = 0.0)
         @test_throws ArgumentError SplitOracleParam(VerticalReversePolarNormalization(); dcglp_param = dcglp_param, fraction_of_benders_cuts_to_master = 1.1)
         @test_throws ArgumentError DirectionalReversePolarNormalization(Float64[], [0.0])
     end
@@ -210,7 +209,6 @@ end
     @testset "direct generate_cuts smoke" begin
         for normalization in [
             LpDistanceNormalization(LpNorm(Inf)),
-            EpigraphSumNormalization(),
             VerticalReversePolarNormalization(),
             DirectionalReversePolarNormalization([0.25, 0.25], [0.0]),
         ]

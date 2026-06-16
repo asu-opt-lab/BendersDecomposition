@@ -26,21 +26,6 @@ function print_dcglp_iteration_info(::LpDistanceNormalization, state::DcglpState
     print_iteration_info(state, log)
 end
 
-function print_dcglp_iteration_info(::EpigraphSumNormalization, state::DcglpState, log::DcglpLog)
-    @printf(
-        "   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | UB_k: %8.2f | UB_v: %8.2f | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
-        log.n_iter,
-        state.LB,
-        state.UB,
-        state.gap,
-        sum(state.omega_t_[1]),
-        sum(state.omega_t_[2]),
-        state.master_time,
-        state.oracle_times[1],
-        state.oracle_times[2],
-    )
-end
-
 function print_dcglp_iteration_info(::VerticalReversePolarNormalization, state::DcglpState, log::DcglpLog)
     @printf(
         "   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | UB_k: %8.2f | UB_v: %8.2f | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
