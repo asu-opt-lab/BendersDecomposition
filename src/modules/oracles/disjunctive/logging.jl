@@ -26,7 +26,30 @@ function print_dcglp_iteration_info(::LpDistanceNormalization, state::DcglpState
     print_iteration_info(state, log)
 end
 
-function print_dcglp_iteration_info(::VerticalReversePolarNormalization, state::DcglpState, log::DcglpLog)
+function print_dcglp_iteration_info(normalization::ReversePolarNormalization, state::DcglpState, log::DcglpLog)
+    if has_core_point(normalization)
+        @printf(
+            "   Iter: %4d | LB: %12.8f | UB: %12.8f | Gap: %8.4f%% | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
+            log.n_iter,
+            state.LB,
+            state.UB,
+            state.gap,
+            state.master_time,
+            state.oracle_times[1],
+            state.oracle_times[2],
+        )
+        @printf(
+            "      Oracle status | k: %-10s gap: %8.4f scaled: %8.4f | v: %-10s gap: %8.4f scaled: %8.4f\n",
+            String(state.values[:oracle_statuses][1]),
+            state.values[:oracle_gaps][1],
+            state.values[:oracle_scaled_gaps][1],
+            String(state.values[:oracle_statuses][2]),
+            state.values[:oracle_gaps][2],
+            state.values[:oracle_scaled_gaps][2],
+        )
+        return nothing
+    end
+
     @printf(
         "   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | UB_k: %8.2f | UB_v: %8.2f | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
         log.n_iter,
@@ -38,28 +61,6 @@ function print_dcglp_iteration_info(::VerticalReversePolarNormalization, state::
         state.master_time,
         state.oracle_times[1],
         state.oracle_times[2],
-    )
-end
-
-function print_dcglp_iteration_info(::DirectionalReversePolarNormalization, state::DcglpState, log::DcglpLog)
-    @printf(
-        "   Iter: %4d | LB: %12.8f | UB: %12.8f | Gap: %8.4f%% | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
-        log.n_iter,
-        state.LB,
-        state.UB,
-        state.gap,
-        state.master_time,
-        state.oracle_times[1],
-        state.oracle_times[2],
-    )
-    @printf(
-        "      Oracle status | k: %-10s gap: %8.4f scaled: %8.4f | v: %-10s gap: %8.4f scaled: %8.4f\n",
-        String(state.values[:oracle_statuses][1]),
-        state.values[:oracle_gaps][1],
-        state.values[:oracle_scaled_gaps][1],
-        String(state.values[:oracle_statuses][2]),
-        state.values[:oracle_gaps][2],
-        state.values[:oracle_scaled_gaps][2],
     )
 end
 

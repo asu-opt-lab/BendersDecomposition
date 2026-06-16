@@ -32,7 +32,7 @@ export BasicOracleParam, ClassicalOracleParam, UnifiedOracleParam, ParetoOracleP
 export SeparableOracleParam, DcglpParam
 export SplitOracleParam
 export LpDistanceNormalization
-export VerticalReversePolarNormalization, DirectionalReversePolarNormalization
+export ReversePolarNormalization
 export BendersSeqParam, BendersSeqInOutParam, BendersBnBParam, SpecializedBendersSeqParam
 export LazyCallback, UserCallback, NoUserCallback, UserCallbackParam
 export RootNodePreprocessing, NoRootNodePreprocessing, DisjunctiveRootNodePreprocessing

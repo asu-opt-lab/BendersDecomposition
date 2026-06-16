@@ -11,7 +11,7 @@ using BendersX
         :solve!,
         :BasicOracleParam, :ClassicalOracleParam, :UnifiedOracleParam, :ParetoOracleParam,
         :SeparableOracleParam, :DcglpParam,
-        :SplitOracleParam, :LpDistanceNormalization, :VerticalReversePolarNormalization, :DirectionalReversePolarNormalization,
+        :SplitOracleParam, :LpDistanceNormalization, :ReversePolarNormalization,
         :BendersSeqParam, :BendersSeqInOutParam, :BendersBnBParam, :SpecializedBendersSeqParam,
         :LazyCallback, :UserCallback, :NoUserCallback, :UserCallbackParam,
         :RootNodePreprocessing, :NoRootNodePreprocessing, :DisjunctiveRootNodePreprocessing,

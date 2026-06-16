@@ -76,14 +76,14 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @assert haskey(reference_objectives, instance_name) "Missing CFLP reference objective for $(instance_name) in $(reference_path)"
             mip_opt_val = reference_objectives[instance_name]
 
-            @testset "DirectionalPolar oracle" begin
+            @testset "ReversePolar oracle" begin
                 @testset "Seq" begin
-                    @info "solving CFLP p$i - SplitOracle/DirectionalReversePolarNormalization/classical - benders2master false reuse false lift false"
+                    @info "solving CFLP p$i - SplitOracle/ReversePolarNormalization/classical - benders2master false reuse false lift false"
 
                     core_x = ones(data.n_facilities)
                     recourse_value = solve_cflp_recourse_value(data, core_x, optimizer)
                     core_t = [recourse_value + max(1.0, 0.05 * abs(recourse_value))]
-                    oracle_param = SplitOracleParam(DirectionalReversePolarNormalization(core_x, core_t); dcglp_param = dcglp_param,
+                    oracle_param = SplitOracleParam(ReversePolarNormalization(core_x, core_t); dcglp_param = dcglp_param,
                         split_index_selection_rule = RandomFractional(),
                         disjunctive_cut_append_rule = AllDisjunctiveCuts(),
                         strengthened = true,

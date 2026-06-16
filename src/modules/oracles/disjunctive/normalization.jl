@@ -42,29 +42,27 @@ function LpDistanceNormalization(norm::AbstractNorm = LpNorm(Inf); adjust_t_to_f
 end
 
 """
-    VerticalReversePolarNormalization()
+    ReversePolarNormalization()
+    ReversePolarNormalization(core_point_x, core_point_t)
 
-Vertical reverse-polar DCGLP normalization for `SplitOracle`.
+Reverse-polar DCGLP normalization for `SplitOracle`. With no core point, this
+uses the vertical reverse-polar direction. With a core point, it uses the
+direction from the core point to the current candidate.
 """
-mutable struct VerticalReversePolarNormalization <: AbstractDisjunctiveNormalization end
-
-"""
-    DirectionalReversePolarNormalization(core_point_x, core_point_t)
-
-Directional reverse-polar DCGLP normalization for `SplitOracle`.
-Stores the core point used to compute the directional cut and the direction
-vectors from the most recent `generate_cuts` call (`last_direction_*`).
-"""
-mutable struct DirectionalReversePolarNormalization <: AbstractDisjunctiveNormalization
-    core_point_x::Vector{Float64}
-    core_point_t::Vector{Float64}
+mutable struct ReversePolarNormalization <: AbstractDisjunctiveNormalization
+    core_point_x::Union{Nothing, Vector{Float64}}
+    core_point_t::Union{Nothing, Vector{Float64}}
     last_direction_x::Vector{Float64}
     last_direction_t::Vector{Float64}
 
-    function DirectionalReversePolarNormalization(core_point_x::Vector{Float64}, core_point_t::Vector{Float64})
+    function ReversePolarNormalization()
+        return new(nothing, nothing, Float64[], Float64[])
+    end
+
+    function ReversePolarNormalization(core_point_x::Vector{Float64}, core_point_t::Vector{Float64})
         isempty(core_point_x) && throw(ArgumentError("`core_point_x` must be non-empty."))
         isempty(core_point_t) && throw(ArgumentError("`core_point_t` must be non-empty."))
-        new(copy(core_point_x), copy(core_point_t), Float64[], Float64[])
+        return new(copy(core_point_x), copy(core_point_t), Float64[], Float64[])
     end
 end
 

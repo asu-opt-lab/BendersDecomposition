@@ -55,7 +55,7 @@ mutable struct SplitOracleParam <: AbstractOracleParam
         SplitOracleParam(disjunctive_norm_param; dcglp_param = DcglpParam(), kwargs...)
 
     Construct split-oracle parameters from a normalization parameter object, such as
-    `LpDistanceNormalization(LpNorm(Inf))` or `VerticalReversePolarNormalization()`.
+    `LpDistanceNormalization(LpNorm(Inf))` or `ReversePolarNormalization()`.
     """
     function SplitOracleParam(
         normalization::AbstractDisjunctiveNormalization;

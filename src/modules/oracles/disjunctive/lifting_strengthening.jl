@@ -78,7 +78,7 @@ function normalize_directional_duals!(
 )
     direction_value = dot(gamma_x, direction_x) + dot(gamma_t, direction_t)
     abs(direction_value) > zero_tol ||
-        throw(AlgorithmException("DirectionalReversePolarNormalization cut normalization failed because the directional support is numerically zero."))
+        throw(AlgorithmException("ReversePolarNormalization cut normalization failed because the directional support is numerically zero."))
     gamma_x ./= direction_value
     gamma_t ./= direction_value
     return direction_value
