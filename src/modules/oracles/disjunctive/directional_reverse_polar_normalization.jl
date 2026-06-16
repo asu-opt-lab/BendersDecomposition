@@ -7,9 +7,9 @@ end
 
 function build_dcglp(
     master::AbstractMaster,
-    param::SplitOracleParam{DirectionalReversePolarNormalization},
+    param::SplitOracleParam,
+    normalization::DirectionalReversePolarNormalization,
 )
-    normalization = param.normalization
     dcglp = Model(param.dcglp_param.optimizer)
     @variable(dcglp, omega_0[1:2] >= 0)
 
@@ -61,7 +61,7 @@ function initialize_dcglp_state(::DirectionalReversePolarNormalization)
     return state
 end
 
-function should_fallback_typical(normalization::DirectionalReversePolarNormalization, oracle::SplitOracle{DirectionalReversePolarNormalization}, x_value::Vector{Float64}, t_value::Vector{Float64})
+function should_fallback_typical(normalization::DirectionalReversePolarNormalization, oracle::SplitOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
     direction_x = x_value .- normalization.core_point_x
     direction_t = t_value .- normalization.core_point_t
 
@@ -74,7 +74,7 @@ function should_fallback_typical(normalization::DirectionalReversePolarNormaliza
     return false
 end
 
-function update_dcglp_for_candidate!(normalization::DirectionalReversePolarNormalization, oracle::SplitOracle{DirectionalReversePolarNormalization}, x_value::Vector{Float64}, t_value::Vector{Float64})
+function update_dcglp_for_candidate!(normalization::DirectionalReversePolarNormalization, oracle::SplitOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
     update_direction_constraints!(oracle, x_value, t_value, normalization.last_direction_x, normalization.last_direction_t)
 end
 
@@ -113,7 +113,7 @@ end
 function build_dcglp_disjunctive_cut(
     normalization::DirectionalReversePolarNormalization,
     dcglp::Model,
-    common::SplitOracleParam{DirectionalReversePolarNormalization},
+    common::SplitOracleParam,
     ::Float64,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
@@ -143,13 +143,16 @@ function build_dcglp_disjunctive_cut(
 end
 
 """
-    set_core_point!(oracle::SplitOracle{DirectionalReversePolarNormalization}, core_point_x, core_point_t)
+    set_core_point!(oracle::SplitOracle, core_point_x, core_point_t)
 
-Update the core point used by a `SplitOracle{DirectionalReversePolarNormalization}`. The supplied
+Update the core point used by a directional reverse-polar `SplitOracle`. The supplied
 vectors must have the same dimensions as the oracle's existing core point.
 """
-function set_core_point!(oracle::SplitOracle{DirectionalReversePolarNormalization}, core_point_x::Vector{Float64}, core_point_t::Vector{Float64})
-    normalization = oracle.param.normalization
+function set_core_point!(oracle::SplitOracle, core_point_x::Vector{Float64}, core_point_t::Vector{Float64})
+    return set_core_point!(oracle.param.normalization, core_point_x, core_point_t)
+end
+
+function set_core_point!(normalization::DirectionalReversePolarNormalization, core_point_x::Vector{Float64}, core_point_t::Vector{Float64})
     length(core_point_x) == length(normalization.core_point_x) ||
         throw(DimensionMismatch("`core_point_x` has length $(length(core_point_x)) but expected $(length(normalization.core_point_x))."))
     length(core_point_t) == length(normalization.core_point_t) ||
@@ -160,7 +163,7 @@ function set_core_point!(oracle::SplitOracle{DirectionalReversePolarNormalizatio
 end
 
 function update_direction_constraints!(
-    oracle::SplitOracle{DirectionalReversePolarNormalization},
+    oracle::SplitOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
     direction_x::Vector{Float64},

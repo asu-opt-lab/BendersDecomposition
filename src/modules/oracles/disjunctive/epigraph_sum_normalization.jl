@@ -1,6 +1,7 @@
 function build_dcglp(
     master::AbstractMaster,
-    param::SplitOracleParam{EpigraphSumNormalization},
+    param::SplitOracleParam,
+    ::EpigraphSumNormalization,
 )
     dcglp = Model(param.dcglp_param.optimizer)
     @variable(dcglp, omega_0[1:2] >= 0)
@@ -34,7 +35,7 @@ function build_dcglp(
     return dcglp
 end
 
-function update_dcglp_for_candidate!(::EpigraphSumNormalization, oracle::SplitOracle{EpigraphSumNormalization}, x_value::Vector{Float64}, ::Vector{Float64})
+function update_dcglp_for_candidate!(::EpigraphSumNormalization, oracle::SplitOracle, x_value::Vector{Float64}, ::Vector{Float64})
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
 end
 
@@ -55,4 +56,3 @@ end
 function has_dcglp_disjunctive_cut(::EpigraphSumNormalization, current_lb::Float64, t_value::Vector{Float64}, zero_tol::Float64)
     return current_lb >= sum(t_value) + zero_tol
 end
-

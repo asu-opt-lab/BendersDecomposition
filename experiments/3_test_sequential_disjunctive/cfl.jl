@@ -78,7 +78,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
             @testset "DirectionalPolar oracle" begin
                 @testset "Seq" begin
-                    @info "solving CFLP p$i - SplitOracle{DirectionalReversePolarNormalization}/classical - benders2master false reuse false lift false"
+                    @info "solving CFLP p$i - SplitOracle/DirectionalReversePolarNormalization/classical - benders2master false reuse false lift false"
 
                     core_x = ones(data.n_facilities)
                     recourse_value = solve_cflp_recourse_value(data, core_x, optimizer)

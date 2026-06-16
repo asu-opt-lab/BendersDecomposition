@@ -2,8 +2,8 @@
     AbstractDisjunctiveNormalization
 
 Normalization object that captures the per-variant behavior of a [`SplitOracle`](@ref).
-All four split-oracle normalization variants in this module are instances of `SplitOracle{S}` for some
-`S <: AbstractDisjunctiveNormalization`. The normalization owns the variant-specific
+All split-oracle normalization variants in this module are stored on `SplitOracleParam`.
+The normalization owns the variant-specific
 configuration (`norm`, `core_point_*`, …) and the dispatch surface listed below.
 
 # Normalization interface
@@ -32,7 +32,7 @@ abstract type AbstractDisjunctiveNormalization end
 """
     LpDistanceNormalization(norm, adjust_t_to_fx)
 
-Distance-norm DCGLP normalization. Backs `SplitOracle{LpDistanceNormalization}`.
+Distance-norm DCGLP normalization for `SplitOracle`.
 """
 mutable struct LpDistanceNormalization <: AbstractDisjunctiveNormalization
     norm::AbstractNorm
@@ -46,21 +46,21 @@ end
 """
     EpigraphSumNormalization()
 
-Epigraph-sum DCGLP normalization. Backs `SplitOracle{EpigraphSumNormalization}`.
+Epigraph-sum DCGLP normalization for `SplitOracle`.
 """
 mutable struct EpigraphSumNormalization <: AbstractDisjunctiveNormalization end
 
 """
     VerticalReversePolarNormalization()
 
-Vertical reverse-polar DCGLP normalization. Backs `SplitOracle{VerticalReversePolarNormalization}`.
+Vertical reverse-polar DCGLP normalization for `SplitOracle`.
 """
 mutable struct VerticalReversePolarNormalization <: AbstractDisjunctiveNormalization end
 
 """
     DirectionalReversePolarNormalization(core_point_x, core_point_t)
 
-Directional reverse-polar DCGLP normalization. Backs `SplitOracle{DirectionalReversePolarNormalization}`.
+Directional reverse-polar DCGLP normalization for `SplitOracle`.
 Stores the core point used to compute the directional cut and the direction
 vectors from the most recent `generate_cuts` call (`last_direction_*`).
 """

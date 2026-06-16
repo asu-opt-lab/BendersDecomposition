@@ -10,7 +10,7 @@ This section explains:
 
 1. How to replace one oracle with another
 2. How oracle parameters affect cut generation
-3. How disjunctive (`SplitOracle{LpDistanceNormalization}`) oracles fit into the workflow
+3. How disjunctive (`SplitOracle` with `LpDistanceNormalization`) oracles fit into the workflow
 
 ---
 
@@ -41,7 +41,7 @@ remains unchanged.
 Each oracle in BendersX owns a `param` field of type `<: AbstractOracleParam`,
 which controls numerical tolerances and cut-generation behavior. By convention,
 an oracle named `XOracle` uses a parameter type named `XOracleParam`; split
-oracles use `SplitOracleParam{<:AbstractDisjunctiveNormalization}`. See
+oracles use `SplitOracleParam` with an `AbstractDisjunctiveNormalization`. See
 [`API`](@ref api) for detailed descriptions of oracle-specific parameters.
 
 Common parameters include:
@@ -107,12 +107,12 @@ required constructor interface can be used as the template.
 
 ---
 
-## Using Split Oracles (`SplitOracle{LpDistanceNormalization}`)
+## Using Split Oracles (`SplitOracle` with `LpDistanceNormalization`)
 For mixed-integer master problems, BendersX provides the
-`SplitOracle{LpDistanceNormalization}`, a [`SplitOracle`](@ref) specialization that generates **disjunctive Benders cuts** by solving a
+[`SplitOracle`](@ref) with `LpDistanceNormalization`, which generates **disjunctive Benders cuts** by solving a
 Dual Cut Generating Linear Program (DCGLP).
 
-A `SplitOracle{LpDistanceNormalization}` is constructed by combining two *typical* oracles (denoted by
+A `SplitOracle` is constructed by combining two *typical* oracles (denoted by
 `κ` and `ν`) together with a `SplitOracleParam` object built from a disjunctive
 normalization parameter and a [`DcglpParam`](@ref) controlling the DCGLP.
 
@@ -131,22 +131,25 @@ dcglp_optimizer = optimizer_with_attributes(
 )
 dcglp_param = DcglpParam(dcglp_optimizer)
 disjunctive_norm_param = LpDistanceNormalization()
-oracle = SplitOracle(
-    master,
-    [oracle_kappa, oracle_nu],
+oracle_param = SplitOracleParam(
     disjunctive_norm_param;
     dcglp_param = dcglp_param,
     split_index_selection_rule = MostFractional(),
     strengthened = true,
     lift = true,
 )
+oracle = SplitOracle(
+    master,
+    (oracle_kappa, oracle_nu);
+    param = oracle_param,
+)
 ```
 Attach the solver for the DCGLP through standard JuMP APIs such as `optimizer_with_attributes(...)`.
 
 The component oracles `oracle_kappa` and `oracle_nu` can be any implementation of typical oracles compatible with the underlying problem.
 
-### Configuring `SplitOracle{LpDistanceNormalization}` Behavior
-The behavior of a `SplitOracle{LpDistanceNormalization}` is controlled entirely through
+### Configuring `SplitOracle` Behavior
+The behavior of a `SplitOracle` is controlled entirely through
 `SplitOracleParam(disjunctive_norm_param; ...)`. Key options include:
 - Split selection
     - `split_index_selection_rule`: determines which fractional master variable is selected to form the disjunction.
@@ -173,7 +176,7 @@ robustness.
 | `ClassicalOracle`, `UnifiedOracle`, `ParetoOracle` | General-purpose Benders decomposition                                      |
 | `CFLKnapsackOracle`                           | Capacitated facility location problems                                      |
 | `UFLKnapsackOracle`                           | Uncapacitated facility location problems                                    |
-| `SplitOracle{LpDistanceNormalization}`                                | General-purpose Benders decomposition for problems with an MILP master      |
+| `SplitOracle` with `LpDistanceNormalization` | General-purpose Benders decomposition for problems with an MILP master      |
 | `SeparableOracle`                            | General-purpose Benders decomposition for problems with multi-scenario or separable recourse |
 | Custom `AbstractOracle` | Research and prototyping |
 

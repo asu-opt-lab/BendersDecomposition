@@ -75,7 +75,7 @@ log = solve!(env)
     | [`UFLKnapsackOracle`](@ref)  | Knapsack-based specialized oracle for uncapacitated facility location problems |
     | [`CFLKnapsackOracle`](@ref)  | Knapsack-based specialized oracle for capacitated facility location problems |
     | [`SplitOracle`](@ref)      | Generic split-cut oracle backed by a DCGLP normalization parameter |
-    | `SplitOracle{LpDistanceNormalization}`      | Distance-norm split oracle specialization |
+    | `SplitOracle` with `LpDistanceNormalization` | Distance-norm split oracle configuration |
 
     **Built-in Environment variants**
 

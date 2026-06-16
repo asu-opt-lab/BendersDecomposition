@@ -1,5 +1,5 @@
 """
-    SplitOracleParam{S<:AbstractDisjunctiveNormalization}
+    SplitOracleParam
 
 Single parameter container for every split-oracle DCGLP normalization variant. The variant-specific
 configuration (`norm`, `core_point_*`, …) lives on the normalization object; this
@@ -13,9 +13,9 @@ split oracle parameters are fixed at construction. Mutating normalization state
 that must stay in sync with the DCGLP (e.g. the directional core point)
 goes through dedicated APIs such as [`set_core_point!`](@ref).
 """
-mutable struct SplitOracleParam{S<:AbstractDisjunctiveNormalization} <: AbstractOracleParam
+mutable struct SplitOracleParam <: AbstractOracleParam
     dcglp_param::DcglpParam
-    normalization::S
+    normalization::AbstractDisjunctiveNormalization
     split_index_selection_rule::SplitIndexSelectionRule
     disjunctive_cut_append_rule::DisjunctiveCutsAppendRule
     add_benders_cuts_to_master::Int
@@ -24,6 +24,64 @@ mutable struct SplitOracleParam{S<:AbstractDisjunctiveNormalization} <: Abstract
     strengthened::Bool
     lift::Bool
     zero_tol::Float64
+
+    function SplitOracleParam(
+        dcglp_param::DcglpParam,
+        normalization::AbstractDisjunctiveNormalization,
+        split_index_selection_rule::SplitIndexSelectionRule,
+        disjunctive_cut_append_rule::DisjunctiveCutsAppendRule,
+        add_benders_cuts_to_master::Union{Bool, Int},
+        fraction_of_benders_cuts_to_master::Float64,
+        reuse_dcglp::Bool,
+        strengthened::Bool,
+        lift::Bool,
+        zero_tol::Float64,
+    )
+        return new(
+            dcglp_param,
+            normalization,
+            split_index_selection_rule,
+            disjunctive_cut_append_rule,
+            normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
+            validate_fraction_of_benders_cuts_to_master(fraction_of_benders_cuts_to_master),
+            reuse_dcglp,
+            strengthened,
+            lift,
+            zero_tol,
+        )
+    end
+
+    """
+        SplitOracleParam(disjunctive_norm_param; dcglp_param = DcglpParam(), kwargs...)
+
+    Construct split-oracle parameters from a normalization parameter object, such as
+    `LpDistanceNormalization(LpNorm(Inf))` or `EpigraphSumNormalization()`.
+    """
+    function SplitOracleParam(
+        normalization::AbstractDisjunctiveNormalization;
+        dcglp_param::DcglpParam = DcglpParam(),
+        split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(),
+        disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
+        add_benders_cuts_to_master::Union{Bool, Int} = 1,
+        fraction_of_benders_cuts_to_master::Float64 = 1.0,
+        reuse_dcglp::Bool = true,
+        strengthened::Bool = true,
+        lift::Bool = false,
+        zero_tol::Float64 = 1.0e-9,
+    )
+        return new(
+            dcglp_param,
+            normalization,
+            split_index_selection_rule,
+            disjunctive_cut_append_rule,
+            normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
+            validate_fraction_of_benders_cuts_to_master(fraction_of_benders_cuts_to_master),
+            reuse_dcglp,
+            strengthened,
+            lift,
+            zero_tol,
+        )
+    end
 end
 
 function Base.getproperty(p::SplitOracleParam, name::Symbol)
@@ -37,38 +95,6 @@ function Base.propertynames(p::SplitOracleParam, private::Bool = false)
 end
 
 """
-    SplitOracleParam(disjunctive_norm_param; dcglp_param = DcglpParam(), kwargs...)
-
-Construct split-oracle parameters from a normalization parameter object, such as
-`LpDistanceNormalization(LpNorm(Inf))` or `EpigraphSumNormalization()`.
-"""
-function SplitOracleParam(
-    normalization::S;
-    dcglp_param::DcglpParam = DcglpParam(),
-    split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(),
-    disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
-    add_benders_cuts_to_master::Union{Bool, Int} = 1,
-    fraction_of_benders_cuts_to_master::Float64 = 1.0,
-    reuse_dcglp::Bool = true,
-    strengthened::Bool = true,
-    lift::Bool = false,
-    zero_tol::Float64 = 1.0e-9,
-) where {S <: AbstractDisjunctiveNormalization}
-    return SplitOracleParam(
-        dcglp_param,
-        normalization,
-        split_index_selection_rule,
-        disjunctive_cut_append_rule,
-        normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
-        validate_fraction_of_benders_cuts_to_master(fraction_of_benders_cuts_to_master),
-        reuse_dcglp,
-        strengthened,
-        lift,
-        zero_tol,
-    )
-end
-
-"""
     build_dcglp(master, param)
 
 Build the DCGLP model for a split-oracle normalization. The fallback builder
@@ -76,11 +102,15 @@ uses the shared distance-normalization layout and delegates the normalization
 cone to `add_normalization_constraint!`; other normalizations may provide a
 more specific method.
 """
+function build_dcglp(master::AbstractMaster, param::SplitOracleParam)
+    return build_dcglp(master, param, param.normalization)
+end
+
 function build_dcglp(
     master::AbstractMaster,
-    param::SplitOracleParam{S},
-) where {S <: AbstractDisjunctiveNormalization}
-    normalization = param.normalization
+    param::SplitOracleParam,
+    normalization::AbstractDisjunctiveNormalization,
+)
     dcglp = Model(param.dcglp_param.optimizer)
     @variable(dcglp, omega_0[1:2] >= 0)
 
@@ -117,43 +147,49 @@ function build_dcglp(
 end
 
 """
-    SplitOracle{S<:AbstractDisjunctiveNormalization}
+    SplitOracle
 
-Single struct that backs all four split-oracle DCGLP normalization variants. The variant identity
-is carried by the `S` type parameter.
+Single struct that backs all split-oracle DCGLP normalization variants. The variant identity
+is carried by the `normalization` object stored on `param`.
 """
-mutable struct SplitOracle{S<:AbstractDisjunctiveNormalization} <: AbstractSplitOracle
-    param::SplitOracleParam{S}
+mutable struct SplitOracle <: AbstractSplitOracle
+    param::SplitOracleParam
     dcglp::Model
     typical_oracles::Vector{AbstractTypicalOracle}
     disjunctive_cuts_by_index::Vector{Vector{Hyperplane}}
     disjunctive_cuts::Vector{Hyperplane}
     splits::Vector{Tuple{SparseVector{Float64, Int}, Float64}}
-end
 
-function SplitOracle(
-    master::AbstractMaster,
-    typical_oracles::NTuple{2, <:AbstractTypicalOracle};
-    param::SplitOracleParam{S} = SplitOracleParam(LpDistanceNormalization()),
-) where {S <: AbstractDisjunctiveNormalization}
-    normalization = param.normalization
-    label = normalization_label(normalization)
-    validate_two_typical_oracles!(typical_oracles, label)
-    validate_binary_master!(master, label)
-    validate_normalization_specific!(normalization, master)
-
-    dcglp = build_dcglp(master, param)
-    cuts_by_index, cuts, splits = initialize_disjunctive_cut_storage(master)
-
-    return SplitOracle{S}(
-        param,
-        dcglp,
-        AbstractTypicalOracle[typical_oracles...],
-        cuts_by_index,
-        cuts,
-        splits,
+    function SplitOracle(
+        param::SplitOracleParam,
+        dcglp::Model,
+        typical_oracles::Vector{AbstractTypicalOracle},
+        disjunctive_cuts_by_index::Vector{Vector{Hyperplane}},
+        disjunctive_cuts::Vector{Hyperplane},
+        splits::Vector{Tuple{SparseVector{Float64, Int}, Float64}},
     )
+        return new(param, dcglp, typical_oracles, disjunctive_cuts_by_index, disjunctive_cuts, splits)
+    end
+
+    function SplitOracle(
+        master::AbstractMaster,
+        typical_oracles::NTuple{2, <:AbstractTypicalOracle};
+        param::SplitOracleParam = SplitOracleParam(LpDistanceNormalization()),
+    )
+        dcglp = build_dcglp(master, param)
+        cuts_by_index, cuts, splits = initialize_disjunctive_cut_storage(master)
+
+        return new(
+            param,
+            dcglp,
+            AbstractTypicalOracle[typical_oracles...],
+            cuts_by_index,
+            cuts,
+            splits,
+        )
+    end
 end
+
 """
     generate_cuts(oracle::SplitOracle, x_value, t_value; kwargs...)
 

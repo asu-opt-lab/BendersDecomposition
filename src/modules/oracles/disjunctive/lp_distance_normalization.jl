@@ -20,7 +20,7 @@ function add_normalization_constraint!(
     end
 end
 
-function update_dcglp_for_candidate!(::LpDistanceNormalization, oracle::SplitOracle{LpDistanceNormalization}, x_value::Vector{Float64}, t_value::Vector{Float64})
+function update_dcglp_for_candidate!(::LpDistanceNormalization, oracle::SplitOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 end
@@ -31,7 +31,7 @@ dcglp_lower_bound(::LpDistanceNormalization, dcglp::Model) = value(dcglp[:tau])
 
 function update_dcglp_reference_t!(
     ::LpDistanceNormalization,
-    oracle::SplitOracle{LpDistanceNormalization},
+    oracle::SplitOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
     start_time::Float64,
@@ -93,7 +93,7 @@ end
 function build_dcglp_disjunctive_cut(
     normalization::LpDistanceNormalization,
     dcglp::Model,
-    common::SplitOracleParam{LpDistanceNormalization},
+    common::SplitOracleParam,
     ::Float64,
     ::Vector{Float64},
     ::Vector{Float64},

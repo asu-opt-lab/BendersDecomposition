@@ -1,6 +1,7 @@
 function build_dcglp(
     master::AbstractMaster,
-    param::SplitOracleParam{VerticalReversePolarNormalization},
+    param::SplitOracleParam,
+    ::VerticalReversePolarNormalization,
 )
     dcglp = Model(param.dcglp_param.optimizer)
     @variable(dcglp, omega_0[1:2] >= 0)
@@ -34,7 +35,7 @@ function build_dcglp(
     return dcglp
 end
 
-function update_dcglp_for_candidate!(::VerticalReversePolarNormalization, oracle::SplitOracle{VerticalReversePolarNormalization}, x_value::Vector{Float64}, t_value::Vector{Float64})
+function update_dcglp_for_candidate!(::VerticalReversePolarNormalization, oracle::SplitOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 end
@@ -56,5 +57,4 @@ end
 function has_dcglp_disjunctive_cut(::VerticalReversePolarNormalization, current_lb::Float64, ::Vector{Float64}, zero_tol::Float64)
     return current_lb >= zero_tol
 end
-
 

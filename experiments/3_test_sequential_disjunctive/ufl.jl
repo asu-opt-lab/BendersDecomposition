@@ -56,8 +56,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "DCGLP normalization oracles" begin
                 normalization_specs = [
                     (
-                        "SplitOracle{EpigraphSumNormalization}",
-                        SplitOracle{EpigraphSumNormalization},
+                        "SplitOracle/EpigraphSumNormalization",
                         SplitOracleParam(EpigraphSumNormalization(); dcglp_param = dcglp_param,
                             split_index_selection_rule = LargestFractional(),
                             disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -69,8 +68,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         ),
                     ),
                     (
-                        "SplitOracle{VerticalReversePolarNormalization}",
-                        SplitOracle{VerticalReversePolarNormalization},
+                        "SplitOracle/VerticalReversePolarNormalization",
                         SplitOracleParam(VerticalReversePolarNormalization(); dcglp_param = dcglp_param,
                             split_index_selection_rule = LargestFractional(),
                             disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -83,7 +81,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     ),
                 ]
 
-                for (normalization_name, oracle_type, oracle_param) in normalization_specs
+                for (normalization_name, oracle_param) in normalization_specs
                     @info "solving UFLP p$i - $normalization_name/classical - benders2master false reuse false lift false"
                     @testset "$normalization_name with ClassicalOracle" begin
                         master = Master(data; model = update_master_model!, optimizer = mip_optimizer)

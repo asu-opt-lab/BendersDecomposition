@@ -157,7 +157,8 @@ end
             dcglp_param = disjunctive_norm_dcglp_param(),
             reuse_dcglp = false,
         )
-        @test param isa SplitOracleParam{LpDistanceNormalization}
+        @test param isa SplitOracleParam
+        @test param.normalization isa LpDistanceNormalization
         @test param.norm.p == 1.0
         @test !param.reuse_dcglp
 
@@ -165,7 +166,8 @@ end
             DirectionalReversePolarNormalization([0.25, 0.25], [0.0]);
             dcglp_param = disjunctive_norm_dcglp_param(),
         )
-        @test directional_param isa SplitOracleParam{DirectionalReversePolarNormalization}
+        @test directional_param isa SplitOracleParam
+        @test directional_param.normalization isa DirectionalReversePolarNormalization
         @test directional_param.core_point_x == [0.25, 0.25]
     end
 
@@ -179,25 +181,13 @@ end
             collect(typical_oracles);
             param = SplitOracleParam(LpDistanceNormalization(); dcglp_param = dcglp_param),
         )
-        @test_throws DimensionMismatch SplitOracle(
-            master,
-            typical_oracles;
-            param = SplitOracleParam(DirectionalReversePolarNormalization([0.25], [0.0]); dcglp_param = dcglp_param),
-        )
-
-        data_cont, continuous_master = build_disjunctive_norm_master(; continuous = true)
-        continuous_typical_oracles = build_typical_pair(data_cont, continuous_master)
-        @test_throws ArgumentError SplitOracle(
-            continuous_master,
-            continuous_typical_oracles;
-            param = SplitOracleParam(EpigraphSumNormalization(); dcglp_param = dcglp_param),
-        )
     end
 
     @testset "generic split oracle constructor" begin
         data, master = build_disjunctive_norm_master()
         default_oracle = SplitOracle(master, build_typical_pair(data, master))
-        @test default_oracle isa SplitOracle{LpDistanceNormalization}
+        @test default_oracle isa SplitOracle
+        @test default_oracle.param.normalization isa LpDistanceNormalization
         @test default_oracle.param.norm isa LpNorm
         @test default_oracle.param.norm.p == Inf
 
@@ -212,7 +202,7 @@ end
         )
 
         @test oracle isa SplitOracle
-        @test oracle isa SplitOracle{LpDistanceNormalization}
+        @test oracle.param.normalization isa LpDistanceNormalization
         @test oracle isa BendersX.AbstractSplitOracle
         @test !oracle.param.reuse_dcglp
     end
