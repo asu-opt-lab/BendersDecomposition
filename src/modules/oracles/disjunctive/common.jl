@@ -1,24 +1,3 @@
-const DCGLP_OMEGA_T_LOWER_BOUND = -1.0e6
-
-function normalize_add_benders_cuts_to_master(add_benders_cuts_to_master::Union{Bool, Int})
-    return add_benders_cuts_to_master === true ? 1 :
-           add_benders_cuts_to_master === false ? 0 :
-           add_benders_cuts_to_master in (0, 1, 2) ? add_benders_cuts_to_master :
-           throw(ArgumentError("`add_benders_cuts_to_master` must be true, false, or an integer in {0, 1, 2}."))
-end
-
-function validate_fraction_of_benders_cuts_to_master(fraction::Float64)
-    0.0 < fraction <= 1.0 ||
-        throw(ArgumentError("`fraction_of_benders_cuts_to_master` must lie in (0, 1]."))
-    return fraction
-end
-
-function initialize_disjunctive_cut_storage(master::AbstractMaster)
-    return [Vector{Hyperplane}() for _ in 1:master.dim_x],
-           Hyperplane[],
-           Vector{Tuple{SparseVector{Float64, Int}, Float64}}()
-end
-
 function delete_registered_constraints!(model::Model, sym::Symbol)
     haskey(model, sym) || return nothing
     registered = model[sym]

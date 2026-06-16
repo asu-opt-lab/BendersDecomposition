@@ -20,13 +20,6 @@ function add_normalization_constraint!(
     end
 end
 
-function update_dcglp_for_candidate!(::LpDistanceNormalization, oracle::SplitOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
-    set_normalized_rhs.(oracle.dcglp[:conx], x_value)
-    set_normalized_rhs.(oracle.dcglp[:cont], t_value)
-end
-
-dcglp_sx_value(::LpDistanceNormalization, dcglp::Model) = value.(dcglp[:sx])
-
 function update_dcglp_reference_t!(
     ::LpDistanceNormalization,
     oracle::SplitOracle,

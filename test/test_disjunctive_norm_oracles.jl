@@ -158,7 +158,7 @@ end
         )
         @test param isa SplitOracleParam
         @test param.normalization isa LpDistanceNormalization
-        @test param.norm.p == 1.0
+        @test param.normalization.norm.p == 1.0
         @test !param.reuse_dcglp
 
         directional_param = SplitOracleParam(
@@ -167,7 +167,7 @@ end
         )
         @test directional_param isa SplitOracleParam
         @test directional_param.normalization isa ReversePolarNormalization
-        @test directional_param.core_point_x == [0.25, 0.25]
+        @test directional_param.normalization.core_point_x == [0.25, 0.25]
     end
 
     @testset "constructor validation" begin
@@ -187,8 +187,8 @@ end
         default_oracle = SplitOracle(master, build_typical_pair(data, master))
         @test default_oracle isa SplitOracle
         @test default_oracle.param.normalization isa LpDistanceNormalization
-        @test default_oracle.param.norm isa LpNorm
-        @test default_oracle.param.norm.p == Inf
+        @test default_oracle.param.normalization.norm isa LpNorm
+        @test default_oracle.param.normalization.norm.p == Inf
 
         oracle = SplitOracle(
             master,
@@ -265,8 +265,8 @@ end
         )
 
         set_core_point!(oracle, [0.2, 0.3], [0.1])
-        @test oracle.param.core_point_x == [0.2, 0.3]
-        @test oracle.param.core_point_t == [0.1]
+        @test oracle.param.normalization.core_point_x == [0.2, 0.3]
+        @test oracle.param.normalization.core_point_t == [0.1]
         @test_throws DimensionMismatch set_core_point!(oracle, [0.1], [0.0])
     end
 
@@ -295,8 +295,8 @@ end
         @test !is_in_L
         @test !isempty(oracle.disjunctive_cuts)
         cut = last(oracle.disjunctive_cuts)
-        direction_x = x_value .- oracle.param.core_point_x
-        direction_t = t_value .- oracle.param.core_point_t
+        direction_x = x_value .- oracle.param.normalization.core_point_x
+        direction_t = t_value .- oracle.param.normalization.core_point_t
         @test isapprox(dot(cut.a_x, direction_x) + dot(cut.a_t, direction_t), 1.0; atol = 1.0e-6)
         @test BendersX.evaluate_violation(cut, x_value, t_value) > 0.0
     end

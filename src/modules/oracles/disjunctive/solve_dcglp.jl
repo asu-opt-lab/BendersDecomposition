@@ -21,6 +21,7 @@ function solve_dcglp_loop!(
     include_disjunctive_cuts_to_hyperplanes::Bool,
 )
     normalization = oracle.param.normalization
+    normalization_name = string(nameof(typeof(normalization)))
     log = DcglpLog()
     log.start_time = start_time
 
@@ -40,7 +41,7 @@ function solve_dcglp_loop!(
                 catch err
                     return fallback_typical_or_throw(
                         oracle, x_value, t_value, start_time, time_limit,
-                        "$(normalization_label(normalization)) master: unexpected error encountered when optimizing dcglp master: $(err)";
+                        "$(normalization_name) master: unexpected error encountered when optimizing dcglp master: $(err)";
                         throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
                     )
                 end
@@ -50,19 +51,17 @@ function solve_dcglp_loop!(
                 elseif termination_status(dcglp) == ALMOST_INFEASIBLE
                     return fallback_typical_or_throw(
                         oracle, x_value, t_value, start_time, time_limit,
-                        "$(normalization_label(normalization)) master: unexpected dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue";
+                        "$(normalization_name) master: unexpected dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue";
                         throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
                     )
                 elseif termination_status(dcglp) == TIME_LIMIT
-                    throw(TimeLimitException("Time limit reached during $(normalization_label(normalization)) solving"))
-                elseif fallback_for_unexpected_dcglp_status(normalization)
+                    throw(TimeLimitException("Time limit reached during $(normalization_name) solving"))
+                else
                     return fallback_typical_or_throw(
                         oracle, x_value, t_value, start_time, time_limit,
-                        "$(normalization_label(normalization)) master: termination status is $(termination_status(dcglp))";
+                        "$(normalization_name) master: termination status is $(termination_status(dcglp))";
                         throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
                     )
-                else
-                    throw(UnexpectedModelStatusException("$(normalization_label(normalization)) master: $(termination_status(dcglp))"))
                 end
             end
 
@@ -80,7 +79,7 @@ function solve_dcglp_loop!(
     end
 
     current_lb = log.iterations[end].LB
-    if has_dcglp_disjunctive_cut(normalization, current_lb, t_value, oracle.param.zero_tol)
+    if current_lb >= oracle.param.zero_tol
         cut = build_dcglp_disjunctive_cut(normalization, dcglp, oracle.param, current_lb, x_value, t_value, zero_indices, one_indices)
         oracle.param.dcglp_param.verbose && print_disjunctive_cut(oracle, cut, x_value, t_value; zero_tol = oracle.param.zero_tol)
         store_dcglp_disjunctive_cut!(oracle, cut, hyperplanes, include_disjunctive_cuts_to_hyperplanes)
@@ -104,7 +103,7 @@ function read_dcglp_solution!(oracle::SplitOracle, state::DcglpState)
     end
     tau_value = value(dcglp[:tau])
     state.values[:tau] = tau_value
-    state.values[:sx] = dcglp_sx_value(oracle.param.normalization, dcglp)
+    state.values[:sx] = value.(dcglp[:sx])
     state.LB = tau_value
 end
 
