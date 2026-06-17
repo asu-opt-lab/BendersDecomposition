@@ -1,6 +1,7 @@
 
 include("utilsSolver.jl")
 include("utilsCuts.jl")
+include("utilsGbc.jl")
 include("utilsLoop.jl")
 include("utilsBnB.jl")
 include("utilsInterface.jl")
