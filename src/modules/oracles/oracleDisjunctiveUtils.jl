@@ -343,9 +343,8 @@ end
 
 If `true`, `generate_cuts` short-circuits and delegates to the first typical
 oracle without solving the DCGLP. Default implementation returns `false`.
-The directional normalization uses this hook both to skip the DCGLP when the
-candidate point coincides with the core point and to cache the direction
-vector for later cut extraction.
+The directional normalization uses this hook to skip the DCGLP when the
+candidate point coincides with the core point.
 """
 should_fallback_typical(::AbstractDisjunctiveNormalization, ::SplitOracle, ::Vector{Float64}, ::Vector{Float64}) = false
 
@@ -370,7 +369,7 @@ function solve_dcglp_loop!(
     reference_t = update_dcglp_reference_t!(normalization, oracle, x_value, t_value, start_time, time_limit)
 
     while true
-        state = initialize_dcglp_state(normalization)
+        state = DcglpState()
         benders_cuts = Dict(1 => AffExpr[], 2 => AffExpr[])
 
         state.total_time = @elapsed begin
@@ -458,7 +457,6 @@ function collect_dcglp_benders_cuts!(
     time_limit::Float64,
 )
     dcglp = oracle.dcglp
-    normalization = oracle.param.normalization
     for i in 1:2
         state.oracle_times[i] = @elapsed begin
             if state.values[:ω_0][i] >= oracle.param.zero_tol
@@ -470,7 +468,6 @@ function collect_dcglp_benders_cuts!(
                     tol_normalize = state.values[:ω_0][i],
                     time_limit = get_sec_remaining(log.start_time, time_limit),
                 )
-                record_dcglp_oracle_result!(normalization, state, i, t_block)
 
                 if !state.is_in_L[i]
                     for k in 1:2
