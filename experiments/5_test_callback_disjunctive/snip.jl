@@ -42,7 +42,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                        oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                             strengthened = strengthened,
@@ -127,7 +127,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                        oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                             strengthened = strengthened,
@@ -215,7 +215,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                        oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                             strengthened = strengthened,

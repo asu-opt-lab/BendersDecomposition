@@ -129,28 +129,6 @@ struct UnsupportedModelException <: Exception
 end
 
 # ============================================================================
-# Normalization type for CGLP
-# ============================================================================
-abstract type AbstractNorm end
-struct StandardNorm <: AbstractNorm end
-"""
-    LpNorm(p::Float64)
-
-Lp normalization used by the disjunctive cut generating LP.
-
-The value `p` specifies the norm order used in normalization constraints for
-the DCGLP. Typical choices are `1.0`, `2.0`, and `Inf`.
-
-See also: `SplitOracleParam`, `LpDistanceNormalization`, `add_normalization_constraint!`
-"""
-mutable struct LpNorm <: AbstractNorm
-    p::Float64
-    function LpNorm(p::Float64)
-        new(p)
-    end
-end
-
-# ============================================================================
 # Rules for constructing a split set
 # ============================================================================
 """

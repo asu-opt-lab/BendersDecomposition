@@ -197,7 +197,7 @@ end
         @test direction_x == [0.0, 0.0]
         @test direction_t == [1.0]
 
-        disjunctive_norm_param = LpDistanceNormalization(LpNorm(1.0))
+        disjunctive_norm_param = LpDistanceNormalization(1.0)
         param = SplitOracleParam(
             disjunctive_norm_param;
             dcglp_param = disjunctive_norm_dcglp_param(),
@@ -205,9 +205,12 @@ end
         )
         @test param isa SplitOracleParam
         @test param.normalization isa LpDistanceNormalization
-        @test param.normalization.norm_p.p == 1.0
+        @test param.normalization.norm_p == 1.0
         @test !param.reuse_dcglp
         @test !param.adjust_t_to_fx
+        @test LpDistanceNormalization(1).norm_p == 1.0
+        @test LpDistanceNormalization(Inf).norm_p == Inf
+        @test_throws ArgumentError LpDistanceNormalization(3.0)
 
         adjusted_param = SplitOracleParam(
             ReversePolarNormalization();
@@ -253,8 +256,7 @@ end
         default_oracle = SplitOracle(master, build_typical_pair(data, master))
         @test default_oracle isa SplitOracle
         @test default_oracle.param.normalization isa LpDistanceNormalization
-        @test default_oracle.param.normalization.norm_p isa LpNorm
-        @test default_oracle.param.normalization.norm_p.p == Inf
+        @test default_oracle.param.normalization.norm_p == Inf
 
         oracle = SplitOracle(
             master,
@@ -274,7 +276,7 @@ end
 
     @testset "direct generate_cuts smoke" begin
         for normalization in [
-            LpDistanceNormalization(LpNorm(Inf)),
+            LpDistanceNormalization(Inf),
             ReversePolarNormalization(),
             ReversePolarNormalization([0.25, 0.25], [0.0]),
             ReversePolarNormalization(; core_diretion_x = [0.0, 0.0], core_diretion_t = [1.0]),

@@ -60,7 +60,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                                 strengthened = strengthened,
@@ -94,7 +94,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                                 strengthened = strengthened,
@@ -127,7 +127,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/unified - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                                 strengthened = strengthened,
@@ -157,7 +157,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/pareto - seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = RandomFractional(),
                                                                 disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                                 strengthened = strengthened,
@@ -187,7 +187,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                         @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/classical with GBC - seq"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
-                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param, split_index_selection_rule = RandomFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 1.0, reuse_dcglp = reuse_dcglp, lift = lift)
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param, split_index_selection_rule = RandomFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 1.0, reuse_dcglp = reuse_dcglp, lift = lift)
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
@@ -207,7 +207,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [1.0], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                         @info "solving SCFLP f25-c50-s64-r10-$i - disjunctive oracle/knapsack with GBC - seq"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
-                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param, split_index_selection_rule = RandomFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 1.0, reuse_dcglp = reuse_dcglp, lift = lift)
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param, split_index_selection_rule = RandomFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 1.0, reuse_dcglp = reuse_dcglp, lift = lift)
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             typical_oracle_kappa = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracle_nu = SeparableOracle(data, master, CFLKnapsackOracle(), data.n_scenarios; model = update_sub_gbc_model!, optimizer = optimizer)

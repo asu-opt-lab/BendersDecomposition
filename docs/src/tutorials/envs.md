@@ -193,7 +193,7 @@ dcglp_optimizer = optimizer_with_attributes(
     MOI.Silent() => true,
 )
 dcglp_param = DcglpParam(dcglp_optimizer; time_limit = 200.0)
-disjunctive_norm_param = LpDistanceNormalization(LpNorm(1.0))
+disjunctive_norm_param = LpDistanceNormalization(1.0)
 
 # disjunctive oracle and callbacks
 disjunctive_oracle = SplitOracle(

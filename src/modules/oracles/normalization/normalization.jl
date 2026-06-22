@@ -22,15 +22,17 @@ configuration (`norm`, `core_point_*`, …) and the dispatch surface listed belo
 abstract type AbstractDisjunctiveNormalization end
 
 """
-    LpDistanceNormalization(norm)
+    LpDistanceNormalization(p)
 
 Distance-norm DCGLP normalization for `SplitOracle`.
 """
 mutable struct LpDistanceNormalization <: AbstractDisjunctiveNormalization
-    norm_p::AbstractNorm
+    norm_p::Float64
 
-    function LpDistanceNormalization(norm::AbstractNorm = LpNorm(Inf))
-        return new(norm)
+    function LpDistanceNormalization(p::Real = Inf)
+        p = Float64(p)
+        p in (1.0, 2.0, Inf) || throw(ArgumentError("Unsupported norm p: $p"))
+        return new(p)
     end
 end
 

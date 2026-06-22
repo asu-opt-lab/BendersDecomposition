@@ -60,7 +60,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                 # for strengthened in [false], add_benders_cuts_to_master in [false], reuse_dcglp in [true], p in [1.0] #fail
                     @info "solving p$i - begin oracle - Specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
                                                                 strengthened=strengthened,
@@ -95,7 +95,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                 # for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf]
                     @info "solving p$i - fat Knapsack oracle - Specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
                                                                 strengthened=strengthened,
@@ -143,7 +143,7 @@ end
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [false], p in [1.0]
                     @info "solving CFLP p$i - disjunctive oracle/classical - specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
                                                                 strengthened=strengthened,
@@ -167,7 +167,7 @@ end
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [false], p in [1.0]
                     @info "solving CFLP p$i - disjunctive oracle/knapsack- specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                            oracle_param = SplitOracleParam(LpDistanceNormalization(LpNorm(p)); dcglp_param = dcglp_param,
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
                                                                 split_index_selection_rule = LargestFractional(),
                                                                 disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
                                                                 strengthened=strengthened,

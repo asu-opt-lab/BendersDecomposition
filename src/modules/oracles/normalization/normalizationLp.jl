@@ -11,16 +11,15 @@ function add_normalization_constraint!(
 )
 
     var_vec = [tau; sx; st]
-    norm = normalization.norm_p
-    norm isa LpNorm || throw(UndefError("Unsupported norm type: $(typeof(norm))"))
-    if norm.p == 1.0
+    p = normalization.norm_p
+    if p == 1.0
         @constraint(dcglp, concone, var_vec in MOI.NormOneCone(length(var_vec)))
-    elseif norm.p == 2.0
+    elseif p == 2.0
         @constraint(dcglp, concone, var_vec in MOI.SecondOrderCone(length(var_vec)))
-    elseif norm.p == Inf
+    elseif p == Inf
         @constraint(dcglp, concone, var_vec in MOI.NormInfinityCone(length(var_vec)))
     else
-        throw(UndefError("Unsupported LpNorm: p=$(norm.p)"))
+        throw(UndefError("Unsupported norm p: $p"))
     end
 end
 
@@ -36,19 +35,19 @@ function update_dcglp_upper_bound_and_gap!(
     update_upper_bound_and_gap!(
         state,
         log,
-        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], normalization.norm_p.p),
+        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], normalization.norm_p),
     )
 end
 
-function compute_norm_value(gamma_x, gamma_t, norm::LpNorm)
-    if norm.p == 1.0
+function compute_norm_value(gamma_x, gamma_t, p::Float64)
+    if p == 1.0
         norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), Inf)
-    elseif norm.p == 2.0
+    elseif p == 2.0
         norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), 2.0)
-    elseif norm.p == Inf
+    elseif p == Inf
         norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), 1.0)
     else
-        throw(UndefError("Unsupported LpNorm: p=$(norm.p)"))
+        throw(UndefError("Unsupported norm p: $p"))
     end
     return max(1.0, norm_value)
 end

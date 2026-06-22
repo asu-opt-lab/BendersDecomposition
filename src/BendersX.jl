@@ -40,7 +40,6 @@ export RootNodePreprocessing, NoRootNodePreprocessing, DisjunctiveRootNodePrepro
 # Common runtime statuses and configuration values
 export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
 export GBCBoundType, UpperBound, LowerBound, Fixed
-export LpNorm
 export RandomFractional, MostFractional, LargestFractional
 export NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
 
@@ -49,7 +48,6 @@ public AbstractBendersEnv, AbstractBendersSeq, AbstractBendersBnB
 public AbstractMaster
 public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, AbstractDisjunctiveOracle, AbstractSplitOracle
 public AbstractRootNodePreprocessing
-public AbstractNorm, StandardNorm
 public AbstractDisjunctiveNormalization
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
 public generate_cuts, callback_node_count, callback_node_depth
