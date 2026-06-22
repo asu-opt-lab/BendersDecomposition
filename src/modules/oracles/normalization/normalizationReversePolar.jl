@@ -2,6 +2,85 @@
 # Reverse-polar normalization
 # -----------------------------------------------------------------------------
 
+"""
+    ReversePolarNormalization()
+    ReversePolarNormalization(core_point_x, core_point_t)
+    ReversePolarNormalization(; core_point_x, core_point_t)
+    ReversePolarNormalization(; core_diretion_x, core_diretion_t)
+
+Reverse-polar DCGLP normalization for `SplitOracle`. With no core point or
+direction, this uses the vertical reverse-polar direction. With a core point,
+it uses the direction from the core point to the current candidate. With a core
+direction, it uses that fixed direction for every candidate.
+"""
+mutable struct ReversePolarNormalization <: AbstractDisjunctiveNormalization
+    core_point_x::Union{Nothing, Vector{Float64}}
+    core_point_t::Union{Nothing, Vector{Float64}}
+    core_diretion_x::Union{Nothing, Vector{Float64}}
+    core_diretion_t::Union{Nothing, Vector{Float64}}
+
+    function ReversePolarNormalization(
+        core_point_x::Union{Nothing, Vector{Float64}},
+        core_point_t::Union{Nothing, Vector{Float64}},
+        core_diretion_x::Union{Nothing, Vector{Float64}},
+        core_diretion_t::Union{Nothing, Vector{Float64}},
+    )
+        has_point = core_point_x !== nothing || core_point_t !== nothing
+        has_direction = core_diretion_x !== nothing || core_diretion_t !== nothing
+        default_vertical_direction = !has_point && !has_direction
+
+        has_point && has_direction &&
+            throw(ArgumentError("Provide either `core_point_x`/`core_point_t` or `core_diretion_x`/`core_diretion_t`, not both."))
+
+        if default_vertical_direction
+            core_diretion_x = Float64[]
+            core_diretion_t = [1.0]
+            has_direction = true
+        end
+
+        if has_point
+            core_point_x !== nothing ||
+                throw(ArgumentError("`core_point_x` must be provided when `core_point_t` is provided."))
+            core_point_t !== nothing ||
+                throw(ArgumentError("`core_point_t` must be provided when `core_point_x` is provided."))
+            isempty(core_point_x) && throw(ArgumentError("`core_point_x` must be non-empty."))
+            isempty(core_point_t) && throw(ArgumentError("`core_point_t` must be non-empty."))
+        end
+
+        if has_direction
+            core_diretion_x !== nothing ||
+                throw(ArgumentError("`core_diretion_x` must be provided when `core_diretion_t` is provided."))
+            core_diretion_t !== nothing ||
+                throw(ArgumentError("`core_diretion_t` must be provided when `core_diretion_x` is provided."))
+            !default_vertical_direction && isempty(core_diretion_x) &&
+                throw(ArgumentError("`core_diretion_x` must be non-empty."))
+            isempty(core_diretion_t) && throw(ArgumentError("`core_diretion_t` must be non-empty."))
+            LinearAlgebra.norm(vcat(core_diretion_x, core_diretion_t), Inf) > 0.0 ||
+                throw(ArgumentError("`core_diretion_x`/`core_diretion_t` must not define the zero direction."))
+        end
+
+        return new(
+            core_point_x === nothing ? nothing : copy(core_point_x),
+            core_point_t === nothing ? nothing : copy(core_point_t),
+            core_diretion_x === nothing ? nothing : copy(core_diretion_x),
+            core_diretion_t === nothing ? nothing : copy(core_diretion_t),
+        )
+    end
+
+    function ReversePolarNormalization(core_point_x::Vector{Float64}, core_point_t::Vector{Float64})
+        return ReversePolarNormalization(core_point_x, core_point_t, nothing, nothing)
+    end
+
+    function ReversePolarNormalization(;
+        core_point_x::Union{Nothing, Vector{Float64}} = nothing,
+        core_point_t::Union{Nothing, Vector{Float64}} = nothing,
+        core_diretion_x::Union{Nothing, Vector{Float64}} = nothing,
+        core_diretion_t::Union{Nothing, Vector{Float64}} = nothing,
+    )
+        return ReversePolarNormalization(core_point_x, core_point_t, core_diretion_x, core_diretion_t)
+    end
+end
+
 has_core_point(normalization::ReversePolarNormalization) = normalization.core_point_x !== nothing
 has_core_direction(normalization::ReversePolarNormalization) = normalization.core_diretion_x !== nothing
 is_default_vertical_direction(normalization::ReversePolarNormalization) =

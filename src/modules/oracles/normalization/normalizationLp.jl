@@ -2,6 +2,21 @@
 # Lp-distance normalization
 # -----------------------------------------------------------------------------
 
+"""
+    LpDistanceNormalization(p)
+
+Distance-norm DCGLP normalization for `SplitOracle`.
+"""
+mutable struct LpDistanceNormalization <: AbstractDisjunctiveNormalization
+    norm_p::Float64
+
+    function LpDistanceNormalization(p::Real = Inf)
+        p = Float64(p)
+        p in (1.0, 2.0, Inf) || throw(ArgumentError("Unsupported norm p: $p"))
+        return new(p)
+    end
+end
+
 function add_normalization_constraint!(
     normalization::LpDistanceNormalization,
     dcglp::Model,
