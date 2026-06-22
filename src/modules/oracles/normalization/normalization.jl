@@ -22,20 +22,15 @@ configuration (`norm`, `core_point_*`, …) and the dispatch surface listed belo
 abstract type AbstractDisjunctiveNormalization end
 
 """
-    LpDistanceNormalization(norm, adjust_t_to_fx)
+    LpDistanceNormalization(norm)
 
 Distance-norm DCGLP normalization for `SplitOracle`.
 """
 mutable struct LpDistanceNormalization <: AbstractDisjunctiveNormalization
-    norm::AbstractNorm
-    adjust_t_to_fx::Bool
+    norm_p::AbstractNorm
 
-    function LpDistanceNormalization(norm::AbstractNorm, adjust_t_to_fx::Bool)
-        return new(norm, adjust_t_to_fx)
-    end
-
-    function LpDistanceNormalization(norm::AbstractNorm = LpNorm(Inf); adjust_t_to_fx::Bool = false)
-        return new(norm, adjust_t_to_fx)
+    function LpDistanceNormalization(norm::AbstractNorm = LpNorm(Inf))
+        return new(norm)
     end
 end
 
@@ -125,4 +120,51 @@ function update_dcglp_for_candidate!(::AbstractDisjunctiveNormalization, oracle:
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 end
 
-update_dcglp_reference_t!(::AbstractDisjunctiveNormalization, ::AbstractSplitOracle, ::Vector{Float64}, t_value::Vector{Float64}, ::Float64, ::Float64) = copy(t_value)
+function adjust_dcglp_reference_t_to_fx!(
+    oracle::AbstractSplitOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    start_time::Float64,
+    time_limit::Float64,
+)
+    dcglp = oracle.dcglp
+    delete_registered_constraints!(dcglp, :initial_L)
+
+    _, initial_hyperplanes, f_x = generate_cuts(
+        oracle.typical_oracles[1],
+        x_value,
+        t_value;
+        time_limit = get_sec_remaining(start_time, time_limit),
+    )
+    any(isnan, f_x) &&
+        throw(AlgorithmException("solve_dcglp!: `t_value` cannot be adjusted to `f(x)` since $(typeof(oracle.typical_oracles[1])) does not compute `f(x)`."))
+
+    initial_benders_cuts = AffExpr[]
+    for k in 1:2
+        append!(
+            initial_benders_cuts,
+            hyperplanes_to_expression(
+                dcglp,
+                initial_hyperplanes,
+                dcglp[:omega_x][k, :],
+                dcglp[:omega_t][k, :],
+                dcglp[:omega_0][k],
+            ),
+        )
+    end
+    dcglp[:initial_L] = @constraint(dcglp, 0 .>= initial_benders_cuts)
+    set_normalized_rhs.(dcglp[:cont], f_x)
+    return copy(f_x)
+end
+
+function update_dcglp_reference_t!(
+    ::AbstractDisjunctiveNormalization,
+    oracle::AbstractSplitOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    start_time::Float64,
+    time_limit::Float64,
+)
+    oracle.param.adjust_t_to_fx || return copy(t_value)
+    return adjust_dcglp_reference_t_to_fx!(oracle, x_value, t_value, start_time, time_limit)
+end

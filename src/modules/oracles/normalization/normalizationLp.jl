@@ -11,7 +11,7 @@ function add_normalization_constraint!(
 )
 
     var_vec = [tau; sx; st]
-    norm = normalization.norm
+    norm = normalization.norm_p
     norm isa LpNorm || throw(UndefError("Unsupported norm type: $(typeof(norm))"))
     if norm.p == 1.0
         @constraint(dcglp, concone, var_vec in MOI.NormOneCone(length(var_vec)))
@@ -22,47 +22,6 @@ function add_normalization_constraint!(
     else
         throw(UndefError("Unsupported LpNorm: p=$(norm.p)"))
     end
-end
-
-function update_dcglp_reference_t!(
-    ::LpDistanceNormalization,
-    oracle::SplitOracle,
-    x_value::Vector{Float64},
-    t_value::Vector{Float64},
-    start_time::Float64,
-    time_limit::Float64,
-)
-    reference_t = copy(t_value)
-    oracle.param.normalization.adjust_t_to_fx || return reference_t
-
-    dcglp = oracle.dcglp
-    delete_registered_constraints!(dcglp, :initial_L)
-
-    _, initial_hyperplanes, f_x = generate_cuts(
-        oracle.typical_oracles[1],
-        x_value,
-        t_value;
-        time_limit = get_sec_remaining(start_time, time_limit),
-    )
-    any(isnan, f_x) &&
-        throw(AlgorithmException("solve_dcglp!: `t_value` cannot be adjusted to `f(x)` since $(typeof(oracle.typical_oracles[1])) does not compute `f(x)`."))
-
-    initial_benders_cuts = AffExpr[]
-    for k in 1:2
-        append!(
-            initial_benders_cuts,
-            hyperplanes_to_expression(
-                dcglp,
-                initial_hyperplanes,
-                dcglp[:omega_x][k, :],
-                dcglp[:omega_t][k, :],
-                dcglp[:omega_0][k],
-            ),
-        )
-    end
-    dcglp[:initial_L] = @constraint(dcglp, 0 .>= initial_benders_cuts)
-    set_normalized_rhs.(dcglp[:cont], f_x)
-    return copy(f_x)
 end
 
 function update_dcglp_upper_bound_and_gap!(
@@ -77,7 +36,7 @@ function update_dcglp_upper_bound_and_gap!(
     update_upper_bound_and_gap!(
         state,
         log,
-        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], normalization.norm.p),
+        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], normalization.norm_p.p),
     )
 end
 
@@ -115,7 +74,7 @@ function build_dcglp_disjunctive_cut(
     )
 
     if common.lift && (!isempty(zero_indices) || !isempty(one_indices))
-        norm_value = compute_norm_value(gamma_x, gamma_t, normalization.norm)
+        norm_value = compute_norm_value(gamma_x, gamma_t, normalization.norm_p)
         return Hyperplane(gamma_x ./ norm_value, gamma_t ./ norm_value, gamma_0 / norm_value)
     end
 

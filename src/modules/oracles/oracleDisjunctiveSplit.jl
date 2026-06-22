@@ -14,6 +14,7 @@ mutable struct SplitOracleParam <: AbstractOracleParam
     add_benders_cuts_to_master::Int
     fraction_of_benders_cuts_to_master::Float64
     reuse_dcglp::Bool
+    adjust_t_to_fx::Bool
     strengthened::Bool
     lift::Bool
     zero_tol::Float64
@@ -26,6 +27,7 @@ mutable struct SplitOracleParam <: AbstractOracleParam
         add_benders_cuts_to_master::Union{Bool, Int},
         fraction_of_benders_cuts_to_master::Float64,
         reuse_dcglp::Bool,
+        adjust_t_to_fx::Bool,
         strengthened::Bool,
         lift::Bool,
         zero_tol::Float64,
@@ -38,6 +40,7 @@ mutable struct SplitOracleParam <: AbstractOracleParam
             normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
             validate_fraction_of_benders_cuts_to_master(fraction_of_benders_cuts_to_master),
             reuse_dcglp,
+            adjust_t_to_fx,
             strengthened,
             lift,
             zero_tol,
@@ -58,6 +61,7 @@ mutable struct SplitOracleParam <: AbstractOracleParam
         add_benders_cuts_to_master::Union{Bool, Int} = 1,
         fraction_of_benders_cuts_to_master::Float64 = 1.0,
         reuse_dcglp::Bool = true,
+        adjust_t_to_fx::Bool = false,
         strengthened::Bool = true,
         lift::Bool = false,
         zero_tol::Float64 = 1.0e-9,
@@ -70,6 +74,7 @@ mutable struct SplitOracleParam <: AbstractOracleParam
             normalize_add_benders_cuts_to_master(add_benders_cuts_to_master),
             validate_fraction_of_benders_cuts_to_master(fraction_of_benders_cuts_to_master),
             reuse_dcglp,
+            adjust_t_to_fx,
             strengthened,
             lift,
             zero_tol,

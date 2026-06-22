@@ -127,6 +127,16 @@ function choose_split_and_update_lifting!(
     return zero_indices, one_indices
 end
 
+function rollback_current_dcglp_candidate!(oracle::AbstractSplitOracle)
+    !isempty(oracle.splits) && pop!(oracle.splits)
+    delete_registered_constraints!(oracle.dcglp, :con_split_kappa)
+    delete_registered_constraints!(oracle.dcglp, :con_split_nu)
+    delete_registered_constraints!(oracle.dcglp, :con_zeta)
+    delete_registered_constraints!(oracle.dcglp, :con_xi)
+    delete_registered_constraints!(oracle.dcglp, :initial_L)
+    return nothing
+end
+
 # -----------------------------------------------------------------------------
 # Disjunctive cut pool management
 # -----------------------------------------------------------------------------
@@ -367,6 +377,15 @@ function solve_dcglp_loop!(
     dcglp = oracle.dcglp
     hyperplanes = Hyperplane[]
     reference_t = update_dcglp_reference_t!(normalization, oracle, x_value, t_value, start_time, time_limit)
+    if should_fallback_typical(normalization, oracle, x_value, reference_t)
+        rollback_current_dcglp_candidate!(oracle)
+        return generate_cuts(
+            oracle.typical_oracles[1],
+            x_value,
+            t_value;
+            time_limit = get_sec_remaining(start_time, time_limit),
+        )
+    end
 
     while true
         state = DcglpState()
@@ -419,7 +438,7 @@ function solve_dcglp_loop!(
 
     current_lb = log.iterations[end].LB
     if current_lb >= oracle.param.zero_tol
-        cut = build_dcglp_disjunctive_cut(normalization, dcglp, oracle.param, current_lb, x_value, t_value, zero_indices, one_indices)
+        cut = build_dcglp_disjunctive_cut(normalization, dcglp, oracle.param, current_lb, x_value, reference_t, zero_indices, one_indices)
         oracle.param.dcglp_param.verbose && print_disjunctive_cut(oracle, cut, x_value, t_value; zero_tol = oracle.param.zero_tol)
         store_dcglp_disjunctive_cut!(oracle, cut, hyperplanes, include_disjunctive_cuts_to_hyperplanes)
         return false, hyperplanes, fill(Inf, length(t_value))

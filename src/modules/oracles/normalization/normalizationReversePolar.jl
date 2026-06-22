@@ -73,6 +73,22 @@ function update_dcglp_for_candidate!(normalization::ReversePolarNormalization, o
     update_reverse_polar_constraints!(oracle, direction_x, direction_t)
 end
 
+function update_dcglp_reference_t!(
+    normalization::ReversePolarNormalization,
+    oracle::SplitOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    start_time::Float64,
+    time_limit::Float64,
+)
+    oracle.param.adjust_t_to_fx || return copy(t_value)
+
+    reference_t = adjust_dcglp_reference_t_to_fx!(oracle, x_value, t_value, start_time, time_limit)
+    direction_x, direction_t = dcglp_reverse_polar_direction(normalization, x_value, reference_t)
+    update_reverse_polar_constraints!(oracle, direction_x, direction_t)
+    return reference_t
+end
+
 function update_dcglp_upper_bound_and_gap!(
     ::ReversePolarNormalization,
     state::DcglpState,

@@ -161,7 +161,8 @@ The behavior of a `SplitOracle` is controlled entirely through
     - `lift`: applies lifting based on variables fixed to 0 or 1.
 - DCGLP reuse and normalization
     - `reuse_dcglp`: reuses the DCGLP model from previous cut generation.
-    - `norm`: normalization norm used in DCGLP.
+    - `adjust_t_to_fx`: adjusts the DCGLP reference epigraph value to the first oracle's computed `f(x)`. For `ReversePolarNormalization`, the reverse-polar direction is recomputed from the adjusted reference.
+    - `norm`: normalization norm used by `LpDistanceNormalization`.
 These options allow fine-grained control over performance and numerical
 robustness.
 

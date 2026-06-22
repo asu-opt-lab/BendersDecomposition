@@ -205,8 +205,17 @@ end
         )
         @test param isa SplitOracleParam
         @test param.normalization isa LpDistanceNormalization
-        @test param.normalization.norm.p == 1.0
+        @test param.normalization.norm_p.p == 1.0
         @test !param.reuse_dcglp
+        @test !param.adjust_t_to_fx
+
+        adjusted_param = SplitOracleParam(
+            ReversePolarNormalization();
+            dcglp_param = disjunctive_norm_dcglp_param(),
+            adjust_t_to_fx = true,
+        )
+        @test adjusted_param.normalization isa ReversePolarNormalization
+        @test adjusted_param.adjust_t_to_fx
 
         directional_param = SplitOracleParam(
             ReversePolarNormalization([0.25, 0.25], [0.0]);
@@ -244,8 +253,8 @@ end
         default_oracle = SplitOracle(master, build_typical_pair(data, master))
         @test default_oracle isa SplitOracle
         @test default_oracle.param.normalization isa LpDistanceNormalization
-        @test default_oracle.param.normalization.norm isa LpNorm
-        @test default_oracle.param.normalization.norm.p == Inf
+        @test default_oracle.param.normalization.norm_p isa LpNorm
+        @test default_oracle.param.normalization.norm_p.p == Inf
 
         oracle = SplitOracle(
             master,
@@ -354,6 +363,66 @@ end
         @test oracle.param.normalization.core_point_x == [0.2, 0.3]
         @test oracle.param.normalization.core_point_t == [0.1]
         @test_throws DimensionMismatch set_core_point!(oracle, [0.1], [0.0])
+    end
+
+    @testset "reverse polar adjust_t_to_fx updates direction" begin
+        data = DirectionalVectorTTestData()
+        master = Master(data; model = update_directional_vector_t_master!, optimizer = disjunctive_norm_optimizer())
+        normalization = ReversePolarNormalization([0.5, 0.5], [0.75, 0.75])
+        oracle = SplitOracle(
+            master,
+            (DirectionalVectorTTestOracle(), DirectionalVectorTTestOracle());
+            param = SplitOracleParam(
+                normalization;
+                dcglp_param = disjunctive_norm_dcglp_param(),
+                adjust_t_to_fx = true,
+            ),
+        )
+
+        x_value = [0.5, 0.5]
+        t_value = [0.0, 0.0]
+        BendersX.update_dcglp_for_candidate!(normalization, oracle, x_value, t_value)
+        reference_t = BendersX.update_dcglp_reference_t!(normalization, oracle, x_value, t_value, time(), 20.0)
+        direction_x, direction_t = BendersX.dcglp_reverse_polar_direction(normalization, x_value, reference_t)
+
+        @test reference_t == [0.5, 0.5]
+        @test direction_x == [0.0, 0.0]
+        @test direction_t == [-0.25, -0.25]
+        @test isapprox(JuMP.normalized_coefficient(oracle.dcglp[:con_reverse_polar_t][1], oracle.dcglp[:tau]), direction_t[1]; atol = 1.0e-9)
+        @test isapprox(JuMP.normalized_coefficient(oracle.dcglp[:con_reverse_polar_t][2], oracle.dcglp[:tau]), direction_t[2]; atol = 1.0e-9)
+    end
+
+    @testset "reverse polar adjust_t_to_fx falls back at adjusted core point" begin
+        data = DirectionalVectorTTestData()
+        master = Master(data; model = update_directional_vector_t_master!, optimizer = disjunctive_norm_optimizer())
+        oracle = SplitOracle(
+            master,
+            (DirectionalVectorTTestOracle(), DirectionalVectorTTestOracle());
+            param = SplitOracleParam(
+                ReversePolarNormalization([0.5, 0.5], [0.5, 0.5]);
+                dcglp_param = disjunctive_norm_dcglp_param(),
+                split_index_selection_rule = MostFractional(),
+                add_benders_cuts_to_master = 2,
+                reuse_dcglp = false,
+                strengthened = false,
+                lift = true,
+                adjust_t_to_fx = true,
+            ),
+        )
+
+        is_in_L, hyperplanes, f_x = BendersX.generate_cuts(
+            oracle,
+            [0.5, 0.5],
+            [0.0, 0.0];
+            time_limit = 20.0,
+            throw_typical_cuts_for_errors = false,
+        )
+
+        @test !is_in_L
+        @test length(hyperplanes) == 2
+        @test f_x == [0.5, 0.5]
+        @test isempty(oracle.disjunctive_cuts)
+        @test isempty(oracle.splits)
     end
 
     @testset "directional lift cut normalization" begin
