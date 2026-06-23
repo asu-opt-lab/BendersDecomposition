@@ -50,7 +50,8 @@ public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, AbstractDisju
 public AbstractRootNodePreprocessing
 public AbstractDisjunctiveNormalization
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
-public generate_cuts, callback_node_count, callback_node_depth
+public generate_cuts, add_normalization_constraint!, update_dcglp_upper_bound_and_gap!
+public callback_node_count, callback_node_depth
 export set_parameter!
 export set_core_point!
 export update_master_model!, update_sub_model!

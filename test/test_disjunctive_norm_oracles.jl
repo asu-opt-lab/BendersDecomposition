@@ -16,6 +16,7 @@ struct DirectionalVectorTTestData <: AbstractData end
 struct DirectionalVectorTTestOracle <: BendersX.AbstractTypicalOracle end
 
 struct ExtensionContractNormalization <: BendersX.AbstractDisjunctiveNormalization end
+struct MissingContractNormalization <: BendersX.AbstractDisjunctiveNormalization end
 
 function disjunctive_norm_optimizer()
     return optimizer_with_attributes(HiGHS.Optimizer, DNO_MOI.Silent() => true)
@@ -120,7 +121,7 @@ function BendersX.generate_cuts(
 end
 
 function BendersX.add_normalization_constraint!(
-    ::ExtensionContractNormalization,
+    normalization::ExtensionContractNormalization,
     dcglp::Model,
     tau::VariableRef,
     sx::AbstractVector{VariableRef},
@@ -131,9 +132,9 @@ function BendersX.add_normalization_constraint!(
 end
 
 function BendersX.update_dcglp_upper_bound_and_gap!(
-    ::ExtensionContractNormalization,
-    state,
-    log,
+    normalization::ExtensionContractNormalization,
+    state::BendersX.DcglpState,
+    log::BendersX.DcglpLog,
     reference_t::Vector{Float64},
     t_value::Vector{Float64},
 )
@@ -296,6 +297,25 @@ end
     end
 
     @testset "normalization extension defaults" begin
+        model = Model()
+        @variable(model, tau)
+        @variable(model, sx[1:1])
+        @variable(model, st[1:1])
+        @test_throws BendersX.UndefError BendersX.add_normalization_constraint!(
+            MissingContractNormalization(),
+            model,
+            tau,
+            sx,
+            st,
+        )
+        @test_throws BendersX.UndefError BendersX.update_dcglp_upper_bound_and_gap!(
+            MissingContractNormalization(),
+            BendersX.DcglpState(),
+            BendersX.DcglpLog(),
+            [0.0],
+            [0.0],
+        )
+
         data, master = build_disjunctive_norm_master()
         oracle = SplitOracle(
             master,

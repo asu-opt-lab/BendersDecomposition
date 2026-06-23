@@ -122,7 +122,7 @@ function dcglp_reverse_polar_direction(normalization::ReversePolarNormalization,
 end
 
 function add_normalization_constraint!(
-    ::ReversePolarNormalization,
+    normalization::ReversePolarNormalization,
     dcglp::Model,
     tau::VariableRef,
     sx::AbstractVector{VariableRef},
@@ -169,12 +169,14 @@ function update_dcglp_reference_t!(
 end
 
 function update_dcglp_upper_bound_and_gap!(
-    ::ReversePolarNormalization,
+    normalization::ReversePolarNormalization,
     state::DcglpState,
     log::DcglpLog,
-    ::Vector{Float64},
+    reference_t::Vector{Float64},
     t_value::Vector{Float64},
 )
+    # todo: consider computing upper bound based on projection onto half-ray; Currently it's based on `is_in_L` indicator.
+
     fill_dcglp_omega_t_estimates!(state, t_value)
     previous_ub = log.n_iter >= 1 ? log.iterations[end].UB : Inf
     state.UB = state.is_in_L[1] && state.is_in_L[2] ? min(previous_ub, state.LB) : previous_ub

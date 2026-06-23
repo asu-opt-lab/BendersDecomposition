@@ -28,6 +28,26 @@ function update_dcglp_for_candidate!(::AbstractDisjunctiveNormalization, oracle:
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 end
 
+function add_normalization_constraint!(
+    normalization::AbstractDisjunctiveNormalization,
+    dcglp::Model,
+    tau::VariableRef,
+    sx::AbstractVector{VariableRef},
+    st::AbstractVector{VariableRef},
+)
+    throw(UndefError("update add_normalization_constraint! for $(typeof(normalization))"))
+end
+
+function update_dcglp_upper_bound_and_gap!(
+    normalization::AbstractDisjunctiveNormalization,
+    state::DcglpState,
+    log::DcglpLog,
+    reference_t::Vector{Float64},
+    t_value::Vector{Float64},
+)
+    throw(UndefError("update update_dcglp_upper_bound_and_gap! for $(typeof(normalization))"))
+end
+
 function adjust_dcglp_reference_t_to_fx!(
     oracle::AbstractSplitOracle,
     x_value::Vector{Float64},
