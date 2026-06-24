@@ -16,7 +16,8 @@ configuration (`norm`, `core_point_*`, …) and the dispatch surface listed belo
 - `update_dcglp_reference_t!` — normalizations may override to adjust the
   reference epigraph used by the UB recomputation.
 - `update_dcglp_upper_bound_and_gap!` — normalization-specific UB/gap rule.
-- `build_dcglp_disjunctive_cut` — normalization-specific cut extraction.
+- `disjunctive_cut_normalization_value` — normalization-specific scaling in the common
+  disjunctive cut extraction.
 - `print_dcglp_iteration_info` — normalization-specific iteration log.
 """
 abstract type AbstractDisjunctiveNormalization end

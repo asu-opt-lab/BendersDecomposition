@@ -543,12 +543,27 @@ function fill_dcglp_omega_t_estimates!(state::DcglpState, t_value::Vector{Float6
     end
 end
 
+function disjunctive_cut_normalization_value(
+    normalization::AbstractDisjunctiveNormalization,
+    gamma_x::Vector{Float64},
+    gamma_t::Vector{Float64},
+    common::SplitOracleParam,
+    current_lb::Float64,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    zero_indices::Vector{Int},
+    one_indices::Vector{Int},
+)
+    @warn "Using scalar cut normalization value 1.0 for $(typeof(normalization)); define `disjunctive_cut_normalization_value` for normalization-specific scaling." maxlog = 1
+    return 1.0
+end
+
 function build_dcglp_disjunctive_cut(
-    ::AbstractDisjunctiveNormalization,
+    normalization::AbstractDisjunctiveNormalization,
     dcglp::Model,
     common::SplitOracleParam,
-    ::Float64,
-    ::Vector{Float64},
+    current_lb::Float64,
+    x_value::Vector{Float64},
     t_value::Vector{Float64},
     zero_indices::Vector{Int},
     one_indices::Vector{Int},
@@ -556,10 +571,23 @@ function build_dcglp_disjunctive_cut(
     gamma_x = dual.(dcglp[:conx])
     gamma_t = dual.(dcglp[:cont])
     gamma_0 = dual(dcglp[:con0])
+
     gamma_x, gamma_0 = apply_lift_or_strengthen(
         dcglp, gamma_x, zero_indices, one_indices;
         lift = common.lift, strengthen = common.strengthened,
         zero_tol = common.zero_tol, gamma_0 = gamma_0,
     )
-    return Hyperplane(gamma_x, gamma_t, gamma_0)
+
+    norm_value = disjunctive_cut_normalization_value(
+        normalization,
+        gamma_x,
+        gamma_t,
+        common,
+        current_lb,
+        x_value,
+        t_value,
+        zero_indices,
+        one_indices,
+    )
+    return Hyperplane(gamma_x ./ norm_value, gamma_t ./ norm_value, gamma_0 / norm_value)
 end

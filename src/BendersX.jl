@@ -51,6 +51,7 @@ public AbstractRootNodePreprocessing
 public AbstractDisjunctiveNormalization
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
 public generate_cuts, add_normalization_constraint!, update_dcglp_upper_bound_and_gap!
+public disjunctive_cut_normalization_value
 public callback_node_count, callback_node_depth
 export set_parameter!
 export set_core_point!

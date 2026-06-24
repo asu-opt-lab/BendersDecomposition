@@ -147,6 +147,22 @@ function BendersX.update_dcglp_upper_bound_and_gap!(
     )
 end
 
+function BendersX.disjunctive_cut_normalization_value(
+    normalization::ExtensionContractNormalization,
+    gamma_x::Vector{Float64},
+    gamma_t::Vector{Float64},
+    common::SplitOracleParam,
+    current_lb::Float64,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    zero_indices::Vector{Int},
+    one_indices::Vector{Int},
+)
+    common.lift && (!isempty(zero_indices) || !isempty(one_indices)) ||
+        return 1.0
+    return max(1.0, LinearAlgebra.norm(vcat(gamma_x, gamma_t), 1.0))
+end
+
 function run_direct_cut_smoke(oracle)
     is_in_L, hyperplanes, f_x = BendersX.generate_cuts(
         oracle,

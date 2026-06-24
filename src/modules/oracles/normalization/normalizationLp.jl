@@ -54,7 +54,7 @@ function update_dcglp_upper_bound_and_gap!(
     )
 end
 
-function compute_norm_value(gamma_x, gamma_t, p::Float64)
+function lp_cut_dual_norm_value(gamma_x, gamma_t, p::Float64)
     if p == 1.0
         norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), Inf)
     elseif p == 2.0
@@ -67,30 +67,18 @@ function compute_norm_value(gamma_x, gamma_t, p::Float64)
     return max(1.0, norm_value)
 end
 
-function build_dcglp_disjunctive_cut(
+function disjunctive_cut_normalization_value(
     normalization::LpDistanceNormalization,
-    dcglp::Model,
+    gamma_x::Vector{Float64},
+    gamma_t::Vector{Float64},
     common::SplitOracleParam,
-    ::Float64,
-    ::Vector{Float64},
-    ::Vector{Float64},
+    current_lb::Float64,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
     zero_indices::Vector{Int},
     one_indices::Vector{Int},
 )
-    gamma_x = dual.(dcglp[:conx])
-    gamma_t = dual.(dcglp[:cont])
-    gamma_0 = dual(dcglp[:con0])
-
-    gamma_x, gamma_0 = apply_lift_or_strengthen(
-        dcglp, gamma_x, zero_indices, one_indices;
-        lift = common.lift, strengthen = common.strengthened,
-        zero_tol = common.zero_tol, gamma_0 = gamma_0,
-    )
-
-    if common.lift && (!isempty(zero_indices) || !isempty(one_indices))
-        norm_value = compute_norm_value(gamma_x, gamma_t, normalization.norm_p)
-        return Hyperplane(gamma_x ./ norm_value, gamma_t ./ norm_value, gamma_0 / norm_value)
-    end
-
-    return Hyperplane(gamma_x, gamma_t, gamma_0)
+    common.lift && (!isempty(zero_indices) || !isempty(one_indices)) ||
+        return 1.0
+    return lp_cut_dual_norm_value(gamma_x, gamma_t, normalization.norm_p)
 end

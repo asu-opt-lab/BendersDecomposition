@@ -186,24 +186,10 @@ function update_dcglp_upper_bound_and_gap!(
         Inf
 end
 
-function normalize_directional_duals!(
-    gamma_x::AbstractVector{Float64},
-    gamma_t::AbstractVector{Float64},
-    direction_x::Vector{Float64},
-    direction_t::Vector{Float64};
-    zero_tol::Float64,
-)
-    direction_value = dot(gamma_x, direction_x) + dot(gamma_t, direction_t)
-    abs(direction_value) > zero_tol ||
-        throw(AlgorithmException("ReversePolarNormalization cut normalization failed because the directional support is numerically zero."))
-    gamma_x ./= direction_value
-    gamma_t ./= direction_value
-    return direction_value
-end
-
-function build_dcglp_disjunctive_cut(
+function disjunctive_cut_normalization_value(
     normalization::ReversePolarNormalization,
-    dcglp::Model,
+    gamma_x::Vector{Float64},
+    gamma_t::Vector{Float64},
     common::SplitOracleParam,
     current_lb::Float64,
     x_value::Vector{Float64},
@@ -211,24 +197,11 @@ function build_dcglp_disjunctive_cut(
     zero_indices::Vector{Int},
     one_indices::Vector{Int},
 )
-    gamma_x = dual.(dcglp[:conx])
-    gamma_t = dual.(dcglp[:cont])
     direction_x, direction_t = dcglp_reverse_polar_direction(normalization, x_value, t_value)
-    direction_value = normalize_directional_duals!(
-        gamma_x,
-        gamma_t,
-        direction_x,
-        direction_t;
-        zero_tol = common.zero_tol,
-    )
-
-    gamma_0 = dual(dcglp[:con0]) / direction_value
-    gamma_x, gamma_0 = apply_lift_or_strengthen(
-        dcglp, gamma_x, zero_indices, one_indices;
-        lift = common.lift, strengthen = common.strengthened,
-        zero_tol = common.zero_tol, gamma_0 = gamma_0,
-    )
-    return Hyperplane(gamma_x, gamma_t, gamma_0)
+    direction_value = dot(gamma_x, direction_x) + dot(gamma_t, direction_t)
+    abs(direction_value) > common.zero_tol ||
+        throw(AlgorithmException("ReversePolarNormalization cut normalization failed because the directional support is numerically zero."))
+    return direction_value
 end
 
 """
