@@ -36,6 +36,7 @@ function add_normalization_constraint!(
     else
         throw(UndefError("Unsupported norm p: $p"))
     end
+    return nothing
 end
 
 function update_dcglp_upper_bound_and_gap!(
@@ -52,6 +53,7 @@ function update_dcglp_upper_bound_and_gap!(
         log,
         (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], normalization.norm_p),
     )
+    return nothing
 end
 
 function lp_cut_dual_norm_value(gamma_x, gamma_t, p::Float64)

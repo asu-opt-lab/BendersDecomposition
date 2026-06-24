@@ -27,6 +27,7 @@ abstract type AbstractDisjunctiveNormalization end
 function update_dcglp_for_candidate!(::AbstractDisjunctiveNormalization, oracle::AbstractSplitOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
     set_normalized_rhs.(oracle.dcglp[:conx], x_value)
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
+    return nothing
 end
 
 function prepare_disjunctive_normalization!(::AbstractDisjunctiveNormalization, ::AbstractMaster)

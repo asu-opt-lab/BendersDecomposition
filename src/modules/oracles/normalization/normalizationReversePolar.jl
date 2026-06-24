@@ -109,6 +109,7 @@ function add_normalization_constraint!(
 )
     @constraint(dcglp, con_reverse_polar_x[j in eachindex(sx)], sx[j] + 0.0 * tau == 0.0)
     @constraint(dcglp, con_reverse_polar_t[j in eachindex(st)], st[j] + 0.0 * tau == 0.0)
+    return nothing
 end
 
 function should_fallback_typical(normalization::ReversePolarNormalization, oracle::SplitOracle, x_value::Vector{Float64}, t_value::Vector{Float64})
@@ -133,6 +134,7 @@ function update_dcglp_for_candidate!(normalization::ReversePolarNormalization, o
         (x_value .- normalization.core_point_x, t_value .- normalization.core_point_t) :
         (.-normalization.core_diretion_x, .-normalization.core_diretion_t)
     update_reverse_polar_constraints!(oracle, direction_x, direction_t)
+    return nothing
 end
 
 function update_dcglp_reference_t!(
@@ -170,6 +172,7 @@ function update_dcglp_upper_bound_and_gap!(
         isfinite(state.UB) ?
         max(state.UB - state.LB, 0.0) / max(abs(state.UB), 1.0) * 100 :
         Inf
+    return nothing
 end
 
 function disjunctive_cut_normalization_value(
@@ -213,6 +216,7 @@ function set_core_point!(normalization::ReversePolarNormalization, core_point_x:
 
     normalization.core_point_x .= core_point_x
     normalization.core_point_t .= core_point_t
+    return nothing
 end
 
 function update_reverse_polar_constraints!(
