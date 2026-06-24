@@ -208,11 +208,9 @@ end
         default_reverse_polar = ReversePolarNormalization()
         @test default_reverse_polar.core_point_x === nothing
         @test default_reverse_polar.core_point_t === nothing
-        @test default_reverse_polar.core_diretion_x == Float64[]
-        @test default_reverse_polar.core_diretion_t == [1.0]
-        direction_x, direction_t = BendersX.reverse_polar_direction(default_reverse_polar, [0.25, 0.25], [0.0])
-        @test direction_x == [0.0, 0.0]
-        @test direction_t == [1.0]
+        @test default_reverse_polar.core_diretion_x === nothing
+        @test default_reverse_polar.core_diretion_t === nothing
+        @test !default_reverse_polar.use_core_point
 
         disjunctive_norm_param = LpDistanceNormalization(1.0)
         param = SplitOracleParam(
@@ -244,6 +242,7 @@ end
         @test directional_param isa SplitOracleParam
         @test directional_param.normalization isa ReversePolarNormalization
         @test directional_param.normalization.core_point_x == [0.25, 0.25]
+        @test directional_param.normalization.use_core_point
 
         fixed_direction_param = SplitOracleParam(
             ReversePolarNormalization(; core_diretion_x = [0.0, 0.0], core_diretion_t = [1.0]);
@@ -254,6 +253,7 @@ end
         @test fixed_direction_param.normalization.core_point_x === nothing
         @test fixed_direction_param.normalization.core_diretion_x == [0.0, 0.0]
         @test fixed_direction_param.normalization.core_diretion_t == [1.0]
+        @test !fixed_direction_param.normalization.use_core_point
     end
 
     @testset "constructor validation" begin
@@ -469,7 +469,8 @@ end
         t_value = [0.0, 0.0]
         BendersX.update_dcglp_for_candidate!(normalization, oracle, x_value, t_value)
         reference_t = BendersX.update_dcglp_reference_t!(normalization, oracle, x_value, t_value, time(), 20.0)
-        direction_x, direction_t = BendersX.dcglp_reverse_polar_direction(normalization, x_value, reference_t)
+        direction_x = x_value .- normalization.core_point_x
+        direction_t = reference_t .- normalization.core_point_t
 
         @test reference_t == [0.5, 0.5]
         @test direction_x == [0.0, 0.0]
@@ -569,7 +570,8 @@ end
         @test !is_in_L
         @test !isempty(oracle.disjunctive_cuts)
         cut = last(oracle.disjunctive_cuts)
-        cut_direction_x, cut_direction_t = BendersX.dcglp_reverse_polar_direction(oracle.param.normalization, x_value, t_value)
+        cut_direction_x = .-oracle.param.normalization.core_diretion_x
+        cut_direction_t = .-oracle.param.normalization.core_diretion_t
         @test isapprox(dot(cut.a_x, cut_direction_x) + dot(cut.a_t, cut_direction_t), 1.0; atol = 1.0e-6)
         @test BendersX.evaluate_violation(cut, x_value, t_value) > 0.0
     end
