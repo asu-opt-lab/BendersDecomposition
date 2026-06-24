@@ -221,30 +221,14 @@ function update_reverse_polar_constraints!(
     direction_t::Vector{Float64},
 )
     dcglp = oracle.dcglp
+    tau = dcglp[:tau]
 
-    if haskey(dcglp, :con_reverse_polar_x) && haskey(dcglp, :con_reverse_polar_t) &&
-       length(dcglp[:con_reverse_polar_x]) == length(direction_x) && length(dcglp[:con_reverse_polar_t]) == length(direction_t)
-        tau = dcglp[:tau]
-        for j in eachindex(direction_x)
-            set_normalized_coefficient(dcglp[:con_reverse_polar_x][j], tau, direction_x[j])
-        end
-        for j in eachindex(direction_t)
-            set_normalized_coefficient(dcglp[:con_reverse_polar_t][j], tau, direction_t[j])
-        end
-        return nothing
+    for j in eachindex(direction_x)
+        set_normalized_coefficient(dcglp[:con_reverse_polar_x][j], tau, direction_x[j])
+    end
+    for j in eachindex(direction_t)
+        set_normalized_coefficient(dcglp[:con_reverse_polar_t][j], tau, direction_t[j])
     end
 
-    delete_registered_constraints!(dcglp, :con_reverse_polar_x)
-    delete_registered_constraints!(dcglp, :con_reverse_polar_t)
-
-    @constraint(
-        dcglp,
-        con_reverse_polar_x[j in eachindex(direction_x)],
-        dcglp[:sx][j] + direction_x[j] * dcglp[:tau] == 0.0,
-    )
-    @constraint(
-        dcglp,
-        con_reverse_polar_t[j in eachindex(direction_t)],
-        dcglp[:st][j] + direction_t[j] * dcglp[:tau] == 0.0,
-    )
+    return nothing
 end
