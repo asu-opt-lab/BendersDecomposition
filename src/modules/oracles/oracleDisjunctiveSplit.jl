@@ -174,6 +174,7 @@ mutable struct SplitOracle <: AbstractSplitOracle
         typical_oracles::NTuple{2, <:AbstractTypicalOracle};
         param::SplitOracleParam = SplitOracleParam(LpDistanceNormalization()),
     )
+        prepare_disjunctive_normalization!(param.normalization, master)
         dcglp = build_dcglp(master, param)
         cuts_by_index, cuts, splits = initialize_disjunctive_cut_storage(master)
 

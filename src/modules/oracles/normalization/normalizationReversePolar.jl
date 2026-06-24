@@ -96,6 +96,28 @@ function check_reverse_polar_dimension(vector::Vector{Float64}, expected::Int, n
     return nothing
 end
 
+function prepare_disjunctive_normalization!(normalization::ReversePolarNormalization, master::AbstractMaster)
+    if has_core_point(normalization)
+        check_reverse_polar_dimension(normalization.core_point_x, master.dim_x, "core_point_x")
+        check_reverse_polar_dimension(normalization.core_point_t, master.dim_t, "core_point_t")
+        return nothing
+    end
+
+    if is_default_vertical_direction(normalization)
+        normalization.core_diretion_x = zeros(master.dim_x)
+        normalization.core_diretion_t = ones(master.dim_t)
+        return nothing
+    end
+
+    if has_core_direction(normalization)
+        check_reverse_polar_dimension(normalization.core_diretion_x, master.dim_x, "core_diretion_x")
+        check_reverse_polar_dimension(normalization.core_diretion_t, master.dim_t, "core_diretion_t")
+        return nothing
+    end
+
+    throw(ArgumentError("ReversePolarNormalization requires a core point, a core direction, or the default vertical direction."))
+end
+
 function reverse_polar_direction(normalization::ReversePolarNormalization, x_value::Vector{Float64}, t_value::Vector{Float64})
     if has_core_point(normalization)
         check_reverse_polar_dimension(normalization.core_point_x, length(x_value), "core_point_x")

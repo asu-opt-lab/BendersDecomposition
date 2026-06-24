@@ -268,6 +268,54 @@ end
         )
     end
 
+    @testset "reverse polar initialization validates dimensions" begin
+        data, master = build_disjunctive_norm_master()
+        typical_oracles = build_typical_pair(data, master)
+        dcglp_param = disjunctive_norm_dcglp_param()
+
+        default_normalization = ReversePolarNormalization()
+        default_oracle = SplitOracle(
+            master,
+            typical_oracles;
+            param = SplitOracleParam(default_normalization; dcglp_param = dcglp_param),
+        )
+        @test default_oracle.param.normalization.core_diretion_x == zeros(master.dim_x)
+        @test default_oracle.param.normalization.core_diretion_t == ones(master.dim_t)
+
+        @test_throws DimensionMismatch SplitOracle(
+            master,
+            typical_oracles;
+            param = SplitOracleParam(
+                ReversePolarNormalization([0.25], [0.0]);
+                dcglp_param = dcglp_param,
+            ),
+        )
+        @test_throws DimensionMismatch SplitOracle(
+            master,
+            typical_oracles;
+            param = SplitOracleParam(
+                ReversePolarNormalization([0.25, 0.25], [0.0, 0.0]);
+                dcglp_param = dcglp_param,
+            ),
+        )
+        @test_throws DimensionMismatch SplitOracle(
+            master,
+            typical_oracles;
+            param = SplitOracleParam(
+                ReversePolarNormalization(; core_diretion_x = [0.0], core_diretion_t = [1.0]);
+                dcglp_param = dcglp_param,
+            ),
+        )
+        @test_throws DimensionMismatch SplitOracle(
+            master,
+            typical_oracles;
+            param = SplitOracleParam(
+                ReversePolarNormalization(; core_diretion_x = [0.0, 0.0], core_diretion_t = [1.0, 1.0]);
+                dcglp_param = dcglp_param,
+            ),
+        )
+    end
+
     @testset "generic split oracle constructor" begin
         data, master = build_disjunctive_norm_master()
         default_oracle = SplitOracle(master, build_typical_pair(data, master))

@@ -29,6 +29,10 @@ function update_dcglp_for_candidate!(::AbstractDisjunctiveNormalization, oracle:
     set_normalized_rhs.(oracle.dcglp[:cont], t_value)
 end
 
+function prepare_disjunctive_normalization!(::AbstractDisjunctiveNormalization, ::AbstractMaster)
+    return nothing
+end
+
 function add_normalization_constraint!(
     normalization::AbstractDisjunctiveNormalization,
     dcglp::Model,
