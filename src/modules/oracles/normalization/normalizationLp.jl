@@ -73,14 +73,9 @@ function disjunctive_cut_normalization_value(
     normalization::LpDistanceNormalization,
     gamma_x::Vector{Float64},
     gamma_t::Vector{Float64},
-    common::SplitOracleParam,
-    current_lb::Float64,
-    x_value::Vector{Float64},
-    t_value::Vector{Float64},
-    zero_indices::Vector{Int},
-    one_indices::Vector{Int},
+    context,
 )
-    common.lift && (!isempty(zero_indices) || !isempty(one_indices)) ||
+    context.lift && (!isempty(context.zero_indices) || !isempty(context.one_indices)) ||
         return 1.0
     return lp_cut_dual_norm_value(gamma_x, gamma_t, normalization.norm_p)
 end

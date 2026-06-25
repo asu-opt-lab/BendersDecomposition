@@ -438,7 +438,15 @@ function solve_dcglp_loop!(
 
     current_lb = log.iterations[end].LB
     if current_lb >= oracle.param.zero_tol
-        cut = build_dcglp_disjunctive_cut(normalization, dcglp, oracle.param, current_lb, x_value, reference_t, zero_indices, one_indices)
+        cut = build_dcglp_disjunctive_cut(
+            normalization,
+            dcglp,
+            oracle.param,
+            x_value,
+            reference_t,
+            zero_indices,
+            one_indices,
+        )
         oracle.param.dcglp_param.verbose && print_disjunctive_cut(oracle, cut, x_value, t_value; zero_tol = oracle.param.zero_tol)
         store_dcglp_disjunctive_cut!(oracle, cut, hyperplanes, include_disjunctive_cuts_to_hyperplanes)
         return false, hyperplanes, fill(Inf, length(t_value))
@@ -547,12 +555,7 @@ function disjunctive_cut_normalization_value(
     normalization::AbstractDisjunctiveNormalization,
     gamma_x::Vector{Float64},
     gamma_t::Vector{Float64},
-    common::SplitOracleParam,
-    current_lb::Float64,
-    x_value::Vector{Float64},
-    t_value::Vector{Float64},
-    zero_indices::Vector{Int},
-    one_indices::Vector{Int},
+    context,
 )
     @warn "Using scalar cut normalization value 1.0 for $(typeof(normalization)); define `disjunctive_cut_normalization_value` for normalization-specific scaling." maxlog = 1
     return 1.0
@@ -562,7 +565,6 @@ function build_dcglp_disjunctive_cut(
     normalization::AbstractDisjunctiveNormalization,
     dcglp::Model,
     common::SplitOracleParam,
-    current_lb::Float64,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
     zero_indices::Vector{Int},
@@ -578,16 +580,14 @@ function build_dcglp_disjunctive_cut(
         zero_tol = common.zero_tol, gamma_0 = gamma_0,
     )
 
-    norm_value = disjunctive_cut_normalization_value(
-        normalization,
-        gamma_x,
-        gamma_t,
-        common,
-        current_lb,
-        x_value,
-        t_value,
-        zero_indices,
-        one_indices,
+    context = (
+        zero_tol = common.zero_tol,
+        lift = common.lift,
+        x_value = x_value,
+        t_value = t_value,
+        zero_indices = zero_indices,
+        one_indices = one_indices,
     )
+    norm_value = disjunctive_cut_normalization_value(normalization, gamma_x, gamma_t, context)
     return Hyperplane(gamma_x ./ norm_value, gamma_t ./ norm_value, gamma_0 / norm_value)
 end
