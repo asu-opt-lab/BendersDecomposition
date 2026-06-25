@@ -3,7 +3,7 @@
 
 ROUND_VERSION="vertical_reverse_polar/scflp_bodur"
 ROUND_DESCRIPTION="vertical_reverse_polar SCFLP, Bodur data, freq250, knapsack/classical oracle, 7 private cores, CPLEX"
-EXPERIMENT_VERSION="4instances_new_new"
+EXPERIMENT_VERSION="0_noroot"
 SEED="1"
 HOUR="04"
 TIME_LIMIT="14400"
@@ -14,7 +14,7 @@ FREQUENCY="250"
 REUSE_DCGLP="false"
 STRENGTHENED="true"
 LIFT="false"
-ORACLE="classical"
+ORACLE="knapsack"
 EXPERIMENT_DESCRIPTION="${HOUR} hr, seed = ${SEED}, vertical_reverse_polar, oracle = ${ORACLE}"
 
 FILE_NAME="scflp_bodur.jl"
@@ -46,18 +46,18 @@ cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
 EOF
 
 BASE_INSTANCES=(
-    # "cap101" "cap102" "cap103" "cap104"
-    # "cap121" "cap122" "cap123" "cap124"
-    # "cap131" "cap132" "cap133" "cap134"
+    "cap101" "cap102" "cap103" "cap104"
+    "cap121" "cap122" "cap123" "cap124"
+    "cap131" "cap132" "cap133" "cap134"
     # "cap61" "cap62" "cap63" "cap64"
     # "cap71" "cap72" "cap73" "cap74"
     # "cap91" "cap92" "cap93" "cap94"
-    "cap123" "cap124"
+    # "cap123" "cap124"
 )
 
 SCENARIO_SIZES=(
-    # "250" "500" "1500"
-    "500" "1500"
+    "250" "500" "1500"
+    # "500" "1500"
 )
 
 for base_instance in "${BASE_INSTANCES[@]}"; do

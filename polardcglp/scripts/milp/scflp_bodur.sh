@@ -38,18 +38,18 @@ cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
 EOF
 
 BASE_INSTANCES=(
-    # "cap101" "cap102" "cap103" "cap104"
-    # "cap121" "cap122" "cap123" "cap124"
-    # "cap131" "cap132" "cap133" "cap134"
+    "cap101" "cap102" "cap103" "cap104"
+    "cap121" "cap122" "cap123" "cap124"
+    "cap131" "cap132" "cap133" "cap134"
     # "cap61" "cap62" "cap63" "cap64"
     # "cap71" "cap72" "cap73" "cap74"
     # "cap91" "cap92" "cap93" "cap94"
-    "cap123" "cap124"
+    # "cap123" "cap124"
 )
 
 SCENARIO_SIZES=(
-    # "250" "500" "1500"
-    "500" "1500"
+    "250" "500" "1500"
+    # "500" "1500"
 )
 
 for base_instance in "${BASE_INSTANCES[@]}"; do

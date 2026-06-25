@@ -48,7 +48,7 @@ threads = get_int_option(options, "threads", 7)
 reuse_dcglp = get_bool_option(options, "reuse_dcglp", false)
 strengthened = get_bool_option(options, "strengthened", true)
 lift = get_bool_option(options, "lift", false)
-oracle_name = get_string_option(options, "oracle", "classical")
+oracle_name = get_string_option(options, "oracle", "knapsack")
 build_only = get_bool_option(options, "build_only", false)
 
 Random.seed!(seed)
@@ -114,7 +114,6 @@ oracle_param = VerticalReversePolarDCGLPParam(
 )
 
 master = Master(data; customize = customize_master_model!, optimizer = master_optimizer_local)
-# set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
 
 typical_oracles = [
     build_scflp_bodur_oracle(data, master, oracle_name; optimizer = sub_optimizer_local),
@@ -123,19 +122,20 @@ typical_oracles = [
 disjunctive_oracle = VerticalReversePolarDCGLPOracle(master, typical_oracles, oracle_param)
 
 lazy_oracle = build_scflp_bodur_oracle(data, master, oracle_name; optimizer = sub_optimizer_local)
-root_preprocessing = RootNodePreprocessing(
-    lazy_oracle,
-    BendersSeqInOut,
-    BendersSeqInOutParam(
-        time_limit = min(500.0, time_limit),
-        gap_tolerance = 1e-6,
-        stabilizing_x = ones(data.n_facilities),
-        α = 0.9,
-        λ = 0.1,
-        verbose = true,
-    ),
-)
-# root_preprocessing = NoRootNodePreprocessing()
+# root_preprocessing = RootNodePreprocessing(
+#     lazy_oracle,
+#     BendersSeqInOut,
+#     BendersSeqInOutParam(
+#         time_limit = min(300.0, time_limit),
+#         gap_tolerance = 1e-6,
+#         stabilizing_x = ones(data.n_facilities),
+#         α = 0.9,
+#         λ = 0.1,
+#         verbose = true,
+#     ),
+# )
+
+root_preprocessing = NoRootNodePreprocessing()
 lazy_callback = LazyCallback(lazy_oracle)
 user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = frequency))
 
