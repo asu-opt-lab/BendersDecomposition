@@ -1,5 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 #SBATCH -t 0-01:00:00
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${REPO_ROOT}"
 
 # Define variables to make the script more readable and maintainable
 
@@ -8,6 +14,8 @@ ROUND_DESCRIPTION="freq500, knapsack, 7 private cores"
 EXPERIMENT_VERSION="19"
 SEED="1"
 HOUR="04"
+TIME_LIMIT=$((10#${HOUR} * 3600))
+FREQUENCY=500
 EXPERIMENT_DESCRIPTION="unsolved 500c instances, ${HOUR} hr, LargestFractional, no lift, no reuse dcglp, branch_dir 1, 5% vbcuts to master, seed = ${SEED}"
 
 FILE_NAME="uflp_bnb_disj_freq500.jl"
@@ -31,7 +39,7 @@ mkdir -p "${ERR_OUT_DIR}"
 # mkdir -p "${JOBSCRIPT_DIR}"
 
 # Copy src directory to output directory
-cp -r scripts/${FILE_NAME} "${OUTPUT_DIR}/${FILE_NAME}"
+cp "experiments/scripts/${FILE_NAME}" "${OUTPUT_DIR}/${FILE_NAME}"
 
 # Create experiment metadata markdown file
 cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
@@ -99,7 +107,7 @@ for instance in "${instances[@]}"; do
     echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
 
     # Run Julia script with algorithm parameters
-    echo "julia --project=experiments/scripts experiments/scripts/${FILE_NAME} --instance ${instance} --output_dir ${OUTPUT_DIR} --seed ${SEED}" >> "${JOBSCRIPT_FILE}"
+    echo "julia --project=experiments/scripts experiments/scripts/${FILE_NAME} --instance=${instance} --output_dir=${OUTPUT_DIR} --seed=${SEED} --time_limit=${TIME_LIMIT} --threads=${THREADS} --frequency=${FREQUENCY}" >> "${JOBSCRIPT_FILE}"
 
     # Submit job
     sbatch "${JOBSCRIPT_FILE}"

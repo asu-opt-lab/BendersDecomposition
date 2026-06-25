@@ -1,17 +1,52 @@
 using JuMP, DataFrames, Logging, CSV
 using BendersX
+using ArgParse
+using Random
 using Printf
 using Statistics
 using CPLEX
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
-# load settings
-# args = parse_commandline()
+function parse_commandline()
+    s = ArgParseSettings()
+    @add_arg_table! s begin
+        "--instance"
+            help = "Instance name"
+            arg_type = String
+            default = "T100x100_5_1"
+        "--seed"
+            help = "Random seed"
+            arg_type = Int
+            default = 1
+        "--output_dir"
+            help = "Output directory"
+            arg_type = String
+            default = "output"
+        "--time_limit"
+            help = "Benders branch-and-bound time limit in seconds"
+            arg_type = Float64
+            default = 200.0
+        "--root_time_limit"
+            help = "Root preprocessing time limit in seconds"
+            arg_type = Float64
+            default = 100.0
+        "--frequency"
+            help = "User callback frequency"
+            arg_type = Int
+            default = 250
+    end
+    return parse_args(s)
+end
 
-# instance = args["instance"]
-# output_dir = args["output_dir"]
-instance = "T100x100_5_1"
-output_dir = "scripts"
+# load settings
+args = parse_commandline()
+
+Random.seed!(args["seed"])
+instance = args["instance"]
+output_dir = args["output_dir"]
+time_limit = args["time_limit"]
+root_time_limit = args["root_time_limit"]
+frequency = args["frequency"]
 
 # -----------------------------------------------------------------------------
 # load problem data
@@ -23,7 +58,7 @@ data = read_cfl_file(instance)
 # -----------------------------------------------------------------------------
 # Algorithm parameters
 benders_param = BendersBnBParam(
-    time_limit = 200.0,
+    time_limit = time_limit,
     gap_tolerance = 1e-6,
     verbose = true
 )
@@ -74,7 +109,7 @@ lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimiz
 
 root_seq_type = BendersSeqInOut
 root_param = BendersSeqInOutParam(
-    time_limit = 100.0,
+    time_limit = root_time_limit,
     gap_tolerance = 1e-6,
     stabilizing_x = ones(data.n_facilities),
     α = 0.9,
@@ -93,7 +128,7 @@ lazy_callback = LazyCallback(lazy_oracle)
 # -----------------------------------------------------------------------------
 # user callback
 # -----------------------------------------------------------------------------
-user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=250))
+user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=frequency))
 
 # -----------------------------------------------------------------------------
 # BendersBnB

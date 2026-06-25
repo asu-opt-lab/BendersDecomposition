@@ -22,6 +22,22 @@ function parse_commandline()
             help = "Output directory"
             arg_type = String
             default = "output"
+        "--time_limit"
+            help = "Benders branch-and-bound time limit in seconds"
+            arg_type = Float64
+            default = 14400.0
+        "--root_time_limit"
+            help = "Root preprocessing time limit in seconds"
+            arg_type = Float64
+            default = 100.0
+        "--threads"
+            help = "Number of CPLEX threads"
+            arg_type = Int
+            default = 7
+        "--build_only"
+            help = "Build the Benders environment without solving"
+            arg_type = Bool
+            default = false
     end
     return parse_args(s)
 end
@@ -32,6 +48,12 @@ args = parse_commandline()
 Random.seed!(args["seed"])
 instance = args["instance"]
 output_dir = args["output_dir"]
+time_limit = args["time_limit"]
+root_time_limit = args["root_time_limit"]
+threads = args["threads"]
+build_only = args["build_only"]
+
+@info "UFLP Benders BnB knapsack script" instance = instance seed = args["seed"] time_limit = time_limit root_time_limit = root_time_limit threads = threads build_only = build_only
 
 # -----------------------------------------------------------------------------
 # load problem data
@@ -43,7 +65,7 @@ data = read_Simple_data(instance)
 # -----------------------------------------------------------------------------
 function update_master_model!(model::Model, data::UFLPData)
     optimizer = optimizer_with_attributes(CPLEX.Optimizer,
-        "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9,
+        "CPXPARAM_Threads" => threads, "CPX_PARAM_EPINT" => 1e-9,
         "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6,
         MOI.Silent() => true)
     set_optimizer(model, optimizer)
@@ -59,7 +81,7 @@ end
 # -----------------------------------------------------------------------------
 # Algorithm parameters
 benders_param = BendersBnBParam(
-    time_limit = 14400.0,
+    time_limit = time_limit,
     gap_tolerance = 1e-6,
     verbose = true
 )
@@ -81,7 +103,7 @@ set_parameter!(typical_oracle, "add_only_violated_cuts", true)
 # -----------------------------------------------------------------------------
 root_seq_type = BendersSeq
 root_param = BendersSeqParam(
-    time_limit = 100.0,
+    time_limit = min(root_time_limit, time_limit),
     gap_tolerance = 1e-9,
     verbose = true
 )
@@ -113,4 +135,14 @@ env = BendersBnB(
 # -----------------------------------------------------------------------------
 # solve
 # -----------------------------------------------------------------------------
-solution_log = solve!(env)
+if build_only
+    @info "UFLP Benders BnB knapsack script build completed without solve." instance = instance
+else
+    solution_log = solve!(env)
+    obj_value = try
+        env.obj_value
+    catch
+        NaN
+    end
+    @info "UFLP Benders BnB knapsack script finished" instance = instance termination_status = env.termination_status objective_value = obj_value
+end
