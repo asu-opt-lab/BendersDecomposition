@@ -10,13 +10,13 @@ cd "${REPO_ROOT}"
 # Define variables to make the script more readable and maintainable
 
 ROUND_VERSION="uflp_bnb_disj_freq500"
-ROUND_DESCRIPTION="freq500, knapsack, 7 private cores"
+ROUND_DESCRIPTION="freq500, vertical reverse polar norm, knapsack, 7 private cores"
 EXPERIMENT_VERSION="19"
 SEED="1"
 HOUR="04"
 TIME_LIMIT=$((10#${HOUR} * 3600))
 FREQUENCY=500
-EXPERIMENT_DESCRIPTION="unsolved 500c instances, ${HOUR} hr, LargestFractional, no lift, no reuse dcglp, branch_dir 1, 5% vbcuts to master, seed = ${SEED}"
+EXPERIMENT_DESCRIPTION="unsolved 500c instances, ${HOUR} hr, vertical reverse polar norm, LargestFractional, no lift, no reuse dcglp, branch_dir 1, 5% vbcuts to master, seed = ${SEED}"
 
 FILE_NAME="uflp_bnb_disj_freq500.jl"
 THREADS=7

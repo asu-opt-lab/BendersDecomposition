@@ -20,7 +20,6 @@ root_time_limit = 100.0
 dcglp_time_limit = 100.0
 dcglp_iter_limit = 250
 dcglp_halt_limit = 3
-p = Inf
 adjust_t_to_fx = false
 lift = false
 strengthened = true
@@ -111,7 +110,7 @@ lift = args["lift"]
 adjust_t_to_fx = args["adjust_t_to_fx"]
 build_only = args["build_only"]
 
-@info "UFLP Benders BnB disjunctive knapsack script" instance = instance seed = args["seed"] time_limit = time_limit dcglp_time_limit = dcglp_time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift adjust_t_to_fx = adjust_t_to_fx build_only = build_only
+@info "UFLP Benders BnB vertical reverse polar knapsack script" instance = instance seed = args["seed"] time_limit = time_limit dcglp_time_limit = dcglp_time_limit frequency = frequency threads = threads reuse_dcglp = reuse_dcglp strengthened = strengthened lift = lift adjust_t_to_fx = adjust_t_to_fx build_only = build_only
 
 # -----------------------------------------------------------------------------
 # load problem data
@@ -156,7 +155,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
     verbose = true
 )
 
-oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
+oracle_param = SplitOracleParam(ReversePolarNormalization(); dcglp_param = dcglp_param,
     split_index_selection_rule = split_index_selection_rule,
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
     strengthened = strengthened,
@@ -232,7 +231,7 @@ env = BendersBnB(
 # solve
 # -----------------------------------------------------------------------------
 if build_only
-    @info "UFLP Benders BnB disjunctive knapsack script build completed without solve." instance = instance
+    @info "UFLP Benders BnB vertical reverse polar knapsack script build completed without solve." instance = instance
 else
     solution_log = solve!(env)
     obj_value = try
@@ -240,5 +239,5 @@ else
     catch
         NaN
     end
-    @info "UFLP Benders BnB disjunctive knapsack script finished" instance = instance termination_status = env.termination_status objective_value = obj_value
+    @info "UFLP Benders BnB vertical reverse polar knapsack script finished" instance = instance termination_status = env.termination_status objective_value = obj_value
 end
