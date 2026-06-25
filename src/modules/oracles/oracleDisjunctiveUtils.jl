@@ -442,8 +442,6 @@ function solve_dcglp_loop!(
             normalization,
             dcglp,
             oracle.param,
-            x_value,
-            reference_t,
             zero_indices,
             one_indices,
         )
@@ -553,20 +551,17 @@ end
 
 function disjunctive_cut_normalization_value(
     normalization::AbstractDisjunctiveNormalization,
+    dcglp::Model,
     gamma_x::Vector{Float64},
     gamma_t::Vector{Float64},
-    context,
 )
-    @warn "Using scalar cut normalization value 1.0 for $(typeof(normalization)); define `disjunctive_cut_normalization_value` for normalization-specific scaling." maxlog = 1
-    return 1.0
+    throw(UndefError("update disjunctive_cut_normalization_value for $(typeof(normalization))"))
 end
 
 function build_dcglp_disjunctive_cut(
     normalization::AbstractDisjunctiveNormalization,
     dcglp::Model,
     common::SplitOracleParam,
-    x_value::Vector{Float64},
-    t_value::Vector{Float64},
     zero_indices::Vector{Int},
     one_indices::Vector{Int},
 )
@@ -580,14 +575,11 @@ function build_dcglp_disjunctive_cut(
         zero_tol = common.zero_tol, gamma_0 = gamma_0,
     )
 
-    context = (
-        zero_tol = common.zero_tol,
-        lift = common.lift,
-        x_value = x_value,
-        t_value = t_value,
-        zero_indices = zero_indices,
-        one_indices = one_indices,
+    norm_value = disjunctive_cut_normalization_value(
+        normalization,
+        dcglp,
+        gamma_x,
+        gamma_t,
     )
-    norm_value = disjunctive_cut_normalization_value(normalization, gamma_x, gamma_t, context)
     return Hyperplane(gamma_x ./ norm_value, gamma_t ./ norm_value, gamma_0 / norm_value)
 end

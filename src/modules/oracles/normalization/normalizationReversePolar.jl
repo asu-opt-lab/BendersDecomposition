@@ -177,16 +177,15 @@ end
 
 function disjunctive_cut_normalization_value(
     normalization::ReversePolarNormalization,
+    dcglp::Model,
     gamma_x::Vector{Float64},
     gamma_t::Vector{Float64},
-    context,
 )
-    direction_x, direction_t =
-        normalization.use_core_point ?
-        (context.x_value .- normalization.core_point_x, context.t_value .- normalization.core_point_t) :
-        (.-normalization.core_diretion_x, .-normalization.core_diretion_t)
+    tau = dcglp[:tau]
+    direction_x = [normalized_coefficient(con, tau) for con in dcglp[:con_reverse_polar_x]]
+    direction_t = [normalized_coefficient(con, tau) for con in dcglp[:con_reverse_polar_t]]
     direction_value = dot(gamma_x, direction_x) + dot(gamma_t, direction_t)
-    abs(direction_value) > context.zero_tol ||
+    !iszero(direction_value) ||
         throw(AlgorithmException("ReversePolarNormalization cut normalization failed because the directional support is numerically zero."))
     return direction_value
 end

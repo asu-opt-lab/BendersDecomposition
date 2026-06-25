@@ -149,12 +149,10 @@ end
 
 function BendersX.disjunctive_cut_normalization_value(
     normalization::ExtensionContractNormalization,
+    dcglp::Model,
     gamma_x::Vector{Float64},
     gamma_t::Vector{Float64},
-    context,
 )
-    context.lift && (!isempty(context.zero_indices) || !isempty(context.one_indices)) ||
-        return 1.0
     return max(1.0, LinearAlgebra.norm(vcat(gamma_x, gamma_t), 1.0))
 end
 
@@ -371,6 +369,12 @@ end
             MissingContractNormalization(),
             BendersX.DcglpState(),
             BendersX.DcglpLog(),
+            [0.0],
+            [0.0],
+        )
+        @test_throws BendersX.UndefError BendersX.disjunctive_cut_normalization_value(
+            MissingContractNormalization(),
+            model,
             [0.0],
             [0.0],
         )

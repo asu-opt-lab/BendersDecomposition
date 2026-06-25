@@ -56,7 +56,13 @@ function update_dcglp_upper_bound_and_gap!(
     return nothing
 end
 
-function lp_cut_dual_norm_value(gamma_x, gamma_t, p::Float64)
+function disjunctive_cut_normalization_value(
+    normalization::LpDistanceNormalization,
+    dcglp::Model,
+    gamma_x::Vector{Float64},
+    gamma_t::Vector{Float64},
+)
+    p = normalization.norm_p
     if p == 1.0
         norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), Inf)
     elseif p == 2.0
@@ -67,15 +73,4 @@ function lp_cut_dual_norm_value(gamma_x, gamma_t, p::Float64)
         throw(UndefError("Unsupported norm p: $p"))
     end
     return max(1.0, norm_value)
-end
-
-function disjunctive_cut_normalization_value(
-    normalization::LpDistanceNormalization,
-    gamma_x::Vector{Float64},
-    gamma_t::Vector{Float64},
-    context,
-)
-    context.lift && (!isempty(context.zero_indices) || !isempty(context.one_indices)) ||
-        return 1.0
-    return lp_cut_dual_norm_value(gamma_x, gamma_t, normalization.norm_p)
 end
