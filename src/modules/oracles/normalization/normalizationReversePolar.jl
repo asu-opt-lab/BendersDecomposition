@@ -6,32 +6,40 @@
     ReversePolarNormalization()
     ReversePolarNormalization(core_point_x, core_point_t)
     ReversePolarNormalization(; core_point_x, core_point_t)
-    ReversePolarNormalization(; core_diretion_x, core_diretion_t)
+    ReversePolarNormalization(; core_direction_x, core_direction_t)
 
 Reverse-polar DCGLP normalization for `SplitOracle`. With no core point or
 direction, this uses the vertical reverse-polar direction. With a core point,
 it uses the direction from the core point to the current candidate. With a core
 direction, it uses that fixed direction for every candidate.
 """
+_reverse_polar_vector(::Nothing, ::String) = nothing
+_reverse_polar_vector(vector::AbstractVector{<:Real}, ::String) = Float64.(collect(vector))
+
 mutable struct ReversePolarNormalization <: AbstractDisjunctiveNormalization
     core_point_x::Union{Nothing, Vector{Float64}}
     core_point_t::Union{Nothing, Vector{Float64}}
-    core_diretion_x::Union{Nothing, Vector{Float64}}
-    core_diretion_t::Union{Nothing, Vector{Float64}}
+    core_direction_x::Union{Nothing, Vector{Float64}}
+    core_direction_t::Union{Nothing, Vector{Float64}}
     use_core_point::Bool
 
     function ReversePolarNormalization(
-        core_point_x::Union{Nothing, Vector{Float64}},
-        core_point_t::Union{Nothing, Vector{Float64}},
-        core_diretion_x::Union{Nothing, Vector{Float64}},
-        core_diretion_t::Union{Nothing, Vector{Float64}},
+        core_point_x::Union{Nothing, AbstractVector{<:Real}},
+        core_point_t::Union{Nothing, AbstractVector{<:Real}},
+        core_direction_x::Union{Nothing, AbstractVector{<:Real}},
+        core_direction_t::Union{Nothing, AbstractVector{<:Real}},
     )
+        core_point_x = _reverse_polar_vector(core_point_x, "core_point_x")
+        core_point_t = _reverse_polar_vector(core_point_t, "core_point_t")
+        core_direction_x = _reverse_polar_vector(core_direction_x, "core_direction_x")
+        core_direction_t = _reverse_polar_vector(core_direction_t, "core_direction_t")
+
         has_point = core_point_x !== nothing || core_point_t !== nothing
-        has_direction = core_diretion_x !== nothing || core_diretion_t !== nothing
+        has_direction = core_direction_x !== nothing || core_direction_t !== nothing
         use_core_point = has_point
 
         has_point && has_direction &&
-            throw(ArgumentError("Provide either `core_point_x`/`core_point_t` or `core_diretion_x`/`core_diretion_t`, not both."))
+            throw(ArgumentError("Provide either `core_point_x`/`core_point_t` or `core_direction_x`/`core_direction_t`, not both."))
 
         if has_point
             core_point_x !== nothing ||
@@ -43,36 +51,36 @@ mutable struct ReversePolarNormalization <: AbstractDisjunctiveNormalization
         end
 
         if has_direction
-            core_diretion_x !== nothing ||
-                throw(ArgumentError("`core_diretion_x` must be provided when `core_diretion_t` is provided."))
-            core_diretion_t !== nothing ||
-                throw(ArgumentError("`core_diretion_t` must be provided when `core_diretion_x` is provided."))
-            isempty(core_diretion_x) && throw(ArgumentError("`core_diretion_x` must be non-empty."))
-            isempty(core_diretion_t) && throw(ArgumentError("`core_diretion_t` must be non-empty."))
-            LinearAlgebra.norm(vcat(core_diretion_x, core_diretion_t), Inf) > 0.0 ||
-                throw(ArgumentError("`core_diretion_x`/`core_diretion_t` must not define the zero direction."))
+            core_direction_x !== nothing ||
+                throw(ArgumentError("`core_direction_x` must be provided when `core_direction_t` is provided."))
+            core_direction_t !== nothing ||
+                throw(ArgumentError("`core_direction_t` must be provided when `core_direction_x` is provided."))
+            isempty(core_direction_x) && throw(ArgumentError("`core_direction_x` must be non-empty."))
+            isempty(core_direction_t) && throw(ArgumentError("`core_direction_t` must be non-empty."))
+            LinearAlgebra.norm(vcat(core_direction_x, core_direction_t), Inf) > 0.0 ||
+                throw(ArgumentError("`core_direction_x`/`core_direction_t` must not define the zero direction."))
         end
 
         return new(
-            core_point_x === nothing ? nothing : copy(core_point_x),
-            core_point_t === nothing ? nothing : copy(core_point_t),
-            core_diretion_x === nothing ? nothing : copy(core_diretion_x),
-            core_diretion_t === nothing ? nothing : copy(core_diretion_t),
+            core_point_x,
+            core_point_t,
+            core_direction_x,
+            core_direction_t,
             use_core_point,
         )
     end
 
-    function ReversePolarNormalization(core_point_x::Vector{Float64}, core_point_t::Vector{Float64})
+    function ReversePolarNormalization(core_point_x::AbstractVector{<:Real}, core_point_t::AbstractVector{<:Real})
         return ReversePolarNormalization(core_point_x, core_point_t, nothing, nothing)
     end
 
     function ReversePolarNormalization(;
-        core_point_x::Union{Nothing, Vector{Float64}} = nothing,
-        core_point_t::Union{Nothing, Vector{Float64}} = nothing,
-        core_diretion_x::Union{Nothing, Vector{Float64}} = nothing,
-        core_diretion_t::Union{Nothing, Vector{Float64}} = nothing,
+        core_point_x::Union{Nothing, AbstractVector{<:Real}} = nothing,
+        core_point_t::Union{Nothing, AbstractVector{<:Real}} = nothing,
+        core_direction_x::Union{Nothing, AbstractVector{<:Real}} = nothing,
+        core_direction_t::Union{Nothing, AbstractVector{<:Real}} = nothing,
     )
-        return ReversePolarNormalization(core_point_x, core_point_t, core_diretion_x, core_diretion_t)
+        return ReversePolarNormalization(core_point_x, core_point_t, core_direction_x, core_direction_t)
     end
 end
 
@@ -89,14 +97,14 @@ function prepare_disjunctive_normalization!(normalization::ReversePolarNormaliza
         return nothing
     end
 
-    if normalization.core_diretion_x === nothing && normalization.core_diretion_t === nothing
-        normalization.core_diretion_x = zeros(master.dim_x)
-        normalization.core_diretion_t = ones(master.dim_t)
+    if normalization.core_direction_x === nothing && normalization.core_direction_t === nothing
+        normalization.core_direction_x = zeros(master.dim_x)
+        normalization.core_direction_t = ones(master.dim_t)
         return nothing
     end
 
-    check_reverse_polar_dimension(normalization.core_diretion_x, master.dim_x, "core_diretion_x")
-    check_reverse_polar_dimension(normalization.core_diretion_t, master.dim_t, "core_diretion_t")
+    check_reverse_polar_dimension(normalization.core_direction_x, master.dim_x, "core_direction_x")
+    check_reverse_polar_dimension(normalization.core_direction_t, master.dim_t, "core_direction_t")
     return nothing
 end
 
@@ -132,7 +140,7 @@ function update_dcglp_for_candidate!(normalization::ReversePolarNormalization, o
     direction_x, direction_t =
         normalization.use_core_point ?
         (x_value .- normalization.core_point_x, t_value .- normalization.core_point_t) :
-        (.-normalization.core_diretion_x, .-normalization.core_diretion_t)
+        (.-normalization.core_direction_x, .-normalization.core_direction_t)
     update_reverse_polar_constraints!(oracle, direction_x, direction_t)
     return nothing
 end
@@ -151,7 +159,7 @@ function update_dcglp_reference_t!(
     direction_x, direction_t =
         normalization.use_core_point ?
         (x_value .- normalization.core_point_x, reference_t .- normalization.core_point_t) :
-        (.-normalization.core_diretion_x, .-normalization.core_diretion_t)
+        (.-normalization.core_direction_x, .-normalization.core_direction_t)
     update_reverse_polar_constraints!(oracle, direction_x, direction_t)
     return reference_t
 end

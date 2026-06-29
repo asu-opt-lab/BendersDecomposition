@@ -16,6 +16,21 @@ function delete_registered_constraints!(model::Model, sym::Symbol)
     unregister(model, sym)
 end
 
+function fallback_to_typical_after_dcglp!(
+    oracle::AbstractDisjunctiveOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64},
+    start_time::Float64,
+    time_limit::Float64,
+)
+    oracle isa AbstractSplitOracle && rollback_current_dcglp_candidate!(oracle)
+    return generate_cuts(
+        oracle.typical_oracles[1],
+        x_value,
+        t_value;
+        time_limit = get_sec_remaining(start_time, time_limit),
+    )
+end
 
 function fallback_typical_or_throw(
     oracle::AbstractDisjunctiveOracle,
@@ -28,13 +43,9 @@ function fallback_typical_or_throw(
 )
     if throw_typical_cuts_for_errors
         @warn msg
-        return generate_cuts(
-            oracle.typical_oracles[1],
-            x_value,
-            t_value;
-            time_limit = get_sec_remaining(start_time, time_limit),
-        )
+        return fallback_to_typical_after_dcglp!(oracle, x_value, t_value, start_time, time_limit)
     end
+    oracle isa AbstractSplitOracle && rollback_current_dcglp_candidate!(oracle)
     throw(UnexpectedModelStatusException(msg))
 end
 
@@ -378,13 +389,7 @@ function solve_dcglp_loop!(
     hyperplanes = Hyperplane[]
     reference_t = update_dcglp_reference_t!(normalization, oracle, x_value, t_value, start_time, time_limit)
     if should_fallback_typical(normalization, oracle, x_value, reference_t)
-        rollback_current_dcglp_candidate!(oracle)
-        return generate_cuts(
-            oracle.typical_oracles[1],
-            x_value,
-            t_value;
-            time_limit = get_sec_remaining(start_time, time_limit),
-        )
+        return fallback_to_typical_after_dcglp!(oracle, x_value, t_value, start_time, time_limit)
     end
 
     while true
@@ -413,6 +418,7 @@ function solve_dcglp_loop!(
                         throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
                     )
                 elseif termination_status(dcglp) == TIME_LIMIT
+                    rollback_current_dcglp_candidate!(oracle)
                     throw(TimeLimitException("Time limit reached during $(normalization_name) solving"))
                 else
                     return fallback_typical_or_throw(
@@ -450,12 +456,7 @@ function solve_dcglp_loop!(
         return false, hyperplanes, fill(Inf, length(t_value))
     end
 
-    return generate_cuts(
-        oracle.typical_oracles[1],
-        x_value,
-        t_value;
-        time_limit = get_sec_remaining(start_time, time_limit),
-    )
+    return fallback_to_typical_after_dcglp!(oracle, x_value, t_value, start_time, time_limit)
 end
 
 function read_dcglp_solution!(oracle::SplitOracle, state::DcglpState)
