@@ -105,7 +105,7 @@ end
 
 function build_uflp_rows()
     rows = NamedTuple[]
-    for i in setdiff(1:71, [67])
+    for i in 1:71
         instance_name = "p$i"
         data = read_uflp_benchmark_data(instance_name)
         push!(rows, (instance_name = instance_name, objective_value = solve_reference_objective(data, instance_name)))
@@ -115,7 +115,7 @@ end
 
 function build_cflp_rows()
     rows = NamedTuple[]
-    for i in setdiff(1:71, [67])
+    for i in 1:71
         instance_name = "p$i"
         data = read_cflp_benchmark_data(instance_name)
         push!(rows, (instance_name = instance_name, objective_value = solve_reference_objective(data, instance_name)))

@@ -11,7 +11,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
     reference_df = DataFrame(CSV.File(reference_path))
     @assert nrow(reference_df) == length(unique(reference_df.instance_name)) "Duplicate CFLP reference objectives found in $(reference_path)"
     reference_objectives = Dict(String(row.instance_name) => Float64(row.objective_value) for row in eachrow(reference_df))
-    instances = setdiff(1:71, [67])
+    instances = 1:71
 
     # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
     function update_sub_gbc_model!(model::Model, data::CFLPData, scen_idx::Int; x)

@@ -34,7 +34,7 @@ dcglp_param = DcglpParam(dcglp_optimizer;
     ufl_reference_df = DataFrame(CSV.File(ufl_reference_path))
     @assert nrow(ufl_reference_df) == length(unique(ufl_reference_df.instance_name)) "Duplicate UFLP reference objectives found in $(ufl_reference_path)"
     ufl_reference_objectives = Dict(String(row.instance_name) => Float64(row.objective_value) for row in eachrow(ufl_reference_df))
-    # instances = setdiff(1:71, [67])
+    # instances = 1:71
     instances = [49] # only instance that uses SpecializedBendersSeq
     for i in instances
         @testset "Instance: p$i" begin
@@ -123,7 +123,7 @@ end
     cfl_reference_df = DataFrame(CSV.File(cfl_reference_path))
     @assert nrow(cfl_reference_df) == length(unique(cfl_reference_df.instance_name)) "Duplicate CFLP reference objectives found in $(cfl_reference_path)"
     cfl_reference_objectives = Dict(String(row.instance_name) => Float64(row.objective_value) for row in eachrow(cfl_reference_df))
-    # instances = setdiff(1:71, [67])
+    # instances = 1:71
     instances = [25 32 34 36 49 51]
     # numerical issue: 29 30 31 35
     # success: 25 32 34 36 49 51
