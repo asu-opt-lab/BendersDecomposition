@@ -15,10 +15,10 @@ const UFLP_CORRECTNESS_INSTANCES = ["p$(i)" for i in 1:71]
 const CFLP_CORRECTNESS_INSTANCES = ["p$(i)" for i in 1:71]
 const UFLP_250_INSTANCES = vcat(["ga250a-$(i)" for i in 1:5], ["ga250b-$(i)" for i in 1:5])
 const CFLP_200_INSTANCES = vcat(["T200x200_5_$(i)" for i in 1:5], ["T200x200_10_$(i)" for i in 1:5])
-const SCFLP_100X200_INSTANCES = vcat(
-    ["f100-c200-s256-r5-$(i)" for i in 1:5],
-    ["f100-c200-s512-r5-$(i)" for i in 1:5],
-    ["f100-c200-s1024-r5-$(i)" for i in 1:5],
+const SCFLP_50X100_INSTANCES = vcat(
+    ["f50-c100-s256-r5-$(i)" for i in 1:5],
+    ["f50-c100-s512-r5-$(i)" for i in 1:5],
+    ["f50-c100-s1024-r5-$(i)" for i in 1:5],
 )
 
 ensure_dir(path::AbstractString) = (isdir(path) || mkpath(path); path)
@@ -105,7 +105,7 @@ end
 
 function load_generated_scflp_instance(instance::AbstractString)
     m = match(r"^f(\d+)-c(\d+)-s(\d+)-r(\d+)-(\d+)$", instance)
-    m === nothing && error("Cannot parse SCFLP instance name $(instance). Expected f100-c200-s256-r5-1.")
+    m === nothing && error("Cannot parse SCFLP instance name $(instance). Expected f50-c100-s256-r5-1.")
     n_facilities = parse(Int, m.captures[1])
     n_customers = parse(Int, m.captures[2])
     n_scenarios = parse(Int, m.captures[3])

@@ -47,7 +47,7 @@ function main()
     problem = "scflp"
 
     repeat_range = args["repeat_index"] == 0 ? (1:args["repeats"]) : (args["repeat_index"]:args["repeat_index"])
-    selected_instances = args["instance"] == "all" ? SCFLP_100X200_INSTANCES : [args["instance"]]
+    selected_instances = args["instance"] == "all" ? SCFLP_50X100_INSTANCES : [args["instance"]]
     for repeat in repeat_range
         for instance in selected_instances
             data, data_source = load_paper_instance(problem, instance)

@@ -15,7 +15,7 @@ matrix, raw result files, and analysis scripts.
   varying oracle.
 - `scripts/03_environment_ablation.jl`: UFLP only, fixed oracle, varying
   environment across `seq`, `seq_inout`, and `callback`.
-- `scripts/04_parallel_scflp.jl`: callback-based SCFLP `100x200`
+- `scripts/04_parallel_scflp.jl`: callback-based SCFLP `50x100`
   separable-oracle scaling.
 - `results/raw/`: append-only run summaries and iteration traces.
 - `results/processed/`: table-ready summaries from `analysis/`.
@@ -32,11 +32,11 @@ matrix, raw result files, and analysis scripts.
 - Environment ablation:
   - UFLP: `ga250a-1:5`, `ga250b-1:5`
 - Parallel scaling:
-  - SCFLP: generated `100 facilities x 200 customers`, 15 instances:
-    `f100-c200-s256-r5-1:5`, `f100-c200-s512-r5-1:5`, and
-    `f100-c200-s1024-r5-1:5`.
+  - SCFLP: generated `50 facilities x 100 customers`, 15 instances:
+    `f50-c100-s256-r5-1:5`, `f50-c100-s512-r5-1:5`, and
+    `f50-c100-s1024-r5-1:5`.
 
-The packaged artifacts do not currently contain `f100-c200-*` SCFLP files, so
+The packaged artifacts do not currently contain `f50-c100-*` SCFLP files, so
 `scripts/common.jl` generates deterministic `SCFLPData` instances using the
 original stochastic CFLP generator logic. The current `SCFLPData` type does not
 store scenario probabilities, so the uniform `prob_scenarios` vector is not
