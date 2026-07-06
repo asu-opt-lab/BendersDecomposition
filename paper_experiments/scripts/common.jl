@@ -15,7 +15,11 @@ const UFLP_CORRECTNESS_INSTANCES = ["p$(i)" for i in 1:71]
 const CFLP_CORRECTNESS_INSTANCES = ["p$(i)" for i in 1:71]
 const UFLP_250_INSTANCES = vcat(["ga250a-$(i)" for i in 1:5], ["ga250b-$(i)" for i in 1:5])
 const CFLP_200_INSTANCES = vcat(["T200x200_5_$(i)" for i in 1:5], ["T200x200_10_$(i)" for i in 1:5])
-const SCFLP_100X200_INSTANCES = ["synthetic-f100-c200-s256-$(i)" for i in 1:10]
+const SCFLP_100X200_INSTANCES = vcat(
+    ["f100-c200-s256-r5-$(i)" for i in 1:5],
+    ["f100-c200-s512-r5-$(i)" for i in 1:5],
+    ["f100-c200-s1024-r5-$(i)" for i in 1:5],
+)
 
 ensure_dir(path::AbstractString) = (isdir(path) || mkpath(path); path)
 
@@ -51,40 +55,64 @@ function update_uflp_knapsack_master!(model::Model, data::UFLPData)
     return (x = x,), t
 end
 
-function synthetic_scflp_data(
-    instance_id::Int;
-    n_facilities::Int = 100,
-    n_customers::Int = 200,
-    n_scenarios::Int = 256,
-    seed_base::Int = 430_000,
+function generate_stochastic_capacited_facility_location(
+    n_facilities::Int,
+    n_customers::Int,
+    n_scenarios::Int,
+    ratio::Int;
+    rng::AbstractRNG = Random.default_rng(),
 )
-    rng = MersenneTwister(seed_base + instance_id)
-    facility_xy = rand(rng, n_facilities, 2)
-    customer_xy = rand(rng, n_customers, 2)
+    c_x = rand(rng, n_customers)
+    c_y = rand(rng, n_customers)
 
-    costs = zeros(Float64, n_facilities, n_customers)
-    for i in 1:n_facilities, j in 1:n_customers
-        dx = facility_xy[i, 1] - customer_xy[j, 1]
-        dy = facility_xy[i, 2] - customer_xy[j, 2]
-        costs[i, j] = 10.0 + 100.0 * sqrt(dx * dx + dy * dy) + rand(rng)
+    f_x = rand(rng, n_facilities)
+    f_y = rand(rng, n_facilities)
+
+    base_demands = rand(rng, 5:35, n_customers)
+    demand_stds = rand(rng, n_customers) .* (0.02 .* base_demands) .+ (0.01 .* base_demands)
+
+    demands = Vector{Vector{Float64}}(undef, n_scenarios)
+    demands[1] = Float64.(base_demands)
+    for s in 2:n_scenarios
+        scenario_demands = zeros(Int, n_customers)
+        for j in 1:n_customers
+            scenario_demands[j] = max(1, round(Int, base_demands[j] + demand_stds[j] * randn(rng)))
+        end
+        demands[s] = Float64.(scenario_demands)
     end
 
-    fixed_costs = Float64.(rand(rng, 800:2600, n_facilities))
-    capacities = Float64.(rand(rng, 70:110, n_facilities))
-    demands = [Float64.(rand(rng, 10:24, n_customers)) for _ in 1:n_scenarios]
+    capacities = rand(rng, 10:160, n_facilities)
+    fixed_costs = (rand(rng, 100:110, n_facilities) .* sqrt.(capacities)) .+ rand(rng, 0:90, n_facilities)
+    fixed_costs = round.(Int, fixed_costs)
 
-    max_demand = maximum(sum.(demands))
-    if sum(capacities) < 1.35 * max_demand
-        capacities .*= 1.35 * max_demand / sum(capacities)
-    end
+    total_demand_max = maximum(sum.(demands))
+    total_capacity = sum(capacities)
+    capacities = capacities .* ratio .* total_demand_max ./ total_capacity
+    capacities = round.(Int, capacities)
 
-    return SCFLPData(n_facilities, n_customers, n_scenarios, capacities, demands, fixed_costs, costs)
+    trans_costs = sqrt.((f_x .- c_x') .^ 2 .+ (f_y .- c_y') .^ 2) .* 10
+
+    return SCFLPData(
+        n_facilities,
+        n_customers,
+        n_scenarios,
+        Float64.(capacities),
+        demands,
+        Float64.(fixed_costs),
+        Float64.(trans_costs),
+    )
 end
 
-function parse_synthetic_scflp_index(instance::AbstractString)
-    m = match(r"-(\d+)$", instance)
-    m === nothing && error("Cannot parse synthetic SCFLP instance index from $(instance)")
-    return parse(Int, m.captures[1])
+function load_generated_scflp_instance(instance::AbstractString)
+    m = match(r"^f(\d+)-c(\d+)-s(\d+)-r(\d+)-(\d+)$", instance)
+    m === nothing && error("Cannot parse SCFLP instance name $(instance). Expected f100-c200-s256-r5-1.")
+    n_facilities = parse(Int, m.captures[1])
+    n_customers = parse(Int, m.captures[2])
+    n_scenarios = parse(Int, m.captures[3])
+    ratio = parse(Int, m.captures[4])
+    replicate = parse(Int, m.captures[5])
+    seed = 1_000_000_000 + n_facilities * 1_000_000 + n_customers * 10_000 + n_scenarios * 100 + ratio * 10 + replicate
+    return generate_stochastic_capacited_facility_location(n_facilities, n_customers, n_scenarios, ratio; rng = MersenneTwister(seed))
 end
 
 function load_paper_instance(problem::AbstractString, instance::AbstractString)
@@ -101,8 +129,8 @@ function load_paper_instance(problem::AbstractString, instance::AbstractString)
         data = read_cfl_file(instance)
         return data, "cflp_output"
     elseif problem == "scflp"
-        data = synthetic_scflp_data(parse_synthetic_scflp_index(instance))
-        return data, "synthetic_scflp"
+        data = load_generated_scflp_instance(instance)
+        return data, "generated_original_scflp"
     else
         error("Unknown problem $(problem)")
     end

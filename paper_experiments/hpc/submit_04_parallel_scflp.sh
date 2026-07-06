@@ -10,7 +10,7 @@ cd "${REPO_ROOT}"
 # Define variables to make the script more readable and maintainable
 
 ROUND_VERSION="04_parallel_scflp"
-ROUND_DESCRIPTION="Parallel SCFLP, synthetic 100x200, separable oracle"
+ROUND_DESCRIPTION="Parallel SCFLP, generated 100x200 with original stochastic generator, separable oracle"
 EXPERIMENT_VERSION="1"
 HOUR="02"
 TIME_LIMIT="1800"
@@ -60,8 +60,9 @@ cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
 EOF
 
 scflp_instances=(
-    "synthetic-f100-c200-s256-1" "synthetic-f100-c200-s256-2" "synthetic-f100-c200-s256-3" "synthetic-f100-c200-s256-4" "synthetic-f100-c200-s256-5"
-    "synthetic-f100-c200-s256-6" "synthetic-f100-c200-s256-7" "synthetic-f100-c200-s256-8" "synthetic-f100-c200-s256-9" "synthetic-f100-c200-s256-10"
+    "f100-c200-s256-r5-1" "f100-c200-s256-r5-2" "f100-c200-s256-r5-3" "f100-c200-s256-r5-4" "f100-c200-s256-r5-5"
+    "f100-c200-s512-r5-1" "f100-c200-s512-r5-2" "f100-c200-s512-r5-3" "f100-c200-s512-r5-4" "f100-c200-s512-r5-5"
+    "f100-c200-s1024-r5-1" "f100-c200-s1024-r5-2" "f100-c200-s1024-r5-3" "f100-c200-s1024-r5-4" "f100-c200-s1024-r5-5"
 )
 
 julia_threads_list=(
@@ -98,4 +99,3 @@ for repeat in $(seq 1 "${REPEATS}"); do
         done
     done
 done
-

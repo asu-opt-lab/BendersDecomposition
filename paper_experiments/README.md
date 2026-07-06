@@ -8,7 +8,7 @@ matrix, raw result files, and analysis scripts.
 
 - `Project.toml`: dedicated Julia environment.
 - `scripts/common.jl`: shared solver factories, instance lists, model builders,
-  synthetic SCFLP generator, baseline MIP models, and CSV logging.
+  SCFLP generator, baseline MIP models, and CSV logging.
 - `scripts/01_correctness.jl`: UFLP/CFLP `p1:p71` correctness against freshly
   solved extensive-form MIP baselines.
 - `scripts/02_oracle_ablation.jl`: fixed `BendersSeq`, varying oracle.
@@ -26,11 +26,15 @@ matrix, raw result files, and analysis scripts.
 - Runtime / ablation:
   - UFLP: `ga250a-1:5`, `ga250b-1:5`
   - CFLP: `T200x200_5_1:5`, `T200x200_10_1:5`
-  - SCFLP: reproducible synthetic `100 facilities x 200 customers`, 10
-    instances, default 256 scenarios.
+  - SCFLP: generated `100 facilities x 200 customers`, 15 instances:
+    `f100-c200-s256-r5-1:5`, `f100-c200-s512-r5-1:5`, and
+    `f100-c200-s1024-r5-1:5`.
 
 The packaged artifacts do not currently contain `f100-c200-*` SCFLP files, so
-`scripts/common.jl` generates deterministic `SCFLPData` instances.
+`scripts/common.jl` generates deterministic `SCFLPData` instances using the
+original stochastic CFLP generator logic. The current `SCFLPData` type does not
+store scenario probabilities, so the uniform `prob_scenarios` vector is not
+written into the data object.
 
 ## Commands
 

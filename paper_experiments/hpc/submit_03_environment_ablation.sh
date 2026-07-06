@@ -69,8 +69,9 @@ cflp_instances=(
 )
 
 scflp_instances=(
-    "synthetic-f100-c200-s256-1" "synthetic-f100-c200-s256-2" "synthetic-f100-c200-s256-3" "synthetic-f100-c200-s256-4" "synthetic-f100-c200-s256-5"
-    "synthetic-f100-c200-s256-6" "synthetic-f100-c200-s256-7" "synthetic-f100-c200-s256-8" "synthetic-f100-c200-s256-9" "synthetic-f100-c200-s256-10"
+    "f100-c200-s256-r5-1" "f100-c200-s256-r5-2" "f100-c200-s256-r5-3" "f100-c200-s256-r5-4" "f100-c200-s256-r5-5"
+    "f100-c200-s512-r5-1" "f100-c200-s512-r5-2" "f100-c200-s512-r5-3" "f100-c200-s512-r5-4" "f100-c200-s512-r5-5"
+    "f100-c200-s1024-r5-1" "f100-c200-s1024-r5-2" "f100-c200-s1024-r5-3" "f100-c200-s1024-r5-4" "f100-c200-s1024-r5-5"
 )
 
 for repeat in $(seq 1 "${REPEATS}"); do
