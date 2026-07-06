@@ -69,7 +69,7 @@ scflp_instances=(
 )
 
 julia_threads_list=(
-    "1" "2" "4" "8"
+    "1" "2" "4" "8" "16"
 )
 
 for repeat in $(seq 1 "${REPEATS}"); do

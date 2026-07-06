@@ -60,6 +60,7 @@ julia --threads=1 --project=paper_experiments paper_experiments/scripts/04_paral
 julia --threads=2 --project=paper_experiments paper_experiments/scripts/04_parallel_scflp.jl
 julia --threads=4 --project=paper_experiments paper_experiments/scripts/04_parallel_scflp.jl
 julia --threads=8 --project=paper_experiments paper_experiments/scripts/04_parallel_scflp.jl
+julia --threads=16 --project=paper_experiments paper_experiments/scripts/04_parallel_scflp.jl
 ```
 
 `04_parallel_scflp.jl` defaults to `--env callback`, which uses `BendersBnB`.

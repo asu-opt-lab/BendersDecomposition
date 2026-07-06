@@ -11,7 +11,7 @@ SOLVER_THREADS="${SOLVER_THREADS:-1}"
 REPEATS="${REPEATS:-3}"
 ORACLE="${ORACLE:-cfl_knapsack}"
 ENV_NAME="${ENV_NAME:-callback}"
-THREADS_LIST="${THREADS_LIST:-1 2 4 8}"
+THREADS_LIST="${THREADS_LIST:-1 2 4 8 16}"
 
 for JULIA_THREADS in $THREADS_LIST; do
   "$JULIA_BIN" --threads="$JULIA_THREADS" --project="$PROJECT" "$PROJECT/scripts/04_parallel_scflp.jl" \
