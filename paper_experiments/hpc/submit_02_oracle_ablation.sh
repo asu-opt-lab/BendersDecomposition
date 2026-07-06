@@ -20,7 +20,7 @@ EXPERIMENT_DESCRIPTION="${HOUR} hr, repeats = ${REPEATS}, BendersSeq fixed"
 
 FILE_NAME="02_oracle_ablation.jl"
 SHELL_FILE_NAME="submit_02_oracle_ablation.sh"
-THREADS=1
+THREADS=7
 MEM="100G"
 PARTITION="htc"
 QOS="grp_gbyeon"
@@ -89,6 +89,7 @@ for repeat in $(seq 1 "${REPEATS}"); do
             echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -c ${THREADS}" >> "${JOBSCRIPT_FILE}"
+            echo "#SBATCH --nodelist=pcc036,pcc037" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH --mem=${MEM}" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -t 0-${HOUR}:00:00" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -o ${ERR_OUT_DIR}/${JOB_NAME}.out%j" >> "${JOBSCRIPT_FILE}"

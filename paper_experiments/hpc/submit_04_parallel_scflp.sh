@@ -82,6 +82,7 @@ for repeat in $(seq 1 "${REPEATS}"); do
             echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -c ${JULIA_THREADS}" >> "${JOBSCRIPT_FILE}"
+            echo "#SBATCH --nodelist=pcc036,pcc037" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH --mem=${MEM}" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -t 0-${HOUR}:00:00" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -o ${ERR_OUT_DIR}/${JOB_NAME}.out%j" >> "${JOBSCRIPT_FILE}"

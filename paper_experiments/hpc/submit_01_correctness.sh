@@ -19,9 +19,9 @@ EXPERIMENT_DESCRIPTION="${HOUR} hr, p1-p71, baseline + Benders variants"
 
 FILE_NAME="01_correctness.jl"
 SHELL_FILE_NAME="submit_01_correctness.sh"
-THREADS=1
+THREADS=7
 MEM="40G"
-PARTITION="htc"
+PARTITION="general"
 QOS="grp_gbyeon"
 
 # Define variables to make the script more readable and maintainable
@@ -84,6 +84,7 @@ for problem in "${problems[@]}"; do
         echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
         echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
         echo "#SBATCH -c ${THREADS}" >> "${JOBSCRIPT_FILE}"
+        echo "#SBATCH --nodelist=pcc036,pcc037" >> "${JOBSCRIPT_FILE}"
         echo "#SBATCH --mem=${MEM}" >> "${JOBSCRIPT_FILE}"
 
         echo "#SBATCH -t 0-${HOUR}:00:00" >> "${JOBSCRIPT_FILE}"

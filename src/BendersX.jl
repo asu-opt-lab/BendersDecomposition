@@ -44,26 +44,26 @@ export RandomFractional, MostFractional, LargestFractional
 export NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
 
 # Public extension interfaces
-public AbstractBendersEnv, AbstractBendersSeq, AbstractBendersBnB
-public AbstractMaster
-public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, AbstractDisjunctiveOracle, AbstractSplitOracle
-public AbstractRootNodePreprocessing
-public AbstractDisjunctiveNormalization
-public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
-public generate_cuts, add_normalization_constraint!, update_dcglp_upper_bound_and_gap!
-public disjunctive_cut_normalization_value
-public callback_node_count, callback_node_depth
+export AbstractBendersEnv, AbstractBendersSeq, AbstractBendersBnB
+export AbstractMaster
+export AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, AbstractDisjunctiveOracle, AbstractSplitOracle
+export AbstractRootNodePreprocessing
+export AbstractDisjunctiveNormalization
+export SplitIndexSelectionRule, DisjunctiveCutsAppendRule
+export generate_cuts, add_normalization_constraint!, update_dcglp_upper_bound_and_gap!
+export disjunctive_cut_normalization_value
+export callback_node_count, callback_node_depth
 export set_parameter!
 export set_core_point!
 export update_master_model!, update_sub_model!
 
 # Public but not auto-imported advanced utilities and support types
-public Hyperplane, aggregate, evaluate_violation, select_top_fraction
-public hyperplanes_to_expression, add_constraints
-public copy_variables!, var_from_tuple, transfer_scaled_linear_rows_and_bounds_with_types!
-public infeasibility_report
-public TimeLimitException, UnexpectedModelStatusException, UndefError
-public AlgorithmException, UnsupportedModelException
+export Hyperplane, aggregate, evaluate_violation, select_top_fraction
+export hyperplanes_to_expression, add_constraints
+export copy_variables!, var_from_tuple, transfer_scaled_linear_rows_and_bounds_with_types!
+export infeasibility_report
+export TimeLimitException, UnexpectedModelStatusException, UndefError
+export AlgorithmException, UnsupportedModelException
 
 # Problem-specific helpers available via `using BendersX`
 export CFLPData, UFLPData, SCFLPData, SNIPData
