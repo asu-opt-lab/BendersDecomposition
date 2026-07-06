@@ -18,6 +18,7 @@ GAP_TOLERANCE="1e-4"
 REPEATS=3
 ORACLE="cfl_knapsack"
 ENV_NAME="callback"
+SOLVER="gurobi"
 EXPERIMENT_DESCRIPTION="${HOUR} hr, repeats = ${REPEATS}, env = ${ENV_NAME}, oracle = ${ORACLE}"
 
 FILE_NAME="04_parallel_scflp.jl"
@@ -59,13 +60,14 @@ cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
 - **Repeats**: ${REPEATS}
 - **Environment**: ${ENV_NAME}
 - **Oracle**: ${ORACLE}
+- **Solver**: ${SOLVER}
 - **Solver Threads**: ${SOLVER_THREADS}
 EOF
 
 scflp_instances=(
+    "f50-c100-s128-r5-1" "f50-c100-s128-r5-2" "f50-c100-s128-r5-3" "f50-c100-s128-r5-4" "f50-c100-s128-r5-5"
     "f50-c100-s256-r5-1" "f50-c100-s256-r5-2" "f50-c100-s256-r5-3" "f50-c100-s256-r5-4" "f50-c100-s256-r5-5"
     "f50-c100-s512-r5-1" "f50-c100-s512-r5-2" "f50-c100-s512-r5-3" "f50-c100-s512-r5-4" "f50-c100-s512-r5-5"
-    "f50-c100-s1024-r5-1" "f50-c100-s1024-r5-2" "f50-c100-s1024-r5-3" "f50-c100-s1024-r5-4" "f50-c100-s1024-r5-5"
 )
 
 julia_threads_list=(
@@ -96,7 +98,7 @@ for repeat in $(seq 1 "${REPEATS}"); do
             echo "module load cplex" >> "${JOBSCRIPT_FILE}"
             echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
             echo "cd ${REPO_ROOT}" >> "${JOBSCRIPT_FILE}"
-            echo "julia --threads=${JULIA_THREADS} --project=paper_experiments paper_experiments/scripts/${FILE_NAME} --output_dir=${JOB_OUTPUT_DIR} --time_limit=${TIME_LIMIT} --gap_tolerance=${GAP_TOLERANCE} --solver_threads=${SOLVER_THREADS} --repeats=${REPEATS} --repeat_index=${repeat} --instance=${instance} --oracle=${ORACLE} --env=${ENV_NAME}" >> "${JOBSCRIPT_FILE}"
+            echo "julia --threads=${JULIA_THREADS} --project=paper_experiments paper_experiments/scripts/${FILE_NAME} --output_dir=${JOB_OUTPUT_DIR} --time_limit=${TIME_LIMIT} --gap_tolerance=${GAP_TOLERANCE} --solver_threads=${SOLVER_THREADS} --solver=${SOLVER} --repeats=${REPEATS} --repeat_index=${repeat} --instance=${instance} --oracle=${ORACLE} --env=${ENV_NAME}" >> "${JOBSCRIPT_FILE}"
             sbatch "${JOBSCRIPT_FILE}"
             rm "${JOBSCRIPT_FILE}"
         done

@@ -3,6 +3,7 @@ using BendersX
 using CPLEX
 using CSV
 using DataFrames
+using Gurobi
 using JuMP
 using Random
 using Statistics
@@ -16,35 +17,70 @@ const CFLP_CORRECTNESS_INSTANCES = ["p$(i)" for i in 1:71]
 const UFLP_250_INSTANCES = vcat(["ga250c-$(i)" for i in 1:5], ["gs250c-$(i)" for i in 1:5])
 const CFLP_200_INSTANCES = vcat(["T200x200_5_$(i)" for i in 1:5], ["T200x200_10_$(i)" for i in 1:5])
 const SCFLP_50X100_INSTANCES = vcat(
+    ["f50-c100-s128-r5-$(i)" for i in 1:5],
     ["f50-c100-s256-r5-$(i)" for i in 1:5],
     ["f50-c100-s512-r5-$(i)" for i in 1:5],
-    ["f50-c100-s1024-r5-$(i)" for i in 1:5],
 )
 
 ensure_dir(path::AbstractString) = (isdir(path) || mkpath(path); path)
 
-function cplex_lp_optimizer(; threads::Int = 1, silent::Bool = true)
-    return optimizer_with_attributes(
-        CPLEX.Optimizer,
-        "CPXPARAM_Threads" => threads,
-        "CPX_PARAM_EPRHS" => 1e-9,
-        "CPX_PARAM_EPOPT" => 1e-9,
-        "CPX_PARAM_NUMERICALEMPHASIS" => 1,
-        MOI.Silent() => silent,
-    )
+const DEFAULT_SOLVER = "gurobi"
+const SUPPORTED_SOLVERS = ("gurobi", "cplex")
+
+function normalize_solver_name(solver_name::AbstractString)
+    solver = lowercase(strip(solver_name))
+    solver in SUPPORTED_SOLVERS || error("Unsupported solver $(solver_name). Expected one of: $(join(SUPPORTED_SOLVERS, ", ")).")
+    return solver
 end
 
-function cplex_mip_optimizer(; threads::Int = 1, silent::Bool = true, mip_gap::Float64 = 1e-6)
-    return optimizer_with_attributes(
-        CPLEX.Optimizer,
-        "CPXPARAM_Threads" => threads,
-        "CPX_PARAM_EPINT" => 1e-9,
-        "CPX_PARAM_EPRHS" => 1e-9,
-        "CPX_PARAM_EPGAP" => mip_gap,
-        "CPX_PARAM_EPOPT" => 1e-9,
-        "CPX_PARAM_NUMERICALEMPHASIS" => 1,
-        MOI.Silent() => silent,
-    )
+function lp_optimizer(solver_name::AbstractString; threads::Int = 1, silent::Bool = true)
+    solver = normalize_solver_name(solver_name)
+    if solver == "gurobi"
+        return optimizer_with_attributes(
+            Gurobi.Optimizer,
+            "Threads" => threads,
+            "FeasibilityTol" => 1e-9,
+            "OptimalityTol" => 1e-9,
+            "NumericFocus" => 1,
+            MOI.Silent() => silent,
+        )
+    elseif solver == "cplex"
+        return optimizer_with_attributes(
+            CPLEX.Optimizer,
+            "CPXPARAM_Threads" => threads,
+            "CPX_PARAM_EPRHS" => 1e-9,
+            "CPX_PARAM_EPOPT" => 1e-9,
+            "CPX_PARAM_NUMERICALEMPHASIS" => 1,
+            MOI.Silent() => silent,
+        )
+    end
+end
+
+function mip_optimizer(solver_name::AbstractString; threads::Int = 1, silent::Bool = true, mip_gap::Float64 = 1e-6)
+    solver = normalize_solver_name(solver_name)
+    if solver == "gurobi"
+        return optimizer_with_attributes(
+            Gurobi.Optimizer,
+            "Threads" => threads,
+            "IntFeasTol" => 1e-9,
+            "FeasibilityTol" => 1e-9,
+            "OptimalityTol" => 1e-9,
+            "MIPGap" => mip_gap,
+            "NumericFocus" => 1,
+            MOI.Silent() => silent,
+        )
+    elseif solver == "cplex"
+        return optimizer_with_attributes(
+            CPLEX.Optimizer,
+            "CPXPARAM_Threads" => threads,
+            "CPX_PARAM_EPINT" => 1e-9,
+            "CPX_PARAM_EPRHS" => 1e-9,
+            "CPX_PARAM_EPGAP" => mip_gap,
+            "CPX_PARAM_EPOPT" => 1e-9,
+            "CPX_PARAM_NUMERICALEMPHASIS" => 1,
+            MOI.Silent() => silent,
+        )
+    end
 end
 
 function update_uflp_knapsack_master!(model::Model, data::UFLPData)
@@ -105,7 +141,7 @@ end
 
 function load_generated_scflp_instance(instance::AbstractString)
     m = match(r"^f(\d+)-c(\d+)-s(\d+)-r(\d+)-(\d+)$", instance)
-    m === nothing && error("Cannot parse SCFLP instance name $(instance). Expected f50-c100-s256-r5-1.")
+    m === nothing && error("Cannot parse SCFLP instance name $(instance). Expected f50-c100-s128-r5-1.")
     n_facilities = parse(Int, m.captures[1])
     n_customers = parse(Int, m.captures[2])
     n_scenarios = parse(Int, m.captures[3])
@@ -270,13 +306,15 @@ function run_benders_case(;
     time_limit::Float64,
     gap_tolerance::Float64,
     solver_threads::Int,
+    solver_name::AbstractString,
     summary_file::AbstractString,
     trace_file::AbstractString,
     baseline_obj::Float64 = NaN,
     verbose::Bool = false,
 )
-    master_optimizer = cplex_mip_optimizer(; threads = solver_threads, silent = !verbose)
-    oracle_optimizer = cplex_lp_optimizer(; threads = solver_threads, silent = !verbose)
+    solver = normalize_solver_name(solver_name)
+    master_optimizer = mip_optimizer(solver; threads = solver_threads, silent = !verbose)
+    oracle_optimizer = lp_optimizer(solver; threads = solver_threads, silent = !verbose)
     master = build_master_for_oracle(data, oracle_name; optimizer = master_optimizer)
     oracle = build_oracle_for_case(data, master, oracle_name; optimizer = oracle_optimizer)
     env = build_env_for_case(master, oracle, env_name, data; time_limit = time_limit, gap_tolerance = gap_tolerance, verbose = verbose)
@@ -315,6 +353,7 @@ function run_benders_case(;
         env = env_name,
         oracle = oracle_name,
         repeat = repeat,
+        solver = solver,
         julia_threads = Threads.nthreads(),
         solver_threads = solver_threads,
         time_limit = time_limit,
@@ -347,8 +386,9 @@ function run_benders_case(;
     return row
 end
 
-function solve_extensive_mip(problem::AbstractString, data; time_limit::Float64, solver_threads::Int, verbose::Bool = false)
-    model = Model(cplex_mip_optimizer(; threads = solver_threads, silent = !verbose))
+function solve_extensive_mip(problem::AbstractString, data; time_limit::Float64, solver_threads::Int, solver_name::AbstractString, verbose::Bool = false)
+    solver = normalize_solver_name(solver_name)
+    model = Model(mip_optimizer(solver; threads = solver_threads, silent = !verbose))
     set_time_limit_sec(model, time_limit)
 
     if data isa UFLPData
@@ -402,10 +442,12 @@ function log_baseline_case(;
     repeat::Int,
     time_limit::Float64,
     solver_threads::Int,
+    solver_name::AbstractString,
     summary_file::AbstractString,
     verbose::Bool = false,
 )
-    result = solve_extensive_mip(problem, data; time_limit = time_limit, solver_threads = solver_threads, verbose = verbose)
+    solver = normalize_solver_name(solver_name)
+    result = solve_extensive_mip(problem, data; time_limit = time_limit, solver_threads = solver_threads, solver_name = solver, verbose = verbose)
     dims = size_metadata(data)
     row = (
         experiment = experiment,
@@ -419,6 +461,7 @@ function log_baseline_case(;
         env = "extensive_form",
         oracle = "mip",
         repeat = repeat,
+        solver = solver,
         julia_threads = Threads.nthreads(),
         solver_threads = solver_threads,
         time_limit = time_limit,

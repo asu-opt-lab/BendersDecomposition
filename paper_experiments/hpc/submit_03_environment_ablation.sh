@@ -21,6 +21,7 @@ EXPERIMENT_DESCRIPTION="${HOUR} hr, repeats = ${REPEATS}, UFLP seq vs seq_inout 
 FILE_NAME="03_environment_ablation.jl"
 SHELL_FILE_NAME="submit_03_environment_ablation.sh"
 THREADS=7
+SOLVER="gurobi"
 MEM="100G"
 PARTITION="general"
 QOS="grp_gbyeon"
@@ -57,6 +58,7 @@ cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
 - **Repeats**: ${REPEATS}
 - **Problem**: UFLP
 - **Environments**: seq, seq_inout, callback
+- **Solver**: ${SOLVER}
 - **Threads**: ${THREADS}
 EOF
 
@@ -89,7 +91,7 @@ for repeat in $(seq 1 "${REPEATS}"); do
             echo "module load cplex" >> "${JOBSCRIPT_FILE}"
             echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
             echo "cd ${REPO_ROOT}" >> "${JOBSCRIPT_FILE}"
-            echo "julia --project=paper_experiments paper_experiments/scripts/${FILE_NAME} --output_dir=${JOB_OUTPUT_DIR} --time_limit=${TIME_LIMIT} --gap_tolerance=${GAP_TOLERANCE} --solver_threads=${THREADS} --repeats=${REPEATS} --repeat_index=${repeat} --problem=uflp --instance=${instance} --env=${env_name}" >> "${JOBSCRIPT_FILE}"
+            echo "julia --project=paper_experiments paper_experiments/scripts/${FILE_NAME} --output_dir=${JOB_OUTPUT_DIR} --time_limit=${TIME_LIMIT} --gap_tolerance=${GAP_TOLERANCE} --solver_threads=${THREADS} --solver=${SOLVER} --repeats=${REPEATS} --repeat_index=${repeat} --problem=uflp --instance=${instance} --env=${env_name}" >> "${JOBSCRIPT_FILE}"
             sbatch "${JOBSCRIPT_FILE}"
             rm "${JOBSCRIPT_FILE}"
         done

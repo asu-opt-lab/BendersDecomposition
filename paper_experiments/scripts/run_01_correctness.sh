@@ -8,10 +8,11 @@ OUTPUT_DIR="${OUTPUT_DIR:-$PROJECT/results/raw}"
 TIME_LIMIT="${TIME_LIMIT:-600}"
 GAP_TOLERANCE="${GAP_TOLERANCE:-1e-6}"
 SOLVER_THREADS="${SOLVER_THREADS:-1}"
+SOLVER="${SOLVER:-gurobi}"
 
 "$JULIA_BIN" --project="$PROJECT" "$PROJECT/scripts/01_correctness.jl" \
   --output_dir "$OUTPUT_DIR" \
   --time_limit "$TIME_LIMIT" \
   --gap_tolerance "$GAP_TOLERANCE" \
-  --solver_threads "$SOLVER_THREADS"
-
+  --solver_threads "$SOLVER_THREADS" \
+  --solver "$SOLVER"

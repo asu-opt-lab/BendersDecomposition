@@ -20,6 +20,7 @@ EXPERIMENT_DESCRIPTION="${HOUR} hr, p1-p71, baseline + Benders variants"
 FILE_NAME="01_correctness.jl"
 SHELL_FILE_NAME="submit_01_correctness.sh"
 THREADS=7
+SOLVER="gurobi"
 MEM="40G"
 PARTITION="general"
 QOS="grp_gbyeon"
@@ -53,6 +54,7 @@ cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
 - **Date**: $(date "+%Y-%m-%d %H:%M:%S")
 - **Time Limit**: ${TIME_LIMIT}
 - **Benders Gap Tolerance**: ${GAP_TOLERANCE}
+- **Solver**: ${SOLVER}
 - **Threads**: ${THREADS}
 EOF
 
@@ -99,11 +101,10 @@ for problem in "${problems[@]}"; do
 
         # Run Julia script with algorithm parameters
         echo "cd ${REPO_ROOT}" >> "${JOBSCRIPT_FILE}"
-        echo "julia --project=paper_experiments paper_experiments/scripts/${FILE_NAME} --output_dir=${JOB_OUTPUT_DIR} --time_limit=${TIME_LIMIT} --gap_tolerance=${GAP_TOLERANCE} --solver_threads=${THREADS} --problem=${problem} --instance=${instance}" >> "${JOBSCRIPT_FILE}"
+        echo "julia --project=paper_experiments paper_experiments/scripts/${FILE_NAME} --output_dir=${JOB_OUTPUT_DIR} --time_limit=${TIME_LIMIT} --gap_tolerance=${GAP_TOLERANCE} --solver_threads=${THREADS} --solver=${SOLVER} --problem=${problem} --instance=${instance}" >> "${JOBSCRIPT_FILE}"
 
         # Submit job
         sbatch "${JOBSCRIPT_FILE}"
         rm "${JOBSCRIPT_FILE}"
     done
 done
-

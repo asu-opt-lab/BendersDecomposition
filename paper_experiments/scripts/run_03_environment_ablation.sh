@@ -8,6 +8,7 @@ OUTPUT_DIR="${OUTPUT_DIR:-$PROJECT/results/raw}"
 TIME_LIMIT="${TIME_LIMIT:-1800}"
 GAP_TOLERANCE="${GAP_TOLERANCE:-1e-4}"
 SOLVER_THREADS="${SOLVER_THREADS:-1}"
+SOLVER="${SOLVER:-gurobi}"
 REPEATS="${REPEATS:-3}"
 
 "$JULIA_BIN" --project="$PROJECT" "$PROJECT/scripts/03_environment_ablation.jl" \
@@ -15,5 +16,5 @@ REPEATS="${REPEATS:-3}"
   --time_limit "$TIME_LIMIT" \
   --gap_tolerance "$GAP_TOLERANCE" \
   --solver_threads "$SOLVER_THREADS" \
+  --solver "$SOLVER" \
   --repeats "$REPEATS"
-

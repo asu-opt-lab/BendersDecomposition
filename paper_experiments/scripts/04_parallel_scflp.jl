@@ -17,6 +17,10 @@ function parse_commandline()
             help = "Keep this at 1 for parallel separation experiments."
             arg_type = Int
             default = 1
+        "--solver"
+            help = "MILP/LP solver backend: gurobi or cplex."
+            arg_type = String
+            default = DEFAULT_SOLVER
         "--repeats"
             arg_type = Int
             default = 3
@@ -64,6 +68,7 @@ function main()
                 time_limit = args["time_limit"],
                 gap_tolerance = args["gap_tolerance"],
                 solver_threads = args["solver_threads"],
+                solver_name = args["solver"],
                 summary_file = files.summary,
                 trace_file = files.trace,
                 verbose = args["verbose"],

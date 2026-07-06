@@ -16,6 +16,10 @@ function parse_commandline()
         "--solver_threads"
             arg_type = Int
             default = 1
+        "--solver"
+            help = "MILP/LP solver backend: gurobi or cplex."
+            arg_type = String
+            default = DEFAULT_SOLVER
         "--problem"
             help = "Optional filter: uflp_correctness, cflp_correctness, or all."
             arg_type = String
@@ -54,6 +58,7 @@ function main()
                 repeat = 1,
                 time_limit = args["time_limit"],
                 solver_threads = args["solver_threads"],
+                solver_name = args["solver"],
                 summary_file = files.summary,
                 verbose = args["verbose"],
             )
@@ -72,6 +77,7 @@ function main()
                     time_limit = args["time_limit"],
                     gap_tolerance = args["gap_tolerance"],
                     solver_threads = args["solver_threads"],
+                    solver_name = args["solver"],
                     summary_file = files.summary,
                     trace_file = files.trace,
                     baseline_obj = baseline.obj_value,

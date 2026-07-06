@@ -33,8 +33,8 @@ matrix, raw result files, and analysis scripts.
   - UFLP: `ga250c-1:5`, `gs250c-1:5`
 - Parallel scaling:
   - SCFLP: generated `50 facilities x 100 customers`, 15 instances:
-    `f50-c100-s256-r5-1:5`, `f50-c100-s512-r5-1:5`, and
-    `f50-c100-s1024-r5-1:5`.
+    `f50-c100-s128-r5-1:5`, `f50-c100-s256-r5-1:5`, and
+    `f50-c100-s512-r5-1:5`.
 
 The packaged artifacts do not currently contain `f50-c100-*` SCFLP files, so
 `scripts/common.jl` generates deterministic `SCFLPData` instances using the
@@ -49,6 +49,10 @@ Instantiate:
 ```bash
 julia --project=paper_experiments -e 'using Pkg; Pkg.instantiate()'
 ```
+
+The paper harness defaults to `--solver gurobi`. Use `--solver cplex` on the
+Julia scripts, or `SOLVER=cplex` with the shell wrappers, to switch back to
+CPLEX.
 
 Run experiments:
 
@@ -79,6 +83,7 @@ The wrappers accept environment-variable overrides, for example:
 
 ```bash
 TIME_LIMIT=60 REPEATS=1 paper_experiments/scripts/run_02_oracle_ablation.sh
+SOLVER=cplex TIME_LIMIT=60 REPEATS=1 paper_experiments/scripts/run_02_oracle_ablation.sh
 THREADS_LIST="1 4" REPEATS=1 paper_experiments/scripts/run_04_parallel_scflp.sh
 ENV_NAME=seq THREADS_LIST="1 4" REPEATS=1 paper_experiments/scripts/run_04_parallel_scflp.sh
 ```
