@@ -13,7 +13,7 @@ const PROCESSED_RESULTS_DIR = joinpath(PAPER_ROOT, "results", "processed")
 
 const UFLP_CORRECTNESS_INSTANCES = ["p$(i)" for i in 1:71]
 const CFLP_CORRECTNESS_INSTANCES = ["p$(i)" for i in 1:71]
-const UFLP_250_INSTANCES = vcat(["ga250a-$(i)" for i in 1:5], ["ga250b-$(i)" for i in 1:5])
+const UFLP_250_INSTANCES = vcat(["ga250c-$(i)" for i in 1:5], ["gs250c-$(i)" for i in 1:5])
 const CFLP_200_INSTANCES = vcat(["T200x200_5_$(i)" for i in 1:5], ["T200x200_10_$(i)" for i in 1:5])
 const SCFLP_50X100_INSTANCES = vcat(
     ["f50-c100-s256-r5-$(i)" for i in 1:5],

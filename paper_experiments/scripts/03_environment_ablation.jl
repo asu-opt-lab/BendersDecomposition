@@ -53,6 +53,12 @@ function main()
     for repeat in repeat_range
         for (problem, instances, oracle_name) in cases
             args["problem"] == "all" || args["problem"] == problem || continue
+            if args["instance"] != "all" && !(args["instance"] in instances)
+                error("Unknown $(problem) instance $(args["instance"]). Expected one of: $(join(instances, ", ")).")
+            end
+            if args["env"] != "all" && !(args["env"] in envs)
+                error("Unknown environment $(args["env"]). Expected one of: $(join(envs, ", ")).")
+            end
             selected_instances = args["instance"] == "all" ? instances : [args["instance"]]
             selected_envs = args["env"] == "all" ? envs : [args["env"]]
             for instance in instances

@@ -30,7 +30,7 @@ matrix, raw result files, and analysis scripts.
   - UFLP: `p1:p71`
   - CFLP: `p1:p71`
 - Environment ablation:
-  - UFLP: `ga250a-1:5`, `ga250b-1:5`
+  - UFLP: `ga250c-1:5`, `gs250c-1:5`
 - Parallel scaling:
   - SCFLP: generated `50 facilities x 100 customers`, 15 instances:
     `f50-c100-s256-r5-1:5`, `f50-c100-s512-r5-1:5`, and
