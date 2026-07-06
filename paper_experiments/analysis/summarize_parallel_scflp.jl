@@ -4,7 +4,7 @@ df = raw_csv("04_parallel_scflp_summary.csv")
 benders = filter(:config_type => ==("benders"), df)
 
 summary = combine(
-    groupby(benders, [:oracle, :n_scenarios, :julia_threads]),
+    groupby(benders, [:env, :oracle, :n_scenarios, :julia_threads]),
     :solved => sum_bool => :solved,
     :solved => length => :runs,
     :total_time => median_finite => :median_time,
@@ -14,7 +14,7 @@ summary = combine(
 
 summary.speedup = fill(NaN, nrow(summary))
 summary.efficiency = fill(NaN, nrow(summary))
-for sub in groupby(summary, [:oracle, :n_scenarios])
+for sub in groupby(summary, [:env, :oracle, :n_scenarios])
     t1_rows = filter(:julia_threads => ==(1), sub)
     isempty(t1_rows) && continue
     t1 = t1_rows.median_time[1]
@@ -25,4 +25,3 @@ for sub in groupby(summary, [:oracle, :n_scenarios])
 end
 
 write_processed("table_parallel_scflp.csv", summary)
-

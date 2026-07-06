@@ -11,9 +11,12 @@ matrix, raw result files, and analysis scripts.
   SCFLP generator, baseline MIP models, and CSV logging.
 - `scripts/01_correctness.jl`: UFLP/CFLP `p1:p71` correctness against freshly
   solved extensive-form MIP baselines.
-- `scripts/02_oracle_ablation.jl`: fixed `BendersSeq`, varying oracle.
-- `scripts/03_environment_ablation.jl`: fixed oracle, varying environment.
-- `scripts/04_parallel_scflp.jl`: SCFLP `100x200` separable-oracle scaling.
+- `scripts/02_oracle_ablation.jl`: UFLP/CFLP `p1:p71`, fixed `BendersSeq`,
+  varying oracle.
+- `scripts/03_environment_ablation.jl`: UFLP only, fixed oracle, varying
+  environment across `seq`, `seq_inout`, and `callback`.
+- `scripts/04_parallel_scflp.jl`: callback-based SCFLP `100x200`
+  separable-oracle scaling.
 - `results/raw/`: append-only run summaries and iteration traces.
 - `results/processed/`: table-ready summaries from `analysis/`.
 - `analysis/*.jl`: scripts that summarize raw results.
@@ -23,9 +26,12 @@ matrix, raw result files, and analysis scripts.
 - Correctness:
   - UFLP: `p1:p71`
   - CFLP: `p1:p71`
-- Runtime / ablation:
+- Oracle ablation:
+  - UFLP: `p1:p71`
+  - CFLP: `p1:p71`
+- Environment ablation:
   - UFLP: `ga250a-1:5`, `ga250b-1:5`
-  - CFLP: `T200x200_5_1:5`, `T200x200_10_1:5`
+- Parallel scaling:
   - SCFLP: generated `100 facilities x 200 customers`, 15 instances:
     `f100-c200-s256-r5-1:5`, `f100-c200-s512-r5-1:5`, and
     `f100-c200-s1024-r5-1:5`.
@@ -56,6 +62,9 @@ julia --threads=4 --project=paper_experiments paper_experiments/scripts/04_paral
 julia --threads=8 --project=paper_experiments paper_experiments/scripts/04_parallel_scflp.jl
 ```
 
+`04_parallel_scflp.jl` defaults to `--env callback`, which uses `BendersBnB`.
+Use `--env seq` to reproduce the old sequential environment run.
+
 Or use the shell wrappers:
 
 ```bash
@@ -70,6 +79,7 @@ The wrappers accept environment-variable overrides, for example:
 ```bash
 TIME_LIMIT=60 REPEATS=1 paper_experiments/scripts/run_02_oracle_ablation.sh
 THREADS_LIST="1 4" REPEATS=1 paper_experiments/scripts/run_04_parallel_scflp.sh
+ENV_NAME=seq THREADS_LIST="1 4" REPEATS=1 paper_experiments/scripts/run_04_parallel_scflp.sh
 ```
 
 ## Slurm / Supercomputer Submission

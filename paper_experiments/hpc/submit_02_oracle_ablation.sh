@@ -10,7 +10,7 @@ cd "${REPO_ROOT}"
 # Define variables to make the script more readable and maintainable
 
 ROUND_VERSION="02_oracle_ablation"
-ROUND_DESCRIPTION="Oracle ablation, BendersSeq, UFLP 250x250, CFLP 200x200, SCFLP 100x200"
+ROUND_DESCRIPTION="Oracle ablation, BendersSeq, UFLP/CFLP p1:p71"
 EXPERIMENT_VERSION="1"
 HOUR="02"
 TIME_LIMIT="1800"
@@ -55,29 +55,19 @@ cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
 - **Time Limit**: ${TIME_LIMIT}
 - **Benders Gap Tolerance**: ${GAP_TOLERANCE}
 - **Repeats**: ${REPEATS}
+- **Instances**: UFLP/CFLP p1:p71
 - **Threads**: ${THREADS}
 EOF
 
 # Define arrays of instance names
-uflp_instances=(
-    "ga250a-1" "ga250a-2" "ga250a-3" "ga250a-4" "ga250a-5"
-    "ga250b-1" "ga250b-2" "ga250b-3" "ga250b-4" "ga250b-5"
-)
-
-cflp_instances=(
-    "T200x200_5_1" "T200x200_5_2" "T200x200_5_3" "T200x200_5_4" "T200x200_5_5"
-    "T200x200_10_1" "T200x200_10_2" "T200x200_10_3" "T200x200_10_4" "T200x200_10_5"
-)
-
-scflp_instances=(
-    "f100-c200-s256-r5-1" "f100-c200-s256-r5-2" "f100-c200-s256-r5-3" "f100-c200-s256-r5-4" "f100-c200-s256-r5-5"
-    "f100-c200-s512-r5-1" "f100-c200-s512-r5-2" "f100-c200-s512-r5-3" "f100-c200-s512-r5-4" "f100-c200-s512-r5-5"
-    "f100-c200-s1024-r5-1" "f100-c200-s1024-r5-2" "f100-c200-s1024-r5-3" "f100-c200-s1024-r5-4" "f100-c200-s1024-r5-5"
-)
+p_instances=()
+for i in $(seq 1 71); do
+    p_instances+=("p${i}")
+done
 
 # Loop through the cases and create one job script for each problem-instance-oracle-repeat
 for repeat in $(seq 1 "${REPEATS}"); do
-    for instance in "${uflp_instances[@]}"; do
+    for instance in "${p_instances[@]}"; do
         for oracle in "classical" "unified" "pareto" "ufl_knapsack"; do
             JOB_NAME="uflp_${instance}_${oracle}_r${repeat}"
             JOBSCRIPT_FILE="${OUTPUT_DIR}/${JOB_NAME}.sh"
@@ -106,7 +96,7 @@ for repeat in $(seq 1 "${REPEATS}"); do
         done
     done
 
-    for instance in "${cflp_instances[@]}"; do
+    for instance in "${p_instances[@]}"; do
         for oracle in "classical" "unified" "pareto" "cfl_knapsack"; do
             JOB_NAME="cflp_${instance}_${oracle}_r${repeat}"
             JOBSCRIPT_FILE="${OUTPUT_DIR}/${JOB_NAME}.sh"
@@ -129,34 +119,6 @@ for repeat in $(seq 1 "${REPEATS}"); do
             echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
             echo "cd ${REPO_ROOT}" >> "${JOBSCRIPT_FILE}"
             echo "julia --project=paper_experiments paper_experiments/scripts/${FILE_NAME} --output_dir=${JOB_OUTPUT_DIR} --time_limit=${TIME_LIMIT} --gap_tolerance=${GAP_TOLERANCE} --solver_threads=${THREADS} --repeats=${REPEATS} --repeat_index=${repeat} --problem=cflp --instance=${instance} --oracle=${oracle}" >> "${JOBSCRIPT_FILE}"
-            sbatch "${JOBSCRIPT_FILE}"
-            rm "${JOBSCRIPT_FILE}"
-        done
-    done
-
-    for instance in "${scflp_instances[@]}"; do
-        for oracle in "classical" "unified" "pareto" "cfl_knapsack"; do
-            JOB_NAME="scflp_${instance}_${oracle}_r${repeat}"
-            JOBSCRIPT_FILE="${OUTPUT_DIR}/${JOB_NAME}.sh"
-            JOB_OUTPUT_DIR="${OUTPUT_DIR}/${JOB_NAME}"
-            mkdir -p "${JOB_OUTPUT_DIR}"
-
-            echo "#!/bin/bash" > "${JOBSCRIPT_FILE}"
-            echo "#SBATCH -p ${PARTITION}" >> "${JOBSCRIPT_FILE}"
-            echo "#SBATCH -q ${QOS}" >> "${JOBSCRIPT_FILE}"
-            echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
-            echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
-            echo "#SBATCH -c ${THREADS}" >> "${JOBSCRIPT_FILE}"
-            echo "#SBATCH --mem=${MEM}" >> "${JOBSCRIPT_FILE}"
-            echo "#SBATCH -t 0-${HOUR}:00:00" >> "${JOBSCRIPT_FILE}"
-            echo "#SBATCH -o ${ERR_OUT_DIR}/${JOB_NAME}.out%j" >> "${JOBSCRIPT_FILE}"
-            echo "#SBATCH -e ${ERR_OUT_DIR}/${JOB_NAME}.err%j" >> "${JOBSCRIPT_FILE}"
-            echo "module purge" >> "${JOBSCRIPT_FILE}"
-            echo "module load julia" >> "${JOBSCRIPT_FILE}"
-            echo "module load cplex" >> "${JOBSCRIPT_FILE}"
-            echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
-            echo "cd ${REPO_ROOT}" >> "${JOBSCRIPT_FILE}"
-            echo "julia --project=paper_experiments paper_experiments/scripts/${FILE_NAME} --output_dir=${JOB_OUTPUT_DIR} --time_limit=${TIME_LIMIT} --gap_tolerance=${GAP_TOLERANCE} --solver_threads=${THREADS} --repeats=${REPEATS} --repeat_index=${repeat} --problem=scflp --instance=${instance} --oracle=${oracle}" >> "${JOBSCRIPT_FILE}"
             sbatch "${JOBSCRIPT_FILE}"
             rm "${JOBSCRIPT_FILE}"
         done

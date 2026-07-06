@@ -250,6 +250,9 @@ function build_env_for_case(master, oracle, env_name::AbstractString, data; time
             λ = 0.1,
         )
         return BendersSeqInOut(master, oracle; param = param)
+    elseif env_name == "callback" || env_name == "bnb"
+        param = BendersBnBParam(; time_limit = time_limit, gap_tolerance = gap_tolerance, verbose = verbose)
+        return BendersBnB(master, oracle; param = param)
     else
         error("Unsupported environment $(env_name)")
     end
@@ -285,13 +288,18 @@ function run_benders_case(;
 
     status = status_string(env.termination_status)
     obj = isfinite(env.obj_value) ? env.obj_value : NaN
-    final_lb = hasproperty(log, :LB) ? safe_last(log.LB) : NaN
-    final_ub = hasproperty(log, :UB) ? safe_last(log.UB) : NaN
-    final_gap = hasproperty(log, :gap) ? safe_last(log.gap) : NaN
+    final_lb = hasproperty(log, :LB) ? safe_last(log.LB) : (hasproperty(log, :obj_bound) ? safe_last(log.obj_bound) : NaN)
+    final_ub = hasproperty(log, :UB) ? safe_last(log.UB) : (hasproperty(log, :obj_val) ? safe_last(log.obj_val) : NaN)
+    final_gap = hasproperty(log, :gap) ? safe_last(log.gap) : (hasproperty(log, :rel_gap) ? safe_last(log.rel_gap) : NaN)
     master_time = hasproperty(log, :master_time) ? safe_sum(log.master_time) : NaN
     oracle_time = hasproperty(log, :oracle_time) ? safe_sum(log.oracle_time) : NaN
-    total_iter_time = hasproperty(log, :total_time) ? safe_sum(log.total_time) : elapsed
-    oracle_share = total_iter_time > 0 ? oracle_time / total_iter_time : NaN
+    total_iter_time = hasproperty(log, :total_time) ? safe_sum(log.total_time) : (hasproperty(log, :time) ? safe_last(log.time) : elapsed)
+    oracle_share = isfinite(oracle_time) && total_iter_time > 0 ? oracle_time / total_iter_time : NaN
+    iterations = hasproperty(log, :node_count) ? safe_last(log.node_count) : nrow(log)
+    root_node_time = hasproperty(log, :root_node_time) ? safe_last(log.root_node_time) : NaN
+    node_count = hasproperty(log, :node_count) ? safe_last(log.node_count) : missing
+    n_lazy_cuts = hasproperty(log, :n_lazy_cuts) ? safe_last(log.n_lazy_cuts) : missing
+    n_user_cuts = hasproperty(log, :n_user_cuts) ? safe_last(log.n_user_cuts) : missing
     dims = size_metadata(data)
     error = isfinite(baseline_obj) && isfinite(obj) ? abs(obj - baseline_obj) : NaN
 
@@ -327,7 +335,11 @@ function run_benders_case(;
         master_time = master_time,
         oracle_time = oracle_time,
         oracle_share = oracle_share,
-        iterations = nrow(log),
+        iterations = iterations,
+        root_node_time = root_node_time,
+        node_count = node_count,
+        n_lazy_cuts = n_lazy_cuts,
+        n_user_cuts = n_user_cuts,
         baseline_obj = baseline_obj,
         obj_error = error,
     ))

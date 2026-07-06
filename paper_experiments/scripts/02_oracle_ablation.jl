@@ -24,7 +24,7 @@ function parse_commandline()
             arg_type = Int
             default = 0
         "--problem"
-            help = "Optional filter: uflp, cflp, scflp, or all."
+            help = "Optional filter: uflp, cflp, or all."
             arg_type = String
             default = "all"
         "--instance"
@@ -45,20 +45,19 @@ function main()
     args = parse_commandline()
     files = default_output_files("02_oracle_ablation", args["output_dir"])
     cases = [
-        ("uflp", UFLP_250_INSTANCES, ["classical", "unified", "pareto", "ufl_knapsack"]),
-        ("cflp", CFLP_200_INSTANCES, ["classical", "unified", "pareto", "cfl_knapsack"]),
-        ("scflp", SCFLP_100X200_INSTANCES, ["classical", "unified", "pareto", "cfl_knapsack"]),
+        ("uflp", "uflp_correctness", UFLP_CORRECTNESS_INSTANCES, ["classical", "unified", "pareto", "ufl_knapsack"]),
+        ("cflp", "cflp_correctness", CFLP_CORRECTNESS_INSTANCES, ["classical", "unified", "pareto", "cfl_knapsack"]),
     ]
 
     repeat_range = args["repeat_index"] == 0 ? (1:args["repeats"]) : (args["repeat_index"]:args["repeat_index"])
     for repeat in repeat_range
-        for (problem, instances, oracles) in cases
+        for (problem, data_problem, instances, oracles) in cases
             args["problem"] == "all" || args["problem"] == problem || continue
             selected_instances = args["instance"] == "all" ? instances : [args["instance"]]
             selected_oracles = args["oracle"] == "all" ? oracles : [args["oracle"]]
             for instance in instances
                 instance in selected_instances || continue
-                data, data_source = load_paper_instance(problem, instance)
+                data, data_source = load_paper_instance(data_problem, instance)
                 for oracle_name in selected_oracles
                     @info "oracle ablation" repeat problem instance oracle_name
                     run_benders_case(;

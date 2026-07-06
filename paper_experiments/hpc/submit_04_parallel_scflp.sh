@@ -17,7 +17,8 @@ TIME_LIMIT="1800"
 GAP_TOLERANCE="1e-4"
 REPEATS=3
 ORACLE="cfl_knapsack"
-EXPERIMENT_DESCRIPTION="${HOUR} hr, repeats = ${REPEATS}, oracle = ${ORACLE}"
+ENV_NAME="callback"
+EXPERIMENT_DESCRIPTION="${HOUR} hr, repeats = ${REPEATS}, env = ${ENV_NAME}, oracle = ${ORACLE}"
 
 FILE_NAME="04_parallel_scflp.jl"
 SHELL_FILE_NAME="submit_04_parallel_scflp.sh"
@@ -56,6 +57,8 @@ cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
 - **Time Limit**: ${TIME_LIMIT}
 - **Benders Gap Tolerance**: ${GAP_TOLERANCE}
 - **Repeats**: ${REPEATS}
+- **Environment**: ${ENV_NAME}
+- **Oracle**: ${ORACLE}
 - **Solver Threads**: ${SOLVER_THREADS}
 EOF
 
@@ -72,7 +75,7 @@ julia_threads_list=(
 for repeat in $(seq 1 "${REPEATS}"); do
     for instance in "${scflp_instances[@]}"; do
         for JULIA_THREADS in "${julia_threads_list[@]}"; do
-            JOB_NAME="scflp_${instance}_${ORACLE}_jt${JULIA_THREADS}_r${repeat}"
+            JOB_NAME="scflp_${instance}_${ENV_NAME}_${ORACLE}_jt${JULIA_THREADS}_r${repeat}"
             JOBSCRIPT_FILE="${OUTPUT_DIR}/${JOB_NAME}.sh"
             JOB_OUTPUT_DIR="${OUTPUT_DIR}/${JOB_NAME}"
             mkdir -p "${JOB_OUTPUT_DIR}"
@@ -93,7 +96,7 @@ for repeat in $(seq 1 "${REPEATS}"); do
             echo "module load cplex" >> "${JOBSCRIPT_FILE}"
             echo "module load gurobi" >> "${JOBSCRIPT_FILE}"
             echo "cd ${REPO_ROOT}" >> "${JOBSCRIPT_FILE}"
-            echo "julia --threads=${JULIA_THREADS} --project=paper_experiments paper_experiments/scripts/${FILE_NAME} --output_dir=${JOB_OUTPUT_DIR} --time_limit=${TIME_LIMIT} --gap_tolerance=${GAP_TOLERANCE} --solver_threads=${SOLVER_THREADS} --repeats=${REPEATS} --repeat_index=${repeat} --instance=${instance} --oracle=${ORACLE}" >> "${JOBSCRIPT_FILE}"
+            echo "julia --threads=${JULIA_THREADS} --project=paper_experiments paper_experiments/scripts/${FILE_NAME} --output_dir=${JOB_OUTPUT_DIR} --time_limit=${TIME_LIMIT} --gap_tolerance=${GAP_TOLERANCE} --solver_threads=${SOLVER_THREADS} --repeats=${REPEATS} --repeat_index=${repeat} --instance=${instance} --oracle=${ORACLE} --env=${ENV_NAME}" >> "${JOBSCRIPT_FILE}"
             sbatch "${JOBSCRIPT_FILE}"
             rm "${JOBSCRIPT_FILE}"
         done

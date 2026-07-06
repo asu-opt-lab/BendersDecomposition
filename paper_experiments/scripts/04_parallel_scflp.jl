@@ -10,7 +10,7 @@ function parse_commandline()
             arg_type = Float64
             default = 1800.0
         "--gap_tolerance"
-            help = "BendersSeq gap tolerance in percent."
+            help = "Gap tolerance passed to the selected environment."
             arg_type = Float64
             default = 1e-4
         "--solver_threads"
@@ -31,6 +31,10 @@ function parse_commandline()
         "--oracle"
             arg_type = String
             default = "cfl_knapsack"
+        "--env"
+            help = "Environment for the SCFLP scaling run: callback, bnb, seq, or seq_inout."
+            arg_type = String
+            default = "callback"
         "--verbose"
             action = :store_true
     end
@@ -47,14 +51,14 @@ function main()
     for repeat in repeat_range
         for instance in selected_instances
             data, data_source = load_paper_instance(problem, instance)
-            @info "parallel scflp" repeat instance Threads.nthreads() args["oracle"]
+            @info "parallel scflp" repeat instance Threads.nthreads() args["oracle"] args["env"]
             run_benders_case(;
                 experiment = "04_parallel_scflp",
                 problem = problem,
                 instance = instance,
                 data = data,
                 data_source = data_source,
-                env_name = "seq",
+                env_name = args["env"],
                 oracle_name = args["oracle"],
                 repeat = repeat,
                 time_limit = args["time_limit"],

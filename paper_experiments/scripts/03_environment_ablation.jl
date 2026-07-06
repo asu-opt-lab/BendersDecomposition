@@ -10,7 +10,7 @@ function parse_commandline()
             arg_type = Float64
             default = 1800.0
         "--gap_tolerance"
-            help = "Sequential environment gap tolerance in percent."
+            help = "Gap tolerance passed to the selected environment."
             arg_type = Float64
             default = 1e-4
         "--solver_threads"
@@ -24,7 +24,7 @@ function parse_commandline()
             arg_type = Int
             default = 0
         "--problem"
-            help = "Optional filter: uflp, cflp, scflp, or all."
+            help = "Optional filter: uflp or all."
             arg_type = String
             default = "all"
         "--instance"
@@ -32,7 +32,7 @@ function parse_commandline()
             arg_type = String
             default = "all"
         "--env"
-            help = "Optional environment filter: seq, seq_inout, or all."
+            help = "Optional environment filter: seq, seq_inout, callback, or all."
             arg_type = String
             default = "all"
         "--verbose"
@@ -46,10 +46,8 @@ function main()
     files = default_output_files("03_environment_ablation", args["output_dir"])
     cases = [
         ("uflp", UFLP_250_INSTANCES, "ufl_knapsack"),
-        ("cflp", CFLP_200_INSTANCES, "cfl_knapsack"),
-        ("scflp", SCFLP_100X200_INSTANCES, "cfl_knapsack"),
     ]
-    envs = ["seq", "seq_inout"]
+    envs = ["seq", "seq_inout", "callback"]
 
     repeat_range = args["repeat_index"] == 0 ? (1:args["repeats"]) : (args["repeat_index"]:args["repeat_index"])
     for repeat in repeat_range

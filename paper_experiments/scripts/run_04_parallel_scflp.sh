@@ -10,6 +10,7 @@ GAP_TOLERANCE="${GAP_TOLERANCE:-1e-4}"
 SOLVER_THREADS="${SOLVER_THREADS:-1}"
 REPEATS="${REPEATS:-3}"
 ORACLE="${ORACLE:-cfl_knapsack}"
+ENV_NAME="${ENV_NAME:-callback}"
 THREADS_LIST="${THREADS_LIST:-1 2 4 8}"
 
 for JULIA_THREADS in $THREADS_LIST; do
@@ -19,6 +20,6 @@ for JULIA_THREADS in $THREADS_LIST; do
     --gap_tolerance "$GAP_TOLERANCE" \
     --solver_threads "$SOLVER_THREADS" \
     --repeats "$REPEATS" \
-    --oracle "$ORACLE"
+    --oracle "$ORACLE" \
+    --env "$ENV_NAME"
 done
-
