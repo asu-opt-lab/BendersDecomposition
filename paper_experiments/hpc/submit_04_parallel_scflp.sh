@@ -24,7 +24,7 @@ FILE_NAME="04_parallel_scflp.jl"
 SHELL_FILE_NAME="submit_04_parallel_scflp.sh"
 SOLVER_THREADS=1
 MEM="100G"
-PARTITION="htc"
+PARTITION="general"
 QOS="grp_gbyeon"
 
 # Define variables to make the script more readable and maintainable
@@ -85,7 +85,7 @@ for repeat in $(seq 1 "${REPEATS}"); do
             echo "#SBATCH -q ${QOS}" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -N 1" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -n 1" >> "${JOBSCRIPT_FILE}"
-            echo "#SBATCH -c ${JULIA_THREADS}" >> "${JOBSCRIPT_FILE}"
+            echo "#SBATCH -c 56" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH --nodelist=pcc036,pcc037" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH --mem=${MEM}" >> "${JOBSCRIPT_FILE}"
             echo "#SBATCH -t 0-${HOUR}:00:00" >> "${JOBSCRIPT_FILE}"

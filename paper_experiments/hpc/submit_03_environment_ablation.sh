@@ -22,7 +22,7 @@ FILE_NAME="03_environment_ablation.jl"
 SHELL_FILE_NAME="submit_03_environment_ablation.sh"
 THREADS=7
 MEM="100G"
-PARTITION="htc"
+PARTITION="general"
 QOS="grp_gbyeon"
 
 # Define variables to make the script more readable and maintainable
@@ -61,8 +61,8 @@ cat > "${OUTPUT_DIR}/experiment_metadata.md" << EOF
 EOF
 
 uflp_instances=(
-    "ga250a-1" "ga250a-2" "ga250a-3" "ga250a-4" "ga250a-5"
-    "ga250b-1" "ga250b-2" "ga250b-3" "ga250b-4" "ga250b-5"
+    "ga250c-1" "ga250c-2" "ga250c-3" "ga250c-4" "ga250c-5"
+    "gs250c-1" "gs250c-2" "gs250c-3" "gs250c-4" "gs250c-5"
 )
 
 for repeat in $(seq 1 "${REPEATS}"); do
