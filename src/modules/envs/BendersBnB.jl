@@ -136,11 +136,11 @@ function solve!(env::BendersBnB)
         
         return df
     catch e
-        @warn e.msg
-        if typeof(e) <: TimeLimitException
+        @warn exception_message(e)
+        if exception_contains(e, TimeLimitException)
             env.termination_status = TimeLimit()
             env.obj_value = has_values(env.master.model) ? JuMP.objective_value(env.master.model) : Inf
-        elseif typeof(e) <: UnexpectedModelStatusException
+        elseif exception_contains(e, UnexpectedModelStatusException)
             env.termination_status = InfeasibleOrNumericalIssue()
         else
             rethrow()  

@@ -157,12 +157,12 @@ function solve!(env::BendersSeqInOut)
         
         return to_dataframe(log)
     catch e
-        if typeof(e) <: TimeLimitException
+        if exception_contains(e, TimeLimitException)
             env.termination_status = TimeLimit()
-            env.obj_value = log.iterations[end].LB
-        elseif typeof(e) <: UnexpectedModelStatusException
+            env.obj_value = last_lower_bound(log)
+        elseif exception_contains(e, UnexpectedModelStatusException)
             env.termination_status = InfeasibleOrNumericalIssue()
-            @warn e.msg
+            @warn exception_message(e)
         else
             rethrow()  
         end
