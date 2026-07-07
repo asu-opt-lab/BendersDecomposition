@@ -21,6 +21,7 @@ const SCFLP_50X100_INSTANCES = vcat(
     ["f50-c100-s256-r5-$(i)" for i in 1:5],
     ["f50-c100-s512-r5-$(i)" for i in 1:5],
 )
+const SCFLP_50X50_S512_INSTANCES = ["f50-c50-s512-r5-$(i)" for i in 1:5]
 
 ensure_dir(path::AbstractString) = (isdir(path) || mkpath(path); path)
 
@@ -311,11 +312,13 @@ function run_benders_case(;
     trace_file::AbstractString,
     baseline_obj::Float64 = NaN,
     verbose::Bool = false,
+    lp_relaxation::Bool = false,
 )
     solver = normalize_solver_name(solver_name)
     master_optimizer = mip_optimizer(solver; threads = solver_threads, silent = !verbose)
     oracle_optimizer = lp_optimizer(solver; threads = solver_threads, silent = !verbose)
     master = build_master_for_oracle(data, oracle_name; optimizer = master_optimizer)
+    lp_relaxation && relax_integrality(master.model)
     oracle = build_oracle_for_case(data, master, oracle_name; optimizer = oracle_optimizer)
     env = build_env_for_case(master, oracle, env_name, data; time_limit = time_limit, gap_tolerance = gap_tolerance, verbose = verbose)
 
@@ -343,7 +346,7 @@ function run_benders_case(;
 
     metadata = (
         experiment = experiment,
-        config_type = "benders",
+        config_type = lp_relaxation ? "benders_lp_relax" : "benders",
         problem = problem_label(problem),
         instance = instance,
         data_source = data_source,
