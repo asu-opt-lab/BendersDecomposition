@@ -95,8 +95,10 @@ set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
 # -----------------------------------------------------------------------------
 # typical oracle
 # -----------------------------------------------------------------------------
-typical_oracle = UFLKnapsackOracle(data)
-set_parameter!(typical_oracle, "add_only_violated_cuts", true)
+typical_oracle = UFLKnapsackOracle(
+    data;
+    param = UFLKnapsackOracleParam(add_only_violated_cuts = true),
+)
 
 # -----------------------------------------------------------------------------
 # root node preprocessing

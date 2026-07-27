@@ -101,8 +101,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     @info "solving UFLP p$i - fat knapsack oracle - seq..."
 
                     master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                    oracle = UFLKnapsackOracle(data)
-                    set_parameter!(oracle, "add_only_violated_cuts", true)
+                    oracle = UFLKnapsackOracle(
+                        data;
+                        param = UFLKnapsackOracleParam(add_only_violated_cuts = true),
+                    )
 
                     env = BendersSeq(master, oracle; param = benders_param)
                     log = solve!(env)
@@ -110,7 +112,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                 end
 
-                # To test slim version, users can use # set_parameter!(oracle, "slim", true)
+                # To test the slim version, pass UFLKnapsackOracleParam(slim = true) to the oracle constructor.
             end
 
             @testset "Pareto oracle" begin

@@ -19,7 +19,7 @@ using BendersX
         :GBCBoundType, :UpperBound, :LowerBound, :Fixed,
         :RandomFractional, :MostFractional, :LargestFractional,
         :NoDisjunctiveCuts, :AllDisjunctiveCuts, :DisjunctiveCutsSmallerIndices,
-        :set_parameter!, :set_core_point!,
+        :set_core_point!,
         :update_master_model!, :update_sub_model!,
         :CFLPData, :UFLPData, :SCFLPData, :SNIPData,
         :CFLKnapsackOracle, :CFLKnapsackOracleParam, :UFLKnapsackOracle, :UFLKnapsackOracleParam,
@@ -59,6 +59,8 @@ using BendersX
     ]
 
     visible_names = Set(names(BendersX))
+
+    @test !isdefined(BendersX, :set_parameter!)
 
     for sym in exported
         @test Base.isexported(BendersX, sym)

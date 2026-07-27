@@ -143,14 +143,22 @@ oracle_param = SplitOracleParam(
 master = Master(data; model = customize_master_knapsack!, optimizer = mip_optimizer)
 set_optimizer_attribute(master.model, "CPX_PARAM_BRDIR", 1)
 
-typical_oracles = (UFLKnapsackOracle(data), UFLKnapsackOracle(data))
-for oracle in typical_oracles
-    set_parameter!(oracle, "add_only_violated_cuts", true)
-end
+typical_oracles = (
+    UFLKnapsackOracle(
+        data;
+        param = UFLKnapsackOracleParam(add_only_violated_cuts = true),
+    ),
+    UFLKnapsackOracle(
+        data;
+        param = UFLKnapsackOracleParam(add_only_violated_cuts = true),
+    ),
+)
 disjunctive_oracle = SplitOracle(master, typical_oracles; param = oracle_param)
 
-lazy_oracle = UFLKnapsackOracle(data)
-set_parameter!(lazy_oracle, "add_only_violated_cuts", true)
+lazy_oracle = UFLKnapsackOracle(
+    data;
+    param = UFLKnapsackOracleParam(add_only_violated_cuts = true),
+)
 root_preprocessing = RootNodePreprocessing(
     lazy_oracle,
     BendersSeq,

@@ -57,40 +57,6 @@ struct BasicOracleParam <: AbstractOracleParam
     end
 end
 
-# Common utility functions for managing oracle parameters
-# To-Do: consider removing it
-"""
-    set_parameter!(oracle, param)
-
-Replace the parameter object stored on an oracle.
-
-The new parameter object must have the same concrete type as the oracle's
-existing `param` field.
-"""
-function set_parameter!(oracle::AbstractTypicalOracle, param::AbstractOracleParam)
-  if :param ∉ fieldnames(typeof(oracle))
-      throw(UndefError("$(typeof(oracle)) must have a field named `param`"))
-  elseif typeof(oracle.param) != typeof(param)
-      throw(ArgumentError("Type mismatch: expected parameter of type $(typeof(oracle.param)), got $(typeof(param))"))
-  else
-      oracle.param = param
-  end
-end
-
-"""
-    set_parameter!(oracle, param_name::String, value)
-
-Update a single field inside an oracle's parameter object by name.
-"""
-function set_parameter!(oracle::AbstractTypicalOracle, param::String, value::Any)
-  sym_param = Symbol(param)
-  if sym_param ∈ fieldnames(typeof(oracle.param))
-      setfield!(oracle.param, sym_param, value)
-  else
-      throw(ArgumentError("Parameter `$(param)` not found in `$(typeof(oracle.param))` for oracle of type `$(typeof(oracle))`"))
-  end
-end
-
 """
     _validate_lp_compatibility(model::Model)
 
