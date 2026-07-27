@@ -80,19 +80,6 @@ function check_lb_improvement!(state::AbstractLoopState, log::AbstractLoopLog; z
 end
 
 """
-Append constraints to a JuMP model using a symbolic name.
-If constraints with the name `constr_symbol` exist, append to them. Otherwise, create a new constraint group named `constr_symbol`, enforcing `0 .>= exprs`.
-"""
-function add_constraints(model::Model, constr_symbol::Symbol, exprs::Vector{AffExpr})
-    # add constraints in the form of 0 .>= expr
-    if haskey(model, constr_symbol)
-        append!(model[constr_symbol], @constraint(model, 0 .>= exprs))
-    else
-        model[constr_symbol] = @constraint(model, 0 .>= exprs)
-    end
-end
-
-"""
 Return the number of seconds remaining given a start time and time limit.
 Ensures the returned time is no smaller than `tol` (default 1e-4).
 """

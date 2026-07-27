@@ -14,8 +14,11 @@ function generate_cuts(oracle::AbstractDisjunctiveOracle, x_value::Vector{Float6
     throw(UndefError("update generate_cuts for $(typeof(oracle))"))
 end
 
-include("normalization/normalization.jl")
-include("oracleDisjunctiveSplit.jl")
-include("oracleDisjunctiveUtils.jl")
-include("normalization/normalizationLp.jl")
-include("normalization/normalizationReversePolar.jl")
+include("disjunctive/normalization/normalization.jl")
+include("disjunctive/splitOracle.jl")
+include("disjunctive/splitUtils.jl")
+include("disjunctive/cutUtils.jl")
+include("disjunctive/dcglpUtils.jl")
+include("disjunctive/loggingUtils.jl")
+include("disjunctive/normalization/lpDistance.jl")
+include("disjunctive/normalization/reversePolar.jl")
