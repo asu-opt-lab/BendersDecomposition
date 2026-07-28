@@ -79,7 +79,7 @@ function read_cflp_benchmark_data(path_to_raw_data)
     Users are responsible for loading their raw data into the 
     user-defined data structure (e.g., `CFLPData`). See, for example,
     `read_cflp_benchmark_data` in
-    `./src/BendersLibrary/src/problems/cflp/data_reader.jl`.
+    `src/problems/cflp/data_reader.jl`.
     """
 end
 
@@ -143,7 +143,7 @@ Users are responsible for loading and preprocessing raw instance data into their
 ```julia
 read_data(path_to_raw_data) -> MyData
 ```
-For an example specific to CFLP, see `read_cflp_benchmark_data` in `./src/BendersLibrary/src/problems/cflp/data_reader.jl`.
+For an example specific to CFLP, see `read_cflp_benchmark_data` in `src/problems/cflp/data_reader.jl`.
 
 ## [3. Modeling Interface](@id modeling-interface)
 *Defining Master and Subproblem Models in BendersX.jl*

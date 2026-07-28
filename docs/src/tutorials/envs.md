@@ -19,21 +19,33 @@ This section explains:
 ## Swapping Execution Environments
 
 All execution environments in BendersX are subtypes of
-[`AbstractBendersEnv`](@ref). The same master and oracle objects can therefore be
-reused across different environments.
+[`AbstractBendersEnv`](@ref). A master can generally be reused across
+environments, while oracle compatibility depends on the environment constructor.
 
-For example, switching from a sequential environment to a branch-and-bound
-environment only requires changing the environment constructor:
+For a typical oracle, switching from a sequential environment to a
+branch-and-bound environment only requires changing the environment constructor:
 
 ```julia
 # Standard sequential Benders
-env = BendersSeq(master, oracle)
+env = BendersSeq(master, typical_oracle)
 
 # Branch-and-bound Benders
-env = BendersBnB(master, oracle)
+env = BendersBnB(master, typical_oracle)
 ```
 
-The master and oracle objects remain unchanged.
+The two-argument `BendersBnB(master, oracle)` convenience constructor accepts
+only an [`AbstractTypicalOracle`](@ref). To use a disjunctive oracle in a
+branch-and-bound environment, configure it as a user callback and use the full
+constructor:
+
+```julia
+env = BendersBnB(
+    master,
+    NoRootNodePreprocessing(),
+    LazyCallback(typical_oracle),
+    UserCallback(disjunctive_oracle),
+)
+```
 
 ---
 
@@ -73,7 +85,7 @@ These environments are typically used for:
 Example:
 
 ```julia
-env = BendersBnB(master, oracle)
+env = BendersBnB(master, typical_oracle)
 ```
 
 ---

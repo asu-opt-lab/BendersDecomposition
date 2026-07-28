@@ -1,4 +1,3 @@
-
 abstract type AbstractDcglpState <: AbstractLoopState end
 abstract type AbstractDcglpLog <: AbstractLoopLog end
 abstract type AbstractDcglpParam <: AbstractLoopParam end

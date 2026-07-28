@@ -24,7 +24,7 @@ avoiding the need to repeatedly solve the entire master problem.
 master = Master(data; model = update_master_model!)
 oracle = ClassicalOracle(data, master; model = update_sub_model!)
 env = BendersBnB(master, oracle)  # Use default setting with no root node preprocessing and no user callback
-obj_value, solve_time = solve!(env)
+result = solve!(env)  # One-row DataFrame containing the solve statistics
 ```
 """
 mutable struct BendersBnB <: AbstractBendersBnB
@@ -56,7 +56,7 @@ end
 
 
 """
-    solve!(env::BendersBnB) -> Tuple{Float64, Float64}
+    solve!(env::BendersBnB) -> DataFrame
 
 Execute the branch-and-bound Benders decomposition algorithm.
 
@@ -67,9 +67,9 @@ cutting plane approach, and processes the results.
 - `env::BendersBnB`: The configured Benders Branch-and-Bound algorithm environment
 
 # Returns
-- `Tuple{Float64, Float64}`: A tuple containing (objective_value, elapsed_time)
-  - The objective value will be Inf if no feasible solution is found
-  - Elapsed time is measured in seconds
+- `DataFrame`: A one-row table containing the solve statistics, including the
+  objective value, objective bound, elapsed time, relative gap, and cut counts.
+  The objective value is `Inf` if no feasible solution is found.
 
 # Algorithm Steps
 1. Apply root node preprocessing if specified (relaxing integrality constraints)
