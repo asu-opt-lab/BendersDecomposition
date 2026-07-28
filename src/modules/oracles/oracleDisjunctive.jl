@@ -16,9 +16,9 @@ end
 
 include("disjunctive/normalization/normalization.jl")
 include("disjunctive/splitOracle.jl")
-include("disjunctive/splitUtils.jl")
-include("disjunctive/cutUtils.jl")
-include("disjunctive/dcglpUtils.jl")
-include("disjunctive/loggingUtils.jl")
+include("disjunctive/utilsSplit.jl")
+include("disjunctive/utilsCuts.jl")
+include("disjunctive/utilsDcglp.jl")
+include("disjunctive/utilsLogging.jl")
 include("disjunctive/normalization/lpDistance.jl")
 include("disjunctive/normalization/reversePolar.jl")
