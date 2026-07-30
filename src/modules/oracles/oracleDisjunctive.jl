@@ -16,7 +16,7 @@ end
 
 include("disjunctive/utilsLoopDcglp.jl")
 include("disjunctive/normalization/normalization.jl")
-include("disjunctive/splitOracle.jl")
+include("disjunctive/Oraclesplit.jl")
 include("disjunctive/utilsSplit.jl")
 include("disjunctive/utilsCuts.jl")
 include("disjunctive/utilsDcglp.jl")
