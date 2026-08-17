@@ -26,8 +26,8 @@ function parse_commandline()
             help = "Benders branch-and-bound time limit in seconds"
             arg_type = Float64
             default = 200.0
-        "--root_time_limit"
-            help = "Root preprocessing time limit in seconds"
+        "--preprocessing_time_limit"
+            help = "Preprocessing time limit in seconds"
             arg_type = Float64
             default = 100.0
         "--frequency"
@@ -45,7 +45,7 @@ Random.seed!(args["seed"])
 instance = args["instance"]
 output_dir = args["output_dir"]
 time_limit = args["time_limit"]
-root_time_limit = args["root_time_limit"]
+preprocessing_time_limit = args["preprocessing_time_limit"]
 frequency = args["frequency"]
 
 # -----------------------------------------------------------------------------
@@ -103,13 +103,13 @@ typical_oracles = [
 disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
 # -----------------------------------------------------------------------------
-# root node preprocessing
+# Benders preprocessing
 # -----------------------------------------------------------------------------
 lazy_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)
 
-root_seq_type = BendersSeqInOut
-root_param = BendersSeqInOutParam(
-    time_limit = root_time_limit,
+preprocessing_seq_type = BendersSeqInOut
+preprocessing_seq_param = BendersSeqInOutParam(
+    time_limit = preprocessing_time_limit,
     gap_tolerance = 1e-6,
     stabilizing_x = ones(data.n_facilities),
     α = 0.9,
@@ -117,8 +117,8 @@ root_param = BendersSeqInOutParam(
     verbose = true
 )
 
-# Create root node preprocessing with oracle
-root_preprocessing = RootNodePreprocessing(lazy_oracle, root_seq_type, root_param)
+# Create Benders preprocessing with oracle
+preprocessing = LPRelaxationPreprocessing(lazy_oracle, preprocessing_seq_type, preprocessing_seq_param)
 
 # -----------------------------------------------------------------------------
 # lazy callback
@@ -128,14 +128,14 @@ lazy_callback = LazyCallback(lazy_oracle)
 # -----------------------------------------------------------------------------
 # user callback
 # -----------------------------------------------------------------------------
-user_callback = UserCallback(disjunctive_oracle; params=UserCallbackParam(frequency=frequency))
+user_callback = UserCallback(disjunctive_oracle; param=UserCallbackParam(frequency=frequency))
 
 # -----------------------------------------------------------------------------
 # BendersBnB
 # -----------------------------------------------------------------------------
 env = BendersBnB(
     master,
-    root_preprocessing,
+    preprocessing,
     lazy_callback,
     user_callback;
     param = benders_param

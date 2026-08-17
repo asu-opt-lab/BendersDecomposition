@@ -26,8 +26,8 @@ function parse_commandline()
             help = "Total time limit in seconds"
             arg_type = Float64
             default = 14400.0
-        "--root_time_limit"
-            help = "Root preprocessing time limit in seconds"
+        "--preprocessing_time_limit"
+            help = "Preprocessing time limit in seconds"
             arg_type = Float64
             default = 300.0
     end
@@ -41,7 +41,7 @@ Random.seed!(args["seed"])
 instance = args["instance"]
 output_dir = args["output_dir"]
 time_limit = args["time_limit"]
-root_time_limit = args["root_time_limit"]
+preprocessing_time_limit = args["preprocessing_time_limit"]
 
 # -----------------------------------------------------------------------------
 # load problem data
@@ -64,7 +64,7 @@ typical_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, opti
 start_time = time()
 undo = relax_integrality(master.model)
 benders_inout_param = BendersSeqInOutParam(;
-            time_limit = root_time_limit,
+            time_limit = preprocessing_time_limit,
             gap_tolerance = 1e-6,
             verbose = true,
             stabilizing_x = ones(data.n_facilities),
@@ -83,7 +83,7 @@ println("Spend time: $spend_time_prev seconds")
 # -----------------------------------------------------------------------------
 # BendersBnB
 # -----------------------------------------------------------------------------
-root_preprocessing = NoRootNodePreprocessing()
+preprocessing = NoPreprocessing()
 lazy_callback = LazyCallback(typical_oracle)
 user_callback = NoUserCallback()
 
@@ -94,7 +94,7 @@ benders_param = BendersBnBParam(
 )
 env = BendersBnB(
     master,
-    root_preprocessing,
+    preprocessing,
     lazy_callback,
     user_callback;
     param = benders_param

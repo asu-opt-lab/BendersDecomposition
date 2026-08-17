@@ -41,7 +41,7 @@ constructor:
 ```julia
 env = BendersBnB(
     master,
-    NoRootNodePreprocessing(),
+    NoPreprocessing(),
     LazyCallback(typical_oracle),
     UserCallback(disjunctive_oracle),
 )
@@ -148,24 +148,23 @@ When finer control is needed, the environment can be constructed explicitly:
 
 ```julia
 # NoSeq: no root Benders run
-root_preprocessing = NoRootNodePreprocessing()
+preprocessing = NoPreprocessing()
 lazy_callback = LazyCallback(oracle)
 user_callback = NoUserCallback()
 
-env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+env = BendersBnB(master, preprocessing, lazy_callback, user_callback; param = benders_param)
 
 # Seq: sequential Benders at the root node
-root_preprocessing = RootNodePreprocessing(
-    oracle, BendersSeq,
-    BendersSeqParam(time_limit = 200.0, gap_tolerance = 1e-9),
+preprocessing = LPRelaxationPreprocessing(
+    oracle; param = BendersSeqParam(time_limit = 200.0, gap_tolerance = 1e-9),
 )
 
-env = BendersBnB(master, root_preprocessing, LazyCallback(oracle), NoUserCallback(); param = benders_param)
+env = BendersBnB(master, preprocessing, LazyCallback(oracle), NoUserCallback(); param = benders_param)
 
 # SeqInOut: stabilized In–Out Benders at the root node
-root_preprocessing = RootNodePreprocessing(
-    oracle, BendersSeqInOut,
-    BendersSeqInOutParam(
+preprocessing = LPRelaxationPreprocessing(
+    oracle; seq_env_type = BendersSeqInOut,
+    param = BendersSeqInOutParam(
         time_limit = 300.0,
         gap_tolerance = 1e-9,
         stabilizing_x = ones(data.n_facilities),
@@ -174,7 +173,7 @@ root_preprocessing = RootNodePreprocessing(
     ),
 )
 
-env = BendersBnB(master, root_preprocessing, LazyCallback(oracle), NoUserCallback(); param = benders_param)
+env = BendersBnB(master, preprocessing, LazyCallback(oracle), NoUserCallback(); param = benders_param)
 ```
 
 **When to use**
@@ -217,14 +216,14 @@ disjunctive_oracle = SplitOracle(
     lift = true,
     add_benders_cuts_to_master = 1,
 )
-user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = 1))
+user_callback = UserCallback(disjunctive_oracle; param = UserCallbackParam(frequency = 1))
 
 lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!)
 lazy_callback = LazyCallback(lazy_oracle)
 
 env = BendersBnB(
     master,
-    NoRootNodePreprocessing(),
+    NoPreprocessing(),
     lazy_callback,
     user_callback;
     param = benders_param,

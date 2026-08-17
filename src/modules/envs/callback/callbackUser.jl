@@ -2,12 +2,12 @@
 """
     UserCallbackParam <: AbstractUserCallbackParam
 
-Parameters for user callbacks in the branch-and-bound process.
+Parameters controlling the execution of a user-cut callback.
 
 # Fields
-- `frequency::Int = 50`: How often to process nodes (every N fractional nodes)
-- `node_count::Int = -1`: Maximum solver node count to process (-1 means no node-count limit)
-- `depth::Int = -1`: Maximum solver node depth to process (-1 means no depth limit)
+- `frequency::Int`: Number of fractional callback nodes between user-cut evaluations. Defaults to `50`.
+- `node_count::Int`: Maximum solver node count at which cuts may be generated. A value of `-1` disables this limit.
+- `depth::Int`: Maximum solver node depth at which cuts may be generated. A value of `-1` disables this limit.
 """
 Base.@kwdef struct UserCallbackParam <: AbstractUserCallbackParam
     frequency::Int = 50
@@ -15,65 +15,55 @@ Base.@kwdef struct UserCallbackParam <: AbstractUserCallbackParam
     depth::Int = -1
 end
 
-
 """
     UserCallback <: AbstractUserCallback
 
-Configuration for user cut callbacks in the branch-and-bound process.
-Used to dynamically add Benders cuts at fractional nodes.
+User-cut callback for Benders branch-and-bound.
+
+`UserCallback` evaluates the Benders oracle at selected fractional branch-and-bound nodes and submits the resulting cuts as user cuts.
 
 # Fields
-- `params::UserCallbackParam`: Parameters controlling when cuts are generated
-- `oracle::AbstractOracle`: Oracle used to generate Benders cuts
+- `param::UserCallbackParam`: Parameters controlling when the callback is evaluated.
+- `oracle::AbstractOracle`: Oracle used to generate Benders cuts.
 """
 struct UserCallback <: AbstractUserCallback
-    params::UserCallbackParam
+    param::UserCallbackParam
     oracle::AbstractOracle
     
-    function UserCallback(oracle::AbstractOracle; params=UserCallbackParam())
-        new(params, oracle)
+    function UserCallback(oracle::AbstractOracle; param=UserCallbackParam())
+        new(param, oracle)
     end
 end
 
 """
     user_callback(cb_data, master::Master, log::BendersBnBLog, callback::UserCallback)
 
-Callback function for adding user cuts in the branch-and-bound process.
-Generates and adds Benders cuts at fractional nodes based on the specified frequency and criteria.
+Generate and submit Benders user cuts at selected fractional branch-and-bound nodes.
 
-# Arguments
-- `cb_data`: Callback data from the solver
-- `master::Master`: The master module
-- `log::BendersBnBLog`: Log object to record statistics
-- `param::BendersBnBParam`: Parameters for the branch-and-bound process
-- `callback::UserCallback`: Configuration for the user callback with parameters controlling when cuts are generated
+The callback first applies the configured frequency, node-count, and depth filters. When a node is selected, it extracts the current fractional solution, evaluates the oracle, and submits the generated cuts as user cuts.
 
 # Notes
-- Solver-specific callback metadata such as node count and depth is resolved through
-  [`callback_node_count`](@ref) and [`callback_node_depth`](@ref).
-- CPLEX support for these accessors is provided by `BendersXCPLEXExt` when `CPLEX.jl`
-  is loaded.
-- If callback metadata is unsupported by the active solver, the fallback metadata accessor emits a warning and the corresponding threshold is not applied.
+Solver-specific callback metadata, such as node counts and depths, is obtained through [`callback_node_count`](@ref) and [`callback_node_depth`](@ref), respectively. When the active solver does not provide a particular metadata accessor, the corresponding filter is not applied.
 """
 
 function user_callback(cb_data, master::Master, log::BendersBnBLog, param::BendersBnBParam, callback::UserCallback)
     status = JuMP.callback_node_status(cb_data, master.model)
     
     if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL
-        log.num_of_fraction_node += 1
+        log.fractional_nodes_since_cut += 1
         
         # Check if we should process this node based on frequency
-        if log.num_of_fraction_node >= callback.params.frequency
-            log.num_of_fraction_node = 0
+        if log.fractional_nodes_since_cut >= callback.param.frequency
+            log.fractional_nodes_since_cut = 0
             
-            node_count = callback.params.node_count == -1 ? nothing :
+            node_count = callback.param.node_count == -1 ? nothing :
                 callback_node_count(cb_data, master.model)
-            node_depth = callback.params.depth == -1 ? nothing :
+            node_depth = callback.param.depth == -1 ? nothing :
                 callback_node_depth(cb_data, master.model)
 
             process_node =
-                (isnothing(node_count) || node_count <= callback.params.node_count) &&
-                (isnothing(node_depth) || node_depth <= callback.params.depth)
+                (isnothing(node_count) || node_count <= callback.param.node_count) &&
+                (isnothing(node_depth) || node_depth <= callback.param.depth)
             
             if process_node
                 # Create state and get current variable values

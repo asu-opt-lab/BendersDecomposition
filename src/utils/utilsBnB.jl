@@ -50,9 +50,9 @@ Fields:
 - `n_lazy_cuts::Int`: Total number of lazy Benders cuts generated.
 - `n_user_cuts::Int`: Total number of user Benders cuts generated.
 - `start_time::Float64`: Algorithm start time (used for calculating elapsed time).
-- `root_node_time::Float64`: Time spent preprocessing at the root node.
+- `preprocessing_time::Float64`: Time spent preprocessing.
 - `total_time::Float64`: Total time spent in `solve!`.
-- `num_of_fraction_node::Int`: Number of nodes with fractional solutions.
+- `fractional_nodes_since_cut::Int`: A counter since the last processed fractional node.
 """
 mutable struct BendersBnBLog <: AbstractBendersBnBLog
     nodes::Vector{BendersBnBState}
@@ -60,9 +60,9 @@ mutable struct BendersBnBLog <: AbstractBendersBnBLog
     n_lazy_cuts::Int
     n_user_cuts::Int
     start_time::Float64
-    root_node_time::Float64
+    preprocessing_time::Float64
     total_time::Float64
-    num_of_fraction_node::Int
+    fractional_nodes_since_cut::Int
     function BendersBnBLog()
         new(Vector{BendersBnBState}(), 0, 0, 0, 0.0, 0.0, 0.0, 0)
     end
@@ -120,7 +120,7 @@ function to_dataframe(env::AbstractBendersBnB, log::BendersBnBLog)
     if termination_status(env.master.model) == MOI.OPTIMIZE_NOT_CALLED
         return DataFrame(
             node_count = 0,
-            root_node_time = log.root_node_time,
+            preprocessing_time = log.preprocessing_time,
             time = log.total_time,
             obj_bound = -Inf,
             obj_val = Inf,
@@ -131,7 +131,7 @@ function to_dataframe(env::AbstractBendersBnB, log::BendersBnBLog)
     else
         return DataFrame(
             node_count = JuMP.node_count(env.master.model),
-            root_node_time = log.root_node_time,
+            preprocessing_time = log.preprocessing_time,
             time = log.total_time,
             obj_bound = JuMP.objective_bound(env.master.model),
             obj_val = env.obj_value,

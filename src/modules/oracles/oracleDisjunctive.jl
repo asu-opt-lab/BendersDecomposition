@@ -1,5 +1,5 @@
 """
-Abstract supertype for split disjunctive oracles implemented with a DCGLP model.
+Abstract supertype for oracles generating split cuts.
 """
 abstract type AbstractSplitOracle <: AbstractDisjunctiveOracle end
 

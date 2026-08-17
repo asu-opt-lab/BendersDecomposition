@@ -14,7 +14,7 @@ using BendersX
         :SplitOracleParam, :LpDistanceNormalization, :ReversePolarNormalization,
         :BendersSeqParam, :BendersSeqInOutParam, :BendersBnBParam, :SpecializedBendersSeqParam,
         :LazyCallback, :UserCallback, :NoUserCallback, :UserCallbackParam,
-        :RootNodePreprocessing, :NoRootNodePreprocessing, :DisjunctiveRootNodePreprocessing,
+        :LPRelaxationPreprocessing, :NoPreprocessing, :DisjunctiveLPRelaxationPreprocessing,
         :TerminationStatus, :NotSolved, :TimeLimit, :Optimal, :InfeasibleOrNumericalIssue,
         :GBCBoundType, :UpperBound, :LowerBound, :Fixed,
         :RandomFractional, :MostFractional, :LargestFractional,
@@ -32,7 +32,7 @@ using BendersX
         :AbstractBendersEnv, :AbstractBendersSeq, :AbstractBendersBnB,
         :AbstractMaster, :AbstractOracle, :AbstractOracleParam, :AbstractTypicalOracle,
         :AbstractDisjunctiveOracle, :AbstractSplitOracle,
-        :AbstractRootNodePreprocessing,
+        :AbstractBendersPreprocessing,
         :AbstractDisjunctiveNormalization,
         :SplitIndexSelectionRule, :DisjunctiveCutsAppendRule,
         :generate_cuts, :add_normalization_constraint!, :update_dcglp_upper_bound_and_gap!,
@@ -45,7 +45,7 @@ using BendersX
     ]
 
     private_symbols = [
-        :lazy_callback, :user_callback, :root_node_processing!,
+        :lazy_callback, :user_callback, :preprocess!,
         :get_sec_remaining, :record_iteration!, :update_upper_bound_and_gap!,
         :is_terminated, :check_lb_improvement!, :print_iteration_info, :to_dataframe,
         :calculate_KP_value,

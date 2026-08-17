@@ -1,6 +1,6 @@
 
 """
-    DisjunctiveRootNodePreprocessing <: AbstractRootNodePreprocessing
+    DisjunctiveLPRelaxationPreprocessing <: AbstractBendersPreprocessing
 
 Two-phase root-node preprocessing that first runs a typical
 oracle-based separation and then a disjunctive oracle separation to
@@ -8,48 +8,48 @@ produce stronger initial cuts.
 # Fields
 - `typical_oracle::AbstractTypicalOracle`: Oracle for the first phase (classical preprocessing)
 - `disjunctive_oracle::AbstractDisjunctiveOracle`: Oracle for the second phase
-- `seq_type::Type{<:AbstractBendersSeq}`: Type of sequential Benders algorithm to use
-- `params::AbstractBendersSeqParam`: Parameters for the sequential algorithm
+- `seq_env_type::Type{<:AbstractBendersSeq}`: Type of sequential Benders algorithm to use
+- `param::AbstractBendersSeqParam`: Parameters for the sequential algorithm
 
 # Constructor
 ```julia
-DisjunctiveRootNodePreprocessing(
+DisjunctiveLPRelaxationPreprocessing(
     typical_oracle::AbstractTypicalOracle,
     disjunctive_oracle::AbstractDisjunctiveOracle;
-    seq_type::Type{<:AbstractBendersSeq} = BendersSeq,
-    params::AbstractBendersSeqParam = BendersSeqParam()
+    seq_env_type::Type{<:AbstractBendersSeq} = BendersSeq,
+    param::AbstractBendersSeqParam = BendersSeqParam()
 )
 ```
 
 # Examples
 ```julia
-preprocessing = DisjunctiveRootNodePreprocessing(typical_oracle, disj_oracle)
+preprocessing = DisjunctiveLPRelaxationPreprocessing(typical_oracle, disj_oracle)
 # Use with BendersBnB
 env = BendersBnB(master, preprocessing, lazy_callback, user_callback)
 ```
-See also: [`RootNodePreprocessing`](@ref), [`AbstractDisjunctiveOracle`](@ref)
+See also: [`LPRelaxationPreprocessing`](@ref), [`AbstractDisjunctiveOracle`](@ref)
 """
-mutable struct DisjunctiveRootNodePreprocessing <: AbstractRootNodePreprocessing
+mutable struct DisjunctiveLPRelaxationPreprocessing <: AbstractBendersPreprocessing
     typical_oracle::AbstractTypicalOracle
     disjunctive_oracle::AbstractDisjunctiveOracle
-    seq_type::Type{<:AbstractBendersSeq}
-    params::AbstractBendersSeqParam
+    seq_env_type::Type{<:AbstractBendersSeq}
+    param::AbstractBendersSeqParam
 
-    function DisjunctiveRootNodePreprocessing(
+    function DisjunctiveLPRelaxationPreprocessing(
         typical_oracle::AbstractTypicalOracle,
         disjunctive_oracle::AbstractDisjunctiveOracle;
-        seq_type::Type{<:AbstractBendersSeq} = BendersSeq,
-        params::AbstractBendersSeqParam = BendersSeqParam()
+        seq_env_type::Type{<:AbstractBendersSeq} = BendersSeq,
+        param::AbstractBendersSeqParam = BendersSeqParam()
     )
-        new(typical_oracle, disjunctive_oracle, seq_type, params)
+        new(typical_oracle, disjunctive_oracle, seq_env_type, param)
     end
 end
 
 """
-    root_node_processing!(master::AbstractMaster, preprocessing::DisjunctiveRootNodePreprocessing) -> Float64
+    preprocess!(master::AbstractMaster, preprocessing::DisjunctiveLPRelaxationPreprocessing) -> Float64
 
 Run a two-phase root-node preprocessing procedure using both the typical and
-disjunctive oracles defined in a `DisjunctiveRootNodePreprocessing` object, and
+disjunctive oracles defined in a `DisjunctiveLPRelaxationPreprocessing` object, and
 return the total preprocessing time in seconds.
 
 This routine performs the following steps:
@@ -67,11 +67,11 @@ This routine performs the following steps:
    A preprocessing follows using `preprocessing.disjunctive_oracle`
    and solved using the remaining time budget.
 
-The function returns the preprocessing times.
+The function returns the total preprocessing time in seconds.
 """
-function root_node_processing!(master::AbstractMaster, preprocessing::DisjunctiveRootNodePreprocessing)
+function preprocess!(master::AbstractMaster, preprocessing::DisjunctiveLPRelaxationPreprocessing)
 
-    root_param = deepcopy(preprocessing.params)
+    preprocessing_seq_param = deepcopy(preprocessing.param)
 
     # Relax integrality, ensure undo() always runs even on error
     undo = relax_integrality(master.model)
@@ -79,15 +79,15 @@ function root_node_processing!(master::AbstractMaster, preprocessing::Disjunctiv
     tic = time()
     try
         # Phase 1: Preprocessing with typical oracle
-        env_root_typical = preprocessing.seq_type(master, preprocessing.typical_oracle; param = root_param)
-        solve!(env_root_typical)
+        env_preprocessing_typical = preprocessing.seq_env_type(master, preprocessing.typical_oracle; param = preprocessing_seq_param)
+        solve!(env_preprocessing_typical)
         typical_time = time() - tic
 
-        root_param.time_limit -= typical_time
+        preprocessing_seq_param.time_limit = max(0.0, preprocessing_seq_param.time_limit - typical_time)
 
         # Phase 2: Preprocessing with disjunctive oracle 
-        env_root_disjunctive = preprocessing.seq_type(master, preprocessing.disjunctive_oracle; param = root_param)
-        solve!(env_root_disjunctive)
+        env_preprocessing_disjunctive = preprocessing.seq_env_type(master, preprocessing.disjunctive_oracle; param = preprocessing_seq_param)
+        solve!(env_preprocessing_disjunctive)
     finally
         # always restore integrality (even on exceptions)
         undo()

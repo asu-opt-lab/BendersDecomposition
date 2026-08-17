@@ -159,7 +159,7 @@ lazy_oracle = UFLKnapsackOracle(
     data;
     param = UFLKnapsackOracleParam(add_only_violated_cuts = true),
 )
-root_preprocessing = RootNodePreprocessing(
+preprocessing = LPRelaxationPreprocessing(
     lazy_oracle,
     BendersSeq,
     BendersSeqParam(
@@ -169,11 +169,11 @@ root_preprocessing = RootNodePreprocessing(
     ),
 )
 lazy_callback = LazyCallback(lazy_oracle)
-user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = frequency))
+user_callback = UserCallback(disjunctive_oracle; param = UserCallbackParam(frequency = frequency))
 
 env = BendersBnB(
     master,
-    root_preprocessing,
+    preprocessing,
     lazy_callback,
     user_callback;
     param = benders_param,

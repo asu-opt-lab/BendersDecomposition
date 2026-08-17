@@ -26,8 +26,8 @@ function parse_commandline()
             help = "Benders branch-and-bound time limit in seconds"
             arg_type = Float64
             default = 14400.0
-        "--root_time_limit"
-            help = "Root preprocessing time limit in seconds"
+        "--preprocessing_time_limit"
+            help = "Preprocessing time limit in seconds"
             arg_type = Float64
             default = 100.0
         "--threads"
@@ -49,11 +49,11 @@ Random.seed!(args["seed"])
 instance = args["instance"]
 output_dir = args["output_dir"]
 time_limit = args["time_limit"]
-root_time_limit = args["root_time_limit"]
+preprocessing_time_limit = args["preprocessing_time_limit"]
 threads = args["threads"]
 build_only = args["build_only"]
 
-@info "UFLP Benders BnB knapsack script" instance = instance seed = args["seed"] time_limit = time_limit root_time_limit = root_time_limit threads = threads build_only = build_only
+@info "UFLP Benders BnB knapsack script" instance = instance seed = args["seed"] time_limit = time_limit preprocessing_time_limit = preprocessing_time_limit threads = threads build_only = build_only
 
 # -----------------------------------------------------------------------------
 # load problem data
@@ -101,17 +101,17 @@ typical_oracle = UFLKnapsackOracle(
 )
 
 # -----------------------------------------------------------------------------
-# root node preprocessing
+# Benders preprocessing
 # -----------------------------------------------------------------------------
-root_seq_type = BendersSeq
-root_param = BendersSeqParam(
-    time_limit = min(root_time_limit, time_limit),
+preprocessing_seq_type = BendersSeq
+preprocessing_seq_param = BendersSeqParam(
+    time_limit = min(preprocessing_time_limit, time_limit),
     gap_tolerance = 1e-9,
     verbose = true
 )
 
-# Create root node preprocessing with oracle
-root_preprocessing = RootNodePreprocessing(typical_oracle, root_seq_type, root_param)
+# Create Benders preprocessing with oracle
+preprocessing = LPRelaxationPreprocessing(typical_oracle, preprocessing_seq_type, preprocessing_seq_param)
 
 # -----------------------------------------------------------------------------
 # lazy callback
@@ -128,7 +128,7 @@ user_callback = NoUserCallback()
 # -----------------------------------------------------------------------------
 env = BendersBnB(
     master,
-    root_preprocessing,
+    preprocessing,
     lazy_callback,
     user_callback;
     param = benders_param

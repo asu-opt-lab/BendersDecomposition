@@ -2,14 +2,14 @@
 """
     BendersSeq <: AbstractBendersSeq
 
-Sequential Benders decomposition algorithm using a cutting-plane method.
+Sequential Benders decomposition environment.
 
-This is the basic Benders decomposition implementation that iteratively solves the master problem, generates Benders cuts from the oracle, and refines the master problem until convergence or a termination criterion is met.
+`BendersSeq` implements the classical Benders cutting-plane algorithm by repeatedly solving the master problem, evaluating the oracle at the current candidate solution, adding the resulting Benders cuts to the master problem, and continuing until a termination criterion is satisfied.
 
 # Fields
 - `master::AbstractMaster`: Master problem formulation
-- `oracle::AbstractOracle`: Oracle for subproblem solving and cut generation
-- `param::BendersSeqParam`: Parameters controlling algorithm behavior (time limit, gap tolerance, verbosity, etc.)
+- `oracle::AbstractOracle`: Oracle used for subproblem evaluation and cut generation.
+- `param::BendersSeqParam`: Parameters controlling the algorithm, such as time limit, gap tolerance, and verbosity
 - `obj_value::Float64`: Objective value of the best solution found
 - `termination_status::TerminationStatus`: Status of the algorithm upon termination
 
@@ -29,12 +29,14 @@ mutable struct BendersSeq <: AbstractBendersSeq
 
     param::BendersSeqParam
 
+    preprocessing::AbstractBendersPreprocessing
+
     # result
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function BendersSeq(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqParam = BendersSeqParam())
-        new(master, oracle, param, Inf, NotSolved())
+    function BendersSeq(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqParam = BendersSeqParam(), preprocessing::AbstractBendersPreprocessing = NoPreprocessing())
+        new(master, oracle, param, preprocessing, Inf, NotSolved())
     end
 end
 
@@ -43,32 +45,41 @@ end
 
 Execute the sequential Benders decomposition algorithm.
 
-This function implements the core Benders cutting-plane method: repeatedly solving the master problem, querying the oracle for Benders cuts, and adding cuts to refine the master problem.
+At each iteration, the method solves the master problem, queries the oracle
+at the resulting candidate solution, updates the bounds and termination state,
+and adds any generated Benders cuts to the master problem. Iterations continue
+until the problem is solved or a termination condition is reached.
+
+The iteration history is returned as a `DataFrame`.
 
 # Arguments
-- `env::BendersSeq`: The configured Benders algorithm environment
+- `env::BendersSeq`: The configured sequential Benders environment
 - `iter_prefix::String`: Optional prefix for iteration logging (default: "")
 
 # Returns
 - `DataFrame`: A log of iterations containing lower bounds, upper bounds, gaps, and timing information
 
-# Algorithm Steps
-1. Solve the master problem to obtain candidate solution (x, t)
-2. Query the oracle to check feasibility and generate Benders cuts
-3. Update bounds and check termination criteria
-4. Add generated cuts to the master problem
-5. Repeat until convergence or termination
+# Termination
+The algorithm terminates when one of the following occurs:
+- the candidate solution is in `L`
+- the prescribed time limit is reached;
+- the prescribed gap tolerance is satisfied;
+- the master problem becomes infeasible or encounters an unexpected status.
 
-# Termination Criteria
-- Optimal solution found (point is in L)
-- Time limit reached
-- Gap tolerance met
-- Master problem becomes infeasible
+The environment's `obj_value` and `termination_status` fields are updated
+before returning.
 """
 function solve!(env::BendersSeq; iter_prefix = "") 
     log = BendersSeqLog()
     param = env.param
     try    
+        # Apply preprocessing
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing)
+
+        if param.time_limit <= log.preprocessing_time
+            throw(TimeLimitException("Time limit reached before BnB starts, please increase the time limit."))
+        end
+        
         while true
             state = BendersSeqState()
             state.total_time = @elapsed begin

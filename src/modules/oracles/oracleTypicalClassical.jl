@@ -12,15 +12,15 @@ const ClassicalOracleParam = BasicOracleParam
 """
     ClassicalOracle <: AbstractTypicalOracle
 
-Classical Benders oracle for LP-compatible subproblems.
+Classical Benders oracle.
 
 This oracle copies the master variables into a subproblem model, fixes them to
 the current candidate point, and uses dual information from the resulting LP to
 produce classical optimality or feasibility cuts.
 
-The user supplies the subproblem through a model-update function. The
-function may optionally return generalized bound constraints (GBCs),
-which are enforced while the oracle evaluates candidate master points.
+The user supplies the subproblem through a model-update function. 
+If the user wants to add generalized bound constraints (GBCs),
+the model-update function must return the corresponding GBC information. See [`update_sub_model!`](@ref) for details.
 
 See also: [`BasicOracleParam`](@ref), [`UnifiedOracle`](@ref), [`ParetoOracle`](@ref)
 """

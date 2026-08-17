@@ -54,9 +54,10 @@ mutable struct BendersSeqLog <: AbstractBendersSeqLog
     iterations::Vector{BendersSeqState}
     start_time::Float64
     consecutive_no_improvement::Int
+    preprocessing_time::Float64
     
     function BendersSeqLog()
-        new(0, Vector{BendersSeqState}(), time(), 0)
+        new(0, Vector{BendersSeqState}(), time(), 0, 0.0)
     end
 end
 

@@ -1,19 +1,30 @@
-include("BendersSeq.jl")
-include("BendersBnB.jl")
-include("BendersSeqInOut.jl")
-include("SpecializedBendersSeq.jl")
-include("callback/preprocessingDisjunctive.jl")
+# ============================================================================
+# Benders execution environments
+# ============================================================================
 
+# ---------------------------------------------------------------------------- 
+# Common interface 
+# ----------------------------------------------------------------------------
 """
     solve!(env::AbstractBendersEnv)
 
-Run a configured Benders environment and return its execution log.
+Execute the Benders algorithm defined by `env` and return its execution log.
 
-Concrete environment types such as [`BendersSeq`](@ref), [`BendersSeqInOut`](@ref),
-[`BendersBnB`](@ref), and [`SpecializedBendersSeq`](@ref) provide the actual
-implementations. This fallback exists to document the public interface and to
-raise a descriptive error for unsupported environment types.
+Concrete environment types implement this interface according to their corresponding Benders algorithm. This fallback method is called only when no implementation is available for the concrete environment type.
 """
 function solve!(env::AbstractBendersEnv)
     throw(UndefError("update solve! for $(typeof(env))"))
 end
+
+# ---------------------------------------------------------------------------- 
+# Benders LP relaxation preprocessing
+# ----------------------------------------------------------------------------
+include("preprocessing/preprocessing.jl") # must be included first
+
+# ---------------------------------------------------------------------------- 
+# Concrete environment implementations 
+# ----------------------------------------------------------------------------
+include("BendersSeq.jl")
+include("BendersBnB.jl")
+include("BendersSeqInOut.jl")
+include("SpecializedBendersSeq.jl")

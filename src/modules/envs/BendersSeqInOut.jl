@@ -2,29 +2,32 @@
 """
     BendersSeqInOut <: AbstractBendersSeq
 
-Sequential Benders decomposition with In-Out stabilization technique.
+Sequential Benders decomposition with in-out stabilization.
 
-This variant of Benders decomposition uses stabilization to improve convergence by maintaining a stabilizing point and perturbing query points. The algorithm can switch to Kelley's cutting-plane method if progress stalls.
+`BendersSeqInOut` applies the in-out stabilization strategy to the sequential
+Benders cutting-plane method. The method maintains a stabilizing point and
+uses a convex combination of the current master solution and the stabilizing
+point as the oracle query point. If progress stalls, the method switches to
+Kelley's cutting-plane method.
+
+The in-out stabilization strategy follows Fischetti, Ljubić, and Sinnl (2017)
+and Ben-Ameur and Neto (2007).
 
 # Fields
-- `master::AbstractMaster`: Master module
-- `oracle::AbstractOracle`: Oracle module for cut generation
-- `param::BendersSeqInOutParam`: Parameters controlling algorithm behavior (includes stabilization parameters α, λ, and stabilizing_x)
+- `master::AbstractMaster`: Master problem module
+- `oracle::AbstractOracle`: Oracle used for subproblem evaluation and cut generation
+- `param::BendersSeqInOutParam`: Parameters controlling the algorithm and its
+  stabilization strategy.
 - `obj_value::Float64`: Objective value of the best solution found
 - `termination_status::TerminationStatus`: Status of the algorithm upon termination
 
-# Constructors
-```julia
-BendersSeqInOut(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam())
-```
+The stabilization parameters are specified through `BendersSeqInOutParam`:
 
-# Stabilization Parameters
-The stabilization technique requires three parameters (specified in `BendersSeqInOutParam`):
-- `α`: Weight for updating the stabilizing point
-- `λ`: Weight for perturbing the query point
-- `stabilizing_x`: Initial stabilizing point
+- `α`: Weight used to update the stabilizing point.
+- `λ`: Weight used to form the perturbed query point.
+- `stabilizing_x`: Initial stabilizing point.
 
-# Examples
+# Example
 ```julia
 master = Master(data; model = update_master_model!)
 oracle = ClassicalOracle(data, master; model = update_sub_model!)
@@ -32,6 +35,10 @@ param = BendersSeqInOutParam(α = 0.8, λ = 0.5, stabilizing_x = zeros(master.di
 env = BendersSeqInOut(master, oracle; param = param)
 df = solve!(env)
 ```
+
+# References
+- M. Fischetti, I. Ljubić, and M. Sinnl, "Redesigning Benders decomposition for large-scale facility location," Management Science, 63 (2017), 2146–2162.
+- W. Ben-Ameur and J. Neto, "Acceleration of cutting-plane and column generation algorithms: Applications to network design," Networks, 49 (2007), 3–17.
 
 See also: [`BendersSeq`](@ref), [`SpecializedBendersSeq`](@ref)
 """
@@ -53,33 +60,15 @@ end
 """
     solve!(env::BendersSeqInOut) -> DataFrame
 
-Execute the sequential Benders decomposition with In-Out stabilization.
+Execute the sequential Benders decomposition algorithm with in-out stabilization.
 
-This function implements a stabilized Benders cutting-plane method that uses a perturbed query point
-to improve convergence. If the lower bound stagnates for multiple iterations, the algorithm switches
-to Kelley's cutting-plane method (setting λ = 1.0).
+At each iteration, the method solves the master problem, updates the
+stabilizing point, evaluates the oracle at a perturbed query point, and adds
+the resulting Benders cuts to the master problem. If lower-bound improvement
+stalls for a prescribed number of iterations, the method switches to Kelley's
+cutting-plane method.
 
-# Arguments
-- `env::BendersSeqInOut`: The configured Benders In-Out algorithm environment
-
-# Returns
-- `DataFrame`: A log of iterations containing lower bounds, upper bounds, gaps, and timing information
-
-# Algorithm Steps
-1. Solve the master problem to obtain candidate solution (x, t)
-2. Update the stabilizing point: `stabilizing_x = α * stabilizing_x + (1 - α) * x`
-3. Generate perturbed query point: `intermediate_x = λ * x + (1 - λ) * stabilizing_x`
-4. Query the oracle at the perturbed point to generate Benders cuts
-5. Update bounds and check termination criteria
-6. Add generated cuts to the master problem
-7. Check if switching to Kelley mode is needed (if no improvement for 5 consecutive iterations)
-8. Repeat until convergence or termination
-
-# Termination Criteria
-- Optimal solution found (point is in L after switching to Kelley mode)
-- Time limit reached
-- Gap tolerance met
-- Master problem becomes infeasible
+The iteration history is returned as a `DataFrame`.
 """
 function solve!(env::BendersSeqInOut)
     param = env.param

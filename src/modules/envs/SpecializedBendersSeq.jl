@@ -2,19 +2,25 @@
 """
     SpecializedBendersSeq <: AbstractBendersSeq
 
-Specialized sequential environment for split-based disjunctive Benders cuts.
+Proof-of-concept sequential Benders decomposition for split Benders cuts.
 
-This environment alternates between solving a linearized master relaxation and
-calling an [`AbstractSplitOracle`](@ref) at carefully chosen fractional vertices. It is
-intended for the split-cut workflow implemented in this package and enforces
-the split-selection and cut-appending rules required by that workflow.
+`SpecializedBendersSeq` explores a specialized Benders workflow in which the
+master problem is relaxed to an LP and the disjunctive oracle is queried at
+selected fractional vertices. The implementation is intended for
+proof-of-concept experiments with the split-cut procedure and is subject to numerical challenge.
+
+The environment restricts the split-selection and disjunctive-cut append
+rules to those required for theoretical finite termination.
 
 # Fields
+
 - `master::AbstractMaster`: Master problem, which is relaxed to an LP internally.
 - `oracle::AbstractSplitOracle`: Disjunctive oracle used to generate split cuts.
-- `param::SpecializedBendersSeqParam`: Loop controls for the specialized algorithm.
+- `param::SpecializedBendersSeqParam`: Parameters controlling the algorithm.
 - `obj_value::Float64`: Best bound recorded on termination.
-- `termination_status::TerminationStatus`: Final solve status.
+- `termination_status::TerminationStatus`: Status of the algorithm at termination.
+
+See also: [`AbstractSplitOracle`](@ref), [`BendersSeq`](@ref)
 """
 mutable struct SpecializedBendersSeq <: AbstractBendersSeq
     master::AbstractMaster
@@ -41,11 +47,9 @@ end
 """
     solve!(env::SpecializedBendersSeq) -> DataFrame
 
-Run the specialized sequential split-cut algorithm.
+Execute the proof-of-concept sequential Benders algorithm with split cut separation. The method repeatedly solves the LP relaxation of the master problem, selects a fractional vertex associated with the current split, and queries the split oracle at that point. Generated split cuts are then added to the master relaxation before the next iteration. This implementation is intended for experimentation with the specialized Benders workflow rather than as a general-purpose Benders algorithm.
 
-This routine maintains a linear master relaxation, solves auxiliary LPs to
-recover stable fractional vertices, and then queries the disjunctive oracle to
-add split cuts tailored to the current branch of the relaxation.
+The iteration history is returned as a `DataFrame`.
 """
 function solve!(env::SpecializedBendersSeq)
     log = BendersSeqLog()

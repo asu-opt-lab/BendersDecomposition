@@ -35,7 +35,7 @@ export LpDistanceNormalization
 export ReversePolarNormalization
 export BendersSeqParam, BendersSeqInOutParam, BendersBnBParam, SpecializedBendersSeqParam
 export LazyCallback, UserCallback, NoUserCallback, UserCallbackParam
-export RootNodePreprocessing, NoRootNodePreprocessing, DisjunctiveRootNodePreprocessing
+export LPRelaxationPreprocessing, NoPreprocessing, DisjunctiveLPRelaxationPreprocessing
 
 # Common runtime statuses and configuration values
 export TerminationStatus, NotSolved, TimeLimit, Optimal, InfeasibleOrNumericalIssue
@@ -47,7 +47,7 @@ export NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
 public AbstractBendersEnv, AbstractBendersSeq, AbstractBendersBnB
 public AbstractMaster
 public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, AbstractDisjunctiveOracle, AbstractSplitOracle
-public AbstractRootNodePreprocessing
+public AbstractBendersPreprocessing
 public AbstractDisjunctiveNormalization
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
 public generate_cuts, add_normalization_constraint!, update_dcglp_upper_bound_and_gap!

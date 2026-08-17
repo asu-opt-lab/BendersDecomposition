@@ -59,7 +59,7 @@ end
 Check whether the loop should terminate.
 This is a prototype and can be implemented for specific subtypes of `AbstractLoopState` and `AbstractLoopLog`.
 """
-function is_terminated(state::AbstractLoopState, log::AbstractLoopLog, params::AbstractLoopParam)
+function is_terminated(state::AbstractLoopState, log::AbstractLoopLog, param::AbstractLoopParam)
     throw(UndefError("update is_terminated for $(typeof(state)) and $(typeof(log))"))
 end
 

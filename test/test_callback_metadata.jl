@@ -4,6 +4,7 @@ using JuMP
 using HiGHS
 using BendersX
 
+# Q. Please change the test to use a different solver with the extensions implemented, such as CPLEX or Gurobi, if available.
 @testset "Callback metadata thresholds" begin
     @testset "Unsupported metadata warnings" begin
         model = Model(HiGHS.Optimizer)
@@ -39,11 +40,5 @@ using BendersX
             @test BendersX.callback_node_depth(nothing, model) === nothing
         end
         @test length(logs) == 2
-
-        state = BendersX.BendersBnBState()
-        @test BendersX.record_node_count!(state, nothing) === state
-        @test state.node == 0
-        @test BendersX.record_node_count!(state, 7) === state
-        @test state.node == 7
     end
 end
