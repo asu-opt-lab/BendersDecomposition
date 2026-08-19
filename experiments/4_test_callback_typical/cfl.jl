@@ -82,7 +82,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
@@ -107,7 +107,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
@@ -146,7 +146,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
@@ -171,7 +171,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
@@ -205,7 +205,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
@@ -230,7 +230,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
@@ -264,7 +264,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
@@ -289,7 +289,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
@@ -325,7 +325,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
@@ -351,7 +351,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
@@ -388,7 +388,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 
@@ -413,7 +413,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                 verbose = false
                             )
 
-                    preprocessing = LPRelaxationPreprocessing(oracle, preprocessing_seq_type, preprocessing_seq_param)
+                    preprocessing = LPRelaxationPreprocessing(oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
                     lazy_callback = LazyCallback(oracle)
                     user_callback = NoUserCallback()
 

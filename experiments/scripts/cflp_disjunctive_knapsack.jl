@@ -118,7 +118,7 @@ preprocessing_seq_param = BendersSeqInOutParam(
 )
 
 # Create Benders preprocessing with oracle
-preprocessing = LPRelaxationPreprocessing(lazy_oracle, preprocessing_seq_type, preprocessing_seq_param)
+preprocessing = LPRelaxationPreprocessing(lazy_oracle; seq_env_type = preprocessing_seq_type, param = preprocessing_seq_param)
 
 # -----------------------------------------------------------------------------
 # lazy callback
