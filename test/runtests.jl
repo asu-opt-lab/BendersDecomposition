@@ -6,6 +6,7 @@ using BendersX
     include("test_solver_extensions.jl")
     include("test_locssall_readers.jl")
     include("test_callback_metadata.jl")
+    include("test_callback_configuration.jl")
     include("test_disjunctive_norm_oracles.jl")
     include("test_scalarize_constraints.jl")
     include("test_validate_LP.jl")
