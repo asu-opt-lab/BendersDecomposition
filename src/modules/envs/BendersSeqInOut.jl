@@ -18,6 +18,8 @@ and Ben-Ameur and Neto (2007).
 - `oracle::AbstractOracle`: Oracle used for subproblem evaluation and cut generation
 - `param::BendersSeqInOutParam`: Parameters controlling the algorithm and its
   stabilization strategy.
+- `preprocessing::AbstractBendersPreprocessing`: Preprocessing applied before the
+  sequential iterations begin.
 - `obj_value::Float64`: Objective value of the best solution found
 - `termination_status::TerminationStatus`: Status of the algorithm upon termination
 
@@ -48,13 +50,20 @@ mutable struct BendersSeqInOut <: AbstractBendersSeq
 
     param::BendersSeqInOutParam 
 
+    preprocessing::AbstractBendersPreprocessing
+
     # result
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function BendersSeqInOut(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam())
+    function BendersSeqInOut(
+        master::AbstractMaster,
+        oracle::AbstractOracle;
+        param::BendersSeqInOutParam = BendersSeqInOutParam(),
+        preprocessing::AbstractBendersPreprocessing = NoPreprocessing(),
+    )
 
-        new(master, oracle, param, Inf, NotSolved())
+        new(master, oracle, param, preprocessing, Inf, NotSolved())
     end
 end
 """
@@ -74,6 +83,13 @@ function solve!(env::BendersSeqInOut)
     param = env.param
     log = BendersSeqLog()
     try    
+        # Apply preprocessing
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing)
+
+        if param.time_limit <= log.preprocessing_time
+            throw(TimeLimitException("Time limit reached before BendersSeqInOut starts, please increase the time limit."))
+        end
+
         state = BendersSeqState()
         stabilizing_x = param.stabilizing_x
         α = param.α
