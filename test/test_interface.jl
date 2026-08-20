@@ -308,7 +308,7 @@ end
     classical = ClassicalOracle(data, master; model = keyword_subproblem_model!, optimizer = optimizer)
     unified = UnifiedOracle(data, master; model = keyword_subproblem_model!, optimizer = optimizer)
     pareto = ParetoOracle(data, master, ParetoOracleParam(fill(0.5, data.n_facilities)); model = keyword_subproblem_model!, optimizer = optimizer)
-    separable = SeparableOracle(data, master, ClassicalOracle(), 1; model = keyword_subproblem_model!, optimizer = optimizer)
+    separable = SeparableOracle(data, master, ClassicalOracle, 1; model = keyword_subproblem_model!, optimizer = optimizer)
     knapsack = CFLKnapsackOracle(data, master; model = keyword_subproblem_model!, optimizer = optimizer)
 
     @test classical.model isa Model
@@ -341,7 +341,7 @@ end
 
     optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
     master = Master(data; model = update_master_model!, optimizer = optimizer)
-    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_model!, optimizer = optimizer)
+    oracle = SeparableOracle(data, master, ClassicalOracle, data.n_scenarios; model = update_sub_model!, optimizer = optimizer)
     is_in_L, hyperplanes, f_x = BendersX.generate_cuts(oracle, [0.0, 0.0], [0.0, 0.0])
 
     @test !is_in_L

@@ -1,12 +1,84 @@
+
+"""
+    build_dcglp(master::AbstractMaster, param::SplitOracleParam)
+
+Build the DCGLP used by [`SplitOracle`](@ref).
+
+The method first constructs the common DCGLP formulation through `build_dcglp_base`, then adds the normalization-specific constraint defined by `param.normalization`.
+
+Returns the constructed JuMP model.
+"""
+function build_dcglp(master::AbstractMaster, param::SplitOracleParam)
+    dcglp, tau, sx, st = build_dcglp_base(master, param)
+
+    add_normalization_constraint!(param.normalization, master, dcglp, tau, sx, st)
+
+    return dcglp
+end
+
+"""
+    build_dcglp_base(
+        master::AbstractMaster,
+        param::SplitOracleParam,
+    )
+
+Build the common DCGLP formulation shared by all normalization schemes.
+
+The method creates the disjunctive variables for the two sides of the split, transfers supported linear constraints and bounds from the master problem, and introduces the auxiliary variables `tau`, `sx`, and `st` used by the normalization.
+
+Normalization-specific constraints are not added by this method.
+
+# Returns
+
+A tuple `(dcglp, tau, sx, st)` containing the DCGLP model and the auxiliary
+variables required to define its normalization.
+"""
+function build_dcglp_base(
+    master::AbstractMaster,
+    param::SplitOracleParam,
+)
+    dcglp = Model(param.dcglp_param.optimizer)
+    @variable(dcglp, omega_0[1:2] >= 0)
+
+    @variable(dcglp, omega_x[1:2, 1:master.dim_x])
+    @variable(dcglp, omega_t[1:2, 1:master.dim_t])
+
+    @constraint(dcglp, [i in 1:2], omega_t[i, :] .>= -1.0e6 .* omega_0[i])
+    @constraint(dcglp, coneta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_0[i] + omega_x[i, j])
+    @constraint(dcglp, condelta[i in 1:2, j in 1:master.dim_x], 0 >= -omega_x[i, j])
+
+    @constraint(dcglp, con0, omega_0[1] + omega_0[2] == 1)
+
+    for i in 1:2
+        transfer_scaled_linear_rows_and_bounds_with_types!(
+            master.model,
+            master.x,
+            dcglp,
+            omega_x[i, :],
+            omega_0[i],
+        )
+    end
+
+    @variable(dcglp, tau)
+    @variable(dcglp, sx[1:master.dim_x])
+    @variable(dcglp, st[1:master.dim_t])
+
+    @objective(dcglp, Min, tau)
+
+    @constraint(dcglp, conx, dcglp[:omega_x][1, :] + dcglp[:omega_x][2, :] - sx .== 0)
+    @constraint(dcglp, cont[j = 1:master.dim_t], dcglp[:omega_t][1, j] + dcglp[:omega_t][2, j] - st[j] == 0)
+
+    return dcglp, tau, sx, st
+end
+
 """
     transfer_scaled_linear_rows_and_bounds_with_types!(master, x, dcglp, omega, omega0)
 
-Copy linear rows and scalar bounds from a master model into the DCGLP
-formulation used by disjunctive DCGLP oracles.
+Transfer supported linear constraints and variable bounds from the master model to a scaled DCGLP representation.
 
-Only linear constraints whose variables all belong to the supplied vector `x`
-are transferred. Variable integrality restrictions are ignored, because the
-target DCGLP is a continuous lifting of the master model.
+Only constraints involving variables contained in `x` are transferred. Affine constraints and scalar variable bounds are scaled by `omega0` and expressed in terms of the corresponding variables in `omega`.
+
+Unsupported constraint types are not transferred and generate a warning.
 """
 function transfer_scaled_linear_rows_and_bounds_with_types!(
     master::Model,
@@ -92,71 +164,42 @@ function transfer_scaled_linear_rows_and_bounds_with_types!(
     end
 end
 
-function fallback_to_typical_after_dcglp!(
-    oracle::AbstractDisjunctiveOracle,
-    x_value::Vector{Float64},
-    t_value::Vector{Float64},
-    start_time::Float64,
-    time_limit::Float64,
-)
-    oracle isa AbstractSplitOracle && rollback_current_dcglp_candidate!(oracle)
-    return generate_cuts(
-        oracle.typical_oracles[1],
-        x_value,
-        t_value;
-        time_limit = get_sec_remaining(start_time, time_limit),
+"""
+    solve_dcglp!(
+        oracle::SplitOracle,
+        x_value::Vector{Float64},
+        t_value::Vector{Float64},
+        zero_indices::Vector{Int},
+        one_indices::Vector{Int};
+        time_limit::Float64,
     )
-end
 
-function fallback_typical_or_throw(
-    oracle::AbstractDisjunctiveOracle,
-    x_value::Vector{Float64},
-    t_value::Vector{Float64},
-    start_time::Float64,
-    time_limit::Float64,
-    msg::String;
-    throw_typical_cuts_for_errors::Bool,
-)
-    if throw_typical_cuts_for_errors
-        @warn msg
-        return fallback_to_typical_after_dcglp!(oracle, x_value, t_value, start_time, time_limit)
-    end
-    oracle isa AbstractSplitOracle && rollback_current_dcglp_candidate!(oracle)
-    throw(UnexpectedModelStatusException(msg))
-end
+Execute the DCGLP cutting-plane loop for a candidate master solution.
 
+At each iteration, the method solves the current DCGLP relaxation, evaluates the two typical oracles at the corresponding points, adds generated Benders cuts to the DCGLP, and updates the DCGLP bounds and termination state.
+
+If the final DCGLP lower bound is sufficiently positive, a disjunctive cut is constructed and stored. Otherwise, separation falls back to a typical oracle.
+
+# Returns
+
+A tuple `(is_in_L, hyperplanes, sub_obj_vals)` as specified by [`generate_cuts`](@ref).
 """
-    should_fallback_typical(normalization, oracle, x_value, t_value) -> Bool
-
-If `true`, `generate_cuts` short-circuits and delegates to the first typical
-oracle without solving the DCGLP. Default implementation returns `false`.
-The directional normalization uses this hook to skip the DCGLP when the
-candidate point coincides with the core point.
-"""
-should_fallback_typical(::AbstractDisjunctiveNormalization, ::SplitOracle, ::Vector{Float64}, ::Vector{Float64}) = false
-
-function solve_dcglp_loop!(
+function solve_dcglp!(
     oracle::SplitOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
     zero_indices::Vector{Int},
     one_indices::Vector{Int};
-    start_time::Float64,
     time_limit::Float64,
-    throw_typical_cuts_for_errors::Bool,
-    include_disjunctive_cuts_to_hyperplanes::Bool,
 )
     normalization = oracle.param.normalization
-    normalization_name = string(nameof(typeof(normalization)))
+
     log = DcglpLog()
-    log.start_time = start_time
+    log.start_time = time()
+    fallback_on_error = oracle.param.fallback_to_typical_cuts
 
     dcglp = oracle.dcglp
     hyperplanes = Hyperplane[]
-    reference_t = update_dcglp_reference_t!(normalization, oracle, x_value, t_value, start_time, time_limit)
-    if should_fallback_typical(normalization, oracle, x_value, reference_t)
-        return fallback_to_typical_after_dcglp!(oracle, x_value, t_value, start_time, time_limit)
-    end
 
     while true
         state = DcglpState()
@@ -168,39 +211,38 @@ function solve_dcglp_loop!(
                 try
                     optimize!(dcglp)
                 catch err
-                    return fallback_typical_or_throw(
-                        oracle, x_value, t_value, start_time, time_limit,
-                        "$(normalization_name) master: unexpected error encountered when optimizing dcglp master: $(err)";
-                        throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
-                    )
+                    if fallback_on_error
+                        @warn "$SplitOracle: DCGLP master encountered an error $err during optimization; fallback to typical oracle";
+                        return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
+                    end
+                    rethrow()
                 end
 
                 if is_solved_and_feasible(dcglp; allow_local = false, dual = true)
                     read_dcglp_solution!(oracle, state)
                 elseif termination_status(dcglp) == ALMOST_INFEASIBLE
-                    return fallback_typical_or_throw(
-                        oracle, x_value, t_value, start_time, time_limit,
-                        "$(normalization_name) master: unexpected dcglp master termination status: $(termination_status(dcglp)); the problem is infeasible or dcglp encountered numerical issue";
-                        throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
-                    )
+                    if fallback_on_error
+                        @warn "$SplitOracle: DCGLP master is almost infeasible; fallback to typical oracle";
+                        return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
+                    end
+                    throw(UnexpectedModelStatusException("SplitOracle: DCGLP is almost infeasible.",))
                 elseif termination_status(dcglp) == TIME_LIMIT
-                    rollback_current_dcglp_candidate!(oracle)
-                    throw(TimeLimitException("Time limit reached during $(normalization_name) solving"))
+                    throw(TimeLimitException("Time limit reached while solving dcglp master"))
                 else
-                    return fallback_typical_or_throw(
-                        oracle, x_value, t_value, start_time, time_limit,
-                        "$(normalization_name) master: termination status is $(termination_status(dcglp))";
-                        throw_typical_cuts_for_errors = throw_typical_cuts_for_errors,
-                    )
+                    if fallback_on_error
+                        @warn "$SplitOracle: DCGLP master terminated with $(termination_status(dcglp)); fallback to typical oracle";
+                        return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
+                    end
+                    throw(UnexpectedModelStatusException("SplitOracle: DCGLP master terminated with $(termination_status(dcglp))."))
                 end
             end
 
             collect_dcglp_benders_cuts!(oracle, state, benders_cuts, hyperplanes, x_value, t_value, log, time_limit)
-            update_dcglp_upper_bound_and_gap!(normalization, state, log, reference_t, t_value)
+            update_dcglp_upper_bound_and_gap!(normalization, state, log, t_value)
             record_iteration!(log, state)
         end
 
-        oracle.param.dcglp_param.verbose && print_dcglp_iteration_info(normalization, state, log)
+        oracle.param.dcglp_param.verbose && print_iteration_info(state, log)
         check_lb_improvement!(state, log; zero_tol = oracle.param.zero_tol)
         is_terminated(state, log, oracle.param.dcglp_param, time_limit) && break
 
@@ -218,11 +260,11 @@ function solve_dcglp_loop!(
             one_indices,
         )
         oracle.param.dcglp_param.verbose && print_disjunctive_cut(oracle, cut, x_value, t_value; zero_tol = oracle.param.zero_tol)
-        store_dcglp_disjunctive_cut!(oracle, cut, hyperplanes, include_disjunctive_cuts_to_hyperplanes)
+        store_dcglp_disjunctive_cut!(oracle, cut, hyperplanes)
         return false, hyperplanes, fill(Inf, length(t_value))
     end
 
-    return fallback_to_typical_after_dcglp!(oracle, x_value, t_value, start_time, time_limit)
+    return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
 end
 
 function read_dcglp_solution!(oracle::SplitOracle, state::DcglpState)
@@ -238,6 +280,23 @@ function read_dcglp_solution!(oracle::SplitOracle, state::DcglpState)
     state.LB = tau_value
 end
 
+"""
+    collect_dcglp_benders_cuts!(
+        oracle,
+        state,
+        benders_cuts,
+        hyperplanes,
+        x_value,
+        t_value,
+        log,
+        time_limit,
+    )
+
+Evaluate the typical oracles at the two DCGLP disjunctive points and collect the resulting Benders cuts.
+
+Cuts violated by the DCGLP points are converted to the scaled DCGLP representation and added to `benders_cuts`. Depending on `oracle.param.add_benders_cuts_to_master`, selected byproduct Benders cuts may
+also be appended to `hyperplanes` for addition to the master problem.
+"""
 function collect_dcglp_benders_cuts!(
     oracle::SplitOracle,
     state::DcglpState,

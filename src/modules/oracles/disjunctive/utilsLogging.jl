@@ -22,10 +22,6 @@ function format_hyperplane(h::Hyperplane; zero_tol::Float64 = 1.0e-10)
     return join(pieces, " ") * " <= 0"
 end
 
-function print_dcglp_iteration_info(::AbstractDisjunctiveNormalization, state::DcglpState, log::DcglpLog)
-    print_iteration_info(state, log)
-end
-
 function print_disjunctive_cut(
     oracle::SplitOracle,
     cut::Hyperplane,

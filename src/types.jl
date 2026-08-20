@@ -194,15 +194,29 @@ end
 """
     SplitIndexSelectionRule
 
-Abstract supertype for rules that choose which fractional master variable is
-used to form a split disjunction in disjunctive DCGLP oracles.
+Abstract supertype for rules used to select the master variable defining a split disjunction.
+
+Available rules include:
+
+- [`RandomFractional`](@ref): Select a fractional master variable at random.
+- [`MostFractional`](@ref): Select the fractional master variable whose value is closest to `0.5`.
+- [`LargestFractional`](@ref): Select the fractional master variable with the largest index.
 """
 abstract type SplitIndexSelectionRule end
+
+"""
+    SimpleSplit <: SplitIndexSelectionRule
+
+Abstract supertype for split-selection rules based a single master variable.
+"""
 abstract type SimpleSplit <: SplitIndexSelectionRule end
+
 """Select a fractional split index at random."""
 struct RandomFractional <: SimpleSplit end
+
 """Select the split index with value closest to 0.5."""
 struct MostFractional <: SimpleSplit end
+
 """Select the largest-index fractional master variable."""
 struct LargestFractional <: SimpleSplit end
 
@@ -213,13 +227,21 @@ struct LargestFractional <: SimpleSplit end
 """
     DisjunctiveCutsAppendRule
 
-Abstract supertype for policies that decide how previously generated
-disjunctive cuts are reused inside the DCGLP solved by disjunctive oracles.
+Abstract supertype for rules controlling which previously generated disjunctive cuts are included in the DCGLP.
+
+Available rules include:
+
+- [`NoDisjunctiveCuts`](@ref): Do not include previously generated disjunctive cuts.
+- [`AllDisjunctiveCuts`](@ref): Include all previously generated disjunctive cuts.
+- [`DisjunctiveCutsSmallerIndices`](@ref): Include only disjunctive cuts associated with smaller split indices.
 """
 abstract type DisjunctiveCutsAppendRule end
-"""Do not reuse previously generated disjunctive cuts."""
+
+"""Do not include previously generated disjunctive cuts in the DCGLP."""
 struct NoDisjunctiveCuts <: DisjunctiveCutsAppendRule end
-"""Reuse all previously generated disjunctive cuts."""
+
+"""Include all previously generated disjunctive cuts in the DCGLP."""
 struct AllDisjunctiveCuts <: DisjunctiveCutsAppendRule end
-"""Reuse only cuts associated with smaller split indices."""
+
+"""Include only disjunctive cuts associated with smaller split indices in the DCGLP."""
 struct DisjunctiveCutsSmallerIndices <: DisjunctiveCutsAppendRule end

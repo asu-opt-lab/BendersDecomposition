@@ -60,9 +60,6 @@ function solve!(env::SpecializedBendersSeq)
         while true
             state = BendersSeqState()
             state.total_time = @elapsed begin
-                ## add all found disjunctive cuts to master
-                all_disj_cuts = hyperplanes_to_expression(env.master.model, env.oracle.disjunctive_cuts, env.master.x, env.master.t)
-                @constraint(env.master.model, con_disjunctive, 0.0 .>= all_disj_cuts)
 
                 # Solve linear relaxation
                 state.master_time = @elapsed begin
@@ -78,7 +75,7 @@ function solve!(env::SpecializedBendersSeq)
                 generate_optimal_vertex!(env, L_env, state)
 
                 state.oracle_time = @elapsed begin
-                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, env.param), throw_typical_cuts_for_errors = false, include_disjunctive_cuts_to_hyperplanes = false)
+                    state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, state.values[:x], state.values[:t]; time_limit = get_sec_remaining(log, env.param), fallback_to_typical_cuts = false)
                     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.x, env.master.t) : []
                 end
 

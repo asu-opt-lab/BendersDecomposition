@@ -18,14 +18,29 @@ and Ben-Ameur and Neto (2007).
 - `oracle::AbstractOracle`: Oracle used for subproblem evaluation and cut generation
 - `param::BendersSeqInOutParam`: Parameters controlling the algorithm and its
   stabilization strategy.
+- `preprocessing::AbstractBendersPreprocessing`: Configuration for optionally preprocessing the LP relaxation of the master problem before the Benders iterations.
 - `obj_value::Float64`: Objective value of the best solution found
 - `termination_status::TerminationStatus`: Status of the algorithm upon termination
 
-The stabilization parameters are specified through `BendersSeqInOutParam`:
+The stabilization parameters are specified through [`BendersSeqInOutParam`](@ref):
 
 - `α`: Weight used to update the stabilizing point.
 - `λ`: Weight used to form the perturbed query point.
 - `stabilizing_x`: Initial stabilizing point.
+
+# Constructor
+
+    BendersSeqInOut(
+        master::AbstractMaster,
+        oracle::AbstractOracle;
+        param::BendersSeqInOutParam = BendersSeqInOutParam(),
+        preprocessing::AbstractBendersPreprocessing = NoPreprocessing(),
+    )
+
+Construct a sequential Benders environment with in-out stabilization.
+
+By default, no preprocessing is applied.
+
 
 # Example
 ```julia
@@ -40,7 +55,7 @@ df = solve!(env)
 - M. Fischetti, I. Ljubić, and M. Sinnl, "Redesigning Benders decomposition for large-scale facility location," Management Science, 63 (2017), 2146–2162.
 - W. Ben-Ameur and J. Neto, "Acceleration of cutting-plane and column generation algorithms: Applications to network design," Networks, 49 (2007), 3–17.
 
-See also: [`BendersSeq`](@ref), [`SpecializedBendersSeq`](@ref)
+See also: [`BendersSeq`](@ref), [`AbstractBendersPreprocessing`](@ref)
 """
 mutable struct BendersSeqInOut <: AbstractBendersSeq
     master::AbstractMaster
@@ -48,13 +63,15 @@ mutable struct BendersSeqInOut <: AbstractBendersSeq
 
     param::BendersSeqInOutParam 
 
+    preprocessing::AbstractBendersPreprocessing
+
     # result
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function BendersSeqInOut(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam())
+    function BendersSeqInOut(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam(), preprocessing::AbstractBendersPreprocessing = NoPreprocessing())
 
-        new(master, oracle, param, Inf, NotSolved())
+        new(master, oracle, param, preprocessing, Inf, NotSolved())
     end
 end
 """
@@ -62,11 +79,7 @@ end
 
 Execute the sequential Benders decomposition algorithm with in-out stabilization.
 
-At each iteration, the method solves the master problem, updates the
-stabilizing point, evaluates the oracle at a perturbed query point, and adds
-the resulting Benders cuts to the master problem. If lower-bound improvement
-stalls for a prescribed number of iterations, the method switches to Kelley's
-cutting-plane method.
+The method first applies the configured preprocessing, if any. At each iteration, the method solves the master problem, updates the stabilizing point, evaluates the oracle at a perturbed query point, and adds the resulting Benders cuts to the master problem. If lower-bound improvement stalls for a prescribed number of iterations, the method switches to Kelley's cutting-plane method.
 
 The iteration history is returned as a `DataFrame`.
 """
@@ -74,6 +87,13 @@ function solve!(env::BendersSeqInOut)
     param = env.param
     log = BendersSeqLog()
     try    
+        # Apply preprocessing
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing)
+
+        if param.time_limit <= log.preprocessing_time
+            throw(TimeLimitException("Time limit reached during preprocessing, please increase the time limit."))
+        end
+
         state = BendersSeqState()
         stabilizing_x = param.stabilizing_x
         α = param.α
@@ -148,7 +168,9 @@ function solve!(env::BendersSeqInOut)
     catch e
         if typeof(e) <: TimeLimitException
             env.termination_status = TimeLimit()
-            env.obj_value = log.iterations[end].LB
+            if length(log.iterations) !== 0
+                env.obj_value = log.iterations[end].LB
+            end
         elseif typeof(e) <: UnexpectedModelStatusException
             env.termination_status = InfeasibleOrNumericalIssue()
             @warn e.msg

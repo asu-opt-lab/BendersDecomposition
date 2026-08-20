@@ -7,14 +7,14 @@ include("callback/callback.jl") # must be included first
 """
     BendersBnB <: AbstractBendersBnB
 
-Branch-and-Bound implementation of Benders decomposition.
+Branch-and-bound Benders decomposition environment.
 
-`BendersBnB` integrates Benders cut generation into the MIP solver's branch-and-bound process through lazy-constraint and optional user-cut callbacks. Optional root-node preprocessing can be applied before the branch-and-bound search begins.
+`BendersBnB` integrates Benders cut generation into the MIP solver's branch-and-bound process through lazy-constraint and optional user-cut callbacks. Optionally, the LP relaxation of the master problem can be preprocessed to generate initial cuts before branch-and-bound begins.
 
 # Fields
 - `master::AbstractMaster`: Master problem.
 - `param::BendersBnBParam`: Parameters controlling algorithm, such as the time limit, relative gap tolerance, and verbosity.
-- `preprocessing::AbstractBendersPreprocessing`: Configuration for root-node preprocessing.
+- `preprocessing::AbstractBendersPreprocessing`: Configuration for preprocessing the LP relaxation before branch-and-bound.
 - `lazy_callback::AbstractLazyCallback`: Configuration for lazy-constraint callback
 - `user_callback::AbstractUserCallback`: Configuration for user-cut callback
 - `obj_value::Float64`: Objective value of the best solution found
@@ -24,11 +24,11 @@ Branch-and-Bound implementation of Benders decomposition.
 ```julia
 master = Master(data; model = update_master_model!)
 oracle = ClassicalOracle(data, master; model = update_sub_model!)
-env = BendersBnB(master, oracle)  # Use default setting with no root node preprocessing and no user callback
+env = BendersBnB(master, oracle)  # Use default setting with no preprocessing and no user callback
 result = solve!(env)
 ```
 
-See also: [`BendersSeq`](@ref)
+See also: [`BendersSeq`](@ref), [`AbstractBendersPreprocessing`](@ref), [`AbstractLazyCallback`](@ref), [`AbstractUserCallback`](@ref)
 """
 mutable struct BendersBnB <: AbstractBendersBnB
     master::AbstractMaster 
@@ -63,7 +63,7 @@ end
 
 Execute the branch-and-bound Benders decomposition algorithm.
 
-The method applies the configured root-node preprocessing, installs the configured lazy-constraint and user-cut callbacks, sets the solver parameters, and solves the master problem through the MIP solver's branch-and-bound procedure.
+The method first applies the configured preprocessing, then installs the configured lazy-constraint and user-cut callbacks, sets the solver parameters, and solves the master problem through the MIP solver's branch-and-bound procedure.
 
 The returned `DataFrame` contains summary statistics for the solve.
 
@@ -82,7 +82,7 @@ function solve!(env::BendersBnB)
     try 
         log.start_time = time()
         
-        # Apply root node preprocessing if specified
+        # Apply preprocessing
         log.preprocessing_time = preprocess!(env.master, env.preprocessing)
 
         # Set up lazy callback

@@ -29,7 +29,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Classic oracle" begin     
                 @info "solving SNIP instance-$instance snipno-$snipno budget-$budget - classical oracle - seq..."
                 master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                oracle = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -40,7 +40,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 @info "solving SNIP instance-$instance snipno-$snipno budget-$budget - pareto oracle - seq..."
                 master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                 param = ParetoOracleParam(fill(1.0, length(data.D)))
-                oracle = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = param, optimizer = optimizer)
+                oracle = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = param, optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()
@@ -50,7 +50,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Unified oracle" begin
                 @info "solving SNIP instance-$instance snipno-$snipno budget-$budget - unified oracle - seq..."
                 master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
+                oracle = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()

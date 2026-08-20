@@ -47,21 +47,29 @@ mutable struct DcglpLog <: AbstractDcglpLog
 end
 
 """
-    DcglpParam([optimizer]; time_limit = 1000.0, gap_tolerance = 1e-3,
-               halt_limit = 3, iter_limit = 250, verbose = true)
+    DcglpParam(
+        [optimizer];
+        time_limit = 1000.0,
+        gap_tolerance = 1e-3,
+        halt_limit = 3,
+        iter_limit = 250,
+        verbose = true,
+    )
 
-Parameter container for the disjunctive cut generating LP cutting-plane loop.
-
-These settings control how aggressively the DCGLP is solved each time a
-[`SplitOracle`](@ref) attempts to generate a disjunctive cut.
+Parameters controlling the DCGLP cutting-plane solution process used by [`SplitOracle`](@ref).
 
 # Fields
-- `optimizer::MOI.OptimizerWithAttributes`: Optimizer used to build the DCGLP model.
-- `time_limit::Float64`: Internal time limit for one DCGLP solve in seconds.
-- `gap_tolerance::Float64`: Stopping tolerance on the DCGLP upper-lower bound gap.
-- `halt_limit::Int`: Number of consecutive non-improving iterations before stopping.
+
+- `optimizer::MOI.OptimizerWithAttributes`: Optimizer used to solve the DCGLP.
+- `time_limit::Float64`: Maximum time allowed for a DCGLP solution process, in seconds.
+- `gap_tolerance::Float64`: Optimality-gap tolerance used for termination.
+- `halt_limit::Int`: Maximum number of consecutive iterations without sufficient improvement before termination.
 - `iter_limit::Int`: Maximum number of DCGLP iterations.
-- `verbose::Bool`: Whether to print DCGLP iteration logs.
+- `verbose::Bool`: Whether to print DCGLP iteration information.
+
+The DCGLP solution process terminates when a configured stopping criterion is satisfied, including the time limit, gap tolerance, halt limit, or iteration limit.
+
+See also: [`SplitOracleParam`](@ref), [`SplitOracle`](@ref)
 """
 mutable struct DcglpParam <: AbstractDcglpParam
     

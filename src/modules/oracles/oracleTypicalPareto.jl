@@ -2,18 +2,34 @@
 """
     ParetoOracleParam <: AbstractOracleParam
 
-Parameter type for [`ParetoOracle`](@ref).
+Parameters controlling [`ParetoOracle`](@ref).
+
+In addition to the numerical tolerances used for cut generation, `ParetoOracleParam` specifies the core point and its update rule for the Magnanti-Wong procedure.
 
 # Fields
-- `rtol::Float64`: Relative tolerance for cut violation detection (default: 1e-9).
-- `atol::Float64`: Absolute tolerance for cut violation detection (default: 0.0).
-- `zero_tol::Float64`: Threshold below which a value is considered zero (default: 1e-9)
-- `core_point::Vector{Float64}`: Initial core point for Magnanti-Wong problem (REQUIRED).
-- `λ::Float64`: Weight for updating the core point. After each cut generation, core_point is updated as:
-  `core_point = λ * core_point + (1 - λ) * x_value`. Default 1.0 means no update (classical behavior).
-- `pareto_tol::Float64`: Absolute tolerance for enforcing the Pareto-optimality constraint (default: 1e-7).
-  Rule of thumb: choose `pareto_tol` about 10x-100x larger than the solver feasibility/optimality
-  tolerances, but still about 10x-100x smaller than the acceptable final objective error.
+
+- `rtol::Float64`: Relative tolerance for cut violation detection.
+- `atol::Float64`: Absolute tolerance for cut violation detection.
+- `zero_tol::Float64`: Threshold below which a value is considered zero.
+- `core_point::Vector{Float64}`: Current core point used by the Magnanti-Wong procedure. The core point is updated in place after each oracle evaluation according to `λ`.
+- `λ::Float64`: Weight used to update the core point after each oracle evaluation.
+- `pareto_tol::Float64`: Absolute tolerance for enforcing the Pareto-optimality constraint.
+  Rule of thumb: choose `pareto_tol` about 10x-100x larger than the solver feasibility/optimality tolerances.
+
+  The core point is updated according to `core_point = λ * core_point + (1 - λ) * x_value` where `x_value` is the current candidate solution. A value of `λ = 1.0` means no update (classical behavior), while `λ < 1.0` allows the core point to move towards the current candidate solution, potentially improving cut quality.
+
+# Constructor
+
+    ParetoOracleParam(
+        core_point::Vector{Float64};
+        rtol = 1e-9,
+        atol = 0.0,
+        zero_tol = 1e-9,
+        λ = 1.0,
+        pareto_tol = 1e-7,
+    )
+
+The `core_point` must be nonempty and `λ` must belong to [0, 1].
 """
 struct ParetoOracleParam <: AbstractOracleParam
     rtol::Float64
@@ -85,9 +101,7 @@ The second constructor is for `SeparableOracle`. `ParetoOracleParam` should be p
 See also [`SeparableOracle`](@ref)
 
 # Arguments
-`ParetoOracleParam` is not an alias of `BasicOracleParam`. Users must define own `ParetoOracleParam` and
-provide it to `ParetoOracle`, as the core point depends on the specific problem being solved.
-All other arguments are identical to those of [`ClassicalOracle`](@ref).
+`ParetoOracleParam` is not an alias of `BasicOracleParam`. Users must define own `ParetoOracleParam` and provide it to `ParetoOracle`, as the core point depends on the specific problem being solved. All other arguments are identical to those of [`ClassicalOracle`](@ref).
 
 # Example with a problem-specific param
 ```julia

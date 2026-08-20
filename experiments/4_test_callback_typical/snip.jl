@@ -28,7 +28,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 @testset "NoSeq" begin
                     @info "solving SNIP instance$instance snipno $snipno budget $budget - classical oracle - no seq..."
                     master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
 
                     preprocessing = NoPreprocessing()
                     lazy_callback = LazyCallback(oracle)
@@ -43,7 +43,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 @testset "Seq" begin
                     @info "solving SNIP instance$instance snipno $snipno budget $budget - classical oracle - seq..."
                     master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
 
                     preprocessing_seq_type = BendersSeq
                     preprocessing_seq_param = BendersSeqParam(;
@@ -65,7 +65,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 @testset "SeqInOut" begin
                     @info "solving SNIP instance$instance snipno $snipno budget $budget - classical oracle - seqinout..."
                     master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
 
                     preprocessing_seq_type = BendersSeqInOut
                     preprocessing_seq_param = BendersSeqInOutParam(
@@ -93,7 +93,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     @info "solving SNIP instance$instance snipno $snipno budget $budget - pareto oracle - no seq..."
                     master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                     pareto_param = ParetoOracleParam(ones(length(data.D)))
-                    oracle = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
 
                     preprocessing = NoPreprocessing()
                     lazy_callback = LazyCallback(oracle)
@@ -109,7 +109,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     @info "solving SNIP instance$instance snipno $snipno budget $budget - pareto oracle - seq..."
                     master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                     pareto_param = ParetoOracleParam(ones(length(data.D)))
-                    oracle = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
 
                     preprocessing_seq_type = BendersSeq
                     preprocessing_seq_param = BendersSeqParam(;
@@ -132,7 +132,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     @info "solving SNIP instance$instance snipno $snipno budget $budget - pareto oracle - seqinout..."
                     master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                     pareto_param = ParetoOracleParam(ones(length(data.D)))
-                    oracle = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
 
                     preprocessing_seq_type = BendersSeqInOut
                     preprocessing_seq_param = BendersSeqInOutParam(
@@ -159,7 +159,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 @testset "NoSeq" begin
                     @info "solving SNIP instance$instance snipno $snipno budget $budget - unified oracle - no seq..."
                     master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
 
                     preprocessing = NoPreprocessing()
                     lazy_callback = LazyCallback(oracle)
@@ -174,7 +174,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 @testset "Seq" begin
                     @info "solving SNIP instance$instance snipno $snipno budget $budget - unified oracle - seq..."
                     master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
 
                     preprocessing_seq_type = BendersSeq
                     preprocessing_seq_param = BendersSeqParam(;
@@ -196,7 +196,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 @testset "SeqInOut" begin
                     @info "solving SNIP instance$instance snipno $snipno budget $budget - unified oracle - seqinout..."
                     master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                    oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
+                    oracle = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
 
                     preprocessing_seq_type = BendersSeqInOut
                     preprocessing_seq_param = BendersSeqInOutParam(

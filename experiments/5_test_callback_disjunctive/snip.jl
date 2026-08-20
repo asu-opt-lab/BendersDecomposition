@@ -38,7 +38,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             mip_opt_val = reference_objectives[instance_name]
             
             @testset "Classic oracle" begin
-                # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
+                # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [true], p in [Inf], lift in [true], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
@@ -54,9 +54,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "NoSeq" begin
                             @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/classical/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                            lazy_oracle = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
@@ -77,9 +77,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "Seq" begin
                             @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/classical/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                            lazy_oracle = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
@@ -100,9 +100,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @testset "SeqInOut" begin
                             @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/classical/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                            lazy_oracle = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle(), data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                            lazy_oracle = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, ClassicalOracle, data.num_scenarios; model = update_sub_model!, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
@@ -140,9 +140,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/pareto/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             pareto_param = ParetoOracleParam(ones(length(data.D)))
-                            lazy_oracle = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                            lazy_oracle = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
@@ -164,9 +164,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/pareto/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             pareto_param = ParetoOracleParam(ones(length(data.D)))
-                            lazy_oracle = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                            lazy_oracle = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
@@ -188,9 +188,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/pareto/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             pareto_param = ParetoOracleParam(ones(length(data.D)))
-                            lazy_oracle = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, ParetoOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                            lazy_oracle = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, ParetoOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = pareto_param, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
@@ -228,9 +228,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/unified/no seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             unified_param = UnifiedOracleParam()
-                            lazy_oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
+                            lazy_oracle = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
@@ -252,9 +252,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/unified/seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             unified_param = UnifiedOracleParam()
-                            lazy_oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
+                            lazy_oracle = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
@@ -276,9 +276,9 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             @info "solving SNIP instance$instance snipno $snipno budget $budget - disjunctive oracle/unified/seqinout - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp lift $lift p $p dcut_append $disjunctive_cut_append_rule"
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             unified_param = UnifiedOracleParam()
-                            lazy_oracle = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
-                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
-                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle(), data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
+                            lazy_oracle = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
+                            typical_oracle_kappa = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
+                            typical_oracle_nu = SeparableOracle(data, master, UnifiedOracle, data.num_scenarios; model = update_sub_model!, sub_oracle_param = unified_param, optimizer = optimizer)
                             typical_oracles = [typical_oracle_kappa; typical_oracle_nu]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 

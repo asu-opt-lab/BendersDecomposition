@@ -80,15 +80,17 @@ function choose_split_and_update_lifting!(
 
     zero_indices, one_indices = oracle.param.lift ? retrieve_zero_one(x_value, oracle.param.zero_tol) : (Int[], Int[])
     add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices)
+
     return zero_indices, one_indices
 end
 
-function rollback_current_dcglp_candidate!(oracle::AbstractSplitOracle)
-    !isempty(oracle.splits) && pop!(oracle.splits)
-    delete_registered_constraints!(oracle.dcglp, :con_split_kappa)
-    delete_registered_constraints!(oracle.dcglp, :con_split_nu)
-    delete_registered_constraints!(oracle.dcglp, :con_zeta)
-    delete_registered_constraints!(oracle.dcglp, :con_xi)
-    delete_registered_constraints!(oracle.dcglp, :initial_L)
-    return nothing
-end
+# # they are done at intialization
+# function rollback_current_dcglp_candidate!(oracle::AbstractSplitOracle)
+#     !isempty(oracle.splits) && pop!(oracle.splits)
+#     delete_registered_constraints!(oracle.dcglp, :con_split_kappa)
+#     delete_registered_constraints!(oracle.dcglp, :con_split_nu)
+#     delete_registered_constraints!(oracle.dcglp, :con_zeta)
+#     delete_registered_constraints!(oracle.dcglp, :con_xi)
+#     delete_registered_constraints!(oracle.dcglp, :initial_L)
+#     return nothing
+# end

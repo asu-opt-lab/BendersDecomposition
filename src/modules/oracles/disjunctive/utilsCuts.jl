@@ -3,7 +3,6 @@ function add_disjunctive_cuts!(oracle::AbstractSplitOracle, rule::DisjunctiveCut
 end
 
 function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::NoDisjunctiveCuts)
-    delete_registered_constraints!(oracle.dcglp, :con_disjunctive)
 end
 
 function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::AllDisjunctiveCuts)
@@ -25,7 +24,6 @@ end
 
 function install_disjunctive_cuts!(oracle::AbstractSplitOracle, cuts::Vector{Hyperplane})
     dcglp = oracle.dcglp
-    delete_registered_constraints!(dcglp, :con_disjunctive)
     isempty(cuts) && return nothing
 
     exprs = AffExpr[]
@@ -47,27 +45,24 @@ end
 function update_dynamic_dcglp_constraints!(oracle::AbstractSplitOracle)
     if !oracle.param.reuse_dcglp
         delete_registered_constraints!(oracle.dcglp, :con_benders)
-        delete_registered_constraints!(oracle.dcglp, :con_disjunctive)
     end
+    delete_registered_constraints!(oracle.dcglp, :con_disjunctive)
     add_disjunctive_cuts!(oracle, oracle.param.disjunctive_cut_append_rule)
-end
-
-function append_current_disjunctive_cut!(oracle::AbstractSplitOracle, cut::Hyperplane)
-    push!(oracle.disjunctive_cuts, cut)
-    if oracle.param.split_index_selection_rule isa SimpleSplit
-        index = get_split_index(oracle)
-        push!(oracle.disjunctive_cuts_by_index[index], cut)
-    end
 end
 
 function store_dcglp_disjunctive_cut!(
     oracle::AbstractSplitOracle,
     cut::Hyperplane,
     master_hyperplanes::Vector{Hyperplane},
-    include_disjunctive_cuts_to_hyperplanes::Bool,
 )
-    append_current_disjunctive_cut!(oracle, cut)
-    include_disjunctive_cuts_to_hyperplanes && push!(master_hyperplanes, cut)
+    push!(oracle.disjunctive_cuts, cut)
+    
+    if oracle.param.split_index_selection_rule isa SimpleSplit
+        index = get_split_index(oracle)
+        push!(oracle.disjunctive_cuts_by_index[index], cut)
+    end
+
+    push!(master_hyperplanes, cut)
 end
 
 """
@@ -150,17 +145,8 @@ function strengthen_coefficients(gamma_x, sigma, delta; zero_tol = 1.0e-9)
     return min.(a_1 .- sigma[1] .* floor.(m), a_2 .+ sigma[2] .* ceil.(m))
 end
 
-function disjunctive_cut_normalization_value(
-    normalization::AbstractDisjunctiveNormalization,
-    dcglp::Model,
-    gamma_x::Vector{Float64},
-    gamma_t::Vector{Float64},
-)
-    throw(UndefError("update disjunctive_cut_normalization_value for $(typeof(normalization))"))
-end
-
 function build_dcglp_disjunctive_cut(
-    normalization::AbstractDisjunctiveNormalization,
+    normalization::AbstractNormalization,
     dcglp::Model,
     common::SplitOracleParam,
     zero_indices::Vector{Int},

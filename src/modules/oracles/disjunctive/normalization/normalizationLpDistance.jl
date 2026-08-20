@@ -3,11 +3,27 @@
 # -----------------------------------------------------------------------------
 
 """
-    LpDistanceNormalization(p)
+    LpDistanceNormalization <: AbstractNormalization
 
-Distance-norm DCGLP normalization for `SplitOracle`.
+``L_p``-distance normalization for DCGLP-based disjunctive cut generation.
+
+# Fields
+
+- `norm_p::Float64`: Norm used for normalization. Supported values are `1`, `2`, and `Inf`.
+
+# Constructor
+
+    LpDistanceNormalization(p = Inf)
+
+Construct an ``L_p``-distance normalization using the specified norm.
+
+# Throws
+
+Throws an `ArgumentError` if `p` is not one of `1`, `2`, or `Inf`.
+
+See also: [`AbstractNormalization`](@ref), [`ReversePolarNormalization`](@ref)
 """
-mutable struct LpDistanceNormalization <: AbstractDisjunctiveNormalization
+mutable struct LpDistanceNormalization <: AbstractNormalization
     norm_p::Float64
 
     function LpDistanceNormalization(p::Real = Inf)
@@ -19,6 +35,7 @@ end
 
 function add_normalization_constraint!(
     normalization::LpDistanceNormalization,
+    master::AbstractMaster,
     dcglp::Model,
     tau::VariableRef,
     sx::AbstractVector{VariableRef},
@@ -39,11 +56,15 @@ function add_normalization_constraint!(
     return nothing
 end
 
+function update_dcglp_for_candidate!(normalization::LpDistanceNormalization, dcglp::Model, x_value::Vector{Float64}, t_value::Vector{Float64})
+    set_normalized_rhs.(dcglp[:conx], x_value)
+    set_normalized_rhs.(dcglp[:cont], t_value)
+end
+
 function update_dcglp_upper_bound_and_gap!(
     normalization::LpDistanceNormalization,
     state::DcglpState,
     log::DcglpLog,
-    reference_t::Vector{Float64},
     t_value::Vector{Float64},
 )
     fill_dcglp_omega_t_estimates!(state, t_value)
@@ -51,7 +72,7 @@ function update_dcglp_upper_bound_and_gap!(
     update_upper_bound_and_gap!(
         state,
         log,
-        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], normalization.norm_p),
+        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], normalization.norm_p),
     )
     return nothing
 end

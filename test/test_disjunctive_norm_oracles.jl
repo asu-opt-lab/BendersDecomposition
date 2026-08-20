@@ -15,8 +15,8 @@ struct DirectionalVectorTTestData <: AbstractData end
 
 struct DirectionalVectorTTestOracle <: BendersX.AbstractTypicalOracle end
 
-struct ExtensionContractNormalization <: BendersX.AbstractDisjunctiveNormalization end
-struct MissingContractNormalization <: BendersX.AbstractDisjunctiveNormalization end
+struct ExtensionContractNormalization <: BendersX.AbstractNormalization end
+struct MissingContractNormalization <: BendersX.AbstractNormalization end
 
 function disjunctive_norm_optimizer()
     return optimizer_with_attributes(HiGHS.Optimizer, DNO_MOI.Silent() => true)
@@ -122,6 +122,7 @@ end
 
 function BendersX.add_normalization_constraint!(
     normalization::ExtensionContractNormalization,
+    master::AbstractMaster,
     dcglp::Model,
     tau::VariableRef,
     sx::AbstractVector{VariableRef},
@@ -132,10 +133,9 @@ function BendersX.add_normalization_constraint!(
 end
 
 function BendersX.update_dcglp_upper_bound_and_gap!(
-    normalization::ExtensionContractNormalization,
+    ::ExtensionContractNormalization,
     state::BendersX.DcglpState,
     log::BendersX.DcglpLog,
-    reference_t::Vector{Float64},
     t_value::Vector{Float64},
 )
     BendersX.fill_dcglp_omega_t_estimates!(state, t_value)
@@ -143,7 +143,7 @@ function BendersX.update_dcglp_upper_bound_and_gap!(
     BendersX.update_upper_bound_and_gap!(
         state,
         log,
-        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- reference_t], Inf),
+        (t1, t2) -> LinearAlgebra.norm([state.values[:sx]; t1 .+ t2 .- t_value], Inf),
     )
 end
 
@@ -162,7 +162,7 @@ function run_direct_cut_smoke(oracle)
         [0.5, 0.5],
         [0.0];
         time_limit = 20.0,
-        throw_typical_cuts_for_errors = true,
+        fallback_to_typical_cuts = true,
     )
 
     @test is_in_L isa Bool
@@ -215,18 +215,15 @@ end
         @test param.normalization isa LpDistanceNormalization
         @test param.normalization.norm_p == 1.0
         @test !param.reuse_dcglp
-        @test !param.adjust_t_to_fx
         @test LpDistanceNormalization(1).norm_p == 1.0
         @test LpDistanceNormalization(Inf).norm_p == Inf
         @test_throws ArgumentError LpDistanceNormalization(3.0)
 
         adjusted_param = SplitOracleParam(
             ReversePolarNormalization();
-            dcglp_param = disjunctive_norm_dcglp_param(),
-            adjust_t_to_fx = true,
+            dcglp_param = disjunctive_norm_dcglp_param()
         )
         @test adjusted_param.normalization isa ReversePolarNormalization
-        @test adjusted_param.adjust_t_to_fx
 
         directional_param = SplitOracleParam(
             ReversePolarNormalization([0.25, 0.25], [0.0]);
@@ -354,12 +351,16 @@ end
     end
 
     @testset "normalization extension defaults" begin
+        
+        data, master = build_disjunctive_norm_master()
+
         model = Model()
         @variable(model, tau)
         @variable(model, sx[1:1])
         @variable(model, st[1:1])
         @test_throws BendersX.UndefError BendersX.add_normalization_constraint!(
             MissingContractNormalization(),
+            master,
             model,
             tau,
             sx,
@@ -379,7 +380,6 @@ end
             [0.0],
         )
 
-        data, master = build_disjunctive_norm_master()
         oracle = SplitOracle(
             master,
             build_typical_pair(data, master);
@@ -391,19 +391,6 @@ end
         )
 
         run_direct_cut_smoke(oracle)
-
-        state = BendersX.DcglpState()
-        state.omega_t_[1] = [1.0]
-        state.omega_t_[2] = [2.0]
-        state.LB = 1.0
-        state.UB = 2.0
-        state.gap = 50.0
-        log = BendersX.DcglpLog()
-        log.n_iter = 1
-
-        redirect_stdout(devnull) do
-            @test BendersX.print_dcglp_iteration_info(ExtensionContractNormalization(), state, log) === nothing
-        end
     end
 
     @testset "cut history and include flag" begin
@@ -431,115 +418,6 @@ end
         @test length(oracle.splits) == 1
         @test !isempty(oracle.disjunctive_cuts)
         @test all(cut -> !(cut in hyperplanes), oracle.disjunctive_cuts)
-    end
-
-    @testset "directional core point update" begin
-        data, master = build_disjunctive_norm_master()
-        oracle = SplitOracle(
-            master,
-            build_typical_pair(data, master);
-            param = SplitOracleParam(
-                ReversePolarNormalization([0.25, 0.25], [0.0]);
-                dcglp_param = disjunctive_norm_dcglp_param(),
-            ),
-        )
-
-        set_core_point!(oracle, [0.2, 0.3], [0.1])
-        @test oracle.param.normalization.core_point_x == [0.2, 0.3]
-        @test oracle.param.normalization.core_point_t == [0.1]
-        @test_throws DimensionMismatch set_core_point!(oracle, [0.1], [0.0])
-    end
-
-    @testset "reverse polar adjust_t_to_fx updates direction" begin
-        data = DirectionalVectorTTestData()
-        master = Master(data; model = update_directional_vector_t_master!, optimizer = disjunctive_norm_optimizer())
-        normalization = ReversePolarNormalization([0.5, 0.5], [0.75, 0.75])
-        oracle = SplitOracle(
-            master,
-            (DirectionalVectorTTestOracle(), DirectionalVectorTTestOracle());
-            param = SplitOracleParam(
-                normalization;
-                dcglp_param = disjunctive_norm_dcglp_param(),
-                adjust_t_to_fx = true,
-            ),
-        )
-
-        x_value = [0.5, 0.5]
-        t_value = [0.0, 0.0]
-        BendersX.update_dcglp_for_candidate!(normalization, oracle, x_value, t_value)
-        reference_t = BendersX.update_dcglp_reference_t!(normalization, oracle, x_value, t_value, time(), 20.0)
-        direction_x = x_value .- normalization.core_point_x
-        direction_t = reference_t .- normalization.core_point_t
-
-        @test reference_t == [0.5, 0.5]
-        @test direction_x == [0.0, 0.0]
-        @test direction_t == [-0.25, -0.25]
-        @test isapprox(JuMP.normalized_coefficient(oracle.dcglp[:con_reverse_polar_t][1], oracle.dcglp[:tau]), direction_t[1]; atol = 1.0e-9)
-        @test isapprox(JuMP.normalized_coefficient(oracle.dcglp[:con_reverse_polar_t][2], oracle.dcglp[:tau]), direction_t[2]; atol = 1.0e-9)
-    end
-
-    @testset "reverse polar adjust_t_to_fx falls back at adjusted core point" begin
-        data = DirectionalVectorTTestData()
-        master = Master(data; model = update_directional_vector_t_master!, optimizer = disjunctive_norm_optimizer())
-        oracle = SplitOracle(
-            master,
-            (DirectionalVectorTTestOracle(), DirectionalVectorTTestOracle());
-            param = SplitOracleParam(
-                ReversePolarNormalization([0.5, 0.5], [0.5, 0.5]);
-                dcglp_param = disjunctive_norm_dcglp_param(),
-                split_index_selection_rule = MostFractional(),
-                add_benders_cuts_to_master = 2,
-                reuse_dcglp = false,
-                strengthened = false,
-                lift = true,
-                adjust_t_to_fx = true,
-            ),
-        )
-
-        is_in_L, hyperplanes, f_x = BendersX.generate_cuts(
-            oracle,
-            [0.5, 0.5],
-            [0.0, 0.0];
-            time_limit = 20.0,
-            throw_typical_cuts_for_errors = false,
-        )
-
-        @test !is_in_L
-        @test length(hyperplanes) == 2
-        @test f_x == [0.5, 0.5]
-        @test isempty(oracle.disjunctive_cuts)
-        @test isempty(oracle.splits)
-    end
-
-    @testset "fallback cleanup removes transient split" begin
-        data, master = build_disjunctive_norm_master()
-        oracle = SplitOracle(
-            master,
-            build_typical_pair(data, master);
-            param = SplitOracleParam(
-                ReversePolarNormalization();
-                dcglp_param = disjunctive_norm_dcglp_param(),
-                split_index_selection_rule = LargestFractional(),
-                reuse_dcglp = false,
-            ),
-        )
-
-        BendersX.choose_split_and_update_lifting!(oracle, [0.5, 0.5])
-        @test length(oracle.splits) == 1
-        @test haskey(oracle.dcglp, :con_split_kappa)
-        @test haskey(oracle.dcglp, :con_split_nu)
-
-        BendersX.fallback_to_typical_after_dcglp!(
-            oracle,
-            [0.5, 0.5],
-            [0.0],
-            time(),
-            20.0,
-        )
-
-        @test isempty(oracle.splits)
-        @test !haskey(oracle.dcglp, :con_split_kappa)
-        @test !haskey(oracle.dcglp, :con_split_nu)
     end
 
     @testset "directional lift cut normalization" begin

@@ -1,5 +1,5 @@
 # tight tolerance for dcglp; adjust tol for generate_cut with omega_0
-# dcglp is not solved -> cannot proceed the algorithm, and should be terminated. Added an optimal argument to dcglp `throw_typical_cuts_for_errors=false`
+# dcglp is not solved -> cannot proceed the algorithm, and should be terminated. Added an optimal argument to dcglp `fallback_to_typical_cuts=false`
 # remove other_constraints from classical oracle.
 # add a method for generating optimal vertex for SpecializedBendersSeq
 
@@ -60,13 +60,16 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                 # for strengthened in [false], add_benders_cuts_to_master in [false], reuse_dcglp in [true], p in [1.0] #fail
                     @info "solving p$i - begin oracle - Specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
-                                                                split_index_selection_rule = LargestFractional(),
-                                                                disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
-                                                                strengthened=strengthened,
-                                                                add_benders_cuts_to_master=add_benders_cuts_to_master,
-                                                                fraction_of_benders_cuts_to_master = 0.5,
-                                                                reuse_dcglp=reuse_dcglp)
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(p);         
+                                                        dcglp_param = dcglp_param,
+                                                        split_index_selection_rule = LargestFractional(),
+                                                        disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
+                                                        strengthened=strengthened,
+                                                        add_benders_cuts_to_master=add_benders_cuts_to_master,
+                                                        fraction_of_benders_cuts_to_master = 0.5,
+                                                        reuse_dcglp=reuse_dcglp,
+                                                        fallback_to_typical_cuts = false
+                                    )
 
                         master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                         set_optimizer_attribute(master.model, "CPX_PARAM_LPMETHOD", 1)
@@ -95,13 +98,16 @@ dcglp_param = DcglpParam(dcglp_optimizer;
                 # for strengthened in [true; false], add_benders_cuts_to_master in [true; false], reuse_dcglp in [true; false], p in [1.0; Inf]
                     @info "solving p$i - fat Knapsack oracle - Specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
-                                                                split_index_selection_rule = LargestFractional(),
-                                                                disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
-                                                                strengthened=strengthened,
-                                                                add_benders_cuts_to_master=add_benders_cuts_to_master,
-                                                                fraction_of_benders_cuts_to_master = 0.5,
-                                                                reuse_dcglp=reuse_dcglp)
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(p);         
+                                                        dcglp_param = dcglp_param,
+                                                        split_index_selection_rule = LargestFractional(),
+                                                        disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
+                                                        strengthened=strengthened,
+                                                        add_benders_cuts_to_master=add_benders_cuts_to_master,
+                                                        fraction_of_benders_cuts_to_master = 0.5,
+                                                        reuse_dcglp=reuse_dcglp,
+                                                        fallback_to_typical_cuts = false
+                                        )
 
                         master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                         set_optimizer_attribute(master.model, "CPX_PARAM_LPMETHOD", 1)
@@ -143,13 +149,16 @@ end
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [false], p in [1.0]
                     @info "solving CFLP p$i - disjunctive oracle/classical - specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                     @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                        oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
-                                                                split_index_selection_rule = LargestFractional(),
-                                                                disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
-                                                                strengthened=strengthened,
-                                                                add_benders_cuts_to_master=add_benders_cuts_to_master,
-                                                                fraction_of_benders_cuts_to_master = 0.5,
-                                                                reuse_dcglp=reuse_dcglp)
+                        oracle_param = SplitOracleParam(LpDistanceNormalization(p); 
+                                                        dcglp_param = dcglp_param,
+                                                        split_index_selection_rule = LargestFractional(),
+                                                        disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
+                                                        strengthened=strengthened,
+                                                        add_benders_cuts_to_master=add_benders_cuts_to_master,
+                                                        fraction_of_benders_cuts_to_master = 0.5,
+                                                        reuse_dcglp=reuse_dcglp,
+                                                        fallback_to_typical_cuts = false
+                                        )
 
                         master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                         typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)] # for kappa & nu
@@ -167,13 +176,16 @@ end
                 for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [false], p in [1.0]
                     @info "solving CFLP p$i - disjunctive oracle/knapsack- specialized seq - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p" begin
-                            oracle_param = SplitOracleParam(LpDistanceNormalization(p); dcglp_param = dcglp_param,
-                                                                split_index_selection_rule = LargestFractional(),
-                                                                disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
-                                                                strengthened=strengthened,
-                                                                add_benders_cuts_to_master=add_benders_cuts_to_master,
-                                                                fraction_of_benders_cuts_to_master = 0.5,
-                                                                reuse_dcglp=reuse_dcglp)
+                            oracle_param = SplitOracleParam(LpDistanceNormalization(p); 
+                                                            dcglp_param = dcglp_param,
+                                                            split_index_selection_rule = LargestFractional(),
+                                                            disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
+                                                            strengthened=strengthened,
+                                                            add_benders_cuts_to_master=add_benders_cuts_to_master,
+                                                            fraction_of_benders_cuts_to_master = 0.5,
+                                                            reuse_dcglp=reuse_dcglp,
+                                                            fallback_to_typical_cuts = false
+                                            )
 
                                                                 master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             typical_oracles = [CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer); CFLKnapsackOracle(data, master; model = update_sub_model!, optimizer = optimizer)]

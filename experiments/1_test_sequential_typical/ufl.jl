@@ -14,36 +14,6 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
     
     instances = setdiff(1:71, [67])
 
-    # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
-    function update_sub_gbc_model!(model::Model, data::UFLPData, scen_idx::Int; x)
-        optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
-        set_optimizer(model, optimizer)
-
-        I, J = data.n_facilities, data.n_customers
-        @variable(model, y[1:I, 1:J] >= 0)
-
-        cost_demands = data.costs .* data.demands'
-        @objective(model, Min, sum(cost_demands .* y))
-
-        @constraint(model, demand[j in 1:J], sum(y[:,j]) == 1)
-
-        # Return GBC tuple: y[i,j] <= x[i] for each j
-        gbc_lhs = vec(y)
-        gbc_rhs = [x[i] for j in 1:J for i in 1:I]  # j outer, i inner to match vec(y)
-        gbc_sense = fill(UpperBound, I*J)
-        return gbc_lhs, gbc_rhs, gbc_sense
-    end
-
-    function update_knapsack_master_model!(model::Model, data::UFLPData)
-        optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPINT" => 1e-9, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPGAP" => 1e-6, MOI.Silent() => true)
-        set_optimizer(model, optimizer)
-        @variable(model, x[1:data.n_facilities], Bin)
-        @variable(model, t[1:data.n_customers] >= -1e6)
-        @constraint(model, sum(x) >= 2)
-        @objective(model, Min, data.fixed_costs'* x + sum(t))
-        return (x = x, ), t
-    end
-
     model_configs = [
         (
             name = "Classical",
@@ -186,7 +156,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             for model_config in model_configs
                 for preprocessing_config in preprocessing_configs
                     @testset "$(model_config.name) / $(preprocessing_config.name)" begin
-                        @info "solving UFLP p$i - oracle: $(model_config.name)  - preprocessing: $(preprocessing_config.name)..."
+                        @info "solving UFLP p$i - env: BendersSeq - oracle: $(model_config.name)  - preprocessing: $(preprocessing_config.name)..."
                         master, oracle = model_config.build(data)
                         preprocessing = preprocessing_config.build(data, oracle)
 
@@ -196,7 +166,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             param = benders_param,
                             preprocessing = preprocessing,
                         )
-
+                        
                         solve!(env)
 
                         @test env.termination_status == Optimal()
