@@ -69,7 +69,12 @@ mutable struct BendersSeqInOut <: AbstractBendersSeq
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function BendersSeqInOut(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqInOutParam = BendersSeqInOutParam(), preprocessing::AbstractBendersPreprocessing = NoPreprocessing())
+    function BendersSeqInOut(
+        master::AbstractMaster,
+        oracle::AbstractOracle;
+        param::BendersSeqInOutParam = BendersSeqInOutParam(),
+        preprocessing::AbstractBendersPreprocessing = NoPreprocessing(),
+    )
 
         new(master, oracle, param, preprocessing, Inf, NotSolved())
     end

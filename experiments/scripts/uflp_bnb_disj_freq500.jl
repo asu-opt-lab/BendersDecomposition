@@ -160,9 +160,9 @@ lazy_oracle = UFLKnapsackOracle(
     param = UFLKnapsackOracleParam(add_only_violated_cuts = true),
 )
 preprocessing = LPRelaxationPreprocessing(
-    lazy_oracle,
-    BendersSeq,
-    BendersSeqParam(
+    lazy_oracle;
+    seq_env_type = BendersSeq,
+    param = BendersSeqParam(
         time_limit = min(100.0, time_limit),
         gap_tolerance = 1e-9,
         verbose = true,

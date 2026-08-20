@@ -17,6 +17,8 @@ rules to those required for theoretical finite termination.
 - `master::AbstractMaster`: Master problem, which is relaxed to an LP internally.
 - `oracle::AbstractSplitOracle`: Disjunctive oracle used to generate split cuts.
 - `param::SpecializedBendersSeqParam`: Parameters controlling the algorithm.
+- `preprocessing::AbstractBendersPreprocessing`: Preprocessing applied before the
+  specialized sequential iterations begin.
 - `obj_value::Float64`: Best bound recorded on termination.
 - `termination_status::TerminationStatus`: Status of the algorithm at termination.
 
@@ -28,11 +30,18 @@ mutable struct SpecializedBendersSeq <: AbstractBendersSeq
 
     param::SpecializedBendersSeqParam
 
+    preprocessing::AbstractBendersPreprocessing
+
     # result
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function SpecializedBendersSeq(master::AbstractMaster, oracle::AbstractSplitOracle; param::SpecializedBendersSeqParam = SpecializedBendersSeqParam())
+    function SpecializedBendersSeq(
+        master::AbstractMaster,
+        oracle::AbstractSplitOracle;
+        param::SpecializedBendersSeqParam = SpecializedBendersSeqParam(),
+        preprocessing::AbstractBendersPreprocessing = NoPreprocessing(),
+    )
 
         # Relax integrality in master
         relax_integrality(master.model)
@@ -40,7 +49,7 @@ mutable struct SpecializedBendersSeq <: AbstractBendersSeq
         oracle.param.split_index_selection_rule != LargestFractional() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.param.split_index_selection_rule). Use LargestFractional() instead."))
         oracle.param.disjunctive_cut_append_rule != DisjunctiveCutsSmallerIndices() && throw(AlgorithmException("SpeicalizedBendersSeq does not admit $(oracle.param.disjunctive_cut_append_rule). Use DisjunctiveCutsSmallerIndices() instead."))
 
-        new(master, oracle, param, Inf, NotSolved())
+        new(master, oracle, param, preprocessing, Inf, NotSolved())
     end
 end
 
@@ -53,10 +62,18 @@ The iteration history is returned as a `DataFrame`.
 """
 function solve!(env::SpecializedBendersSeq)
     log = BendersSeqLog()
-    L_param = BendersSeqParam(; time_limit = env.param.time_limit, gap_tolerance = env.param.lp_gap_tolerance, verbose = env.param.verbose)
-    L_env = BendersSeq(env.master, env.oracle.typical_oracles[1]; param = L_param)
 
     try
+        # Apply preprocessing
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing)
+
+        if env.param.time_limit <= log.preprocessing_time
+            throw(TimeLimitException("Time limit reached before SpecializedBendersSeq starts, please increase the time limit."))
+        end
+
+        L_param = BendersSeqParam(; time_limit = env.param.time_limit, gap_tolerance = env.param.lp_gap_tolerance, verbose = env.param.verbose)
+        L_env = BendersSeq(env.master, env.oracle.typical_oracles[1]; param = L_param)
+
         while true
             state = BendersSeqState()
             state.total_time = @elapsed begin

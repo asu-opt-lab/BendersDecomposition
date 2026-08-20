@@ -100,7 +100,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)] # for kappa & nu
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
-                            preprocessing = LPRelaxationPreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
+                            preprocessing = LPRelaxationPreprocessing(lazy_oracle; seq_env_type = BendersSeq, param = BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; param=UserCallbackParam(frequency=10))
 
@@ -123,7 +123,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)] # for kappa & nu
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
-                            preprocessing = LPRelaxationPreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
+                            preprocessing = LPRelaxationPreprocessing(lazy_oracle; seq_env_type = BendersSeqInOut, param = BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; param=UserCallbackParam(frequency=10))
 
@@ -179,7 +179,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
-                            preprocessing = LPRelaxationPreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
+                            preprocessing = LPRelaxationPreprocessing(lazy_oracle; seq_env_type = BendersSeq, param = BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; param=UserCallbackParam(frequency=10))
 
@@ -197,7 +197,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
-                            preprocessing = LPRelaxationPreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
+                            preprocessing = LPRelaxationPreprocessing(lazy_oracle; seq_env_type = BendersSeqInOut, param = BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; param=UserCallbackParam(frequency=10))
 
@@ -250,7 +250,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
-                            preprocessing = LPRelaxationPreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
+                            preprocessing = LPRelaxationPreprocessing(lazy_oracle; seq_env_type = BendersSeq, param = BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; param=UserCallbackParam(frequency=10))
 
@@ -269,7 +269,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
-                            preprocessing = LPRelaxationPreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
+                            preprocessing = LPRelaxationPreprocessing(lazy_oracle; seq_env_type = BendersSeqInOut, param = BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; param=UserCallbackParam(frequency=10))
 
@@ -309,7 +309,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer); ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
-                            preprocessing = LPRelaxationPreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
+                            preprocessing = LPRelaxationPreprocessing(lazy_oracle; seq_env_type = BendersSeq, param = BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; param=UserCallbackParam(frequency=10))
                             env = BendersBnB(master, preprocessing, lazy_callback, user_callback; param = benders_param)
@@ -325,7 +325,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             lazy_oracle = ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer); ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
-                            preprocessing = LPRelaxationPreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
+                            preprocessing = LPRelaxationPreprocessing(lazy_oracle; seq_env_type = BendersSeqInOut, param = BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; param=UserCallbackParam(frequency=10))
                             env = BendersBnB(master, preprocessing, lazy_callback, user_callback; param = benders_param)
@@ -411,7 +411,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             ]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
-                            preprocessing = LPRelaxationPreprocessing(lazy_oracle, BendersSeq, BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
+                            preprocessing = LPRelaxationPreprocessing(lazy_oracle; seq_env_type = BendersSeq, param = BendersSeqParam(;time_limit=200.0, gap_tolerance=1e-9, verbose=false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; param=UserCallbackParam(frequency=10))
 
@@ -443,7 +443,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             ]
                             disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
-                            preprocessing = LPRelaxationPreprocessing(lazy_oracle, BendersSeqInOut, BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
+                            preprocessing = LPRelaxationPreprocessing(lazy_oracle; seq_env_type = BendersSeqInOut, param = BendersSeqInOutParam(time_limit = 300.0, gap_tolerance = 1e-9, stabilizing_x = ones(data.n_facilities), α = 0.9, λ = 0.1, verbose = false))
                             lazy_callback = LazyCallback(lazy_oracle)
                             user_callback = UserCallback(disjunctive_oracle; param=UserCallbackParam(frequency=10))
 
