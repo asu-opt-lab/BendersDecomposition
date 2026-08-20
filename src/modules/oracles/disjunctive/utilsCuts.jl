@@ -1,15 +1,15 @@
-function add_disjunctive_cuts!(oracle::AbstractSplitOracle, rule::DisjunctiveCutsAppendRule)
+function add_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, rule::DisjunctiveCutsAppendRule)
     throw(UndefError("update add_disjunctive_cuts! for $(typeof(rule))"))
 end
 
-function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::NoDisjunctiveCuts)
+function add_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, ::NoDisjunctiveCuts)
 end
 
-function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::AllDisjunctiveCuts)
+function add_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, ::AllDisjunctiveCuts)
     install_disjunctive_cuts!(oracle, oracle.disjunctive_cuts)
 end
 
-function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::DisjunctiveCutsSmallerIndices)
+function add_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, ::DisjunctiveCutsSmallerIndices)
     oracle.param.split_index_selection_rule isa SimpleSplit ||
         throw(AlgorithmException("DisjunctiveCutsSmallerIndices requires a simple split rule."))
 
@@ -22,7 +22,7 @@ function add_disjunctive_cuts!(oracle::AbstractSplitOracle, ::DisjunctiveCutsSma
     install_disjunctive_cuts!(oracle, cuts)
 end
 
-function install_disjunctive_cuts!(oracle::AbstractSplitOracle, cuts::Vector{Hyperplane})
+function install_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, cuts::Vector{Hyperplane})
     dcglp = oracle.dcglp
     isempty(cuts) && return nothing
 
@@ -42,7 +42,7 @@ function install_disjunctive_cuts!(oracle::AbstractSplitOracle, cuts::Vector{Hyp
     add_constraints(dcglp, :con_disjunctive, exprs)
 end
 
-function update_dynamic_dcglp_constraints!(oracle::AbstractSplitOracle)
+function update_dynamic_dcglp_constraints!(oracle::AbstractDisjunctiveOracle)
     if !oracle.param.reuse_dcglp
         delete_registered_constraints!(oracle.dcglp, :con_benders)
     end
@@ -51,7 +51,7 @@ function update_dynamic_dcglp_constraints!(oracle::AbstractSplitOracle)
 end
 
 function store_dcglp_disjunctive_cut!(
-    oracle::AbstractSplitOracle,
+    oracle::AbstractDisjunctiveOracle,
     cut::Hyperplane,
     master_hyperplanes::Vector{Hyperplane},
 )

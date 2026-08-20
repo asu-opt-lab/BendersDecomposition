@@ -22,7 +22,7 @@ include("problems/problems.jl")
 # Default `using BendersX` workflow
 export AbstractData
 export Master
-export BendersSeq, BendersSeqInOut, SpecializedBendersSeq, BendersBnB
+export BendersSeq, BendersSeqInOut, BendersBnB
 export ClassicalOracle, UnifiedOracle, ParetoOracle, SeparableOracle
 export SplitOracle
 export solve!
@@ -33,7 +33,7 @@ export SeparableOracleParam, DcglpParam
 export SplitOracleParam
 export LpDistanceNormalization
 export ReversePolarNormalization
-export BendersSeqParam, BendersSeqInOutParam, BendersBnBParam, SpecializedBendersSeqParam
+export BendersSeqParam, BendersSeqInOutParam, BendersBnBParam
 export LazyCallback, UserCallback, NoUserCallback, UserCallbackParam
 export LPRelaxationPreprocessing, NoPreprocessing, DisjunctiveLPRelaxationPreprocessing
 
@@ -46,7 +46,7 @@ export NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
 # Public extension interfaces
 public AbstractBendersEnv, AbstractBendersSeq, AbstractBendersBnB
 public AbstractMaster
-public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, AbstractDisjunctiveOracle, AbstractSplitOracle
+public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, AbstractDisjunctiveOracle
 public AbstractBendersPreprocessing
 public AbstractNormalization
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule

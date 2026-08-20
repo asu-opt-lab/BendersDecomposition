@@ -115,7 +115,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                 param = BendersSeqParam(
                     time_limit = 200.0,
                     gap_tolerance = 1e-9,
-                    verbose = true,
+                    verbose = false,
                 ),
             ),
         ),
@@ -130,7 +130,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     stabilizing_x = ones(data.n_facilities),
                     α = 0.9,
                     λ = 0.1,
-                    verbose = true,
+                    verbose = false,
                 ),
             ),
         ),
@@ -146,7 +146,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             benders_param = BendersSeqParam(;
                             time_limit = 200.0,
                             gap_tolerance = 1e-6,
-                            verbose = true
+                            verbose = false
                             )
 
             instance_name = "p$i"

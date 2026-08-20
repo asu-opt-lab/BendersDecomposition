@@ -74,7 +74,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @testset "Unified oracle" begin
                 @info "solving SCFLP f25-c50-s64-r10-$i - unified oracle - seq..."
                 master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
-                oracle = SeparableOracle(data, master, UnifiedOracle, data.n_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam, optimizer = optimizer)
+                oracle = SeparableOracle(data, master, UnifiedOracle, data.n_scenarios; model = update_sub_model!, sub_oracle_param = UnifiedOracleParam(), optimizer = optimizer)
                 env = BendersSeq(master, oracle; param = benders_param)
                 log = solve!(env)
                 @test env.termination_status == Optimal()

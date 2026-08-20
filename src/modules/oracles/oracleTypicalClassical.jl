@@ -111,7 +111,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
     
     optimize!(oracle.model)
     if termination_status(oracle.model) == TIME_LIMIT
-        throw(TimeLimitException("Time limit reached during cut generation"))
+        throw(TimeLimitException("ClassicalOracle: Time limit reached during cut generation"))
     end
     
     status = dual_status(oracle.model)

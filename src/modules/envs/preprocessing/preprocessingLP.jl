@@ -54,15 +54,19 @@ A private copy of the preprocessing parameters is used so that the configured pa
 
 The elapsed preprocessing time in seconds.
 """
-function preprocess!(master::AbstractMaster, preprocessing::LPRelaxationPreprocessing)
+function preprocess!(master::AbstractMaster, preprocessing::LPRelaxationPreprocessing; time_limit::Float64 = 100.0)
+   
+    tic = time()
+
+    seq_param = deepcopy(preprocessing.param)
+    seq_param.time_limit = max(0.0, min(time_limit, seq_param.time_limit))
     
     # Relax integrality, ensure undo() always runs even on error
     undo = relax_integrality(master.model)
     
     # measure time and ensure undo() is called even if solve! errors
-    tic = time()
     try
-        env_preprocessing = preprocessing.seq_env_type(master, preprocessing.oracle; param = preprocessing.param)
+        env_preprocessing = preprocessing.seq_env_type(master, preprocessing.oracle; param = seq_param)
         solve!(env_preprocessing)
     finally
         # always restore integrality (even on exceptions)

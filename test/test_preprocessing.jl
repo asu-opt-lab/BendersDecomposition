@@ -9,7 +9,7 @@ struct PreprocessingTestMaster <: BendersX.AbstractMaster
     model::Model
 end
 
-struct PreprocessingTestSplitOracle <: BendersX.AbstractSplitOracle
+struct PreprocessingTestSplitOracle <: BendersX.SplitOracle
     param::Any
 end
 
@@ -152,19 +152,6 @@ end
                 stabilizing_x = Float64[],
                 verbose = false,
             ),
-            preprocessing = preprocessing,
-        )
-
-        @test env.preprocessing === preprocessing
-        @test_throws PreprocessingProbeException solve!(env)
-    end
-
-    @testset "SpecializedBendersSeq preprocessing" begin
-        preprocessing = ThrowingPreprocessing()
-        env = SpecializedBendersSeq(
-            PreprocessingTestMaster(Model()),
-            PreprocessingTestSplitOracle();
-            param = SpecializedBendersSeqParam(verbose = false),
             preprocessing = preprocessing,
         )
 

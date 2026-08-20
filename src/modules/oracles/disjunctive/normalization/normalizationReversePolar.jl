@@ -56,7 +56,8 @@ mutable struct ReversePolarNormalization <: AbstractNormalization
             @warn "ReversePolarNormalization: No core point or direction provided; " *
             "using the default vertical reverse-polar direction. Its validity " *
             "is not guaranteed for all master formulations."
-
+        end
+        
         has_point && has_direction &&
             throw(ArgumentError("ReversePolarNormalization: Provide either `core_point_x`/`core_point_t` or `core_direction_x`/`core_direction_t`, not both."))
 
@@ -132,7 +133,7 @@ end
 
 function is_applicable(
     normalization::ReversePolarNormalization,
-    oracle::SplitOracle,
+    oracle::AbstractDisjunctiveOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
 )

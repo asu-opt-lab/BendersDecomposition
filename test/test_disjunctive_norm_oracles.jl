@@ -161,8 +161,7 @@ function run_direct_cut_smoke(oracle)
         oracle,
         [0.5, 0.5],
         [0.0];
-        time_limit = 20.0,
-        fallback_to_typical_cuts = true,
+        time_limit = 20.0
     )
 
     @test is_in_L isa Bool
@@ -325,7 +324,7 @@ end
 
         @test oracle isa SplitOracle
         @test oracle.param.normalization isa LpDistanceNormalization
-        @test oracle isa BendersX.AbstractSplitOracle
+        @test oracle isa BendersX.AbstractDisjunctiveOracle
         @test !oracle.param.reuse_dcglp
     end
 

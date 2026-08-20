@@ -11,7 +11,6 @@ include("oracleDisjunctiveSplit.jl")
 # ----------------------------------------------------------------------------
 # Disjunctive oracle utilities
 # ----------------------------------------------------------------------------
-include("disjunctive/utilsLoopDcglp.jl")
 include("disjunctive/utilsSplit.jl")
 include("disjunctive/utilsCuts.jl")
 include("disjunctive/utilsDcglp.jl")

@@ -31,7 +31,7 @@ Parameters controlling [`SplitOracle`](@ref).
         reuse_dcglp = true,
         strengthened = true,
         lift = false,
-        fallback_to_typical_cuts::Bool = true,
+        fallback_to_typical_cuts = true,
         zero_tol = 1e-9,
     )
 
@@ -47,47 +47,40 @@ mutable struct SplitOracleParam <: AbstractOracleParam
     reuse_dcglp::Bool
     strengthened::Bool
     lift::Bool
-    fallback_to_typical_cuts::Bool,
+    fallback_to_typical_cuts::Bool
     zero_tol::Float64
 
     function SplitOracleParam(;
         dcglp_param::DcglpParam = DcglpParam(),
-        normalization::AbstractNormalization =
-            LpDistanceNormalization(),
-        split_index_selection_rule::SplitIndexSelectionRule =
-            RandomFractional(),
-        disjunctive_cut_append_rule::DisjunctiveCutsAppendRule =
-            AllDisjunctiveCuts(),
+        normalization::AbstractNormalization = LpDistanceNormalization(),
+        split_index_selection_rule::SplitIndexSelectionRule = RandomFractional(),
+        disjunctive_cut_append_rule::DisjunctiveCutsAppendRule = AllDisjunctiveCuts(),
         add_benders_cuts_to_master::Union{Bool,Int} = 1,
         fraction_of_benders_cuts_to_master::Float64 = 1.0,
         reuse_dcglp::Bool = true,
         strengthened::Bool = true,
         lift::Bool = false,
         fallback_to_typical_cuts::Bool = true,
-        zero_tol::Float64 = 1e-9,
+        zero_tol::Float64 = 1e-9
     )
-        add_benders_cuts_to_master =
-            add_benders_cuts_to_master isa Bool ?
-            Int(add_benders_cuts_to_master) :
-            add_benders_cuts_to_master
+        add_benders_cuts_to_master = add_benders_cuts_to_master isa Bool ? Int(add_benders_cuts_to_master) : add_benders_cuts_to_master
 
         add_benders_cuts_to_master in 0:2 ||
             throw(
                 ArgumentError(
                     "`add_benders_cuts_to_master` must be true, false, " *
                     "or an integer in 0:2.",
-                ),
+                )
             )
 
         0.0 < fraction_of_benders_cuts_to_master <= 1.0 ||
             throw(
                 ArgumentError(
                     "`fraction_of_benders_cuts_to_master` must lie in (0, 1].",
-                ),
+                )
             )
 
-        new(
-            dcglp_param,
+        new(dcglp_param,
             normalization,
             split_index_selection_rule,
             disjunctive_cut_append_rule,
@@ -97,7 +90,7 @@ mutable struct SplitOracleParam <: AbstractOracleParam
             strengthened,
             lift,
             fallback_to_typical_cuts,
-            zero_tol,
+            zero_tol
         )
     end
 end
@@ -160,13 +153,13 @@ mutable struct SplitOracle{
         disjunctive_cuts = Hyperplane[]
         splits = Tuple{SparseVector{Float64,Int},Float64}[]
 
-        return new(
+        new{T1, T2}(
             param,
             dcglp,
             typical_oracles,
             disjunctive_cuts_by_index,
             disjunctive_cuts,
-            splits,
+            splits
         )
     end
 end

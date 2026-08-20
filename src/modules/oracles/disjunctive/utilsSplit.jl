@@ -29,7 +29,7 @@ function select_disjunctive_inequality(x_value::Vector{Float64}, ::RandomFractio
     return phi, 0.0
 end
 
-function get_split_index(oracle::AbstractSplitOracle)
+function get_split_index(oracle::SplitOracle)
     oracle.param.split_index_selection_rule isa SimpleSplit ||
         throw(AlgorithmException("get_split_index is only valid for simple split rules."))
     isempty(oracle.splits) &&
@@ -37,7 +37,7 @@ function get_split_index(oracle::AbstractSplitOracle)
     return findfirst(x -> x > 0.5, oracle.splits[end][1])
 end
 
-function replace_disjunctive_inequality!(oracle::AbstractSplitOracle)
+function replace_disjunctive_inequality!(oracle::SplitOracle)
     dcglp = oracle.dcglp
     phi, phi_0 = oracle.splits[end]
 
@@ -65,7 +65,7 @@ function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_i
 end
 
 function choose_split_and_update_lifting!(
-    oracle::AbstractSplitOracle,
+    oracle::SplitOracle,
     x_value::Vector{Float64},
 )
     push!(
@@ -83,14 +83,3 @@ function choose_split_and_update_lifting!(
 
     return zero_indices, one_indices
 end
-
-# # they are done at intialization
-# function rollback_current_dcglp_candidate!(oracle::AbstractSplitOracle)
-#     !isempty(oracle.splits) && pop!(oracle.splits)
-#     delete_registered_constraints!(oracle.dcglp, :con_split_kappa)
-#     delete_registered_constraints!(oracle.dcglp, :con_split_nu)
-#     delete_registered_constraints!(oracle.dcglp, :con_zeta)
-#     delete_registered_constraints!(oracle.dcglp, :con_xi)
-#     delete_registered_constraints!(oracle.dcglp, :initial_L)
-#     return nothing
-# end

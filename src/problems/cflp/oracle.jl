@@ -80,7 +80,7 @@ function generate_cuts(oracle::CFLKnapsackOracle, x_value::Vector{Float64}, t_va
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
     optimize!(oracle.model)
     if termination_status(oracle.model) == TIME_LIMIT
-        throw(TimeLimitException("Time limit reached during cut generation"))
+        throw(TimeLimitException("CFLKnapsackOracle: Time limit reached during cut generation"))
     end
 
     status = dual_status(oracle.model)

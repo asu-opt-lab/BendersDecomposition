@@ -10,7 +10,7 @@ abstract type AbstractBendersPreprocessing end
 """
     NoPreprocessing <: AbstractBendersPreprocessing
 
-No-op root-node preprocessing strategy.
+No-op preprocessing strategy.
 
 Use this type when no preprocessing or initial Benders cuts should be generated before Benders decomposition.
 """
@@ -23,7 +23,7 @@ No-op implementation for NoPreprocessing.
 # Returns
 - `Float64`: 0.0 (no time spent)
 """
-function preprocess!(master::AbstractMaster, preprocessing::NoPreprocessing)
+function preprocess!(master::AbstractMaster, preprocessing::NoPreprocessing; time_limit::Float64 = 100.0)
     return 0.0
 end
 

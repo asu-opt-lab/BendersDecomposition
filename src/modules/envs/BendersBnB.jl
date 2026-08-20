@@ -80,10 +80,8 @@ function solve!(env::BendersBnB)
     log = BendersBnBLog()
     param = env.param
     try 
-        log.start_time = time()
-        
         # Apply preprocessing
-        log.preprocessing_time = preprocess!(env.master, env.preprocessing)
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing; time_limit = param.time_limit)
 
         # Set up lazy callback
         function lazy_callback_wrapper(cb_data)
@@ -100,8 +98,8 @@ function solve!(env::BendersBnB)
         end
         
         # Configure solver parameters
-        if param.time_limit <= log.preprocessing_time
-            throw(TimeLimitException("Time limit reached before BnB starts, please increase the time limit."))
+        if param.time_limit <= time() - log.start_time
+            throw(TimeLimitException("BendersBnB: Time limit reached during preprocessing, please increase the time limit."))
         end
         set_time_limit_sec(env.master.model, param.time_limit - log.preprocessing_time)
         set_optimizer_attribute(env.master.model, MOI.Silent(), !param.verbose)

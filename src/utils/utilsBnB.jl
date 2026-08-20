@@ -64,7 +64,7 @@ mutable struct BendersBnBLog <: AbstractBendersBnBLog
     total_time::Float64
     fractional_nodes_since_cut::Int
     function BendersBnBLog()
-        new(Vector{BendersBnBState}(), 0, 0, 0, 0.0, 0.0, 0.0, 0)
+        new(Vector{BendersBnBState}(), 0, 0, 0, time(), 0.0, 0.0, 0)
     end
 end
 

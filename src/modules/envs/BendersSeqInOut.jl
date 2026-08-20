@@ -89,13 +89,13 @@ The method first applies the configured preprocessing, if any. At each iteration
 The iteration history is returned as a `DataFrame`.
 """
 function solve!(env::BendersSeqInOut)
-    param = env.param
     log = BendersSeqLog()
+    param = env.param
     try    
         # Apply preprocessing
-        log.preprocessing_time = preprocess!(env.master, env.preprocessing)
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing; time_limit = param.time_limit)
 
-        if param.time_limit <= log.preprocessing_time
+        if param.time_limit <= time() - log.start_time
             throw(TimeLimitException("Time limit reached during preprocessing, please increase the time limit."))
         end
 
@@ -117,9 +117,9 @@ function solve!(env::BendersSeqInOut)
                         state.values[:x] = JuMP.value.(env.master.x)
                         state.values[:t] = JuMP.value.(env.master.t)
                     elseif termination_status(env.master.model) == TIME_LIMIT
-                        throw(TimeLimitException("Time limit reached during master solving"))
+                        throw(TimeLimitException("BendersSeqInOut: Time limit reached during master solving"))
                     else
-                        throw(ErrorException("master termination status: $(termination_status(env.master.model))"))
+                        throw(UnexpectedModelStatusException("BendersSeqInOut: master $(termination_status(env.master.model))"))
                     end
                 end
                 
@@ -132,7 +132,7 @@ function solve!(env::BendersSeqInOut)
                     state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, intermediate_x, state.values[:t]; time_limit = get_sec_remaining(log, param))
 
                     if kelley_mode 
-                        if state.f_x != NaN
+                        if !any(isnan, state.f_x)
                             update_upper_bound_and_gap!(state, log, (f_x, x) -> env.master.c_t' * f_x + env.master.c_x' * x)
                         end
                     else
@@ -171,19 +171,17 @@ function solve!(env::BendersSeqInOut)
         
         return to_dataframe(log)
     catch e
+        @warn e.msg
         if typeof(e) <: TimeLimitException
             env.termination_status = TimeLimit()
-            if length(log.iterations) !== 0
-                env.obj_value = log.iterations[end].LB
-            end
+            env.obj_value = isempty(log.iterations) ? Inf : log.iterations[end].LB
         elseif typeof(e) <: UnexpectedModelStatusException
             env.termination_status = InfeasibleOrNumericalIssue()
-            @warn e.msg
         else
             rethrow()  
         end
         if env.param.verbose
-            println("Terminated with $(env.termination_status)")
+            println("BendersSeqInOut: Terminated with $(env.termination_status)")
         end
         return to_dataframe(log)
     end

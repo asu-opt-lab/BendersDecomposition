@@ -85,9 +85,9 @@ function solve!(env::BendersSeq; iter_prefix = "")
     param = env.param
     try    
         # Apply preprocessing
-        log.preprocessing_time = preprocess!(env.master, env.preprocessing)
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing; time_limit = param.time_limit)
 
-        if param.time_limit <= log.preprocessing_time
+        if param.time_limit <= time() - log.start_time
             throw(TimeLimitException("Time limit reached during preprocessing, please increase the time limit."))
         end
         
@@ -103,7 +103,7 @@ function solve!(env::BendersSeq; iter_prefix = "")
                         state.values[:x] = JuMP.value.(env.master.x)
                         state.values[:t] = JuMP.value.(env.master.t)
                     elseif termination_status(env.master.model) == TIME_LIMIT
-                        throw(TimeLimitException("Time limit reached during master solving"))
+                        throw(TimeLimitException("BendersSeq: Time limit reached during master solving"))
                     else
                         throw(UnexpectedModelStatusException("BendersSeq: master $(termination_status(env.master.model))"))
                     end
@@ -115,7 +115,7 @@ function solve!(env::BendersSeq; iter_prefix = "")
                     
                     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.x, env.master.t) : []
                 
-                    if state.f_x !== NaN
+                    if !any(isnan, state.f_x)
                         update_upper_bound_and_gap!(state, log, (f_x, x) -> env.master.c_t' * f_x + env.master.c_x' * x)
                     end
                 end
@@ -138,17 +138,14 @@ function solve!(env::BendersSeq; iter_prefix = "")
         @warn e.msg
         if typeof(e) <: TimeLimitException
             env.termination_status = TimeLimit()
-            if length(log.iterations) !== 0
-                env.obj_value = log.iterations[end].LB
-            end
+            env.obj_value = isempty(log.iterations) ? Inf : log.iterations[end].LB
         elseif typeof(e) <: UnexpectedModelStatusException
             env.termination_status = InfeasibleOrNumericalIssue()
-            @warn e.msg
         else
             rethrow()  
         end
         if env.param.verbose
-            println("Terminated with $(env.termination_status)")
+            println("BendersSeq: Terminated with $(env.termination_status)")
         end
         return to_dataframe(log)
     end

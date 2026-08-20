@@ -44,7 +44,7 @@ end
 
 is_applicable(
     ::AbstractNormalization,
-    ::SplitOracle,
+    ::AbstractDisjunctiveOracle,
     x_value::Vector{Float64},
     t_value::Vector{Float64},
 ) = true

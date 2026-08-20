@@ -95,7 +95,6 @@ Pass these functions to `Master` and the oracle through the `model` keyword. If 
 | ----------------------- | ------------------------------------------------- |
 | `BendersSeq`            | Classical sequential Benders decomposition        |
 | `BendersSeqInOut`       | Sequential Benders with in-out stabilization      |
-| `SpecializedBendersSeq` | Specialized sequential workflow for split cuts    |
 | `BendersBnB`            | Branch-and-bound integrated with Benders cuts     |
 
 > These are representative built-ins. See the documentation for the full list and configuration options.

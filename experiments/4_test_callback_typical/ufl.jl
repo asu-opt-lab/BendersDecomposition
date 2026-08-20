@@ -55,6 +55,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     env = BendersBnB(master, oracle; param = benders_param)
 
                     log = solve!(env)
+                    log = solve!(env)
                     @test env.termination_status == Optimal()
                     @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
                 end
