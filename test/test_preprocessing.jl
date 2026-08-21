@@ -9,19 +9,10 @@ struct PreprocessingTestMaster <: BendersX.AbstractMaster
     model::Model
 end
 
-struct PreprocessingTestSplitOracle <: BendersX.SplitOracle
-    param::Any
-end
-
-PreprocessingTestSplitOracle() = PreprocessingTestSplitOracle((
-    split_index_selection_rule = LargestFractional(),
-    disjunctive_cut_append_rule = DisjunctiveCutsSmallerIndices(),
-))
-
 struct PreprocessingProbeException <: Exception end
 struct ThrowingPreprocessing <: BendersX.AbstractBendersPreprocessing end
 
-BendersX.preprocess!(::BendersX.AbstractMaster, ::ThrowingPreprocessing) =
+BendersX.preprocess!(::BendersX.AbstractMaster, ::ThrowingPreprocessing; time_limit::Float64 = 100.0) =
     throw(PreprocessingProbeException())
 
 struct PreprocessingRecordingSeq <: BendersX.AbstractBendersSeq
