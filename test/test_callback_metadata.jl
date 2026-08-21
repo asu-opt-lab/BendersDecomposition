@@ -4,6 +4,15 @@ using JuMP
 using HiGHS
 using BendersX
 
+struct LazyCallbackTestOracle <: BendersX.AbstractOracle end
+
+@testset "LazyCallback oracle interface" begin
+    oracle = LazyCallbackTestOracle()
+    callback = LazyCallback(oracle)
+
+    @test callback.oracle === oracle
+end
+
 # Q. Please change the test to use a different solver with the extensions implemented, such as CPLEX or Gurobi, if available.
 @testset "Callback metadata thresholds" begin
     @testset "Unsupported metadata warnings" begin

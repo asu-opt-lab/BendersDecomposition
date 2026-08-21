@@ -127,8 +127,8 @@ dcglp_param = DcglpParam(
     verbose = false,
 )
 
-oracle_param = SplitOracleParam(
-    ReversePolarNormalization();
+oracle_param = SplitOracleParam(;
+    normalization = ReversePolarNormalization(),
     dcglp_param = dcglp_param,
     split_index_selection_rule = LargestFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),

@@ -4,21 +4,15 @@
 
 A lazy-constraint callback for Benders branch-and-bound.
 
-`LazyCallback` uses an [`AbstractTypicalOracle`](@ref) to generate Benders cuts whenever the MIP solver encounters an integer candidate solution.
+`LazyCallback` uses an [`AbstractOracle`](@ref) to generate Benders cuts whenever the MIP solver encounters an integer candidate solution.
 
-# Q. Theoretically, AbstractDisjunctiveOracle might work.
 # Fields
-- `oracle::AbstractTypicalOracle`: Oracle used to evaluate candidate solutions and generate Benders cuts.
-
-# Notes
-This callback is intended for typical Benders oracles. Disjunctive oracles are
-not supported here because their cut-generation procedure may not be valid at
-integer candidate solutions.
+- `oracle::AbstractOracle`: Oracle used to evaluate candidate solutions and generate Benders cuts.
 """
 struct LazyCallback <: AbstractLazyCallback
-    oracle::AbstractTypicalOracle
+    oracle::AbstractOracle
     
-    function LazyCallback(oracle::AbstractTypicalOracle)
+    function LazyCallback(oracle::AbstractOracle)
         new(oracle)
     end
 end
