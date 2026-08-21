@@ -53,7 +53,7 @@ Master(data; model = build_master_model!)
 In that case, `build_master_model!(model, data)` must follow the same interface.
 """
 function update_master_model!(model::Model, data::AbstractData)
-    throw(UndefError(
+    throw(UnimplementedInterfaceException(
         "BendersX does not know how to formulate a master problem for " * "$(typeof(data)). Define " * "`update_master_model!(model::Model, data::$(typeof(data)))`, " * "or pass a custom model-building function with " * "`Master(data; model = your_builder!)`."
 ))
 end
@@ -130,7 +130,7 @@ In that case, `build_sub_model!(model, data, scen_idx; kwargs...)` must follow
 the same interface.
 """
 function update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...) 
-    throw(UndefError( 
+    throw(UnimplementedInterfaceException( 
         "BendersX does not know how to formulate a subproblem for " * "$(typeof(data)). Define " * "`update_sub_model!(model::Model, data::$(typeof(data)), " * "scen_idx::Int; kwargs...)`, or pass a custom model-building " * 
         "function with `Oracle(...; model = your_builder!)`." )) 
 end

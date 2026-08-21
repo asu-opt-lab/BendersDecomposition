@@ -18,7 +18,7 @@ Branch-and-bound Benders decomposition environment.
 - `lazy_callback::AbstractLazyCallback`: Configuration for lazy-constraint callback
 - `user_callback::AbstractUserCallback`: Configuration for user-cut callback
 - `obj_value::Float64`: Objective value of the best solution found
-- `termination_status::TerminationStatus`: Status of the algorithm at termination
+- `termination_status::TerminationStatus`: Termination status of the Benders algorithm. See [`TerminationStatus`](@ref) for available statuses.
 
 # Examples
 ```julia
@@ -140,7 +140,7 @@ function solve!(env::BendersBnB)
             rethrow()  
         end
         if env.param.verbose
-            println("Terminated with $(env.termination_status)")
+            println("BendersBnB: Terminated with $(env.termination_status)")
         end
         return to_dataframe(env, log)
     end

@@ -138,8 +138,6 @@ function BendersX.update_dcglp_upper_bound_and_gap!(
     log::BendersX.DcglpLog,
     t_value::Vector{Float64},
 )
-    BendersX.fill_dcglp_omega_t_estimates!(state, t_value)
-    all(f_i -> !any(isnan, f_i), state.f_x) || return nothing
     BendersX.update_upper_bound_and_gap!(
         state,
         log,
@@ -357,7 +355,7 @@ end
         @variable(model, tau)
         @variable(model, sx[1:1])
         @variable(model, st[1:1])
-        @test_throws BendersX.UndefError BendersX.add_normalization_constraint!(
+        @test_throws BendersX.UnimplementedInterfaceException BendersX.add_normalization_constraint!(
             MissingContractNormalization(),
             master,
             model,
@@ -365,14 +363,14 @@ end
             sx,
             st,
         )
-        @test_throws BendersX.UndefError BendersX.update_dcglp_upper_bound_and_gap!(
+        @test_throws BendersX.UnimplementedInterfaceException BendersX.update_dcglp_upper_bound_and_gap!(
             MissingContractNormalization(),
             BendersX.DcglpState(),
             BendersX.DcglpLog(),
             [0.0],
             [0.0],
         )
-        @test_throws BendersX.UndefError BendersX.disjunctive_cut_normalization_value(
+        @test_throws BendersX.UnimplementedInterfaceException BendersX.disjunctive_cut_normalization_value(
             MissingContractNormalization(),
             model,
             [0.0],

@@ -29,7 +29,7 @@ Concrete [`AbstractLazyCallback`](@ref) subtypes should implement this method to
 - `callback::AbstractLazyCallback`: Lazy-callback configuration.
 """
 function lazy_callback(cb_data, master_model::Model, log::AbstractBendersBnBLog, param::AbstractBendersBnBParam, callback::AbstractLazyCallback)
-    throw(UndefError("lazy_callback is not implemented for $(typeof(callback))"))
+    throw(UnimplementedInterfaceException("lazy_callback is not implemented for $(typeof(callback))"))
 end
 
 """
@@ -82,7 +82,7 @@ Concrete [`AbstractUserCallback`](@ref) subtypes should implement this method to
 function user_callback(cb_data, master_model::Model, log::AbstractBendersBnBLog, param::AbstractBendersBnBParam, callback::AbstractUserCallback)
     callback isa NoUserCallback && return # Silent no-op for NoUserCallback
 
-    throw(UndefError("user_callback is not implemented for $(typeof(callback))"))
+    throw(UnimplementedInterfaceException("user_callback is not implemented for $(typeof(callback))"))
 end
 
 # ----------------------------------------------------------------------------

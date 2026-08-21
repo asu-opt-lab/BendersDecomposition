@@ -281,8 +281,7 @@ end
 
 Generate Benders cuts using the reformulated primal problem [`UnifiedOracle`](@ref).
 """
-function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; 
-                  tol_normalize = 1.0, time_limit = 3600)
+function generate_cuts(oracle::UnifiedOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
     
     set_normalized_rhs(oracle.objective_constraint, -t_value[1])

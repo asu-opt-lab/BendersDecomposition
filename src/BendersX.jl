@@ -60,7 +60,7 @@ public Hyperplane, aggregate, evaluate_violation, select_top_fraction
 public hyperplanes_to_expression, add_constraints
 public copy_variables!, var_from_tuple, transfer_scaled_linear_rows_and_bounds_with_types!
 public infeasibility_report
-public TimeLimitException, UnexpectedModelStatusException, UndefError
+public TimeLimitException, UnexpectedModelStatusException, UnimplementedInterfaceException
 public AlgorithmException, UnsupportedModelException
 
 # Problem-specific helpers available via `using BendersX`

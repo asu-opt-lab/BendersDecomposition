@@ -20,7 +20,7 @@ Throws an error if `T` does not implement the required constructor.
             scen_idx::Int,
             param::AbstractOracleParam,
             optimizer = DEFAULT_OPTIMIZER) where T <: AbstractTypicalOracle =
-    throw(UndefError(
+    throw(UnimplementedInterfaceException(
         """
         Oracle subtype $(T) does not implement the required constructor needed by `SeparableOracle`.
 

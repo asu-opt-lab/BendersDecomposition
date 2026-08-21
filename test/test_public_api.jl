@@ -39,7 +39,7 @@ using BendersX
         :select_top_fraction, :hyperplanes_to_expression, :add_constraints,
         :copy_variables!, :var_from_tuple, :transfer_scaled_linear_rows_and_bounds_with_types!,
         :infeasibility_report,
-        :TimeLimitException, :UnexpectedModelStatusException, :UndefError,
+        :TimeLimitException, :UnexpectedModelStatusException, :UnimplementedInterfaceException,
         :AlgorithmException, :UnsupportedModelException,
     ]
 

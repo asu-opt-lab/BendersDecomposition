@@ -57,7 +57,7 @@ mutable struct ReversePolarNormalization <: AbstractNormalization
             "using the default vertical reverse-polar direction. Its validity " *
             "is not guaranteed for all master formulations."
         end
-        
+
         has_point && has_direction &&
             throw(ArgumentError("ReversePolarNormalization: Provide either `core_point_x`/`core_point_t` or `core_direction_x`/`core_direction_t`, not both."))
 
@@ -185,17 +185,26 @@ function update_dcglp_upper_bound_and_gap!(
     ::ReversePolarNormalization,
     state::DcglpState,
     log::DcglpLog,
-    t_value::Vector{Float64}
+    t_value::Vector{Float64};
+    zero_tol::Float64 = 1e-9
 )
     # todo: consider computing upper bound based on projection onto half-ray; Currently it's based on `is_in_L` indicator.
 
-    fill_dcglp_omega_t_estimates!(state, t_value)
     previous_ub = log.n_iter >= 1 ? log.iterations[end].UB : Inf
     state.UB = state.is_in_L[1] && state.is_in_L[2] ? min(previous_ub, state.LB) : previous_ub
-    state.gap =
-        isfinite(state.UB) ?
-        max(state.UB - state.LB, 0.0) / max(abs(state.UB), 1.0) * 100 :
-        Inf
+    if !isfinite(state.UB)
+        state.gap = Inf
+    elseif isapprox(state.UB, state.LB; atol = zero_tol)
+        state.gap = 0.0
+    elseif abs(state.UB) <= zero_tol
+        state.gap = Inf
+    else
+        state.gap = max(
+            0.0,
+            (state.UB - state.LB) / abs(state.UB) * 100.0,
+        )
+    end
+    
     return nothing
 end
 

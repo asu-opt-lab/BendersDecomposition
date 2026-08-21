@@ -149,6 +149,15 @@ end
     TerminationStatus
 
 Abstract supertype for termination statuses of Benders execution environments.
+
+These statuses describe the outcome of the overall Benders algorithm and are distinct from the solver-level statuses returned by `JuMP.termination_status(model)`.
+
+Available statuses include:
+
+- [`NotSolved`](@ref): The algorithm has not yet been executed.
+- [`Optimal`](@ref): The algorithm terminated successfully.
+- [`TimeLimit`](@ref): The algorithm terminated because the time limit was reached.
+- [`InfeasibleOrNumericalIssue`](@ref): The algorithm terminated because of infeasibility or a numerical issue.
 """
 abstract type TerminationStatus end
 
@@ -167,16 +176,36 @@ struct InfeasibleOrNumericalIssue <: TerminationStatus end
 # ============================================================================
 # Error Exceptions
 # ============================================================================
+
+"""
+    TimeLimitException <: Exception
+
+Exception indicating that the time limit for the current Benders execution has been reached.
+
+This exception is used internally to interrupt algorithmic operations when no time remains.
+
+Execution environments may catch this exception and record [`TimeLimit`](@ref) as the algorithm-level termination status.
+"""
 struct TimeLimitException <: Exception 
     msg::String
 end
+
+"""
+    UnexpectedModelStatusException <: Exception
+
+Exception indicating that a JuMP model terminated with a solver status that is unexpected for the current Benders execution.
+
+This exception is typically raised when a model returns an unsupported, unexpected, or numerically problematic termination status.
+
+Execution environments may translate this exception into [`InfeasibleOrNumericalIssue`](@ref) and terminate.
+"""
 struct UnexpectedModelStatusException <: Exception 
     msg::String
 end
 struct AlgorithmException <: Exception 
     msg::String
 end
-struct UndefError <: Exception 
+struct UnimplementedInterfaceException <: Exception 
     msg::String
 end
 struct UnsupportedModelException <: Exception 

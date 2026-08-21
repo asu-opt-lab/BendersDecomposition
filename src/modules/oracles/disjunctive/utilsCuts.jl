@@ -1,5 +1,5 @@
 function add_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, rule::DisjunctiveCutsAppendRule)
-    throw(UndefError("update add_disjunctive_cuts! for $(typeof(rule))"))
+    throw(UnimplementedInterfaceException("update add_disjunctive_cuts! for $(typeof(rule))"))
 end
 
 function add_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, ::NoDisjunctiveCuts)

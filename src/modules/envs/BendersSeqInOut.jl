@@ -20,7 +20,7 @@ and Ben-Ameur and Neto (2007).
   stabilization strategy.
 - `preprocessing::AbstractBendersPreprocessing`: Configuration for optionally preprocessing the LP relaxation of the master problem before the Benders iterations.
 - `obj_value::Float64`: Objective value of the best solution found
-- `termination_status::TerminationStatus`: Status of the algorithm upon termination
+- `termination_status::TerminationStatus`: Termination status of the Benders algorithm. See [`TerminationStatus`](@ref) for available statuses.
 
 The stabilization parameters are specified through [`BendersSeqInOutParam`](@ref):
 
@@ -93,19 +93,16 @@ function solve!(env::BendersSeqInOut)
     param = env.param
     try    
         # Apply preprocessing
-        log.preprocessing_time = preprocess!(env.master, env.preprocessing; time_limit = param.time_limit)
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing; time_limit = get_sec_remaining(log, param))
 
-        if param.time_limit <= time() - log.start_time
-            throw(TimeLimitException("Time limit reached during preprocessing, please increase the time limit."))
-        end
-
-        state = BendersSeqState()
         stabilizing_x = param.stabilizing_x
         α = param.α
         λ = param.λ
         kelley_mode = false
         
         while true
+            get_sec_remaining(log, param) <= 0.0 && throw(TimeLimitException("BendersSeqInOut: Time limit reached."))
+
             state = BendersSeqState()
             state.total_time = @elapsed begin
                 # Solve master problem
@@ -132,7 +129,7 @@ function solve!(env::BendersSeqInOut)
                     state.is_in_L, hyperplanes, state.f_x = generate_cuts(env.oracle, intermediate_x, state.values[:t]; time_limit = get_sec_remaining(log, param))
 
                     if kelley_mode 
-                        if !any(isnan, state.f_x)
+                        if all(isfinite, state.f_x)
                             update_upper_bound_and_gap!(state, log, (f_x, x) -> env.master.c_t' * f_x + env.master.c_x' * x)
                         end
                     else
@@ -156,7 +153,7 @@ function solve!(env::BendersSeqInOut)
             
             # whether to switch kelley mode
             if !kelley_mode && log.n_iter != 0
-                check_lb_improvement!(state, log; zero_tol = 1e-8, tol_imprv = 0.05)
+                check_lb_improvement!(state, log; zero_tol = 1e-8, tol_imprv = 5e-4)
 
                 if log.consecutive_no_improvement >= 5
                     # Reset λ to 1 (switch to Kelley's cutting plane)
@@ -171,11 +168,12 @@ function solve!(env::BendersSeqInOut)
         
         return to_dataframe(log)
     catch e
-        @warn e.msg
         if typeof(e) <: TimeLimitException
+            @warn e.msg
             env.termination_status = TimeLimit()
             env.obj_value = isempty(log.iterations) ? Inf : log.iterations[end].LB
         elseif typeof(e) <: UnexpectedModelStatusException
+            @warn e.msg
             env.termination_status = InfeasibleOrNumericalIssue()
         else
             rethrow()  

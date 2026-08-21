@@ -51,7 +51,7 @@ function add_normalization_constraint!(
     elseif p == Inf
         @constraint(dcglp, concone, var_vec in MOI.NormInfinityCone(length(var_vec)))
     else
-        throw(UndefError("Unsupported norm p: $p"))
+        throw(ArgumentError("Unsupported norm p: $p"))
     end
     return nothing
 end
@@ -67,8 +67,6 @@ function update_dcglp_upper_bound_and_gap!(
     log::DcglpLog,
     t_value::Vector{Float64},
 )
-    fill_dcglp_omega_t_estimates!(state, t_value)
-    all(f_i -> !any(isnan, f_i), state.f_x) || return nothing
     update_upper_bound_and_gap!(
         state,
         log,
@@ -91,7 +89,7 @@ function disjunctive_cut_normalization_value(
     elseif p == Inf
         norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), 1.0)
     else
-        throw(UndefError("Unsupported norm p: $p"))
+        throw(ArgumentError("Unsupported norm p: $p"))
     end
     return max(1.0, norm_value)
 end

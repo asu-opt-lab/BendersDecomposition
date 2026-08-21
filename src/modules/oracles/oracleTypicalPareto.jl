@@ -221,8 +221,7 @@ end
 
 Generate Pareto-optimal cuts using the Magnanti-Wong method.
 """
-function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::Vector{Float64};
-                       tol_normalize = 1.0, time_limit = 3600)
+function generate_cuts(oracle::ParetoOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     λ = oracle.param.λ
     oracle.param.core_point .= λ .* oracle.param.core_point .+ (1 - λ) .* x_value
     t0 = time()

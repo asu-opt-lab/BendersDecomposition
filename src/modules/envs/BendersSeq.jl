@@ -12,7 +12,7 @@ Sequential Benders decomposition environment.
 - `param::BendersSeqParam`: Parameters controlling the algorithm, such as time limit, gap tolerance, and verbosity
 - `preprocessing::AbstractBendersPreprocessing`: Configuration for optionally preprocessing the LP relaxation of the master problem before the Benders iterations.
 - `obj_value::Float64`: Objective value of the best solution found
-- `termination_status::TerminationStatus`: Status of the algorithm upon termination
+- `termination_status::TerminationStatus`: Termination status of the Benders algorithm. See [`TerminationStatus`](@ref) for available statuses.
 
 # Constructor
 
@@ -85,13 +85,12 @@ function solve!(env::BendersSeq; iter_prefix = "")
     param = env.param
     try    
         # Apply preprocessing
-        log.preprocessing_time = preprocess!(env.master, env.preprocessing; time_limit = param.time_limit)
-
-        if param.time_limit <= time() - log.start_time
-            throw(TimeLimitException("Time limit reached during preprocessing, please increase the time limit."))
-        end
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing; time_limit = get_sec_remaining(log, param))
         
         while true
+
+            get_sec_remaining(log, param) <= 0.0 && throw(TimeLimitException("BendersSeq: Time limit reached."))
+
             state = BendersSeqState()
             state.total_time = @elapsed begin
                 # Solve master problem
@@ -115,7 +114,7 @@ function solve!(env::BendersSeq; iter_prefix = "")
                     
                     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.x, env.master.t) : []
                 
-                    if !any(isnan, state.f_x)
+                    if all(isfinite, state.f_x)
                         update_upper_bound_and_gap!(state, log, (f_x, x) -> env.master.c_t' * f_x + env.master.c_x' * x)
                     end
                 end
@@ -135,11 +134,12 @@ function solve!(env::BendersSeq; iter_prefix = "")
         
         return to_dataframe(log)
     catch e
-        @warn e.msg
         if typeof(e) <: TimeLimitException
+            @warn e.msg
             env.termination_status = TimeLimit()
             env.obj_value = isempty(log.iterations) ? Inf : log.iterations[end].LB
         elseif typeof(e) <: UnexpectedModelStatusException
+            @warn e.msg
             env.termination_status = InfeasibleOrNumericalIssue()
         else
             rethrow()  

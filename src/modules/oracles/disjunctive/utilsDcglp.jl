@@ -192,79 +192,94 @@ function solve_dcglp!(
     one_indices::Vector{Int};
     time_limit::Float64,
 )
-    normalization = oracle.param.normalization
-
     log = DcglpLog()
-    log.start_time = time()
-    fallback_on_error = oracle.param.fallback_to_typical_cuts
+    normalization = oracle.param.normalization
 
     dcglp = oracle.dcglp
     hyperplanes = Hyperplane[]
 
-    while true
-        state = DcglpState()
-        benders_cuts = Dict(1 => AffExpr[], 2 => AffExpr[])
+    try
+        while true
+            get_sec_remaining(log.start_time, time_limit) <= 0.0 && break
 
-        state.total_time = @elapsed begin
-            state.master_time = @elapsed begin
-                set_time_limit_sec(dcglp, get_sec_remaining(log.start_time, time_limit))
-                try
+            state = DcglpState()
+            benders_cuts = Dict(1 => AffExpr[], 2 => AffExpr[])
+            
+            state.total_time = @elapsed begin
+                # Solve dcglp relaxation
+                state.master_time = @elapsed begin
+                    set_time_limit_sec(dcglp, get_sec_remaining(log.start_time, time_limit))
                     optimize!(dcglp)
-                catch err
-                    if fallback_on_error
-                        @warn "$SplitOracle: DCGLP master encountered an error $err during optimization; fallback to typical oracle";
-                        return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
+                    if is_solved_and_feasible(dcglp; allow_local = false, dual = true)
+                        read_dcglp_solution!(oracle, state)
+                    elseif termination_status(dcglp) == TIME_LIMIT
+                        break
+                    else
+                        throw(UnexpectedModelStatusException("SplitOracle: DCGLP master terminated with $(termination_status(dcglp))."))
+                    end
+                end 
+                    
+                # Execute oracle
+                try
+                    collect_dcglp_benders_cuts!(oracle, state, benders_cuts, hyperplanes, x_value, t_value, log, time_limit)
+                catch error
+                    if e isa TimeLimitException || e isa UnexpectedModelStatusException
+                        @warn "SplitOracle: typical-oracle cut generation was interrupted " *
+                              "($(e.msg)); using the current DCGLP solution."
+                        break
                     end
                     rethrow()
                 end
-
-                if is_solved_and_feasible(dcglp; allow_local = false, dual = true)
-                    read_dcglp_solution!(oracle, state)
-                elseif termination_status(dcglp) == ALMOST_INFEASIBLE
-                    if fallback_on_error
-                        @warn "$SplitOracle: DCGLP master is almost infeasible; fallback to typical oracle";
-                        return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
-                    end
-                    throw(UnexpectedModelStatusException("SplitOracle: DCGLP is almost infeasible.",))
-                elseif termination_status(dcglp) == TIME_LIMIT
-                    throw(TimeLimitException("Time limit reached while solving dcglp master"))
-                else
-                    if fallback_on_error
-                        @warn "$SplitOracle: DCGLP master terminated with $(termination_status(dcglp)); fallback to typical oracle";
-                        return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
-                    end
-                    throw(UnexpectedModelStatusException("SplitOracle: DCGLP master terminated with $(termination_status(dcglp))."))
-                end
+                update_dcglp_upper_bound_and_gap!(normalization, state, log, t_value)
+                record_iteration!(log, state)
             end
 
-            collect_dcglp_benders_cuts!(oracle, state, benders_cuts, hyperplanes, x_value, t_value, log, time_limit)
-            update_dcglp_upper_bound_and_gap!(normalization, state, log, t_value)
-            record_iteration!(log, state)
+            oracle.param.dcglp_param.verbose && print_iteration_info(state, log)
+            check_lb_improvement!(state, log; zero_tol = oracle.param.zero_tol)
+            is_terminated(state, log, oracle.param.dcglp_param) && break
+
+            cuts_to_add = [benders_cuts[1]; benders_cuts[2]]
+            !isempty(cuts_to_add) && add_constraints(dcglp, :con_benders, cuts_to_add)
         end
 
-        oracle.param.dcglp_param.verbose && print_iteration_info(state, log)
-        check_lb_improvement!(state, log; zero_tol = oracle.param.zero_tol)
-        is_terminated(state, log, oracle.param.dcglp_param, time_limit) && break
+        if isempty(log.iterations)
+            @warn "SplitOracle: DCGLP cutting-plane loop terminated without any iterations."
+            return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
+        end
 
-        cuts_to_add = [benders_cuts[1]; benders_cuts[2]]
-        !isempty(cuts_to_add) && add_constraints(dcglp, :con_benders, cuts_to_add)
+        # If the final DCGLP lower bound is sufficiently positive, construct a disjunctive cut. Otherwise, fallback to a typical oracle.
+        current_lb = log.iterations[end].LB
+        if current_lb >= oracle.param.zero_tol && has_duals(dcglp)
+            cut = build_dcglp_disjunctive_cut(
+                normalization,
+                dcglp,
+                oracle.param,
+                zero_indices,
+                one_indices,
+            )
+            oracle.param.dcglp_param.verbose && print_disjunctive_cut(oracle, cut, x_value, t_value; zero_tol = oracle.param.zero_tol)
+            store_dcglp_disjunctive_cut!(oracle, cut, hyperplanes)
+            return false, hyperplanes, fill(Inf, length(t_value))
+        end
+
+        if all(log.iterations[end].is_in_L) # optimal termination with both points in the oracle feasible region
+            return true, [Hyperplane(length(x_value), length(t_value))], deepcopy(t_value)
+        end
+
+        # fallback to typical oracle since no meaningful disjunctive cut can be constructed from the DCGLP solution
+        return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
+
+    catch e
+        if typeof(e) <: UnexpectedModelStatusException
+            @warn "$SplitOracle: DCGLP cutting-plane loop terminated with unexpected dcglp model status"
+            if oracle.param.fallback_to_typical_cuts
+                @warn "$SplitOracle: fallback to typical oracle due to DCGLP error"
+                return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
+            end
+        else
+            rethrow()
+        end
     end
-
-    current_lb = log.iterations[end].LB
-    if current_lb >= oracle.param.zero_tol
-        cut = build_dcglp_disjunctive_cut(
-            normalization,
-            dcglp,
-            oracle.param,
-            zero_indices,
-            one_indices,
-        )
-        oracle.param.dcglp_param.verbose && print_disjunctive_cut(oracle, cut, x_value, t_value; zero_tol = oracle.param.zero_tol)
-        store_dcglp_disjunctive_cut!(oracle, cut, hyperplanes)
-        return false, hyperplanes, fill(Inf, length(t_value))
-    end
-
-    return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
 end
 
 function read_dcglp_solution!(oracle::SplitOracle, state::DcglpState)
@@ -311,11 +326,11 @@ function collect_dcglp_benders_cuts!(
     for i in 1:2
         state.oracle_times[i] = @elapsed begin
             if state.values[:ω_0][i] >= oracle.param.zero_tol
-                t_block = state.values[:ω_t][i] ./ state.values[:ω_0][i]
+                t_prime = state.values[:ω_t][i] ./ state.values[:ω_0][i]
                 state.is_in_L[i], hyperplanes_i, state.f_x[i] = generate_cuts(
                     oracle.typical_oracles[i],
                     clamp.(state.values[:ω_x][i] ./ state.values[:ω_0][i], 0.0, 1.0),
-                    t_block;
+                    t_prime;
                     tol_normalize = state.values[:ω_0][i],
                     time_limit = get_sec_remaining(log.start_time, time_limit),
                 )
@@ -339,7 +354,6 @@ function collect_dcglp_benders_cuts!(
                 end
             else
                 state.is_in_L[i] = true
-                state.f_x[i] = zeros(length(t_value))
             end
         end
     end
@@ -364,13 +378,4 @@ function append_selected_benders_cuts_to_master!(
             add_only_violated_cuts = add_violated,
         ),
     )
-end
-
-function fill_dcglp_omega_t_estimates!(state::DcglpState, t_value::Vector{Float64})
-    for i in 1:2
-        state.omega_t_[i] =
-            state.is_in_L[i] ? state.values[:ω_t][i] :
-            any(isnan, state.f_x[i]) ? fill(NaN, length(t_value)) :
-            state.f_x[i] * state.values[:ω_0][i]
-    end
 end

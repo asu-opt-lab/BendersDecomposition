@@ -1,5 +1,5 @@
 function select_disjunctive_inequality(x_value::Vector{Float64}, split_selection_rule::SplitIndexSelectionRule; zero_tol = 1.0e-2)
-    throw(UndefError("update select_disjunctive_inequality for $(typeof(split_selection_rule))"))
+    throw(UnimplementedInterfaceException("update select_disjunctive_inequality for $(typeof(split_selection_rule))"))
 end
 
 function select_disjunctive_inequality(x_value::Vector{Float64}, ::LargestFractional; zero_tol = 1.0e-9)

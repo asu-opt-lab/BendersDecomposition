@@ -39,7 +39,7 @@ function add_normalization_constraint!(
     sx::AbstractVector{VariableRef},
     st::AbstractVector{VariableRef},
 )
-    throw(UndefError("update add_normalization_constraint! for $(typeof(normalization))"))
+    throw(UnimplementedInterfaceException("update add_normalization_constraint! for $(typeof(normalization))"))
 end
 
 is_applicable(
@@ -50,7 +50,7 @@ is_applicable(
 ) = true
 
 function update_dcglp_for_candidate!(normalization::AbstractNormalization, dcglp::Model, x_value::Vector{Float64}, t_value::Vector{Float64})
-    throw(UndefError("update update_dcglp_for_candidate! for $(typeof(normalization))"))
+    throw(UnimplementedInterfaceException("update update_dcglp_for_candidate! for $(typeof(normalization))"))
 end
 
 function update_dcglp_upper_bound_and_gap!(
@@ -59,7 +59,7 @@ function update_dcglp_upper_bound_and_gap!(
     log::DcglpLog,
     t_value::Vector{Float64},
 )
-    throw(UndefError("update update_dcglp_upper_bound_and_gap! for $(typeof(normalization))"))
+    throw(UnimplementedInterfaceException("update update_dcglp_upper_bound_and_gap! for $(typeof(normalization))"))
 end
 
 function disjunctive_cut_normalization_value(
@@ -68,7 +68,7 @@ function disjunctive_cut_normalization_value(
     gamma_x::Vector{Float64},
     gamma_t::Vector{Float64},
 )
-    throw(UndefError("update disjunctive_cut_normalization_value for $(typeof(normalization))"))
+    throw(UnimplementedInterfaceException("update disjunctive_cut_normalization_value for $(typeof(normalization))"))
 end
 
 include("normalizationLpDistance.jl")

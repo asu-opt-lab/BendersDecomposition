@@ -1,6 +1,6 @@
 using Test
 using BendersX
-import BendersX: copy_variables!, transfer_scaled_linear_rows_and_bounds_with_types!, UndefError
+import BendersX: copy_variables!, transfer_scaled_linear_rows_and_bounds_with_types!, UnimplementedInterfaceException
 import MathOptInterface
 using HiGHS
 using JuMP
@@ -390,7 +390,7 @@ end
         catch e
             e
         end
-        @test master_error isa UndefError
+        @test master_error isa UnimplementedInterfaceException
         @test occursin("BendersX does not know how to formulate a master problem", master_error.msg)
         @test occursin("Define `update_master_model!", master_error.msg)
         @test occursin("Master(data; model = your_builder!)", master_error.msg)
@@ -412,7 +412,7 @@ end
         catch e
             e
         end
-        @test subproblem_error isa UndefError
+        @test subproblem_error isa UnimplementedInterfaceException
         @test occursin("BendersX does not know how to formulate a subproblem", subproblem_error.msg)
         @test occursin("Define `update_sub_model!", subproblem_error.msg)
         @test occursin("Oracle(...; model = your_builder!)", subproblem_error.msg)
