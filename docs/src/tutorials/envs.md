@@ -113,7 +113,7 @@ Typical environment parameters include:
 * `iter_limit`: maximum number of iterations,
 * `halt_limit`: maximum number of iterations without significant improvement,
 * `time_limit`: global time limit,
-* `gap_tolerance`: convergence tolerance,
+* `gap_tolerance`: relative gap tolerance,
 * `verbose`: logging verbosity.
 
 See [`BendersSeqInOutParam`](@ref) and [`BendersBnBParam`](@ref) for parameters

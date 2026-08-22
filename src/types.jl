@@ -180,34 +180,64 @@ struct InfeasibleOrNumericalIssue <: TerminationStatus end
 """
     TimeLimitException <: Exception
 
-Exception indicating that the time limit for the current Benders execution has been reached.
+Exception indicating that the time budget for the current Benders operation has been exhausted.
 
-This exception is used internally to interrupt algorithmic operations when no time remains.
+This exception may be raised by an execution environment or by an operation invoked during the solve, such as preprocessing, master optimization, oracle evaluation, or DCGLP separation.
 
-Execution environments may catch this exception and record [`TimeLimit`](@ref) as the algorithm-level termination status.
+The handling of this exception depends on where the time limit is reached. If the overall time budget of the execution environment is exhausted, the environment records [`TimeLimit`](@ref) as the algorithm-level termination status. If the exception arises within a recoverable subprocedure, such as preprocessing or DCGLP separation, the enclosing algorithm may terminate that subprocedure and continue using the information generated so far.
 """
-struct TimeLimitException <: Exception 
+struct TimeLimitException <: Exception
     msg::String
 end
 
 """
     UnexpectedModelStatusException <: Exception
 
-Exception indicating that a JuMP model terminated with a solver status that is unexpected for the current Benders execution.
+Exception indicating that a JuMP model returned a termination or solution status that is unexpected or unsupported by the current Benders operation.
 
-This exception is typically raised when a model returns an unsupported, unexpected, or numerically problematic termination status.
+The handling depends on where it occurs. Execution environments convert it to an algorithm-level termination status [`InfeasibleOrNumericalIssue`](@ref), while recoverable subprocedures may intercept it and continue using the information already generated.
 
-Execution environments may translate this exception into [`InfeasibleOrNumericalIssue`](@ref) and terminate.
+See also: [`InfeasibleOrNumericalIssue`](@ref)
 """
-struct UnexpectedModelStatusException <: Exception 
+struct UnexpectedModelStatusException <: Exception
     msg::String
 end
+
+"""
+    UnimplementedInterfaceException <: Exception
+
+Exception indicating that a required BendersX extension point has not been implemented for a concrete user-defined type.
+
+This exception is raised when a concrete subtype does not provide a required method or constructor defined by the BendersX interface.
+
+Examples include missing model-building functions, oracle methods, normalization methods, callback methods, or execution-environment methods.
+"""
+struct UnimplementedInterfaceException <: Exception
+    msg::String
+end
+
+"""
+    AlgorithmException <: Exception
+
+Exception indicating that an algorithm-specific requirement or invariant has been violated, so the current Benders procedure cannot safely continue.
+
+This exception is used for invalid algorithmic combinations, violated algorithm assumptions, or inconsistent algorithm state.
+
+It is distinct from [`ArgumentError`](@ref), which is used for invalid function arguments, and from [`UnsupportedModelException`](@ref), which is used when the model itself is outside the supported formulation class.
+"""
 struct AlgorithmException <: Exception 
     msg::String
 end
-struct UnimplementedInterfaceException <: Exception 
-    msg::String
-end
+
+"""
+    UnsupportedModelException <: Exception
+
+Exception indicating that a model or model feature is outside the class of formulations supported by the current BendersX component.
+
+This exception should be used when the limitation is intrinsic to the algorithm or implementation rather than caused by an invalid algorithm configuration.
+
+See also: [`AlgorithmException`](@ref)
+"""
 struct UnsupportedModelException <: Exception 
     msg::String
 end

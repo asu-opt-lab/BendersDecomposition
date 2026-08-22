@@ -43,7 +43,7 @@ Apply LP-relaxation preprocessing to `master`.
 
 The method temporarily relaxes the integrality constraints of the master problem and executes the sequential Benders environment specified by `preprocessing`. Cuts generated during this solve remain in the master model, while the original integrality constraints are restored before returning, including when preprocessing terminates with an error.
 
-A private copy of the preprocessing parameters is used so that the configured parameters are not modified by the preprocessing solve.
+A private copy of the preprocessing parameters is used because the preprocessing solve adjusts the nested time limit without modifying the configured parameter object.
 
 # Arguments
 

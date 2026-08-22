@@ -22,6 +22,7 @@ Throws an error if `T` does not implement the required constructor.
             optimizer = DEFAULT_OPTIMIZER) where T <: AbstractTypicalOracle =
     throw(UnimplementedInterfaceException(
         """
+        SeparableOracle: 
         Oracle subtype $(T) does not implement the required constructor needed by `SeparableOracle`.
 
         Expected constructor signature:
@@ -104,7 +105,7 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
         @debug "Building classical separable oracle"
         @info "SeparableOracle: N=$N subproblems, $(Threads.nthreads()) threads available for parallel execution"
         
-        N == master.dim_t || throw(DimensionMismatch("`N` must equal master.dim_t ($(master.dim_t)), got $N."))
+        N == master.dim_t || throw(DimensionMismatch("SeparableOracle: `N` must equal master.dim_t ($(master.dim_t)), got $N."))
 
         oracles = [oracle_type(data, master; model = model, scen_idx = j, param = sub_oracle_param, optimizer = optimizer) for j in 1:N]
 

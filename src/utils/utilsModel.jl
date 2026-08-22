@@ -15,7 +15,7 @@ function _validate_lp_compatibility(model::Model)
     for (_, S) in list_of_constraint_types(model)
         if S <: Union{MOI.Integer, MOI.ZeroOne, MOI.Semicontinuous, MOI.Semiinteger}
             throw(UnsupportedModelException(
-                "Unsupported variable type: $S. " *
+                "_validate_lp_compatibility: Unsupported variable type: $S. " *
                 "Typical oracles require a Linear Programming (LP) subproblem. " *
                 "Discontinuous variables are not allowed."
             ))
@@ -26,7 +26,7 @@ function _validate_lp_compatibility(model::Model)
     obj_type = objective_function_type(model)
     if !(obj_type <: Union{VariableRef, AffExpr, Real})
         throw(UnsupportedModelException(
-            "Unsupported objective function type: $obj_type. " *
+            "_validate_lp_compatibility: Unsupported objective function type: $obj_type. " *
             "Typical oracles require a Linear Programming (LP) subproblem. "
         ))
     end
@@ -40,13 +40,13 @@ function _validate_lp_compatibility(model::Model)
         if func isa VariableRef || func isa AffExpr || (func isa AbstractVector && all(x -> x isa AffExpr || x isa VariableRef, func))
             if !(set isa MOI.GreaterThan || set isa MOI.LessThan || set isa MOI.EqualTo || set isa MOI.Interval || set isa MOI.Zeros || set isa MOI.Nonpositives || set isa MOI.Nonnegatives)
                 throw(UnsupportedModelException(
-                    "Unsupported constraint set type: $(typeof(set)). " *
+                    "_validate_lp_compatibility: Unsupported constraint set type: $(typeof(set)). " *
                     "Typical oracles only support affine constraints."
                 ))
             end
         else
             throw(UnsupportedModelException(
-                "Unsupported constraint function type: $(typeof(func)). " *
+                "_validate_lp_compatibility: Unsupported constraint function type: $(typeof(func)). " *
                 "Typical oracles only support affine constraints."
             ))
         end

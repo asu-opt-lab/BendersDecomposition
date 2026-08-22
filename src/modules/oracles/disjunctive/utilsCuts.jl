@@ -11,7 +11,7 @@ end
 
 function add_disjunctive_cuts!(oracle::AbstractDisjunctiveOracle, ::DisjunctiveCutsSmallerIndices)
     oracle.param.split_index_selection_rule isa SimpleSplit ||
-        throw(AlgorithmException("DisjunctiveCutsSmallerIndices requires a simple split rule."))
+        throw(AlgorithmException("add_disjunctive_cuts!: DisjunctiveCutsSmallerIndices requires a simple split rule."))
 
     index = get_split_index(oracle)
     cuts = if index > 1

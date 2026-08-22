@@ -13,7 +13,7 @@ Concrete loop-state types typically provide:
 
 - `LB::Float64`: Current lower bound.
 - `UB::Float64`: Current upper bound.
-- `gap::Float64`: Optimality gap between the upper and lower bounds, in percent.
+- `gap::Float64`: Relative gap between the upper and lower bounds.
 - `values`: Current solution estimates.
 - `f_x`: Subproblem objective values associated with the current solution.
 - `is_in_L::Bool`: Whether the current solution belongs to the feasible region of the oracle.
@@ -56,7 +56,7 @@ Concrete subtypes provide common loop controls such as time limits, optimality g
 
 - `time_limit::Float64`: Maximum wall-clock time allowed for the loop, in
   seconds.
-- `gap_tolerance::Float64`: Optimality-gap tolerance used for termination.
+- `gap_tolerance::Float64`: Relative gap tolerance used for termination.
 - `iter_limit::Int`: Maximum number of loop iterations.
 - `verbose::Bool`: Whether to print iteration information.
 """
@@ -98,7 +98,7 @@ end
 
 Generic interface for updating the upper bound and optimality gap stored in the loop state.
 
-Concrete implementations use `f` to evaluate a candidate upper bound and update `state.UB` and `state.gap`. The gap is reported as a percentage relative to the absolute upper bound.
+Concrete implementations use `f` to evaluate a candidate upper bound and update `state.UB` and relative gap `state.gap`.
 
 # Throws
 
@@ -235,7 +235,7 @@ end
 
 Convert the iteration log into a `DataFrame`.
 
-The resulting data frame contains the lower bound, upper bound, optimality gap, and available timing statistics for each iteration.
+The resulting data frame contains the lower bound, upper bound, relative gap, and available timing statistics for each iteration.
 """
 function to_dataframe(log::AbstractLoopLog)
     return DataFrame(

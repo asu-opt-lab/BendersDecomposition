@@ -28,7 +28,7 @@ mutable struct LpDistanceNormalization <: AbstractNormalization
 
     function LpDistanceNormalization(p::Real = Inf)
         p = Float64(p)
-        p in (1.0, 2.0, Inf) || throw(ArgumentError("Unsupported norm p: $p"))
+        p in (1.0, 2.0, Inf) || throw(ArgumentError("LpDistanceNormalization: Unsupported norm $p"))
         return new(p)
     end
 end
@@ -51,7 +51,7 @@ function add_normalization_constraint!(
     elseif p == Inf
         @constraint(dcglp, concone, var_vec in MOI.NormInfinityCone(length(var_vec)))
     else
-        throw(ArgumentError("Unsupported norm p: $p"))
+        throw(ArgumentError("LpDistanceNormalization: Unsupported norm $p"))
     end
     return nothing
 end
@@ -89,7 +89,7 @@ function disjunctive_cut_normalization_value(
     elseif p == Inf
         norm_value = LinearAlgebra.norm(vcat(gamma_x, gamma_t), 1.0)
     else
-        throw(ArgumentError("Unsupported norm p: $p"))
+        throw(ArgumentError("LpDistanceNormalization: Unsupported norm $p"))
     end
     return max(1.0, norm_value)
 end

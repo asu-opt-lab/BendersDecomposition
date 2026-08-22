@@ -6,11 +6,28 @@
 # Common interface 
 # ----------------------------------------------------------------------------
 """
-    solve!(env::AbstractBendersEnv)
+    solve!(env::AbstractBendersEnv; kwargs...)
 
-Execute the Benders algorithm defined by `env` and return its execution log.
+Execute a Benders decomposition environment.
 
-Concrete [`AbstractBendersEnv`](@ref) types implement this method according to their corresponding Benders algorithm. This fallback method is called only when no implementation is available for the concrete environment type.
+Concrete execution environments implement this method according to their algorithmic workflow.
+
+# Error Handling
+
+The execution environment handles the following internal exceptions:
+
+- [`TimeLimitException`](@ref): Sets `env.termination_status` to [`TimeLimit`](@ref).
+- [`UnexpectedModelStatusException`](@ref): Sets `env.termination_status` to [`InfeasibleOrNumericalIssue`](@ref).
+
+These exceptions may originate directly from `solve!` or propagate from operations invoked during the solve, such as preprocessing or oracle evaluation.
+
+Other exceptions are not converted to algorithm-level termination statuses and propagate to the caller.
+
+# Returns
+
+The return value is defined by the concrete execution environment.
+
+See also: [`AbstractBendersEnv`](@ref), [`TerminationStatus`](@ref)
 """
 function solve!(env::AbstractBendersEnv)
     throw(UnimplementedInterfaceException("update solve! for $(typeof(env))"))

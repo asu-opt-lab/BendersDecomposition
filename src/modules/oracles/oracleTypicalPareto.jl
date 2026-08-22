@@ -146,7 +146,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         # Validate core_point dimension
         dim_x = length(x)
         if length(param.core_point) != dim_x
-            throw(DimensionMismatch("core_point has length $(length(param.core_point)) but expected $dim_x"))
+            throw(DimensionMismatch("ParetoOracle: core_point has length $(length(param.core_point)) but expected $dim_x"))
         end
 
         # Build the submodel using user-defined model update

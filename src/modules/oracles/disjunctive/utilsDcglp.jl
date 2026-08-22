@@ -222,8 +222,8 @@ function solve_dcglp!(
                 # Execute oracle
                 try
                     collect_dcglp_benders_cuts!(oracle, state, benders_cuts, hyperplanes, x_value, t_value, log, time_limit)
-                catch error
-                    if e isa TimeLimitException || e isa UnexpectedModelStatusException
+                catch err
+                    if err isa TimeLimitException || err isa UnexpectedModelStatusException
                         @warn "SplitOracle: typical-oracle cut generation was interrupted " *
                               "($(e.msg)); using the current DCGLP solution."
                         break
@@ -270,7 +270,7 @@ function solve_dcglp!(
         return generate_cuts(oracle.typical_oracles[1], x_value, t_value; time_limit = get_sec_remaining(log.start_time, time_limit))
 
     catch e
-        if typeof(e) <: UnexpectedModelStatusException
+        if e isa UnexpectedModelStatusException
             @warn "$SplitOracle: DCGLP cutting-plane loop terminated with unexpected dcglp model status"
             if oracle.param.fallback_to_typical_cuts
                 @warn "$SplitOracle: fallback to typical oracle due to DCGLP error"

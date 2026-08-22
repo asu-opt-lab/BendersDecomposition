@@ -68,7 +68,7 @@ mutable struct SplitOracleParam <: AbstractOracleParam
         add_benders_cuts_to_master in 0:2 ||
             throw(
                 ArgumentError(
-                    "`add_benders_cuts_to_master` must be true, false, " *
+                    "SplitOracleParam: `add_benders_cuts_to_master` must be true, false, " *
                     "or an integer in 0:2.",
                 )
             )
@@ -76,7 +76,7 @@ mutable struct SplitOracleParam <: AbstractOracleParam
         0.0 < fraction_of_benders_cuts_to_master <= 1.0 ||
             throw(
                 ArgumentError(
-                    "`fraction_of_benders_cuts_to_master` must lie in (0, 1].",
+                    "SplitOracleParam: `fraction_of_benders_cuts_to_master` must lie in (0, 1].",
                 )
             )
 

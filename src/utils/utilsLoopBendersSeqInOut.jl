@@ -8,7 +8,7 @@ In addition to the standard sequential Benders stopping criteria, these paramete
 # Fields
 
 - `time_limit::Float64`: Maximum wall-clock time allowed for the algorithm, in seconds.
-- `gap_tolerance::Float64`: Optimality-gap tolerance for termination, in percentage points.
+- `gap_tolerance::Float64`: Relative gap tolerance for termination.
 - `halt_limit::Int`: Maximum number of consecutive iterations without sufficient lower-bound improvement.
 - `iter_limit::Int`: Maximum number of Benders iterations.
 - `verbose::Bool`: Whether to print iteration information.
@@ -34,7 +34,7 @@ mutable struct BendersSeqInOutParam <: AbstractBendersSeqParam
 
     function BendersSeqInOutParam(; 
                         time_limit::Float64 = 7200.0, 
-                        gap_tolerance::Float64 = 1e-4, 
+                        gap_tolerance::Float64 = 1e-6, 
                         halt_limit::Int = 10000, 
                         iter_limit::Int = 1000000, 
                         verbose::Bool = true,

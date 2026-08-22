@@ -37,7 +37,7 @@ State recorded for one iteration of a sequential Benders algorithm.
 
 - `LB::Float64`: Current lower bound.
 - `UB::Float64`: Current upper bound.
-- `gap::Float64`: Current optimality gap, in percent.
+- `gap::Float64`: Current relative optimality gap.
 - `values::Dict{Symbol,Vector{Float64}}`: Candidate master solution values, including `:x` and `:t`.
 - `f_x::Vector{Float64}`: Subproblem objective values associated with the candidate solution. Entries may be `Inf` when the corresponding objective value is unavailable.
 - `master_time::Float64`: Time spent solving the master problem.
@@ -112,7 +112,7 @@ BendersSeqParam(;
 
 # Fields
 - `time_limit::Float64`: Maximum wall-clock time, in seconds.
-- `gap_tolerance::Float64`: Optimality-gap tolerance for termination, in percentage points.
+- `gap_tolerance::Float64`: Relative gap tolerance for termination.
 - `halt_limit::Int`: Maximum number of consecutive non-improving iterations.
 - `iter_limit::Int`: Maximum number of Benders iterations.
 - `verbose::Bool`: Whether to print iteration-level logging information.
@@ -129,7 +129,7 @@ mutable struct BendersSeqParam <: AbstractBendersSeqParam
 
     function BendersSeqParam(; 
                         time_limit::Float64 = 7200.0, 
-                        gap_tolerance::Float64 = 1e-4, 
+                        gap_tolerance::Float64 = 1e-6, 
                         halt_limit::Int = 10000, 
                         iter_limit::Int = 1000000, 
                         verbose::Bool = true
@@ -151,7 +151,7 @@ Update the upper bound and optimality gap for a sequential Benders iteration.
 
 The candidate upper bound is obtained by evaluating `f` at the componentwise maximum of the current auxiliary-variable value `t` and the corresponding subproblem objective values `f_x`. The best upper bound seen so far is stored in `state.UB`.
 
-The gap is computed as a percentage relative to `abs(state.UB)`. If the upper bound and lower bound agree within `zero_tol`, the gap is set to zero. If the upper bound is within `zero_tol` of zero but does not agree with the lower bound, the gap is set to `Inf`.
+The gap is computed as a relative to `abs(state.UB)`. If the upper bound and lower bound agree within `zero_tol`, the gap is set to zero. If the upper bound is within `zero_tol` of zero but does not agree with the lower bound, the gap is set to `Inf`.
 
 Returns `nothing`.
 """
@@ -178,7 +178,7 @@ function update_upper_bound_and_gap!(
     else
         state.gap = max(
             0.0,
-            (state.UB - state.LB) / abs(state.UB) * 100.0,
+            (state.UB - state.LB) / abs(state.UB),
         )
     end
 
@@ -187,7 +187,7 @@ end
 
 function print_iteration_info(state::BendersSeqState, log::BendersSeqLog; prefix="")
     @printf("%s Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.3f%% | Time: (M: %6.2f, S: %6.2f, Total: %6.2f) \n",
-           prefix, log.n_iter, state.LB, state.UB, state.gap, 
+           prefix, log.n_iter, state.LB, state.UB, state.gap * 100, 
            state.master_time, state.oracle_time, state.total_time)
 end
 

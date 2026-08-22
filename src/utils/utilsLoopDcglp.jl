@@ -11,7 +11,7 @@ State recorded for one iteration of the DCGLP cutting-plane loop.
 
 - `LB::Float64`: Current lower bound.
 - `UB::Float64`: Current upper bound.
-- `gap::Float64`: Current optimality gap, in percent.
+- `gap::Float64`: Current relative optimality gap.
 - `values::Dict{Symbol,Any}`: Current DCGLP solution values.
 - `f_x::Vector{Vector{Float64}}`: Subproblem objective values obtained from the typical oracles on the two sides of the split.
 - `master_time::Float64`: Time spent solving the DCGLP master problem.
@@ -88,7 +88,7 @@ Parameters controlling the DCGLP cutting-plane solution process used by [`SplitO
 
 - `optimizer::MOI.OptimizerWithAttributes`: Optimizer used to solve the DCGLP.
 - `time_limit::Float64`: Maximum time allowed for the DCGLP solution process, in seconds.
-- `gap_tolerance::Float64`: Optimality-gap tolerance for terminating the DCGLP cutting-plane loop.
+- `gap_tolerance::Float64`: Relative gap tolerance for terminating the DCGLP cutting-plane loop.
 - `halt_limit::Int`: Maximum number of consecutive iterations without sufficient lower-bound improvement before termination.
 - `iter_limit::Int`: Maximum number of iterations of the DCGLP cutting-plane loop.
 - `verbose::Bool`: Whether to print DCGLP iteration information.
@@ -100,7 +100,7 @@ The DCGLP cutting-plane loop terminates when a configured stopping criterion is 
     DcglpParam(;
         optimizer = default_optimizer(),
         time_limit = 1000.0,
-        gap_tolerance = 1e-3,
+        gap_tolerance = 1e-5,
         halt_limit = 3,
         iter_limit = 250,
         verbose = true,
@@ -123,7 +123,7 @@ mutable struct DcglpParam <: AbstractDcglpParam
     function DcglpParam(;
         optimizer::MOI.OptimizerWithAttributes = default_optimizer(),
         time_limit::Float64 = 1000.0,
-        gap_tolerance::Float64 = 1e-3,
+        gap_tolerance::Float64 = 1e-5,
         halt_limit::Int = 3,
         iter_limit::Int = 250,
         verbose::Bool = true,
@@ -146,7 +146,7 @@ For each side of the split, the auxiliary-vector estimate is taken from the DCGL
 
 The function `f` is evaluated at the resulting auxiliary vectors to obtain a candidate upper bound. The best upper bound seen so far is stored in `state.UB`.
 
-The gap is reported as a percentage relative to `abs(state.UB)`. If the upper and lower bounds agree within `zero_tol`, the gap is set to zero. If the upper bound is within `zero_tol` of zero but does not agree with the lower bound, the gap is set to `Inf`.
+The gap is reported as a relative to `abs(state.UB)`. If the upper and lower bounds agree within `zero_tol`, the gap is set to zero. If the upper bound is within `zero_tol` of zero but does not agree with the lower bound, the gap is set to `Inf`.
 
 Returns `nothing`.
 """
@@ -180,7 +180,7 @@ function update_upper_bound_and_gap!(
     else
         state.gap = max(
             0.0,
-            (state.UB - state.LB) / abs(state.UB) * 100.0,
+            (state.UB - state.LB) / abs(state.UB),
         )
     end
 
@@ -199,7 +199,7 @@ The output includes the lower bound, upper bound, optimality gap, auxiliary uppe
 """
 function print_iteration_info(state::DcglpState, log::DcglpLog)
     @printf("   Iter: %4d | LB: %8.4f | UB: %8.4f | Gap: %6.2f%% | UB_k: %8.2f | UB_v: %8.2f | Master time: %6.2f | Sub_k time: %6.2f | Sub_v time: %6.2f \n",
-           log.n_iter, state.LB, state.UB, state.gap, sum(state.omega_t_[1]), sum(state.omega_t_[2]), state.master_time, state.oracle_times[1], state.oracle_times[2])
+           log.n_iter, state.LB, state.UB, state.gap * 100, sum(state.omega_t_[1]), sum(state.omega_t_[2]), state.master_time, state.oracle_times[1], state.oracle_times[2])
 end
 
 """

@@ -201,7 +201,7 @@ function update_dcglp_upper_bound_and_gap!(
     else
         state.gap = max(
             0.0,
-            (state.UB - state.LB) / abs(state.UB) * 100.0,
+            (state.UB - state.LB) / abs(state.UB),
         )
     end
     

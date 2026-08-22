@@ -42,9 +42,8 @@ mutable struct BendersBnB <: AbstractBendersBnB
     obj_value::Float64 
     termination_status::TerminationStatus 
 
-    function BendersBnB(master::AbstractMaster, oracle::AbstractTypicalOracle; param::BendersBnBParam = BendersBnBParam())
+    function BendersBnB(master::AbstractMaster, oracle::AbstractTypicalOracle; param::BendersBnBParam = BendersBnBParam(), preprocessing::AbstractBendersPreprocessing = NoPreprocessing())
         
-        preprocessing = NoPreprocessing()
         lazy_callback = LazyCallback(oracle)
         user_callback = NoUserCallback()
         
@@ -81,7 +80,7 @@ function solve!(env::BendersBnB)
     param = env.param
     try 
         # Apply preprocessing
-        log.preprocessing_time = preprocess!(env.master, env.preprocessing; time_limit = param.time_limit)
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing; time_limit = get_sec_remaining(log, param))
 
         # Set up lazy callback
         function lazy_callback_wrapper(cb_data)
@@ -97,11 +96,10 @@ function solve!(env::BendersBnB)
             set_attribute(env.master.model, MOI.UserCutCallback(), user_callback_wrapper)
         end
         
+        get_sec_remaining(log, param) <= 0.0 && throw(TimeLimitException("BendersBnB: Time limit reached before initiating branch-and-bound procedure."))
+
         # Configure solver parameters
-        if param.time_limit <= time() - log.start_time
-            throw(TimeLimitException("BendersBnB: Time limit reached during preprocessing, please increase the time limit."))
-        end
-        set_time_limit_sec(env.master.model, param.time_limit - log.preprocessing_time)
+        set_time_limit_sec(env.master.model, get_sec_remaining(log, param))
         set_optimizer_attribute(env.master.model, MOI.Silent(), !param.verbose)
         set_optimizer_attribute(env.master.model, MOI.RelativeGapTolerance(), param.gap_tolerance)
         
@@ -130,11 +128,12 @@ function solve!(env::BendersBnB)
         
         return df
     catch e
-        @warn e.msg
-        if typeof(e) <: TimeLimitException
+        if e isa TimeLimitException
+            @warn e.msg
             env.termination_status = TimeLimit()
             env.obj_value = has_values(env.master.model) ? JuMP.objective_value(env.master.model) : Inf
-        elseif typeof(e) <: UnexpectedModelStatusException
+        elseif e isa UnexpectedModelStatusException
+            @warn e.msg
             env.termination_status = InfeasibleOrNumericalIssue()
         else
             rethrow()  
