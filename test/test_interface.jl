@@ -389,6 +389,19 @@ end
     end
     @test status_error isa BendersX.UnexpectedModelStatusException
     @test status_error.msg == "test status"
+
+    oracle.oracles = BendersX.AbstractTypicalOracle[
+        SeparableInterruptionTestOracle(ArgumentError("test generic error")),
+        SeparableInterruptionTestOracle(nothing),
+    ]
+    generic_error = try
+        BendersX.generate_cuts(oracle, [0.0, 0.0], [0.0, 0.0])
+        nothing
+    catch err
+        err
+    end
+    @test generic_error isa ArgumentError
+    @test generic_error.msg == "test generic error"
 end
 
 @testset "transfer_scaled_linear_rows_and_bounds_with_types!" begin
