@@ -15,6 +15,8 @@ struct DirectionalVectorTTestData <: AbstractData end
 
 struct DirectionalVectorTTestOracle <: BendersX.AbstractTypicalOracle end
 
+struct DcglpInterruptionTestOracle <: BendersX.AbstractTypicalOracle end
+
 struct ExtensionContractNormalization <: BendersX.AbstractNormalization end
 struct MissingContractNormalization <: BendersX.AbstractNormalization end
 
@@ -79,8 +81,8 @@ function build_typical_pair(data, master)
 end
 
 function disjunctive_norm_dcglp_param(; verbose::Bool = false)
-    return DcglpParam(
-        disjunctive_norm_optimizer();
+    return DcglpParam(;
+        optimizer = disjunctive_norm_optimizer(),
         time_limit = 20.0,
         gap_tolerance = 1.0e-5,
         halt_limit = 3,
@@ -118,6 +120,16 @@ function BendersX.generate_cuts(
     f_x = 1.0 .- x_value[1:length(t_value)]
     is_in_L = all(f_x .<= t_value .+ 1.0e-9)
     return is_in_L, hyperplanes, f_x
+end
+
+function BendersX.generate_cuts(
+    ::DcglpInterruptionTestOracle,
+    ::Vector{Float64},
+    ::Vector{Float64};
+    tol_normalize = 1.0,
+    time_limit = 3600.0,
+)
+    throw(BendersX.TimeLimitException("test DCGLP interruption"))
 end
 
 function BendersX.add_normalization_constraint!(
@@ -356,6 +368,29 @@ end
             )
             run_direct_cut_smoke(oracle)
         end
+    end
+
+    @testset "DCGLP interruption preserves the original exception" begin
+        _, master = build_disjunctive_norm_master()
+        oracle = SplitOracle(
+            master,
+            (DcglpInterruptionTestOracle(), DcglpInterruptionTestOracle());
+            param = SplitOracleParam(;
+                normalization = LpDistanceNormalization(),
+                dcglp_param = disjunctive_norm_dcglp_param(),
+                reuse_dcglp = false,
+            ),
+        )
+
+        err = try
+            BendersX.generate_cuts(oracle, [0.5, 0.5], [0.0]; time_limit = 20.0)
+            nothing
+        catch caught
+            caught
+        end
+
+        @test err isa BendersX.TimeLimitException
+        @test err.msg == "test DCGLP interruption"
     end
 
     @testset "normalization extension defaults" begin

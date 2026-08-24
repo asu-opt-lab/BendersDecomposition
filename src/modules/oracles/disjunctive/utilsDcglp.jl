@@ -225,7 +225,7 @@ function solve_dcglp!(
                 catch err
                     if err isa TimeLimitException || err isa UnexpectedModelStatusException
                         @warn "SplitOracle: typical-oracle cut generation was interrupted " *
-                              "($(e.msg)); using the current DCGLP solution."
+                              "($(err.msg)); using the current DCGLP solution."
                         break
                     end
                     rethrow()

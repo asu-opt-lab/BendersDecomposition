@@ -7,6 +7,21 @@ using JuMP
 
 const MOI = MathOptInterface
 
+struct SeparableInterruptionTestOracle <: BendersX.AbstractTypicalOracle
+    interruption::Union{Nothing,Exception}
+end
+
+function BendersX.generate_cuts(
+    oracle::SeparableInterruptionTestOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64};
+    tol_normalize = 1.0,
+    time_limit = 3600.0,
+)
+    !isnothing(oracle.interruption) && throw(oracle.interruption)
+    return true, [BendersX.Hyperplane(length(x_value), length(t_value))], deepcopy(t_value)
+end
+
 @testset "BendersX copy_variables!" begin
     @testset "VariableRef" begin
         master_model = Model()
@@ -348,6 +363,32 @@ end
     @test length(hyperplanes) == data.n_scenarios
     @test f_x == [1.0, 1.0]
     @test all(occursin("HiGHS", solver_name(suboracle.model)) for suboracle in oracle.oracles)
+
+    oracle.oracles = BendersX.AbstractTypicalOracle[
+        SeparableInterruptionTestOracle(BendersX.TimeLimitException("test timeout")),
+        SeparableInterruptionTestOracle(nothing),
+    ]
+    timeout_error = try
+        BendersX.generate_cuts(oracle, [0.0, 0.0], [0.0, 0.0])
+        nothing
+    catch err
+        err
+    end
+    @test timeout_error isa BendersX.TimeLimitException
+    @test timeout_error.msg == "test timeout"
+
+    oracle.oracles = BendersX.AbstractTypicalOracle[
+        SeparableInterruptionTestOracle(nothing),
+        SeparableInterruptionTestOracle(BendersX.UnexpectedModelStatusException("test status")),
+    ]
+    status_error = try
+        BendersX.generate_cuts(oracle, [0.0, 0.0], [0.0, 0.0])
+        nothing
+    catch err
+        err
+    end
+    @test status_error isa BendersX.UnexpectedModelStatusException
+    @test status_error.msg == "test status"
 end
 
 @testset "transfer_scaled_linear_rows_and_bounds_with_types!" begin

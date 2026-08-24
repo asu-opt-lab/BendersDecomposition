@@ -118,8 +118,8 @@ dcglp_optimizer = optimizer_with_attributes(
     "CPX_PARAM_EPOPT" => 1e-9,
     MOI.Silent() => true,
 )
-dcglp_param = DcglpParam(
-    dcglp_optimizer;
+dcglp_param = DcglpParam(;
+    optimizer = dcglp_optimizer,
     time_limit = dcglp_time_limit,
     gap_tolerance = 1e-3,
     halt_limit = dcglp_halt_limit,

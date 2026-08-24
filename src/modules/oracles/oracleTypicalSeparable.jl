@@ -134,17 +134,31 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
     is_in_L = Vector{Bool}(undef,N)
     sub_obj_val = Vector{Vector{Float64}}(undef,N)
     hyperplanes = Vector{Vector{Hyperplane}}(undef,N)
+    interruptions = Vector{Union{Nothing,Exception}}(nothing, N)
 
     Threads.@threads for j=1:N
-        is_in_L[j], hyperplanes[j], sub_obj_val[j] = generate_cuts(oracle.oracles[j], x_value, [t_value[j]], tol_normalize = tol_normalize; time_limit = get_sec_remaining(tic, time_limit))
+        try
+            is_in_L[j], hyperplanes[j], sub_obj_val[j] = generate_cuts(oracle.oracles[j], x_value, [t_value[j]], tol_normalize = tol_normalize; time_limit = get_sec_remaining(tic, time_limit))
 
-        # correct dimension for t_j's
-        for h in hyperplanes[j]
-            coeff_t = h.a_t[1]
-            h.a_t = spzeros(length(t_value)) 
-            h.a_t[j] = coeff_t
+            # correct dimension for t_j's
+            for h in hyperplanes[j]
+                coeff_t = h.a_t[1]
+                h.a_t = spzeros(length(t_value))
+                h.a_t[j] = coeff_t
+            end
+        catch err
+            if err isa TimeLimitException || err isa UnexpectedModelStatusException
+                interruptions[j] = err
+            else
+                rethrow()
+            end
         end
     end
+
+    interruption_index = findfirst(err -> err isa TimeLimitException, interruptions)
+    isnothing(interruption_index) &&
+        (interruption_index = findfirst(err -> !isnothing(err), interruptions))
+    !isnothing(interruption_index) && throw(interruptions[interruption_index])
 
     if any(.!is_in_L)
         return false, reduce(vcat, hyperplanes), reduce(vcat, sub_obj_val)

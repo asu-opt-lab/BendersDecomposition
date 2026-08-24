@@ -66,7 +66,7 @@ benders_param = BendersBnBParam(
 dcglp_optimizer = optimizer_with_attributes(CPLEX.Optimizer,
     "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1,
     "CPX_PARAM_EPOPT" => 1e-9, MOI.Silent() => true)
-dcglp_param = DcglpParam(dcglp_optimizer;
+dcglp_param = DcglpParam(; optimizer = dcglp_optimizer,
     time_limit = 1000.0,
     gap_tolerance = 1e-3,
     halt_limit = 3,
