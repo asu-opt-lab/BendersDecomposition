@@ -3,7 +3,7 @@
 
 Abstract supertype for iteration state used by sequential Benders environments.
 
-See also: [`BendersSeqState`](@ref)
+See also: `BendersSeqState`
 """
 abstract type AbstractBendersSeqState <: AbstractLoopState end
 
@@ -13,7 +13,7 @@ abstract type AbstractBendersSeqState <: AbstractLoopState end
 
 Abstract supertype for iteration logs used by sequential Benders environments.
 
-See also: [`BendersSeqLog`](@ref)
+See also: `BendersSeqLog`
 """
 abstract type AbstractBendersSeqLog <: AbstractLoopLog end
 

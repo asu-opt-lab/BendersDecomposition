@@ -14,7 +14,7 @@ Abstract supertype for state information associated with a node processed during
 
 A concrete B&B state records the candidate solution, oracle evaluation, and cut-generation information associated with a processed node.
 
-See also: [`BendersBnBState`](@ref), [`AbstractLoopState`](@ref)
+See also: `BendersBnBState`, [`AbstractLoopState`](@ref)
 """
 abstract type AbstractBendersBnBState end
 
@@ -25,7 +25,7 @@ Abstract supertype for logs that record the progress of a Benders branch-and-bou
 
 Unlike sequential Benders logs, a B&B log records information associated with processed nodes rather than iterations of a cutting-plane loop.
 
-See also: [`BendersBnBLog`](@ref), [`AbstractLoopLog`](@ref)
+See also: `BendersBnBLog`, [`AbstractLoopLog`](@ref)
 """
 abstract type AbstractBendersBnBLog end
 

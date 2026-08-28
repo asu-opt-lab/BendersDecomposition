@@ -223,7 +223,7 @@ Exception indicating that an algorithm-specific requirement or invariant has bee
 
 This exception is used for invalid algorithmic combinations, violated algorithm assumptions, or inconsistent algorithm state.
 
-It is distinct from [`ArgumentError`](@ref), which is used for invalid function arguments, and from [`UnsupportedModelException`](@ref), which is used when the model itself is outside the supported formulation class.
+It is distinct from `ArgumentError`, which is used for invalid function arguments, and from [`UnsupportedModelException`](@ref), which is used when the model itself is outside the supported formulation class.
 """
 struct AlgorithmException <: Exception 
     msg::String

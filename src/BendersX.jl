@@ -49,6 +49,10 @@ public AbstractMaster
 public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, AbstractDisjunctiveOracle
 public AbstractBendersPreprocessing
 public AbstractNormalization
+public AbstractLazyCallback, AbstractUserCallback
+public AbstractLoopState, AbstractLoopLog, AbstractLoopParam
+public AbstractBendersSeqState, AbstractBendersSeqLog, AbstractBendersSeqParam
+public AbstractBendersBnBState, AbstractBendersBnBLog, AbstractBendersBnBParam
 public SplitIndexSelectionRule, DisjunctiveCutsAppendRule
 public generate_cuts, add_normalization_constraint!, update_dcglp_upper_bound_and_gap!
 public disjunctive_cut_normalization_value

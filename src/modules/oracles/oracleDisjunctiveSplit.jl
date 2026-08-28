@@ -124,7 +124,7 @@ Split-based disjunctive Benders oracle.
 
 Construct a split oracle using two typical Benders oracles and the specified split-oracle configuration.
 
-See also: [`SplitOracleParam`](@ref), [`AbstractDisjunctiveNormalization`](@ref)
+See also: [`SplitOracleParam`](@ref), [`AbstractNormalization`](@ref)
 """
 mutable struct SplitOracle{
     T1 <: AbstractTypicalOracle,
