@@ -1,17 +1,36 @@
-
 """
     Master <: AbstractMaster
 
-A mutable struct representing the master module in Benders decomposition.
+Master problem used in Benders decomposition.
+
+`Master` stores the JuMP model, the first-stage decision variables `x`, the auxiliary variables `t`, and the corresponding objective coefficients used by the Benders algorithms.
 
 # Fields
-- `model::Model`: The underlying JuMP optimization model
-- `x::Vector{VariableRef}`: Binary first-stage decision variables
-- `t::Vector{VariableRef}`: Auxiliary variables for epigraph constraints
-- `dim_x::Int`: dimension of `x`
-- `dim_t::Int`: dimension of `t`
-- `c_x::Vector{Float64}`: objective coefficient vector of `x`
-- `c_x::Vector{Float64}`: objective coefficient vector of `t`
+
+- `model::Model`: Underlying JuMP optimization model.
+- `x_tuple::NamedTuple`: Named tuple containing the master variables returned by the master-model builder.
+- `x::Vector{VariableRef}`: Flattened vector of master variables that link to the second-stage problems.
+- `t::Vector{VariableRef}`: Auxiliary variables associated with the second-stage value functions.
+- `dim_x::Int`: Dimension of `x`.
+- `dim_t::Int`: Dimension of `t`.
+- `c_x::Vector{Float64}`: Objective coefficients of `x`.
+- `c_t::Vector{Float64}`: Objective coefficients of `t`.
+
+# Constructor
+
+    Master(
+        data::AbstractData;
+        model = update_master_model!,
+        optimizer = DEFAULT_OPTIMIZER,
+    )
+
+Construct a Benders master problem from `data`.
+
+# Arguments
+
+- `data::AbstractData`: Problem data used to formulate the master problem.
+- `model`: Function that builds the master model.
+- `optimizer`: JuMP-compatible optimizer constructor.
 """
 mutable struct Master <: AbstractMaster
     model::Model

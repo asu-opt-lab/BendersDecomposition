@@ -90,7 +90,7 @@ function generate_cuts(oracle::UFLKnapsackOracle, x_value::Vector{Float64}, t_va
     end
     
     if get_sec_remaining(tic, time_limit) <= 0.0
-        throw(TimeLimitException("Time limit reached during cut generation"))
+        throw(TimeLimitException("UFLKnapsackOracle: Time limit reached during cut generation"))
     end
 
     customers = findall(x -> x != -1, critical_facility)
@@ -128,5 +128,5 @@ function find_critical_item(c::Vector{Float64}, x::Vector{Float64})
             return idx
         end
     end
-    throw(AlgorithmException("`k` cannot be `nothing` as sum(x) >= 2 is enforced. Check the models."))
+    throw(AlgorithmException("UFLKnapsackOracle: `k` cannot be `nothing` as sum(x) >= 2 is enforced. Check the models."))
 end

@@ -22,7 +22,7 @@ The field names of `x` determine the keyword arguments passed to
 `t` must be a `VariableRef` or `Vector{VariableRef}` representing the auxiliary
 variable(s) used to approximate the subproblem objective value.
 
-Optimizer selection is handled elsewhere. Do not attach an optimizer in this
+Optimizer selection is handled elsewhere. Do not attach an optimizer to `model` in this
 function.
 
 # Example
@@ -53,7 +53,7 @@ Master(data; model = build_master_model!)
 In that case, `build_master_model!(model, data)` must follow the same interface.
 """
 function update_master_model!(model::Model, data::AbstractData)
-    throw(UndefError(
+    throw(UnimplementedInterfaceException(
         "BendersX does not know how to formulate a master problem for " * "$(typeof(data)). Define " * "`update_master_model!(model::Model, data::$(typeof(data)))`, " * "or pass a custom model-building function with " * "`Master(data; model = your_builder!)`."
 ))
 end
@@ -61,7 +61,7 @@ end
 """
     update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
 
-Formulate the subproblem for scenario `scen_idx` and `data` in `model`.
+Formulate the subproblem for scenario `scen_idx` using `data` in `model`.
 
 When a model-based oracle is constructed, BendersX searches for an `update_sub_model!` method defined for the type of `data`. This fallback method is called only if no such method exists.
 
@@ -71,7 +71,7 @@ To use a model-based oracle with a custom data type,
 
 where `MyDataType` is a concrete subtype of [`AbstractData`](@ref) that represents your problem data.
 
-The function must:
+The method must:
 
 1. Add the subproblem variables, constraints, and objective to `model`.
 2. Use the master variables passed as keyword arguments, if needed.
@@ -90,15 +90,16 @@ function update_sub_model!(model, data, scen_idx; x, y)
 end
 ```
 
-`scen_idx` identifies the scenario being formulated. It may be ignored for
-deterministic models.
+The argument `scen_idx` identifies the scenario being formulated and may be
+ignored for deterministic models.
 
-Most implementations return `nothing`. To define generalized bound
-constraints, return `(gbc_lhs, gbc_rhs, gbc_sense)`, representing relations of the form
- `subproblem_variable <=/>=/== affine_expression_of_master_variables`.
+Most implementations should return `nothing`. To define generalized bound
+constraints (GBCs), return `(gbc_lhs, gbc_rhs, gbc_sense)`, where the three objects describe GBCs relating subproblem variables (`gbc_lhs`) to affine
+expressions of master variables (`gbc_rhs`), with senses <=, >=, or ==. See
+[`ClassicalOracle`](@ref) for an oracle that supports GBCs.
 
-Optimizer selection is handled elsewhere. Do not attach an optimizer in this
-function.
+Optimizer selection is handled elsewhere. Do not attach an optimizer to
+`model` in this function.
 
 # Example
 
@@ -129,7 +130,7 @@ In that case, `build_sub_model!(model, data, scen_idx; kwargs...)` must follow
 the same interface.
 """
 function update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...) 
-    throw(UndefError( 
+    throw(UnimplementedInterfaceException( 
         "BendersX does not know how to formulate a subproblem for " * "$(typeof(data)). Define " * "`update_sub_model!(model::Model, data::$(typeof(data)), " * "scen_idx::Int; kwargs...)`, or pass a custom model-building " * 
         "function with `Oracle(...; model = your_builder!)`." )) 
 end

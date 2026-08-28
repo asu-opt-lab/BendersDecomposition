@@ -4,25 +4,44 @@
 
 Alias for [`BasicOracleParam`](@ref) used by [`ClassicalOracle`](@ref).
 
-It controls the numerical tolerances for cut violation detection in the
-classical oracle.
+It controls the numerical tolerances used to determine whether a constraint violation is detected and whether a value is treated as zero.
 """
 const ClassicalOracleParam = BasicOracleParam
 
 """
     ClassicalOracle <: AbstractTypicalOracle
 
-Classical Benders oracle for LP-compatible subproblems.
+Classical Benders oracle.
 
-This oracle copies the master variables into a subproblem model, fixes them to
-the current candidate point, and uses dual information from the resulting LP to
-produce classical optimality or feasibility cuts.
+`ClassicalOracle` constructs an LP subproblem by copying the master's coupling variables into a subproblem model and fixing their values to the current candidate solution. Dual information from the resulting subproblem is used to generate classical Benders optimality or feasibility cuts.
 
-The user supplies the subproblem through a model-update function. The
-function may optionally return generalized bound constraints (GBCs),
-which are enforced while the oracle evaluates candidate master points.
+The user supplies the subproblem through a model-update function. To use generalized bound constraints (GBCs), the model-update function must return GBC information. See [`update_sub_model!`](@ref) for details.
 
-See also: [`BasicOracleParam`](@ref), [`UnifiedOracle`](@ref), [`ParetoOracle`](@ref)
+# Fields
+
+- `param::ClassicalOracleParam`: Numerical tolerances controlling cut generation.
+- `model::Model`: LP subproblem model used for oracle evaluation.
+- `fixed_x_constraints::Vector{ConstraintRef}`: Constraints fixing the copied master variables to the current candidate solution.
+- `gbc_lhs::Vector{VariableRef}`: Left-hand sides of the generalized bound constraints.
+- `gbc_rhs::Vector{Union{VariableRef, AffExpr}}`: Right-hand sides of the generalized bound constraints.
+- `gbc_sense::Vector{GBCBoundType}`: Senses of the generalized bound constraints.
+
+# Constructor
+
+    ClassicalOracle(
+        data::AbstractData,
+        master::Master;
+        model = update_sub_model!,
+        scen_idx::Int = 0,
+        param::ClassicalOracleParam = ClassicalOracleParam(),
+        optimizer = DEFAULT_OPTIMIZER,
+    )
+
+Construct a classical Benders oracle from `data` and `master`.
+
+The `model` function formulates the subproblem using the copied master variables. The subproblem must be LP-compatible.
+
+See also: [`ClassicalOracleParam`](@ref), [`UnifiedOracle`](@ref), [`ParetoOracle`](@ref), [`update_sub_model!`](@ref)
 """
 mutable struct ClassicalOracle <: AbstractTypicalOracle
     
@@ -68,6 +87,21 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
     ClassicalOracle() = new()
 end
 
+"""
+    generate_cuts(
+        oracle::ClassicalOracle,
+        x_value::Vector{Float64},
+        t_value::Vector{Float64};
+        tol_normalize = 1.0,
+        time_limit = 3600,
+    )
+
+Generate a classical Benders cut for the candidate master solution.
+
+The subproblem is solved with the copied master variables fixed to `x_value`. For a finite optimal subproblem, dual information is used to generate an optimality cut. For an infeasible subproblem with a valid infeasibility certificate, the dual certificate is used to generate a feasibility cut.
+
+The method returns whether the candidate satisfies the oracle's separation criterion, the generated hyperplanes, and the corresponding subproblem objective values.
+"""
 function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_value::Vector{Float64}; tol_normalize = 1.0, time_limit = 3600)
     set_time_limit_sec(oracle.model, time_limit)
     set_normalized_rhs.(oracle.fixed_x_constraints, x_value)
@@ -77,7 +111,7 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
     
     optimize!(oracle.model)
     if termination_status(oracle.model) == TIME_LIMIT
-        throw(TimeLimitException("Time limit reached during cut generation"))
+        throw(TimeLimitException("ClassicalOracle: Time limit reached during cut generation"))
     end
     
     status = dual_status(oracle.model)
@@ -113,6 +147,11 @@ function generate_cuts(oracle::ClassicalOracle, x_value::Vector{Float64}, t_valu
             else
                 return true, [Hyperplane(a_x, a_t, a_0)], [Inf]
             end
+        else
+            throw(UnexpectedModelStatusException(
+                "ClassicalOracle: infeasibility certificate was returned " *
+                "but no dual information is available."
+            ))
         end
     else
         throw(UnexpectedModelStatusException("ClassicalOracle: $(status). This is likely a numerical issue. Please try using other oracles, such as unified oracle or pareto oracle."))

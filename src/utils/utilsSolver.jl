@@ -1,3 +1,4 @@
+# Q. `DEFAULT_OPTIMIZER` and `default_optimizer()` are defining the same thing. why is it defined twice?
 const DEFAULT_OPTIMIZER = optimizer_with_attributes(GLPK.Optimizer, MOI.Silent() => true)
 
 default_optimizer() = optimizer_with_attributes(GLPK.Optimizer, MOI.Silent() => true)
@@ -20,17 +21,9 @@ callback_solver_tag(model::Model) = Val(Symbol(solver_name(model)))
 """
     callback_node_count(cb_data, model::Model)
 
-Return the solver-reported callback node count, or `nothing` if the active
-solver does not expose this metadata.
+Return the solver-reported callback node count, or `nothing` if this metadata is not supported for the active solver.
 
-This function is an extension hook. Solver-specific implementations should
-specialize `callback_node_count(cb_data, model, ::Val{:SolverName})`.
-
-# Notes
-- Solver-specific support is provided through package extensions.
-- CPLEX support is implemented by `BendersXCPLEXExt` when `CPLEX.jl` is loaded.
-- If the active solver does not support this metadata, BendersX emits a warning
-  and returns `nothing`.
+Solver-specific support is provided by specializing `callback_node_count(cb_data, model, ::Val{:SolverName})` for the solver of interest through a package extension. For instance,CPLEX support is implemented by `BendersXCPLEXExt` when `CPLEX.jl` is loaded. If no implementation is available, this function emits a warning and returns `nothing`.
 
 See also: [`callback_node_depth`](@ref)
 """
@@ -49,11 +42,9 @@ callback_node_count(cb_data, model::Model, ::Val) = nothing
 """
     callback_node_depth(cb_data, model::Model)
 
-Return the solver-reported callback node depth, or `nothing` if the active
-solver does not expose this metadata.
+Return the solver-reported node depth for the current callback, or nothing if node-depth metadata is not supported for the active solver.
 
-This function is an extension hook. Solver-specific implementations should
-specialize `callback_node_depth(cb_data, model, ::Val{:SolverName})`.
+Solver-specific support is provided by specializing `callback_node_depth(cb_data, model, ::Val{:SolverName})` for the solver of interest through a package extension. For instance, CPLEX support is implemented by `BendersXCPLEXExt` when `CPLEX.jl` is loaded. If no implementation is available, this function emits a warning and returns `nothing`.
 
 # Notes
 - Solver-specific support is provided through package extensions.

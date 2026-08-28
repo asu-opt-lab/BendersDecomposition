@@ -41,7 +41,7 @@ remains unchanged.
 Each oracle in BendersX owns a `param` field of type `<: AbstractOracleParam`,
 which controls numerical tolerances and cut-generation behavior. By convention,
 an oracle named `XOracle` uses a parameter type named `XOracleParam`; split
-oracles use `SplitOracleParam` with an `AbstractDisjunctiveNormalization`. See
+oracles use `SplitOracleParam` with an `AbstractNormalization`. See
 [`API`](@ref api) for detailed descriptions of oracle-specific parameters.
 
 Common parameters include:
@@ -90,7 +90,7 @@ implementations:
 oracle = SeparableOracle(
     data,
     master,
-    ClassicalOracle(),
+    ClassicalOracle,
     N;
     sub_oracle_param = ClassicalOracleParam(rtol = 1e-6),
 )
@@ -161,7 +161,6 @@ The behavior of a `SplitOracle` is controlled entirely through
     - `lift`: applies lifting based on variables fixed to 0 or 1.
 - DCGLP reuse and normalization
     - `reuse_dcglp`: reuses the DCGLP model from previous cut generation.
-    - `adjust_t_to_fx`: adjusts the DCGLP reference epigraph value to the first oracle's computed `f(x)`. For `ReversePolarNormalization`, the reverse-polar direction is recomputed from the adjusted reference.
     - normalization object: use `LpDistanceNormalization(p)` for the DCGLP norm or `ReversePolarNormalization(...)` for reverse-polar scaling.
 These options allow fine-grained control over performance and numerical
 robustness.

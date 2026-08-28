@@ -1,5 +1,5 @@
 function select_disjunctive_inequality(x_value::Vector{Float64}, split_selection_rule::SplitIndexSelectionRule; zero_tol = 1.0e-2)
-    throw(UndefError("update select_disjunctive_inequality for $(typeof(split_selection_rule))"))
+    throw(UnimplementedInterfaceException("update select_disjunctive_inequality for $(typeof(split_selection_rule))"))
 end
 
 function select_disjunctive_inequality(x_value::Vector{Float64}, ::LargestFractional; zero_tol = 1.0e-9)
@@ -29,7 +29,7 @@ function select_disjunctive_inequality(x_value::Vector{Float64}, ::RandomFractio
     return phi, 0.0
 end
 
-function get_split_index(oracle::AbstractSplitOracle)
+function get_split_index(oracle::SplitOracle)
     oracle.param.split_index_selection_rule isa SimpleSplit ||
         throw(AlgorithmException("get_split_index is only valid for simple split rules."))
     isempty(oracle.splits) &&
@@ -37,7 +37,7 @@ function get_split_index(oracle::AbstractSplitOracle)
     return findfirst(x -> x > 0.5, oracle.splits[end][1])
 end
 
-function replace_disjunctive_inequality!(oracle::AbstractSplitOracle)
+function replace_disjunctive_inequality!(oracle::SplitOracle)
     dcglp = oracle.dcglp
     phi, phi_0 = oracle.splits[end]
 
@@ -65,7 +65,7 @@ function add_lifting_constraints!(dcglp::Model, zero_indices::Vector{Int}, one_i
 end
 
 function choose_split_and_update_lifting!(
-    oracle::AbstractSplitOracle,
+    oracle::SplitOracle,
     x_value::Vector{Float64},
 )
     push!(
@@ -80,15 +80,6 @@ function choose_split_and_update_lifting!(
 
     zero_indices, one_indices = oracle.param.lift ? retrieve_zero_one(x_value, oracle.param.zero_tol) : (Int[], Int[])
     add_lifting_constraints!(oracle.dcglp, zero_indices, one_indices)
-    return zero_indices, one_indices
-end
 
-function rollback_current_dcglp_candidate!(oracle::AbstractSplitOracle)
-    !isempty(oracle.splits) && pop!(oracle.splits)
-    delete_registered_constraints!(oracle.dcglp, :con_split_kappa)
-    delete_registered_constraints!(oracle.dcglp, :con_split_nu)
-    delete_registered_constraints!(oracle.dcglp, :con_zeta)
-    delete_registered_constraints!(oracle.dcglp, :con_xi)
-    delete_registered_constraints!(oracle.dcglp, :initial_L)
-    return nothing
+    return zero_indices, one_indices
 end

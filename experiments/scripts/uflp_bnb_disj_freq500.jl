@@ -118,8 +118,8 @@ dcglp_optimizer = optimizer_with_attributes(
     "CPX_PARAM_EPOPT" => 1e-9,
     MOI.Silent() => true,
 )
-dcglp_param = DcglpParam(
-    dcglp_optimizer;
+dcglp_param = DcglpParam(;
+    optimizer = dcglp_optimizer,
     time_limit = dcglp_time_limit,
     gap_tolerance = 1e-3,
     halt_limit = dcglp_halt_limit,
@@ -127,8 +127,8 @@ dcglp_param = DcglpParam(
     verbose = false,
 )
 
-oracle_param = SplitOracleParam(
-    ReversePolarNormalization();
+oracle_param = SplitOracleParam(;
+    normalization = ReversePolarNormalization(),
     dcglp_param = dcglp_param,
     split_index_selection_rule = LargestFractional(),
     disjunctive_cut_append_rule = AllDisjunctiveCuts(),
@@ -159,21 +159,21 @@ lazy_oracle = UFLKnapsackOracle(
     data;
     param = UFLKnapsackOracleParam(add_only_violated_cuts = true),
 )
-root_preprocessing = RootNodePreprocessing(
-    lazy_oracle,
-    BendersSeq,
-    BendersSeqParam(
+preprocessing = LPRelaxationPreprocessing(
+    lazy_oracle;
+    seq_env_type = BendersSeq,
+    param = BendersSeqParam(
         time_limit = min(100.0, time_limit),
         gap_tolerance = 1e-9,
         verbose = true,
     ),
 )
 lazy_callback = LazyCallback(lazy_oracle)
-user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = frequency))
+user_callback = UserCallback(disjunctive_oracle; param = UserCallbackParam(frequency = frequency))
 
 env = BendersBnB(
     master,
-    root_preprocessing,
+    preprocessing,
     lazy_callback,
     user_callback;
     param = benders_param,
