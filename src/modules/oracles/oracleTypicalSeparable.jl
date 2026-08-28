@@ -147,28 +147,13 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
             end
         end
     catch err
-        failures = Any[]
-
-        if err isa TaskFailedException
-            append!(failures, current_exceptions(err.task))
-        elseif err isa CompositeException
-            for suberr in err.exceptions
-                if suberr isa TaskFailedException
-                    append!(failures, current_exceptions(suberr.task))
-                else
-                    rethrow()
-                end
-            end
-        else
-            rethrow()
-        end
-
-        isempty(failures) && throw(err)
-        for (exception, backtrace) in failures
-            showerror(stderr, exception, backtrace)
-            println(stderr)
-        end
-        throw(first(failures)[1])
+        err isa CompositeException || rethrow()
+        task_failure = first(err.exceptions)
+        task_failure isa TaskFailedException || rethrow()
+        failure = first(current_exceptions(task_failure.task))
+        showerror(stderr, failure.exception, failure.backtrace)
+        println(stderr)
+        throw(failure.exception)
     end
 
     if any(.!is_in_L)
