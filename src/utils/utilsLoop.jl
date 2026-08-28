@@ -42,7 +42,6 @@ In particular, `iterations` contains the state recorded for each completed itera
 
 See also: [`AbstractLoopState`](@ref), [`AbstractLoopParam`](@ref)
 """
-
 abstract type AbstractLoopLog end
 
 """
