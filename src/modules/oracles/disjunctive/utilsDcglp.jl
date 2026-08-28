@@ -174,15 +174,25 @@ end
         time_limit::Float64,
     )
 
-Execute the DCGLP cutting-plane loop for a candidate master solution.
+Execute the DCGLP cutting-plane separation loop for a candidate master solution.
 
-At each iteration, the method solves the current DCGLP relaxation, evaluates the two typical oracles at the corresponding points, adds generated Benders cuts to the DCGLP, and updates the DCGLP bounds and termination state.
+At each iteration, the method solves the current DCGLP relaxation, evaluates the typical oracles at the two disjunctive points, adds generated Benders cuts to the DCGLP, and updates the DCGLP bounds and termination state.
 
-If the final DCGLP lower bound is sufficiently positive, a disjunctive cut is constructed and stored. Otherwise, separation falls back to a typical oracle.
+If typical-oracle cut generation is interrupted by a time limit or an unexpected model status, the current DCGLP solution is retained and no incomplete Benders cuts are added to the DCGLP.
+
+After the loop terminates, a disjunctive cut is constructed if the current DCGLP lower bound is sufficiently positive and a valid dual solution is available. If no such cut can be constructed but both disjunctive points belong to their respective typical-oracle feasible regions, the candidate is reported as belonging to the split oracle's feasible region. Otherwise, separation falls back to the first typical oracle.
+
+An unexpected model status from the DCGLP itself may also trigger fallback to the typical oracle, controlled by `oracle.param.fallback_to_typical_cuts`.
 
 # Returns
 
 A tuple `(is_in_L, hyperplanes, sub_obj_vals)` as specified by [`generate_cuts`](@ref).
+
+# Error Handling
+
+- A time limit or unexpected model status encountered during typical-oracle cut generation terminates the DCGLP loop while preserving the current DCGLP solution.
+- An unexpected model status returned by the DCGLP master triggers fallback to the first typical oracle when `fallback_to_typical_cuts` is enabled.
+- Other exceptions are propagated to the caller.
 """
 function solve_dcglp!(
     oracle::SplitOracle,

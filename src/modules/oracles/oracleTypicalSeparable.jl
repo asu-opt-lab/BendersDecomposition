@@ -1,19 +1,36 @@
 """
-    (::Type{T})(data::AbstractData, master::AbstractMaster;
-                model = update_sub_model!,
-                scen_idx::Int,
-                param::AbstractOracleParam,
-                optimizer = DEFAULT_OPTIMIZER) where T <: AbstractTypicalOracle
+    (::Type{T})(
+        data::AbstractData,
+        master::AbstractMaster;
+        model = update_sub_model!,
+        scen_idx::Int,
+        param::AbstractOracleParam,
+        optimizer = DEFAULT_OPTIMIZER,
+    ) where T <: AbstractTypicalOracle
 
-Fallback constructor for [`AbstractTypicalOracle`](@ref) subtypes used by [`SeparableOracle`](@ref).
+Scenario-specific constructor interface used by the homogeneous convenience constructor of [`SeparableOracle`](@ref).
 
-A concrete typical-oracle type intended for use with `SeparableOracle` must provide a constructor with this interface so that `SeparableOracle` can instantiate one sub-oracle for each scenario.
+When calling
 
-The `model` keyword specifies the subproblem model-update function, and `scen_idx` identifies the scenario or subproblem associated with the oracle.
+    SeparableOracle(data, master, T, N; ...)
+
+`SeparableOracle` constructs one oracle of type `T` for each of the `N` subproblems. To support this form of construction, `T` must implement the constructor above. For subproblem `j`, `SeparableOracle` calls the constructor with `scen_idx = j`.
+
+This constructor is required only for automatic homogeneous construction. It is not part of the general [`AbstractTypicalOracle`](@ref) interface. Oracles that do not implement this constructor can still be used with `SeparableOracle` by constructing them explicitly and passing them to
+
+    SeparableOracle(master, oracles)
+
+# Keywords
+
+- `model`: JuMP modeling function used to construct the subproblem.
+- `scen_idx`: Index of the scenario or independent subproblem represented by
+  the constructed oracle.
+- `param`: Parameter object for the constructed oracle.
+- `optimizer`: Optimizer used by the constructed oracle.
 
 # Throws
 
-Throws an error if `T` does not implement the required constructor.
+Throws an [`UnimplementedInterfaceException`](@ref) when a subtype `T` does not implement this constructor and is used with the homogeneous `SeparableOracle(data, master, T, N; ...)` constructor.
 """
 (::Type{T})(data::AbstractData, master::AbstractMaster;
             model = update_sub_model!,
@@ -42,6 +59,8 @@ Parameters controlling [`SeparableOracle`](@ref).
 
 This parameter container is currently empty and serves as an extension point for future controls related to scenario handling or parallel evaluation.
 
+Parameters of the individual sub-oracles are stored by those oracles rather than by `SeparableOracle`.
+
 See also: [`SeparableOracle`](@ref), [`AbstractOracleParam`](@ref)
 """
 mutable struct SeparableOracleParam <: AbstractOracleParam
@@ -53,18 +72,78 @@ end
 
 Composite oracle for problems with multiple independent subproblems.
 
-`SeparableOracle` constructs one [`AbstractTypicalOracle`](@ref) of the specified concrete type for each scenario or subproblem and evaluates the sub-oracles in parallel. Each sub-oracle generates cuts associated with one component of the auxiliary variable `t`.
+`SeparableOracle` contains one [`AbstractTypicalOracle`](@ref) for each independent subproblem and evaluates these oracles in parallel. Each sub-oracle evaluates the common linking-variable candidate and the corresponding component of the auxiliary variable `t`. The resulting cuts are embedded in the full `t` space.
 
-The oracle type is specified by `oracle`, whose concrete type must provide the constructor required to instantiate a sub-oracle for each scenario.
+Sub-oracles may have different concrete types and parameter objects.
 
 # Fields
-param::SeparableOracleParam: Parameters controlling the separable oracle.
-oracles::Vector{AbstractTypicalOracle}: Typical sub-oracles, one for each scenario or subproblem.
-N::Int: Number of subproblems.
+param::SeparableOracleParam: Parameters controlling separable evaluation.
+oracles::Vector{AbstractTypicalOracle}: One configured oracle per subproblem.
+N::Int: Number of independent subproblems.
 
-# Constructor
+# Constructors
 
     SeparableOracle(
+        master::Master,
+        oracles::AbstractVector{<:AbstractTypicalOracle};
+        param = SeparableOracleParam(),
+    )
+
+Construct a `SeparableOracle` from already configured sub-oracles.
+
+    SeparableOracle(
+        data::AbstractData,
+        master::Master,
+        oracle_type::Type{T},
+        N::Int;
+        model = update_sub_model!,
+        sub_oracle_param = BasicOracleParam(),
+        param = SeparableOracleParam(),
+        optimizer = DEFAULT_OPTIMIZER,
+    ) where T <: AbstractTypicalOracle
+
+Convenience constructor for the common case in which all `N` subproblems use the same oracle type and configuration. It constructs one oracle for each subproblem using `scen_idx = 1:N`. The same `sub_oracle_param` and `model` function are passed to every sub-oracle.
+
+`N` must equal `master.dim_t`, with one component of the master auxiliary variable `t` associated with each subproblem.
+
+# Throws
+
+Throws a `DimensionMismatch` if `N != master.dim_t`.
+
+See also: [`AbstractOracle`](@ref), [`generate_cuts`](@ref)
+"""
+mutable struct SeparableOracle <: AbstractTypicalOracle
+    param::SeparableOracleParam 
+
+    oracles::Vector{AbstractTypicalOracle}
+    N::Int
+
+    function SeparableOracle(
+        master::Master,
+        oracles::AbstractVector{<:AbstractTypicalOracle};
+        param::SeparableOracleParam = SeparableOracleParam(),
+    )
+        N = length(oracles)
+
+        N == master.dim_t || throw(
+            DimensionMismatch(
+                "SeparableOracle: number of sub-oracles ($N) must equal " *
+                "master.dim_t ($(master.dim_t))."
+            )
+        )
+
+        @info "SeparableOracle: N=$N subproblems, " *
+              "$(Threads.nthreads()) threads available for parallel execution"
+
+        new(
+            param,
+            AbstractTypicalOracle[oracles...],
+            N,
+        )
+    end
+end
+
+function SeparableOracle(
         data::AbstractData,
         master::Master,
         oracle_type::Type{T},
@@ -73,44 +152,25 @@ N::Int: Number of subproblems.
         sub_oracle_param::AbstractOracleParam = BasicOracleParam(),
         param::SeparableOracleParam = SeparableOracleParam(),
         optimizer = DEFAULT_OPTIMIZER,
-    ) where T <: AbstractTypicalOracle
+        ) where {T <: AbstractTypicalOracle}
 
+            oracles = [
+                oracle_type(
+                    data,
+                    master;
+                    model = model,
+                    scen_idx = j,
+                    param = deepcopy(sub_oracle_param),
+                    optimizer = optimizer,
+                )
+                for j in 1:N
+            ]
 
-Construct a separable oracle with `N` sub-oracles of type `oracle_type`.
-
-A new sub-oracle is constructed for each scenario using `scen_idx = 1:N`. The same `sub_oracle_param` and `model` function are passed to every sub-oracle.
-
-`N` must equal `master.dim_t`, with one component of the master auxiliary variable `t` associated with each subproblem.
-
-# Throws
-
-Throws a `DimensionMismatch` if `N != master.dim_t`.
-
-See also: [`ClassicalOracle`](@ref), [`ParetoOracle`](@ref), [`UnifiedOracle`](@ref)
-"""
-mutable struct SeparableOracle <: AbstractTypicalOracle
-    param::SeparableOracleParam 
-
-    oracles::Vector{AbstractTypicalOracle}
-    N::Int
-
-    function SeparableOracle(data::AbstractData, 
-                            master::Master,
-                            oracle_type::Type{T}, 
-                            N::Int; 
-                            model = update_sub_model!,
-                            sub_oracle_param::AbstractOracleParam = BasicOracleParam(),
-                            param::SeparableOracleParam = SeparableOracleParam(),
-                            optimizer = DEFAULT_OPTIMIZER) where {T<:AbstractTypicalOracle}
-        @debug "Building classical separable oracle"
-        @info "SeparableOracle: N=$N subproblems, $(Threads.nthreads()) threads available for parallel execution"
-        
-        N == master.dim_t || throw(DimensionMismatch("SeparableOracle: `N` must equal master.dim_t ($(master.dim_t)), got $N."))
-
-        oracles = [oracle_type(data, master; model = model, scen_idx = j, param = sub_oracle_param, optimizer = optimizer) for j in 1:N]
-
-        new(param, oracles, N)
-    end
+            return SeparableOracle(
+                master,
+                oracles;
+                param = param,
+            )
 end
 
 """
@@ -151,6 +211,7 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
         task_failure = first(err.exceptions)
         task_failure isa TaskFailedException || rethrow()
         failure = first(current_exceptions(task_failure.task; backtrace = false))
+        isempty(failures) && rethrow()
         throw(failure.exception)
     end
 
