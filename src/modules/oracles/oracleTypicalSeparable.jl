@@ -156,7 +156,7 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
                 if suberr isa TaskFailedException
                     append!(failures, current_exceptions(suberr.task))
                 else
-                    push!(failures, (suberr, nothing))
+                    rethrow()
                 end
             end
         else
@@ -165,11 +165,7 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
 
         isempty(failures) && throw(err)
         for (exception, backtrace) in failures
-            if isnothing(backtrace)
-                showerror(stderr, exception)
-            else
-                showerror(stderr, exception, backtrace)
-            end
+            showerror(stderr, exception, backtrace)
             println(stderr)
         end
         throw(first(failures)[1])
