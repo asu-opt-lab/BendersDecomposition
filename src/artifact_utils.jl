@@ -1,3 +1,5 @@
+# Q. It seems better to move this file to src/utils/utilsArtifact.jl.
+
 # Artifact utilities for BendersX benchmark data
 # Downloads data from GitHub Releases on first use
 

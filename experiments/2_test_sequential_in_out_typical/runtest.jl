@@ -2,7 +2,7 @@ using BendersX
 using Test
 using JuMP
 
-@testset "Sequential Typical Tests" begin
+@testset "Sequential InOut Typical Tests" begin
     @info "Running Sequential InOut Typical Tests"
     include("ufl.jl")
     include("cfl.jl")

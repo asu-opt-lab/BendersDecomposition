@@ -19,21 +19,33 @@ This section explains:
 ## Swapping Execution Environments
 
 All execution environments in BendersX are subtypes of
-[`AbstractBendersEnv`](@ref). The same master and oracle objects can therefore be
-reused across different environments.
+[`AbstractBendersEnv`](@ref). A master can generally be reused across
+environments, while oracle compatibility depends on the environment constructor.
 
-For example, switching from a sequential environment to a branch-and-bound
-environment only requires changing the environment constructor:
+For a typical oracle, switching from a sequential environment to a
+branch-and-bound environment only requires changing the environment constructor:
 
 ```julia
 # Standard sequential Benders
-env = BendersSeq(master, oracle)
+env = BendersSeq(master, typical_oracle)
 
 # Branch-and-bound Benders
-env = BendersBnB(master, oracle)
+env = BendersBnB(master, typical_oracle)
 ```
 
-The master and oracle objects remain unchanged.
+The two-argument `BendersBnB(master, oracle)` convenience constructor accepts
+only an [`AbstractTypicalOracle`](@ref). To use a disjunctive oracle in a
+branch-and-bound environment, configure it as a user callback and use the full
+constructor:
+
+```julia
+env = BendersBnB(
+    master,
+    NoPreprocessing(),
+    LazyCallback(typical_oracle),
+    UserCallback(disjunctive_oracle),
+)
+```
 
 ---
 
@@ -73,7 +85,7 @@ These environments are typically used for:
 Example:
 
 ```julia
-env = BendersBnB(master, oracle)
+env = BendersBnB(master, typical_oracle)
 ```
 
 ---
@@ -101,7 +113,7 @@ Typical environment parameters include:
 * `iter_limit`: maximum number of iterations,
 * `halt_limit`: maximum number of iterations without significant improvement,
 * `time_limit`: global time limit,
-* `gap_tolerance`: convergence tolerance,
+* `gap_tolerance`: relative gap tolerance,
 * `verbose`: logging verbosity.
 
 See [`BendersSeqInOutParam`](@ref) and [`BendersBnBParam`](@ref) for parameters
@@ -136,24 +148,23 @@ When finer control is needed, the environment can be constructed explicitly:
 
 ```julia
 # NoSeq: no root Benders run
-root_preprocessing = NoRootNodePreprocessing()
+preprocessing = NoPreprocessing()
 lazy_callback = LazyCallback(oracle)
 user_callback = NoUserCallback()
 
-env = BendersBnB(master, root_preprocessing, lazy_callback, user_callback; param = benders_param)
+env = BendersBnB(master, preprocessing, lazy_callback, user_callback; param = benders_param)
 
 # Seq: sequential Benders at the root node
-root_preprocessing = RootNodePreprocessing(
-    oracle, BendersSeq,
-    BendersSeqParam(time_limit = 200.0, gap_tolerance = 1e-9),
+preprocessing = LPRelaxationPreprocessing(
+    oracle; param = BendersSeqParam(time_limit = 200.0, gap_tolerance = 1e-9),
 )
 
-env = BendersBnB(master, root_preprocessing, LazyCallback(oracle), NoUserCallback(); param = benders_param)
+env = BendersBnB(master, preprocessing, LazyCallback(oracle), NoUserCallback(); param = benders_param)
 
 # SeqInOut: stabilized In–Out Benders at the root node
-root_preprocessing = RootNodePreprocessing(
-    oracle, BendersSeqInOut,
-    BendersSeqInOutParam(
+preprocessing = LPRelaxationPreprocessing(
+    oracle; seq_env_type = BendersSeqInOut,
+    param = BendersSeqInOutParam(
         time_limit = 300.0,
         gap_tolerance = 1e-9,
         stabilizing_x = ones(data.n_facilities),
@@ -162,7 +173,7 @@ root_preprocessing = RootNodePreprocessing(
     ),
 )
 
-env = BendersBnB(master, root_preprocessing, LazyCallback(oracle), NoUserCallback(); param = benders_param)
+env = BendersBnB(master, preprocessing, LazyCallback(oracle), NoUserCallback(); param = benders_param)
 ```
 
 **When to use**
@@ -186,31 +197,33 @@ kappa = ClassicalOracle(data, master; model = update_sub_model!)
 nu    = ClassicalOracle(data, master; model = update_sub_model!)
 typical_oracles = [kappa, nu]
 
-# DCGLP and SplitOracle parameters
+# DCGLP and split oracle parameters
 dcglp_optimizer = optimizer_with_attributes(
     CPLEX.Optimizer,
     "CPXPARAM_Threads" => 7,
     MOI.Silent() => true,
 )
 dcglp_param = DcglpParam(dcglp_optimizer; time_limit = 200.0)
-split_param = SplitOracleParam(
-    dcglp_param;
-    norm = LpNorm(1.0),
+disjunctive_norm_param = LpDistanceNormalization(1.0)
+
+# disjunctive oracle and callbacks
+disjunctive_oracle = SplitOracle(
+    master,
+    typical_oracles,
+    disjunctive_norm_param;
+    dcglp_param = dcglp_param,
     strengthened = true,
     lift = true,
     add_benders_cuts_to_master = 1,
 )
-
-# disjunctive oracle and callbacks
-disjunctive_oracle = SplitOracle(master, typical_oracles, split_param)
-user_callback = UserCallback(disjunctive_oracle; params = UserCallbackParam(frequency = 1))
+user_callback = UserCallback(disjunctive_oracle; param = UserCallbackParam(frequency = 1))
 
 lazy_oracle = ClassicalOracle(data, master; model = update_sub_model!)
 lazy_callback = LazyCallback(lazy_oracle)
 
 env = BendersBnB(
     master,
-    NoRootNodePreprocessing(),
+    NoPreprocessing(),
     lazy_callback,
     user_callback;
     param = benders_param,

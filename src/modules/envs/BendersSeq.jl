@@ -2,16 +2,30 @@
 """
     BendersSeq <: AbstractBendersSeq
 
-Sequential Benders decomposition algorithm using a cutting-plane method.
+Sequential Benders decomposition environment.
 
-This is the basic Benders decomposition implementation that iteratively solves the master problem, generates Benders cuts from the oracle, and refines the master problem until convergence or a termination criterion is met.
+`BendersSeq` implements the classical Benders cutting-plane algorithm by repeatedly solving the master problem, evaluating the oracle at the current candidate solution, adding the resulting Benders cuts to the master problem, and continuing until a termination criterion is satisfied. An optional [`AbstractBendersPreprocessing`](@ref) configuration can be applied before the cutting-plane iterations begin.
 
 # Fields
-- `master::AbstractMaster`: Master problem formulation
-- `oracle::AbstractOracle`: Oracle for subproblem solving and cut generation
-- `param::BendersSeqParam`: Parameters controlling algorithm behavior (time limit, gap tolerance, verbosity, etc.)
+- `master::AbstractMaster`: Master problem
+- `oracle::AbstractOracle`: Oracle used for subproblem evaluation and cut generation.
+- `param::BendersSeqParam`: Parameters controlling the algorithm, such as time limit, gap tolerance, and verbosity
+- `preprocessing::AbstractBendersPreprocessing`: Configuration for optionally preprocessing the LP relaxation of the master problem before the Benders iterations.
 - `obj_value::Float64`: Objective value of the best solution found
-- `termination_status::TerminationStatus`: Status of the algorithm upon termination
+- `termination_status::TerminationStatus`: Termination status of the Benders algorithm. See [`TerminationStatus`](@ref) for available statuses.
+
+# Constructor
+
+    BendersSeq(
+        master::AbstractMaster,
+        oracle::AbstractOracle;
+        param::BendersSeqParam = BendersSeqParam(),
+        preprocessing::AbstractBendersPreprocessing = NoPreprocessing(),
+    )
+
+Construct a sequential Benders environment.
+
+By default, no preprocessing is applied. A preprocessing configuration may be provided through `preprocessing`.
 
 # Examples
 ```julia
@@ -21,7 +35,7 @@ env = BendersSeq(master, oracle)  # Use default parameters
 df = solve!(env)
 ```
 
-See also: [`BendersSeqInOut`](@ref), [`SpecializedBendersSeq`](@ref), [`BendersBnB`](@ref)
+See also: [`BendersSeqInOut`](@ref), [`BendersBnB`](@ref), [`AbstractBendersPreprocessing`](@ref)
 """
 mutable struct BendersSeq <: AbstractBendersSeq
     master::AbstractMaster
@@ -29,12 +43,14 @@ mutable struct BendersSeq <: AbstractBendersSeq
 
     param::BendersSeqParam
 
+    preprocessing::AbstractBendersPreprocessing
+
     # result
     obj_value::Float64
     termination_status::TerminationStatus
 
-    function BendersSeq(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqParam = BendersSeqParam())
-        new(master, oracle, param, Inf, NotSolved())
+    function BendersSeq(master::AbstractMaster, oracle::AbstractOracle; param::BendersSeqParam = BendersSeqParam(), preprocessing::AbstractBendersPreprocessing = NoPreprocessing())
+        new(master, oracle, param, preprocessing, Inf, NotSolved())
     end
 end
 
@@ -43,33 +59,38 @@ end
 
 Execute the sequential Benders decomposition algorithm.
 
-This function implements the core Benders cutting-plane method: repeatedly solving the master problem, querying the oracle for Benders cuts, and adding cuts to refine the master problem.
+The method first applies the configured preprocessing, if any. It then repeatedly solves the master problem, queries the oracle for the resulting candidate solution, updates the bounds, and adds generated Benders cuts to the master problem until a termination criterion is satisfied.
+
+The iteration history is returned as a `DataFrame`.
 
 # Arguments
-- `env::BendersSeq`: The configured Benders algorithm environment
+- `env::BendersSeq`: The configured sequential Benders environment
 - `iter_prefix::String`: Optional prefix for iteration logging (default: "")
 
 # Returns
 - `DataFrame`: A log of iterations containing lower bounds, upper bounds, gaps, and timing information
 
-# Algorithm Steps
-1. Solve the master problem to obtain candidate solution (x, t)
-2. Query the oracle to check feasibility and generate Benders cuts
-3. Update bounds and check termination criteria
-4. Add generated cuts to the master problem
-5. Repeat until convergence or termination
+# Termination
+The algorithm terminates when one of the following occurs:
+- the candidate solution is in `L`
+- the prescribed time limit is reached;
+- the prescribed gap tolerance is satisfied;
+- the master problem becomes infeasible or encounters an unexpected status.
 
-# Termination Criteria
-- Optimal solution found (point is in L)
-- Time limit reached
-- Gap tolerance met
-- Master problem becomes infeasible
+The environment's `obj_value` and `termination_status` fields are updated
+before returning.
 """
 function solve!(env::BendersSeq; iter_prefix = "") 
     log = BendersSeqLog()
     param = env.param
     try    
+        # Apply preprocessing
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing; time_limit = get_sec_remaining(log, param))
+        
         while true
+
+            get_sec_remaining(log, param) <= 0.0 && throw(TimeLimitException("BendersSeq: Time limit reached."))
+
             state = BendersSeqState()
             state.total_time = @elapsed begin
                 # Solve master problem
@@ -81,7 +102,7 @@ function solve!(env::BendersSeq; iter_prefix = "")
                         state.values[:x] = JuMP.value.(env.master.x)
                         state.values[:t] = JuMP.value.(env.master.t)
                     elseif termination_status(env.master.model) == TIME_LIMIT
-                        throw(TimeLimitException("Time limit reached during master solving"))
+                        throw(TimeLimitException("BendersSeq: Time limit reached during master solving"))
                     else
                         throw(UnexpectedModelStatusException("BendersSeq: master $(termination_status(env.master.model))"))
                     end
@@ -93,7 +114,7 @@ function solve!(env::BendersSeq; iter_prefix = "")
                     
                     cuts = !state.is_in_L ? hyperplanes_to_expression(env.master.model, hyperplanes, env.master.x, env.master.t) : []
                 
-                    if state.f_x !== NaN
+                    if all(isfinite, state.f_x)
                         update_upper_bound_and_gap!(state, log, (f_x, x) -> env.master.c_t' * f_x + env.master.c_x' * x)
                     end
                 end
@@ -113,18 +134,18 @@ function solve!(env::BendersSeq; iter_prefix = "")
         
         return to_dataframe(log)
     catch e
-        @warn e.msg
-        if typeof(e) <: TimeLimitException
-            env.termination_status = TimeLimit()
-            env.obj_value = log.iterations[end].LB
-        elseif typeof(e) <: UnexpectedModelStatusException
-            env.termination_status = InfeasibleOrNumericalIssue()
+        if e isa TimeLimitException
             @warn e.msg
+            env.termination_status = TimeLimit()
+            env.obj_value = isempty(log.iterations) ? Inf : log.iterations[end].LB
+        elseif e isa UnexpectedModelStatusException
+            @warn e.msg
+            env.termination_status = InfeasibleOrNumericalIssue()
         else
             rethrow()  
         end
         if env.param.verbose
-            println("Terminated with $(env.termination_status)")
+            println("BendersSeq: Terminated with $(env.termination_status)")
         end
         return to_dataframe(log)
     end

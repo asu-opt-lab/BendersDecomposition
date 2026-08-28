@@ -1,17 +1,47 @@
 using JuMP, DataFrames, Logging, CSV
 using BendersX
+using ArgParse
+using Random
 using Printf
 using Statistics
 using CPLEX
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
-# load settings
-# args = parse_commandline()
+function parse_commandline()
+    s = ArgParseSettings()
+    @add_arg_table! s begin
+        "--instance"
+            help = "Instance name"
+            arg_type = String
+            default = "T100x100_5_1"
+        "--seed"
+            help = "Random seed"
+            arg_type = Int
+            default = 1
+        "--output_dir"
+            help = "Output directory"
+            arg_type = String
+            default = "output"
+        "--time_limit"
+            help = "Total time limit in seconds"
+            arg_type = Float64
+            default = 14400.0
+        "--preprocessing_time_limit"
+            help = "Preprocessing time limit in seconds"
+            arg_type = Float64
+            default = 300.0
+    end
+    return parse_args(s)
+end
 
-# instance = args["instance"]
-# output_dir = args["output_dir"]
-instance = "T100x100_5_1"
-output_dir = "scripts"
+# load settings
+args = parse_commandline()
+
+Random.seed!(args["seed"])
+instance = args["instance"]
+output_dir = args["output_dir"]
+time_limit = args["time_limit"]
+preprocessing_time_limit = args["preprocessing_time_limit"]
 
 # -----------------------------------------------------------------------------
 # load problem data
@@ -34,7 +64,7 @@ typical_oracle = CFLKnapsackOracle(data, master; model = update_sub_model!, opti
 start_time = time()
 undo = relax_integrality(master.model)
 benders_inout_param = BendersSeqInOutParam(;
-            time_limit = 300.0,
+            time_limit = preprocessing_time_limit,
             gap_tolerance = 1e-6,
             verbose = true,
             stabilizing_x = ones(data.n_facilities),
@@ -53,18 +83,18 @@ println("Spend time: $spend_time_prev seconds")
 # -----------------------------------------------------------------------------
 # BendersBnB
 # -----------------------------------------------------------------------------
-root_preprocessing = NoRootNodePreprocessing()
+preprocessing = NoPreprocessing()
 lazy_callback = LazyCallback(typical_oracle)
 user_callback = NoUserCallback()
 
 benders_param = BendersBnBParam(
-    time_limit = 14400.0 - spend_time_prev,
+    time_limit = max(time_limit - spend_time_prev, 0.0),
     gap_tolerance = 1e-6,
     verbose = true
 )
 env = BendersBnB(
     master,
-    root_preprocessing,
+    preprocessing,
     lazy_callback,
     user_callback;
     param = benders_param

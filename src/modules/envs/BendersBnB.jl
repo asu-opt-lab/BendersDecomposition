@@ -1,92 +1,86 @@
+# ----------------------------------------------------------------------------
+# Callback infrastructure
+# ----------------------------------------------------------------------------
 
-include("callback/preprocessing.jl") # must be included first
 include("callback/callback.jl") # must be included first
  
 """
     BendersBnB <: AbstractBendersBnB
 
-Branch-and-Bound implementation of Benders decomposition algorithm.
+Branch-and-bound Benders decomposition environment.
 
-This implementation uses callbacks to efficiently generate Benders cuts during the branch-and-bound process,
-avoiding the need to repeatedly solve the entire master problem.
+`BendersBnB` integrates Benders cut generation into the MIP solver's branch-and-bound process through lazy-constraint and optional user-cut callbacks. Optionally, the LP relaxation of the master problem can be preprocessed to generate initial cuts before branch-and-bound begins.
 
 # Fields
-- `master::AbstractMaster`: Master problem formulation
-- `param::BendersBnBParam`: Parameters controlling algorithm behavior
-- `root_preprocessing::AbstractRootNodePreprocessing`: Configuration for preprocessing at the root node
-- `lazy_callback::AbstractLazyCallback`: Configuration for lazy constraint callbacks
-- `user_callback::AbstractUserCallback`: Configuration for user cut callbacks
+- `master::AbstractMaster`: Master problem.
+- `param::BendersBnBParam`: Parameters controlling algorithm, such as the time limit, relative gap tolerance, and verbosity.
+- `preprocessing::AbstractBendersPreprocessing`: Configuration for preprocessing the LP relaxation before branch-and-bound.
+- `lazy_callback::AbstractLazyCallback`: Configuration for lazy-constraint callback
+- `user_callback::AbstractUserCallback`: Configuration for user-cut callback
 - `obj_value::Float64`: Objective value of the best solution found
-- `termination_status::TerminationStatus`: Status of the algorithm upon termination
+- `termination_status::TerminationStatus`: Termination status of the Benders algorithm. See [`TerminationStatus`](@ref) for available statuses.
 
 # Examples
 ```julia
 master = Master(data; model = update_master_model!)
 oracle = ClassicalOracle(data, master; model = update_sub_model!)
-env = BendersBnB(master, oracle)  # Use default setting with no root node preprocessing and no user callback
-obj_value, solve_time = solve!(env)
+env = BendersBnB(master, oracle)  # Use default setting with no preprocessing and no user callback
+result = solve!(env)
 ```
+
+See also: [`BendersSeq`](@ref), [`AbstractBendersPreprocessing`](@ref), [`AbstractLazyCallback`](@ref), [`AbstractUserCallback`](@ref)
 """
 mutable struct BendersBnB <: AbstractBendersBnB
     master::AbstractMaster 
 
     param::BendersBnBParam 
 
-    root_preprocessing::AbstractRootNodePreprocessing
+    preprocessing::AbstractBendersPreprocessing
     lazy_callback::AbstractLazyCallback
     user_callback::AbstractUserCallback
 
     obj_value::Float64 
     termination_status::TerminationStatus 
 
-    function BendersBnB(master::AbstractMaster, oracle::AbstractTypicalOracle; param::BendersBnBParam = BendersBnBParam())
+    function BendersBnB(master::AbstractMaster, oracle::AbstractTypicalOracle; param::BendersBnBParam = BendersBnBParam(), preprocessing::AbstractBendersPreprocessing = NoPreprocessing())
         
-        root_preprocessing = NoRootNodePreprocessing()
         lazy_callback = LazyCallback(oracle)
         user_callback = NoUserCallback()
         
-        new(master, param, root_preprocessing, lazy_callback, user_callback, Inf, NotSolved())
+        new(master, param, preprocessing, lazy_callback, user_callback, Inf, NotSolved())
     end
 
-    function BendersBnB(master::AbstractMaster, root_preprocessing::AbstractRootNodePreprocessing, lazy_callback::AbstractLazyCallback, user_callback::AbstractUserCallback; param::BendersBnBParam = BendersBnBParam())
+    function BendersBnB(master::AbstractMaster, preprocessing::AbstractBendersPreprocessing, lazy_callback::AbstractLazyCallback, user_callback::AbstractUserCallback; param::BendersBnBParam = BendersBnBParam())
         
-        new(master, param, root_preprocessing, lazy_callback, user_callback, Inf, NotSolved())
+        new(master, param, preprocessing, lazy_callback, user_callback, Inf, NotSolved())
     end
 end
 
 
 """
-    solve!(env::BendersBnB) -> Tuple{Float64, Float64}
+    solve!(env::BendersBnB) -> DataFrame
 
 Execute the branch-and-bound Benders decomposition algorithm.
 
-This function configures callbacks, solves the master problem with the callback-based 
-cutting plane approach, and processes the results.
+The method first applies the configured preprocessing, then installs the configured lazy-constraint and user-cut callbacks, sets the solver parameters, and solves the master problem through the MIP solver's branch-and-bound procedure.
+
+The returned `DataFrame` contains summary statistics for the solve.
 
 # Arguments
-- `env::BendersBnB`: The configured Benders Branch-and-Bound algorithm environment
+- `env::BendersBnB`: The configured Benders Branch-and-Bound environment
 
 # Returns
-- `Tuple{Float64, Float64}`: A tuple containing (objective_value, elapsed_time)
-  - The objective value will be Inf if no feasible solution is found
-  - Elapsed time is measured in seconds
+A one-row `DataFrame` containing the solve statistics, including the objective value, objective bound, elapsed time, relative gap, and cut-generation counts. The objective value is Inf when no feasible solution is available.
 
-# Algorithm Steps
-1. Apply root node preprocessing if specified (relaxing integrality constraints)
-2. Configure lazy and user callbacks for the branch-and-bound process
-3. Set solver parameters (time limit, verbosity, and gap tolerance)
-4. Solve the master problem with callbacks
-5. Process termination status and objective value
-6. Return results and execution statistics
+# Termination
+The environment's `obj_value` and `termination_status` fields are updated before returning. A time limit or unexpected solver status is handled and reflected in the returned environment and solve statistics.
 """
 function solve!(env::BendersBnB) 
     log = BendersBnBLog()
     param = env.param
     try 
-        log.start_time = time()
-        
-        # Apply root node preprocessing if specified
-        log.root_node_time = root_node_processing!(env.master, env.root_preprocessing)
+        # Apply preprocessing
+        log.preprocessing_time = preprocess!(env.master, env.preprocessing; time_limit = get_sec_remaining(log, param))
 
         # Set up lazy callback
         function lazy_callback_wrapper(cb_data)
@@ -102,11 +96,10 @@ function solve!(env::BendersBnB)
             set_attribute(env.master.model, MOI.UserCutCallback(), user_callback_wrapper)
         end
         
+        get_sec_remaining(log, param) <= 0.0 && throw(TimeLimitException("BendersBnB: Time limit reached before initiating branch-and-bound procedure."))
+
         # Configure solver parameters
-        if param.time_limit <= log.root_node_time
-            throw(TimeLimitException("Time limit reached before BnB starts, please increase the time limit."))
-        end
-        set_time_limit_sec(env.master.model, param.time_limit - log.root_node_time)
+        set_time_limit_sec(env.master.model, get_sec_remaining(log, param))
         set_optimizer_attribute(env.master.model, MOI.Silent(), !param.verbose)
         set_optimizer_attribute(env.master.model, MOI.RelativeGapTolerance(), param.gap_tolerance)
         
@@ -125,7 +118,6 @@ function solve!(env::BendersBnB)
             env.obj_value = has_values(env.master.model) ? JuMP.objective_value(env.master.model) : Inf
         else
             throw(UnexpectedModelStatusException("BendersBnB: master $(status)"))
-            env.obj_value = Inf
         end
        
         df = to_dataframe(env, log)
@@ -136,17 +128,18 @@ function solve!(env::BendersBnB)
         
         return df
     catch e
-        @warn e.msg
-        if typeof(e) <: TimeLimitException
+        if e isa TimeLimitException
+            @warn e.msg
             env.termination_status = TimeLimit()
             env.obj_value = has_values(env.master.model) ? JuMP.objective_value(env.master.model) : Inf
-        elseif typeof(e) <: UnexpectedModelStatusException
+        elseif e isa UnexpectedModelStatusException
+            @warn e.msg
             env.termination_status = InfeasibleOrNumericalIssue()
         else
             rethrow()  
         end
         if env.param.verbose
-            println("Terminated with $(env.termination_status)")
+            println("BendersBnB: Terminated with $(env.termination_status)")
         end
         return to_dataframe(env, log)
     end

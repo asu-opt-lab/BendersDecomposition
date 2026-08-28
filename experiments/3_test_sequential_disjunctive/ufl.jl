@@ -13,7 +13,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
     reference_objectives = Dict(String(row.instance_name) => Float64(row.objective_value) for row in eachrow(reference_df))
     instances = setdiff(1:71, [67])
 
-    # GBC-enabled subproblem customization (y[i,j] <= x[i] via GBC)
+    # GBC-enabled subproblem model update (y[i,j] <= x[i] via GBC)
     function update_sub_gbc_model!(model::Model, data::UFLPData, scen_idx::Int; x)
         optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_EPOPT" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, MOI.Silent() => true)
         set_optimizer(model, optimizer)
@@ -41,7 +41,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             )
 
             dcglp_optimizer = optimizer_with_attributes(CPLEX.Optimizer, "CPXPARAM_Threads" => 7, "CPX_PARAM_EPRHS" => 1e-9, "CPX_PARAM_NUMERICALEMPHASIS" => 1, "CPX_PARAM_EPOPT" => 1e-9, MOI.Silent() => true)
-            dcglp_param = DcglpParam(dcglp_optimizer;
+            dcglp_param = DcglpParam(; optimizer = dcglp_optimizer,
                                     time_limit = 1000.0,
                                     gap_tolerance = 1e-3,
                                     halt_limit = 3,
@@ -53,26 +53,62 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
             @assert haskey(reference_objectives, instance_name) "Missing UFLP reference objective for $(instance_name) in $(reference_path)"
             mip_opt_val = reference_objectives[instance_name]
 
+            @testset "DCGLP normalization oracles" begin
+                normalization_specs = [
+                    (
+                        "SplitOracle/ReversePolarNormalization",
+                        SplitOracleParam(; dcglp_param = dcglp_param,
+                            normalization = ReversePolarNormalization(),
+                            split_index_selection_rule = LargestFractional(),
+                            disjunctive_cut_append_rule = AllDisjunctiveCuts(),
+                            strengthened = true,
+                            add_benders_cuts_to_master = false,
+                            reuse_dcglp = false,
+                            lift = false,
+                            zero_tol = 1e-9,
+                        ),
+                    ),
+                ]
+
+                for (normalization_name, oracle_param) in normalization_specs
+                    @info "solving UFLP p$i - $normalization_name/classical - benders2master false reuse false lift false"
+                    @testset "$normalization_name with ClassicalOracle" begin
+                        master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
+                        typical_oracles = [
+                            ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer),
+                            ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer),
+                        ]
+                        disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
+
+                        env = BendersSeq(master, disjunctive_oracle; param = benders_param)
+                        solve!(env)
+                        @test env.termination_status == Optimal()
+                        @test isapprox(mip_opt_val, env.obj_value, atol=1e-5)
+                    end
+                end
+            end
+
             @testset "Classical oracle" begin
                 @testset "Seq" begin
-                    # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
+                    # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]
                     for strengthened in [true], add_benders_cuts_to_master in [2], reuse_dcglp in [false], p in [Inf], lift in [false], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                         @info "solving UFLP p$i - disjunctive oracle/classical - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam(dcglp_param;
-                                                            norm = LpNorm(p),
+                            oracle_param = SplitOracleParam(; dcglp_param = dcglp_param,
+                                                            normalization = LpDistanceNormalization(p),
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                             strengthened = strengthened,
                                                             add_benders_cuts_to_master = add_benders_cuts_to_master,
                                                             fraction_of_benders_cuts_to_master = 0.05,
                                                             reuse_dcglp = reuse_dcglp,
+                                                            fallback_to_typical_cuts = true,
                                                             lift = lift)
 
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer); ClassicalOracle(data, master; model = update_sub_model!, optimizer = optimizer)] # for kappa & nu
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                             log = solve!(env)
@@ -92,8 +128,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving UFLP p$i - disjunctive oracle/unified - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam(dcglp_param;
-                                                            norm = LpNorm(p),
+                            oracle_param = SplitOracleParam(; dcglp_param = dcglp_param,
+                                                            normalization = LpDistanceNormalization(p),
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                             strengthened = strengthened,
@@ -104,7 +140,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             typical_oracles = [UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer); UnifiedOracle(data, master; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                             log = solve!(env)
@@ -121,8 +157,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                         @info "solving UFLP p$i - disjunctive oracle/pareto - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
 
-                            oracle_param = SplitOracleParam(dcglp_param;
-                                                            norm = LpNorm(p),
+                            oracle_param = SplitOracleParam(; dcglp_param = dcglp_param,
+                                                            normalization = LpDistanceNormalization(p),
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                             strengthened = strengthened,
@@ -134,7 +170,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             pareto_param = ParetoOracleParam(ones(data.n_facilities))
                             typical_oracles = [ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer); ParetoOracle(data, master, pareto_param; model = update_sub_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                             log = solve!(env)
@@ -150,10 +186,10 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                     for strengthened in [true], add_benders_cuts_to_master in [2], reuse_dcglp in [false], p in [Inf], lift in [false], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                         @info "solving UFLP p$i - disjunctive oracle/classical with GBC"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
-                            oracle_param = SplitOracleParam(dcglp_param; norm = LpNorm(p), split_index_selection_rule = LargestFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 0.05, reuse_dcglp = reuse_dcglp, lift = lift)
+                            oracle_param = SplitOracleParam(; dcglp_param = dcglp_param, normalization = LpDistanceNormalization(p), split_index_selection_rule = LargestFractional(), disjunctive_cut_append_rule = disjunctive_cut_append_rule, strengthened = strengthened, add_benders_cuts_to_master = add_benders_cuts_to_master, fraction_of_benders_cuts_to_master = 0.05, reuse_dcglp = reuse_dcglp, lift = lift)
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             typical_oracles = [ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer); ClassicalOracle(data, master; model = update_sub_gbc_model!, optimizer = optimizer)]
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                             log = solve!(env)
                             @test env.termination_status == Optimal()
@@ -176,7 +212,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
 
                 # fat-knapsack-based disjunctive cut has sparse gamma_t, so adding only disjunctive cut does not improve lower bound, setting add_benders_cuts_to_master = true
                 @testset "Seq" begin
-                    # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()], adjust_t_to_fx in [true; false]
+                    # for strengthened in [true; false], add_benders_cuts_to_master in [true; false; 2], reuse_dcglp in [true; false], p in [1.0; Inf], lift in [true; false], disjunctive_cut_append_rule in [NoDisjunctiveCuts(); AllDisjunctiveCuts(); DisjunctiveCutsSmallerIndices()]
                     for strengthened in [true], add_benders_cuts_to_master in [true], reuse_dcglp in [false], p in [Inf], lift in [false], disjunctive_cut_append_rule in [AllDisjunctiveCuts()]
                     @info "solving UFLP p$i - disjunctive oracle/fat knapsack - strgthnd $strengthened; benders2master $add_benders_cuts_to_master reuse $reuse_dcglp p $p lift $lift dcut_append $disjunctive_cut_append_rule"
                         @testset "strgthnd $strengthened; benders2master $add_benders_cuts_to_master; reuse $reuse_dcglp; p $p; lift $lift; dcut_append $disjunctive_cut_append_rule" begin
@@ -184,8 +220,8 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                             master = Master(data; model = update_master_model!, optimizer = mip_optimizer)
                             typical_oracles = [UFLKnapsackOracle(data); UFLKnapsackOracle(data)] # for kappa & nu
 
-                            oracle_param = SplitOracleParam(dcglp_param;
-                                                            norm = LpNorm(p),
+                            oracle_param = SplitOracleParam(; dcglp_param = dcglp_param,
+                                                            normalization = LpDistanceNormalization(p),
                                                             split_index_selection_rule = LargestFractional(),
                                                             disjunctive_cut_append_rule = disjunctive_cut_append_rule,
                                                             strengthened = strengthened,
@@ -193,7 +229,7 @@ include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
                                                             fraction_of_benders_cuts_to_master = 0.05,
                                                             reuse_dcglp = reuse_dcglp,
                                                             lift = lift)
-                            disjunctive_oracle = SplitOracle(master, typical_oracles, oracle_param)
+                            disjunctive_oracle = SplitOracle(master, Tuple(typical_oracles); param = oracle_param)
 
                             env = BendersSeq(master, disjunctive_oracle; param = benders_param)
                             log = solve!(env)

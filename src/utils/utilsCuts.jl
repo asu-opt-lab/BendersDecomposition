@@ -14,7 +14,7 @@ Hyperplanes are used to represent Benders cuts and disjunctive cuts. A hyperplan
 
 # Main Functions
 - [`aggregate`](@ref): Aggregate multiple hyperplanes by averaging
-- [`evaluate_violation`](@ref): Check if a point violates the hyperplane
+- [`evaluate_violation`](@ref): Evaluate the hyperplane at a point
 - [`select_top_fraction`](@ref): Select the most violated or highest-scoring hyperplanes
 - [`hyperplanes_to_expression`](@ref): Convert hyperplanes to JuMP expressions for adding to models
 
@@ -23,10 +23,10 @@ Hyperplanes are used to represent Benders cuts and disjunctive cuts. A hyperplan
 # Create a hyperplane
 h = Hyperplane([1.0, 2.0], [3.0, 4.0], -5.0)
 
-# Check violation at a point
+# Evaluate the cut at a point
 x_val = [0.5, 0.3]
 t_val = [1.0, 2.0]
-is_violated = evaluate_violation(h, x_val, t_val)
+violation = evaluate_violation(h, x_val, t_val)
 ```
 """
 mutable struct Hyperplane
@@ -66,10 +66,10 @@ function aggregate(hyperplanes::Vector{Hyperplane})
     return h
 end
 """
-evaluate the violation of a hyperplane by (x_value, t_value)
+evaluate a hyperplane by (x_value, t_value)
 """
-function evaluate_violation(h::Hyperplane, x_value::Vector{Float64}, t_value::Vector{Float64}; zero_tol = 1e-6)
-    return h.a_0 + h.a_x' * x_value + h.a_t' * t_value >= zero_tol
+function evaluate_violation(h::Hyperplane, x_value::Vector{Float64}, t_value::Vector{Float64})
+    return h.a_0 + h.a_x' * x_value + h.a_t' * t_value
 end
 """
 select a top fraction of a set of hyperplanes based on a score measured by a function f
@@ -101,4 +101,3 @@ end
 function hyperplanes_to_expression(model::Model, hyperplanes::Vector{Hyperplane}, x_var::Vector{VariableRef}, t_var::Vector{VariableRef})
     return @expression(model, [j in 1:length(hyperplanes)], hyperplanes[j].a_0 + hyperplanes[j].a_x' * x_var + hyperplanes[j].a_t' * t_var)
 end
-

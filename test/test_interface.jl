@@ -1,11 +1,26 @@
 using Test
 using BendersX
-import BendersX: copy_variables!, transfer_scaled_linear_rows_and_bounds_with_types!, UndefError
+import BendersX: copy_variables!, transfer_scaled_linear_rows_and_bounds_with_types!, UnimplementedInterfaceException
 import MathOptInterface
 using HiGHS
 using JuMP
 
 const MOI = MathOptInterface
+
+struct SeparableInterruptionTestOracle <: BendersX.AbstractTypicalOracle
+    interruption::Union{Nothing,Exception}
+end
+
+function BendersX.generate_cuts(
+    oracle::SeparableInterruptionTestOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64};
+    tol_normalize = 1.0,
+    time_limit = 3600.0,
+)
+    !isnothing(oracle.interruption) && throw(oracle.interruption)
+    return true, [BendersX.Hyperplane(length(x_value), length(t_value))], deepcopy(t_value)
+end
 
 @testset "BendersX copy_variables!" begin
     @testset "VariableRef" begin
@@ -308,7 +323,7 @@ end
     classical = ClassicalOracle(data, master; model = keyword_subproblem_model!, optimizer = optimizer)
     unified = UnifiedOracle(data, master; model = keyword_subproblem_model!, optimizer = optimizer)
     pareto = ParetoOracle(data, master, ParetoOracleParam(fill(0.5, data.n_facilities)); model = keyword_subproblem_model!, optimizer = optimizer)
-    separable = SeparableOracle(data, master, ClassicalOracle(), 1; model = keyword_subproblem_model!, optimizer = optimizer)
+    separable = SeparableOracle(data, master, ClassicalOracle, 1; model = keyword_subproblem_model!, optimizer = optimizer)
     knapsack = CFLKnapsackOracle(data, master; model = keyword_subproblem_model!, optimizer = optimizer)
 
     @test classical.model isa Model
@@ -341,13 +356,52 @@ end
 
     optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
     master = Master(data; model = update_master_model!, optimizer = optimizer)
-    oracle = SeparableOracle(data, master, ClassicalOracle(), data.n_scenarios; model = update_sub_model!, optimizer = optimizer)
+    oracle = SeparableOracle(data, master, ClassicalOracle, data.n_scenarios; model = update_sub_model!, optimizer = optimizer)
     is_in_L, hyperplanes, f_x = BendersX.generate_cuts(oracle, [0.0, 0.0], [0.0, 0.0])
 
     @test !is_in_L
     @test length(hyperplanes) == data.n_scenarios
     @test f_x == [1.0, 1.0]
     @test all(occursin("HiGHS", solver_name(suboracle.model)) for suboracle in oracle.oracles)
+
+    oracle.oracles = BendersX.AbstractTypicalOracle[
+        SeparableInterruptionTestOracle(BendersX.TimeLimitException("test timeout")),
+        SeparableInterruptionTestOracle(nothing),
+    ]
+    timeout_error = try
+        BendersX.generate_cuts(oracle, [0.0, 0.0], [0.0, 0.0])
+        nothing
+    catch err
+        err
+    end
+    @test timeout_error isa BendersX.TimeLimitException
+    @test timeout_error.msg == "test timeout"
+
+    oracle.oracles = BendersX.AbstractTypicalOracle[
+        SeparableInterruptionTestOracle(nothing),
+        SeparableInterruptionTestOracle(BendersX.UnexpectedModelStatusException("test status")),
+    ]
+    status_error = try
+        BendersX.generate_cuts(oracle, [0.0, 0.0], [0.0, 0.0])
+        nothing
+    catch err
+        err
+    end
+    @test status_error isa BendersX.UnexpectedModelStatusException
+    @test status_error.msg == "test status"
+
+    oracle.oracles = BendersX.AbstractTypicalOracle[
+        SeparableInterruptionTestOracle(ArgumentError("test generic error")),
+        SeparableInterruptionTestOracle(nothing),
+    ]
+    generic_error = try
+        BendersX.generate_cuts(oracle, [0.0, 0.0], [0.0, 0.0])
+        nothing
+    catch err
+        err
+    end
+    @test generic_error isa ArgumentError
+    @test generic_error.msg == "test generic error"
 end
 
 @testset "transfer_scaled_linear_rows_and_bounds_with_types!" begin
@@ -390,10 +444,10 @@ end
         catch e
             e
         end
-        @test master_error isa UndefError
-        @test occursin("BendersX does not know how to build a master model", master_error.msg)
+        @test master_error isa UnimplementedInterfaceException
+        @test occursin("BendersX does not know how to formulate a master problem", master_error.msg)
         @test occursin("Define `update_master_model!", master_error.msg)
-        @test occursin("Master(data; model = build_master_model!)", master_error.msg)
+        @test occursin("Master(data; model = your_builder!)", master_error.msg)
 
         # Model-based oracle without a subproblem model-update function must throw
         function update_master_model!(model::Model, data::EmptyData)
@@ -412,10 +466,10 @@ end
         catch e
             e
         end
-        @test subproblem_error isa UndefError
-        @test occursin("BendersX does not know how to build a subproblem model", subproblem_error.msg)
+        @test subproblem_error isa UnimplementedInterfaceException
+        @test occursin("BendersX does not know how to formulate a subproblem", subproblem_error.msg)
         @test occursin("Define `update_sub_model!", subproblem_error.msg)
-        @test occursin("model = build_sub_model!", subproblem_error.msg)
+        @test occursin("Oracle(...; model = your_builder!)", subproblem_error.msg)
     end
 
     @testset "master variable container Vector{VariableRef}" begin

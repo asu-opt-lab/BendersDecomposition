@@ -1,61 +1,93 @@
-# Note: update_upper_bound_and_gap!, print_iteration_info, and is_terminated
-# are already exported in utilsLoop.jl and are implemented here for BendersSeqState/Log 
-
-abstract type AbstractBendersSeqState <: AbstractLoopState end
-abstract type AbstractBendersSeqLog <: AbstractLoopLog end
-abstract type AbstractBendersSeqParam <: AbstractLoopParam end
 """
-Concrete state for a single iteration of a Sequential Benders algorithm.
+    AbstractBendersSeqState <: AbstractLoopState
 
-Stores:
-- `master_time`: Time spent solving the master problem.
-- `oracle_time`: Time spent generating cuts by the oracle.
-- `total_time`: Combined time for the full iteration.
-- `values`: Candidate solution from the master problem.
-- `f_x`: Evaluation of the subproblem at `values`; set to `NaN` if the oracle does not evaluate it.
-- `is_in_L`: Boolean flag indicating whether the candidate solution is feasible (lies in the feasible region).
-- `LB`: Current lower bound.
-- `UB`: Current upper bound.
-- `gap`: Relative optimality gap (in percent).
+Abstract supertype for iteration state used by sequential Benders environments.
 
-Used to store and track relevant data for each iteration of the algorithm.
+See also: `BendersSeqState`
+"""
+abstract type AbstractBendersSeqState <: AbstractLoopState end
+
+
+"""
+    AbstractBendersSeqLog <: AbstractLoopLog
+
+Abstract supertype for iteration logs used by sequential Benders environments.
+
+See also: `BendersSeqLog`
+"""
+abstract type AbstractBendersSeqLog <: AbstractLoopLog end
+
+
+"""
+    AbstractBendersSeqParam <: AbstractLoopParam
+
+Abstract supertype for parameter containers used by sequential Benders environments.
+
+See also: [`BendersSeqParam`](@ref),
+[`BendersSeqInOutParam`](@ref)
+"""
+abstract type AbstractBendersSeqParam <: AbstractLoopParam end
+
+"""
+    BendersSeqState <: AbstractBendersSeqState
+
+State recorded for one iteration of a sequential Benders algorithm.
+
+# Fields
+
+- `LB::Float64`: Current lower bound.
+- `UB::Float64`: Current upper bound.
+- `gap::Float64`: Current relative optimality gap.
+- `values::Dict{Symbol,Vector{Float64}}`: Candidate master solution values, including `:x` and `:t`.
+- `f_x::Vector{Float64}`: Subproblem objective values associated with the candidate solution. Entries may be `Inf` when the corresponding objective value is unavailable.
+- `master_time::Float64`: Time spent solving the master problem.
+- `oracle_time::Float64`: Time spent evaluating the oracle and generating cuts.
+- `total_time::Float64`: Total time spent in the iteration.
+- `is_in_L::Bool`: Whether the candidate solution belongs to the oracle's feasible region.
+
+See also: [`BendersSeqLog`](@ref), [`BendersSeq`](@ref)
 """
 mutable struct BendersSeqState <: AbstractBendersSeqState
-    master_time::Float64
-    oracle_time::Float64
-    total_time::Float64
-    values::Dict{Symbol, Vector{Float64}}
-    f_x::Vector{Float64}
-    is_in_L::Bool
     LB::Float64
     UB::Float64
     gap::Float64
-   
+    values::Dict{Symbol, Vector{Float64}}
+    f_x::Vector{Float64}
+    is_in_L::Bool
+    master_time::Float64
+    oracle_time::Float64
+    total_time::Float64
+    
     # Constructor with specified values
     function BendersSeqState()
-        new(0.0, 0.0, 0.0, Dict(:x => Vector{Float64}(), :t => Vector{Float64}()), Vector{Float64}(), false, -Inf, Inf, 100.0)
+        new(-Inf, Inf, 100.0, Dict(:x => Vector{Float64}(), :t => Vector{Float64}()), Vector{Float64}(), false, 0.0, 0.0, 0.0)
     end
 end
 
 """
-Concrete log type for tracking the progress of a Sequential Benders algorithm.
+    BendersSeqLog <: AbstractBendersSeqLog
 
-Tracks:
-- `n_iter`: Number of iterations completed.
-- `iterations`: A vector of `BendersSeqState` objects recording iteration history.
-- `start_time`: Timestamp when the algorithm started.
-- `consecutive_no_improvement`: Number of iterations with insufficient LB improvement.
+Log of iterations performed by a sequential Benders environment.
 
-Used to store all historical data during the solve and check termination logic.
+# Fields
+
+- `n_iter::Int`: Number of completed iterations.
+- `iterations::Vector{BendersSeqState}`: Iteration history.
+- `start_time::Float64`: Time at which the solve started.
+- `consecutive_no_improvement::Int`: Number of consecutive iterations without sufficient lower-bound improvement.
+- `preprocessing_time::Float64`: Time spent in preprocessing before the main Benders iterations.
+
+See also: [`BendersSeqState`](@ref), [`BendersSeq`](@ref)
 """
 mutable struct BendersSeqLog <: AbstractBendersSeqLog
     n_iter::Int
     iterations::Vector{BendersSeqState}
     start_time::Float64
     consecutive_no_improvement::Int
+    preprocessing_time::Float64
     
     function BendersSeqLog()
-        new(0, Vector{BendersSeqState}(), time(), 0)
+        new(0, Vector{BendersSeqState}(), time(), 0, 0.0)
     end
 end
 
@@ -80,7 +112,7 @@ BendersSeqParam(;
 
 # Fields
 - `time_limit::Float64`: Maximum wall-clock time, in seconds.
-- `gap_tolerance::Float64`: Relative optimality gap tolerance for termination.
+- `gap_tolerance::Float64`: Relative gap tolerance for termination.
 - `halt_limit::Int`: Maximum number of consecutive non-improving iterations.
 - `iter_limit::Int`: Maximum number of Benders iterations.
 - `verbose::Bool`: Whether to print iteration-level logging information.
@@ -97,7 +129,7 @@ mutable struct BendersSeqParam <: AbstractBendersSeqParam
 
     function BendersSeqParam(; 
                         time_limit::Float64 = 7200.0, 
-                        gap_tolerance::Float64 = 1e-4, 
+                        gap_tolerance::Float64 = 1e-6, 
                         halt_limit::Int = 10000, 
                         iter_limit::Int = 1000000, 
                         verbose::Bool = true
@@ -106,28 +138,74 @@ mutable struct BendersSeqParam <: AbstractBendersSeqParam
         new(time_limit, gap_tolerance, halt_limit, iter_limit, verbose)
     end
 end
-function update_upper_bound_and_gap!(state::BendersSeqState, log::BendersSeqLog, f::Function)
-    evaluation = f(max.(state.values[:t], state.f_x), state.values[:x])
-    state.UB = log.n_iter >= 1 ? min(log.iterations[end].UB, evaluation) : evaluation
-    state.gap = (state.UB - state.LB) / abs(state.UB) * 100
+
+"""
+    update_upper_bound_and_gap!(
+        state::BendersSeqState,
+        log::BendersSeqLog,
+        f::Function;
+        zero_tol = 1e-9,
+    )
+
+Update the upper bound and optimality gap for a sequential Benders iteration.
+
+The candidate upper bound is obtained by evaluating `f` at the componentwise maximum of the current auxiliary-variable value `t` and the corresponding subproblem objective values `f_x`. The best upper bound seen so far is stored in `state.UB`.
+
+The gap is computed as a relative to `abs(state.UB)`. If the upper bound and lower bound agree within `zero_tol`, the gap is set to zero. If the upper bound is within `zero_tol` of zero but does not agree with the lower bound, the gap is set to `Inf`.
+
+Returns `nothing`.
+"""
+function update_upper_bound_and_gap!(
+    state::BendersSeqState,
+    log::BendersSeqLog,
+    f::Function;
+    zero_tol::Float64 = 1e-9,
+)
+    evaluation = f(
+        max.(state.values[:t], state.f_x),
+        state.values[:x],
+    )
+
+    state.UB =
+        log.n_iter >= 1 ?
+        min(log.iterations[end].UB, evaluation) :
+        evaluation
+
+    if isapprox(state.UB, state.LB; atol = zero_tol)
+        state.gap = 0.0
+    elseif abs(state.UB) <= zero_tol
+        state.gap = Inf
+    else
+        state.gap = max(
+            0.0,
+            (state.UB - state.LB) / abs(state.UB),
+        )
+    end
+
+    return nothing
 end
 
 function print_iteration_info(state::BendersSeqState, log::BendersSeqLog; prefix="")
     @printf("%s Iter: %4d | LB: %12.4f | UB: %11.4f | Gap: %8.3f%% | Time: (M: %6.2f, S: %6.2f, Total: %6.2f) \n",
-           prefix, log.n_iter, state.LB, state.UB, state.gap, 
+           prefix, log.n_iter, state.LB, state.UB, state.gap * 100, 
            state.master_time, state.oracle_time, state.total_time)
 end
 
 """
-Check termination criteria for the Sequential Benders loop.
+    is_terminated(
+        state::BendersSeqState,
+        log::BendersSeqLog,
+        param::BendersSeqParam,
+    )
 
-Terminates if:
-- `is_in_L` is true (termination via feasibility).
-- `gap` is within `gap_tolerance`.
-- The remaining time is exhausted.
+Check whether the sequential Benders loop should terminate.
 
-Returns a `Bool`.
+The loop terminates when the current candidate solution is in the oracle feasible region or when the current optimality gap is within `param.gap_tolerance`.
+
+Time-limit handling is performed by the surrounding solve loop.
+
+Returns `true` if the loop should terminate and `false` otherwise.
 """
 function is_terminated(state::BendersSeqState, log::BendersSeqLog, param::BendersSeqParam)
-    return state.is_in_L || state.gap <= param.gap_tolerance || get_sec_remaining(log, param) <= 0.0
+    return state.is_in_L || state.gap <= param.gap_tolerance
 end

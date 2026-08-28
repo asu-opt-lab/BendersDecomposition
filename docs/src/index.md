@@ -74,11 +74,12 @@ log = solve!(env)
     | [`SeparableOracle`](@ref)  | Wrapper oracle for separable subproblems | 
     | [`UFLKnapsackOracle`](@ref)  | Knapsack-based specialized oracle for uncapacitated facility location problems |
     | [`CFLKnapsackOracle`](@ref)  | Knapsack-based specialized oracle for capacitated facility location problems |
-    | [`SplitOracle`](@ref)      | Produces split cuts to strengthen the master relaxation |
+    | [`SplitOracle`](@ref)      | Generic split-cut oracle backed by a DCGLP normalization parameter |
+    | `SplitOracle` with `LpDistanceNormalization` | Distance-norm split oracle configuration |
 
     **Built-in Environment variants**
 
-    | Environment type        | Execution strategy |
+    | Environment type        | Execution mode |
     |-------------------------|--------------------|
     | [`BendersSeq`](@ref)            | Classical sequential Benders decomposition |
     | [`BendersSeqInOut`](@ref)       | Sequential Benders with in–out stabilization |

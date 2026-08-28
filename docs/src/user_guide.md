@@ -65,10 +65,20 @@ end
 ```
 together with the required interface:
 ```julia
-function generate_cuts(oracle::MyOracle)::Tuple
-    # return a collection of cuts
+function generate_cuts(
+    oracle::MyOracle,
+    x_value::Vector{Float64},
+    t_value::Vector{Float64};
+    tol_normalize = 1.0,
+    time_limit = 3600,
+)
+    # Generate cuts that separate (x_value, t_value).
+    return is_in_L, hyperplanes, sub_obj_vals
 end
 ```
+The returned tuple contains whether the candidate belongs to the relevant set,
+the generated `Vector{Hyperplane}`, and the subproblem objective values used to
+update the upper bound.
 This interface-based design allows new algorithmic ideas to be prototyped directly within the framework.
 
 

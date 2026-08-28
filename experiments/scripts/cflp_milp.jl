@@ -1,6 +1,7 @@
 using JuMP, DataFrames, Logging, CSV
 using BendersX
 using ArgParse
+using Random
 using Printf
 using Statistics
 include(normpath(joinpath(@__DIR__, "..", "solver_defaults.jl")))
@@ -12,10 +13,22 @@ function parse_commandline()
             help = "Instance name"
             arg_type = String
             default = "T100x100_5_1"
+        "--seed"
+            help = "Random seed"
+            arg_type = Int
+            default = 1
         "--output_dir"
             help = "Output directory"
             arg_type = String
             default = "output"
+        "--time_limit"
+            help = "Time limit in seconds"
+            arg_type = Float64
+            default = 14400.0
+        "--threads"
+            help = "Number of CPLEX threads"
+            arg_type = Int
+            default = 7
     end
     return parse_args(s)
 end
@@ -41,8 +54,11 @@ end
 # load settings
 args = parse_commandline()
 
+Random.seed!(args["seed"])
 instance = args["instance"]
 output_dir = args["output_dir"]
+time_limit = args["time_limit"]
+threads = args["threads"]
 
 # -----------------------------------------------------------------------------
 # load problem data
@@ -53,8 +69,8 @@ data = read_cfl_file(instance)
 # MIP model
 # -----------------------------------------------------------------------------
 mip_model = create_mip_model(data)
-set_optimizer_attribute(mip_model, "CPXPARAM_Threads", 7)
-set_time_limit_sec(mip_model, 14400.0)
+set_optimizer_attribute(mip_model, "CPXPARAM_Threads", threads)
+set_time_limit_sec(mip_model, time_limit)
 set_optimizer_attribute(mip_model, MOI.Silent(), false)
 optimize!(mip_model)
 
