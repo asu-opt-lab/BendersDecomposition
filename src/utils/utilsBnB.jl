@@ -180,11 +180,20 @@ Convert the Benders branch-and-bound log and solve result into a one-row summary
 
 The returned data frame contains solver-level node statistics, preprocessing time, total solve time, objective bound, objective value, relative optimality gap, and lazy/user-cut counts.
 
+It also reports callback-level attribution statistics: the number of recorded
+callback evaluations, their cumulative oracle time, and the mean oracle time
+per recorded callback. These values include both lazy- and user-cut callbacks
+when both are configured.
+
 If the master optimizer has not been called, the objective and bound fields are reported as unavailable.
 
 See also: [`BendersBnB`](@ref)
 """
 function to_dataframe(env::AbstractBendersBnB, log::BendersBnBLog)
+    callback_calls = log.n_enter_nodes
+    oracle_time = sum(state.oracle_time for state in log.nodes; init = 0.0)
+    mean_oracle_time = callback_calls == 0 ? 0.0 : oracle_time / callback_calls
+
     if termination_status(env.master.model) == MOI.OPTIMIZE_NOT_CALLED
         return DataFrame(
             node_count = 0,
@@ -194,7 +203,10 @@ function to_dataframe(env::AbstractBendersBnB, log::BendersBnBLog)
             obj_val = Inf,
             rel_gap = Inf,
             n_lazy_cuts = log.n_lazy_cuts,
-            n_user_cuts = log.n_user_cuts
+            n_user_cuts = log.n_user_cuts,
+            callback_calls = callback_calls,
+            oracle_time = oracle_time,
+            mean_oracle_time = mean_oracle_time,
         )
     else
         return DataFrame(
@@ -205,7 +217,10 @@ function to_dataframe(env::AbstractBendersBnB, log::BendersBnBLog)
             obj_val = env.obj_value,
             rel_gap = has_values(env.master.model) ? JuMP.relative_gap(env.master.model) : Inf,
             n_lazy_cuts = log.n_lazy_cuts,
-            n_user_cuts = log.n_user_cuts
+            n_user_cuts = log.n_user_cuts,
+            callback_calls = callback_calls,
+            oracle_time = oracle_time,
+            mean_oracle_time = mean_oracle_time,
         )
     end
 end
