@@ -1,6 +1,6 @@
 """
     (::Type{T})(
-        data::AbstractData,
+        data,
         master::AbstractMaster;
         model = update_sub_model!,
         scen_idx::Int,
@@ -32,7 +32,7 @@ This constructor is required only for automatic homogeneous construction. It is 
 
 Throws an [`UnimplementedInterfaceException`](@ref) when a subtype `T` does not implement this constructor and is used with the homogeneous `SeparableOracle(data, master, T, N; ...)` constructor.
 """
-(::Type{T})(data::AbstractData, master::AbstractMaster;
+(::Type{T})(data, master::AbstractMaster;
             model = update_sub_model!,
             scen_idx::Int,
             param::AbstractOracleParam,
@@ -44,7 +44,7 @@ Throws an [`UnimplementedInterfaceException`](@ref) when a subtype `T` does not 
 
         Expected constructor signature:
 
-          $(T)(data::AbstractData, master::AbstractMaster;
+          $(T)(data, master::AbstractMaster;
               model = update_sub_model!, scen_idx::Int, param::AbstractOracleParam,
               optimizer = ...)
 
@@ -92,7 +92,7 @@ N::Int: Number of independent subproblems.
 Construct a `SeparableOracle` from already configured sub-oracles.
 
     SeparableOracle(
-        data::AbstractData,
+        data,
         master::Master,
         oracle_type::Type{T},
         N::Int;
@@ -144,7 +144,7 @@ mutable struct SeparableOracle <: AbstractTypicalOracle
 end
 
 function SeparableOracle(
-        data::AbstractData,
+        data,
         master::Master,
         oracle_type::Type{T},
         N::Int;

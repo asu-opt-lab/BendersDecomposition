@@ -20,7 +20,6 @@ include("problems/problems.jl")
 # they must not decide visibility via `export` or `public`.
 
 # Default `using BendersX` workflow
-export AbstractData
 export Master
 export BendersSeq, BendersSeqInOut, BendersBnB
 export ClassicalOracle, UnifiedOracle, ParetoOracle, SeparableOracle

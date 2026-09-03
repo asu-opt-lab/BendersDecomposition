@@ -1,5 +1,5 @@
 """
-    update_master_model!(model::Model, data::AbstractData) -> (x, t)
+    update_master_model!(model::Model, data) -> (x, t)
 
 Formulate the master problem for `data` in `model`.
 
@@ -9,7 +9,8 @@ To use `Master(data)` with a custom data type, define
 
     update_master_model!(model::Model, data::MyDataType) -> (x, t)
 
-where `MyDataType` is the concrete subtype of [`AbstractData`](@ref) that represents your problem data.
+where `MyDataType` is the type that represents your problem data. BendersX does
+not require it to have a particular supertype.
 
 The function must:
 1. Add the master variables, constraints, and objective to `model`.
@@ -28,7 +29,7 @@ function.
 # Example
 
 ```julia
-struct MyDataType <: AbstractData
+struct MyDataType
     n::Int
 end
 
@@ -52,14 +53,14 @@ Master(data; model = build_master_model!)
 
 In that case, `build_master_model!(model, data)` must follow the same interface.
 """
-function update_master_model!(model::Model, data::AbstractData)
+function update_master_model!(model::Model, data)
     throw(UnimplementedInterfaceException(
         "BendersX does not know how to formulate a master problem for " * "$(typeof(data)). Define " * "`update_master_model!(model::Model, data::$(typeof(data)))`, " * "or pass a custom model-building function with " * "`Master(data; model = your_builder!)`."
 ))
 end
 
 """
-    update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...)
+    update_sub_model!(model::Model, data; scen_idx::Int = 0, kwargs...)
 
 Formulate the subproblem for scenario `scen_idx` using `data` in `model`.
 
@@ -67,9 +68,10 @@ When a model-based oracle is constructed, BendersX searches for an `update_sub_m
 
 To use a model-based oracle with a custom data type, 
 
-    update_sub_model!(model::Model, data::MyDataType, scen_idx::Int; kwargs...)
+    update_sub_model!(model::Model, data::MyDataType; scen_idx::Int = 0, kwargs...)
 
-where `MyDataType` is a concrete subtype of [`AbstractData`](@ref) that represents your problem data.
+where `MyDataType` is the type that represents your problem data. BendersX does
+not require it to have a particular supertype.
 
 The method must:
 
@@ -85,13 +87,14 @@ The keyword arguments correspond to the fields of the `NamedTuple` returned by
 
 then the subproblem builder may be written as
 ```julia
-function update_sub_model!(model, data, scen_idx; x, y)
+function update_sub_model!(model, data; x, y, scen_idx::Int = 0)
     ...
 end
 ```
 
-The argument `scen_idx` identifies the scenario being formulated and may be
-ignored for deterministic models.
+The optional keyword `scen_idx` identifies the scenario being formulated. It
+defaults to `0` and may be ignored for deterministic models. Scenario-based
+models receive a one-based index when constructed through [`SeparableOracle`](@ref).
 
 Most implementations should return `nothing`. To define generalized bound
 constraints (GBCs), return `(gbc_lhs, gbc_rhs, gbc_sense)`, where the three objects describe GBCs relating subproblem variables (`gbc_lhs`) to affine
@@ -104,12 +107,12 @@ Optimizer selection is handled elsewhere. Do not attach an optimizer to
 # Example
 
 ```julia
-struct MyDataType <: AbstractData
+struct MyDataType
     demand::Vector{Float64}
     cost::Vector{Float64}
 end
 
-function update_sub_model!(model::Model, data::MyDataType, scen_idx::Int; x)
+function update_sub_model!(model::Model, data::MyDataType; x, scen_idx::Int = 0)
     @variable(model, y[eachindex(data.demand)] >= 0)
 
     @constraint(model, demand[j in eachindex(data.demand)], y[j] == data.demand[j])
@@ -126,11 +129,11 @@ You may pass a custom builder directly:
 ClassicalOracle(data, master; model = build_sub_model!)
 ```
 
-In that case, `build_sub_model!(model, data, scen_idx; kwargs...)` must follow
+In that case, `build_sub_model!(model, data; scen_idx::Int = 0, kwargs...)` must follow
 the same interface.
 """
-function update_sub_model!(model::Model, data::AbstractData, scen_idx::Int; kwargs...) 
+function update_sub_model!(model::Model, data; scen_idx::Int = 0, kwargs...)
     throw(UnimplementedInterfaceException( 
-        "BendersX does not know how to formulate a subproblem for " * "$(typeof(data)). Define " * "`update_sub_model!(model::Model, data::$(typeof(data)), " * "scen_idx::Int; kwargs...)`, or pass a custom model-building " * 
+        "BendersX does not know how to formulate a subproblem for " * "$(typeof(data)). Define " * "`update_sub_model!(model::Model, data::$(typeof(data)); " * "scen_idx::Int = 0, kwargs...)`, or pass a custom model-building " *
         "function with `Oracle(...; model = your_builder!)`." )) 
 end

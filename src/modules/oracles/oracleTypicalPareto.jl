@@ -87,11 +87,11 @@ where:
 
 # Constructors
 ```julia
-ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
+ParetoOracle(data, master::Master, param::ParetoOracleParam;
              model = update_sub_model!,
              scen_idx::Int = 0)
 
-ParetoOracle(data::AbstractData, master::Master; 
+ParetoOracle(data, master::Master;
             model = update_sub_model!,
             scen_idx::Int = 0,
             param::ParetoOracleParam)
@@ -128,7 +128,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
     # Magnanti-Wong pareto model
     pareto_model::Model
 
-    function ParetoOracle(data::AbstractData, master::Master, param::ParetoOracleParam;
+    function ParetoOracle(data, master::Master, param::ParetoOracleParam;
                          model = update_sub_model!,
                          scen_idx::Int = 0,
                          optimizer = DEFAULT_OPTIMIZER)
@@ -150,7 +150,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         end
 
         # Build the submodel using user-defined model update
-        model(sub_model, data, scen_idx; x_copy...)
+        model(sub_model, data; x_copy..., scen_idx = scen_idx)
 
         # Validate that the subproblem is LP-compatible for typical oracles
         _validate_lp_compatibility(sub_model)
@@ -166,7 +166,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         pareto_x = var_from_tuple(pareto_x_copy)
 
         # Build pareto model structure
-        model(pareto_model, data, scen_idx; pareto_x_copy...)
+        model(pareto_model, data; pareto_x_copy..., scen_idx = scen_idx)
 
         # Apply Magnanti-Wong transformations (add σ, etc.)
         _apply_pareto_transformations!(pareto_model, pareto_x)
@@ -182,7 +182,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
 
     ParetoOracle() = new()
 
-    function ParetoOracle(data::AbstractData, master::Master;
+    function ParetoOracle(data, master::Master;
                           model = update_sub_model!,
                           scen_idx::Int = 0,
         param::ParetoOracleParam,

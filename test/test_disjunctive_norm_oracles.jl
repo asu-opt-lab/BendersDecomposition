@@ -7,11 +7,11 @@ using LinearAlgebra
 
 const DNO_MOI = MathOptInterface
 
-struct DisjunctiveNormTestData <: AbstractData
+struct DisjunctiveNormTestData
     costs::Matrix{Float64}
 end
 
-struct DirectionalVectorTTestData <: AbstractData end
+struct DirectionalVectorTTestData end
 
 struct DirectionalVectorTTestOracle <: BendersX.AbstractTypicalOracle end
 
@@ -55,7 +55,7 @@ function update_continuous_disjunctive_norm_master!(model::Model, data::Disjunct
     return (x = x,), t
 end
 
-function update_disjunctive_norm_sub!(model::Model, data::DisjunctiveNormTestData, scen_idx::Int; x)
+function update_disjunctive_norm_sub!(model::Model, data::DisjunctiveNormTestData; x, scen_idx::Int = 0)
     set_optimizer(model, disjunctive_norm_optimizer())
     n_facilities, n_customers = size(data.costs)
 

@@ -10,7 +10,7 @@ function update_master_model!(model::Model, data::SNIPData)
     return (x = x, ), t
 end
 
-function update_sub_model!(model::Model, data::SNIPData, scen_idx::Int; x)
+function update_sub_model!(model::Model, data::SNIPData; x, scen_idx::Int = 0)
     @variable(model, y[1:data.num_nodes] >= 0)
     
     @objective(model, Min, y[data.scenarios[scen_idx][1]])

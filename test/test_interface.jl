@@ -253,7 +253,7 @@ end
 end
 
 @testset "Default optimizer is attached before model-update functions run" begin
-    struct AttrData <: AbstractData end
+    struct AttrData end
     data = AttrData()
 
     function update_master_model!(model::Model, data::AttrData)
@@ -264,7 +264,7 @@ end
         return (x = x,), t
     end
 
-    function update_sub_model!(model::Model, data::AttrData, scen_idx::Int; x)
+    function update_sub_model!(model::Model, data::AttrData; x, scen_idx::Int = 0)
         set_optimizer_attribute(model, MOI.Silent(), true)
         @variable(model, y >= 0)
         @objective(model, Min, y)
@@ -279,8 +279,8 @@ end
     @test occursin("GLPK", solver_name(oracle.model))
 end
 
-@testset "model keyword accepts model-update functions" begin
-    struct ModelKeywordData <: AbstractData
+@testset "model keyword accepts model-update functions and unconstrained data types" begin
+    struct ModelKeywordData
         n_facilities::Int
         n_customers::Int
         capacities::Vector{Float64}
@@ -297,6 +297,7 @@ end
         [1.0, 1.0],
         reshape([1.0, 2.0], 2, 1),
     )
+    @test supertype(ModelKeywordData) === Any
 
     function keyword_master_model!(model::Model, data::ModelKeywordData)
         @variable(model, x[1:data.n_facilities], Bin)
@@ -306,13 +307,17 @@ end
         return (x = x,), t
     end
 
-    function keyword_subproblem_model!(model::Model, data::ModelKeywordData, scen_idx::Int; x)
+    function keyword_subproblem_model!(model::Model, data::ModelKeywordData; x, scen_idx::Int = 0)
         @variable(model, y[1:data.n_facilities, 1:data.n_customers] >= 0)
         @objective(model, Min, sum(data.costs[i, j] * y[i, j] for i in 1:data.n_facilities, j in 1:data.n_customers))
         @constraint(model, demand[j in 1:data.n_customers], sum(y[:, j]) == data.demands[j])
         @constraint(model, facility_open[i in 1:data.n_facilities, j in 1:data.n_customers], y[i, j] <= x[i])
         return nothing
     end
+
+    direct_subproblem = Model()
+    @variable(direct_subproblem, direct_x[1:data.n_facilities])
+    @test isnothing(keyword_subproblem_model!(direct_subproblem, data; x = direct_x))
 
     optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 
@@ -335,7 +340,7 @@ end
 end
 
 @testset "SeparableOracle works with explicit non-GLPK optimizer" begin
-    struct SeparableData <: AbstractData
+    struct SeparableData
         n_scenarios::Int
     end
     data = SeparableData(2)
@@ -347,7 +352,7 @@ end
         return (x = x,), t
     end
 
-    function update_sub_model!(model::Model, data::SeparableData, scen_idx::Int; x)
+    function update_sub_model!(model::Model, data::SeparableData; x, scen_idx::Int = 0)
         @variable(model, y >= 0)
         @objective(model, Min, y)
         @constraint(model, y >= 1 - x[scen_idx])
@@ -433,7 +438,7 @@ end
 end
 
 @testset "BendersX model-update functions" begin
-    struct EmptyData <: AbstractData end
+    struct EmptyData end
     data = EmptyData()
 
     @testset "no model-update functions provided (should throw)" begin
@@ -483,7 +488,7 @@ end
             return (u = u, ), t
         end
 
-        function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u)
+        function update_sub_model!(model::Model, data::EmptyData; u, scen_idx::Int = 0)
 
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
@@ -508,7 +513,7 @@ end
             return (u = u, ), t
         end
 
-        function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u)
+        function update_sub_model!(model::Model, data::EmptyData; u, scen_idx::Int = 0)
 
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
@@ -536,7 +541,7 @@ end
             return (u = u, v = v, w = w), t
         end
 
-        function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w)
+        function update_sub_model!(model::Model, data::EmptyData; u, v, w, scen_idx::Int = 0)
 
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))

@@ -41,7 +41,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
     gbc_rhs::Vector{Union{VariableRef, AffExpr}}
     gbc_sense::Vector{GBCBoundType}
     
-    function CFLKnapsackOracle(data::AbstractData, master::Master; 
+    function CFLKnapsackOracle(data, master::Master;
                             model = update_sub_model!,
                             scen_idx::Int=-1, 
                             param::CFLKnapsackOracleParam = CFLKnapsackOracleParam(),
@@ -58,7 +58,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         @constraint(sub_model, fix_x, x .== 0)
 
         # Build the submodel using user-defined model update, passing the copied variables
-        result = model(sub_model, data, scen_idx; x_copy...)
+        result = model(sub_model, data; x_copy..., scen_idx = scen_idx)
         
         # Parse the result to extract GBC information using shared helper
         gbc_lhs, gbc_rhs, gbc_sense = _parse_gbc_result(result, x)
