@@ -210,8 +210,9 @@ function generate_cuts(oracle::SeparableOracle, x_value::Vector{Float64}, t_valu
         err isa CompositeException || rethrow()
         task_failure = first(err.exceptions)
         task_failure isa TaskFailedException || rethrow()
-        failure = first(current_exceptions(task_failure.task; backtrace = false))
+        failures = current_exceptions(task_failure.task; backtrace = false)
         isempty(failures) && rethrow()
+        failure = first(failures)
         throw(failure.exception)
     end
 

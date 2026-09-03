@@ -47,7 +47,7 @@ export NoDisjunctiveCuts, AllDisjunctiveCuts, DisjunctiveCutsSmallerIndices
 public AbstractBendersEnv, AbstractBendersSeq, AbstractBendersBnB
 public AbstractMaster
 public AbstractOracle, AbstractOracleParam, AbstractTypicalOracle, AbstractDisjunctiveOracle
-public AbstractBendersPreprocessing
+public AbstractPreprocessing
 public AbstractNormalization
 public AbstractLazyCallback, AbstractUserCallback
 public AbstractLoopState, AbstractLoopLog, AbstractLoopParam

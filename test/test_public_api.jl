@@ -31,7 +31,7 @@ using BendersX
         :AbstractBendersEnv, :AbstractBendersSeq, :AbstractBendersBnB,
         :AbstractMaster, :AbstractOracle, :AbstractOracleParam, :AbstractTypicalOracle,
         :AbstractDisjunctiveOracle,
-        :AbstractBendersPreprocessing,
+        :AbstractPreprocessing,
         :AbstractNormalization,
         :AbstractLazyCallback, :AbstractUserCallback,
         :AbstractLoopState, :AbstractLoopLog, :AbstractLoopParam,

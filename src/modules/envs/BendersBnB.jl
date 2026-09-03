@@ -15,7 +15,7 @@ master before branch-and-bound begins.
 # Fields
 - `master::AbstractMaster`: Master problem.
 - `param::BendersBnBParam`: Parameters controlling algorithm, such as the time limit, relative gap tolerance, and verbosity.
-- `preprocessing::AbstractBendersPreprocessing`: Preprocessing procedure applied before branch-and-bound.
+- `preprocessing::AbstractPreprocessing`: Preprocessing procedure applied before branch-and-bound.
 - `lazy_callback::AbstractLazyCallback`: Configuration for lazy-constraint callback
 - `user_callback::AbstractUserCallback`: Configuration for user-cut callback
 - `obj_value::Float64`: Objective value of the best solution found
@@ -26,7 +26,7 @@ master before branch-and-bound begins.
     BendersBnB(
         master::AbstractMaster;
         lazy_callback::AbstractLazyCallback,
-        preprocessing::AbstractBendersPreprocessing = NoPreprocessing(),
+        preprocessing::AbstractPreprocessing = NoPreprocessing(),
         user_callback::AbstractUserCallback = NoUserCallback(),
         param::BendersBnBParam = BendersBnBParam(),
     )
@@ -36,7 +36,7 @@ Construct a `BendersBnB` environment from explicitly configured callback and pre
     BendersBnB(
         master::AbstractMaster,
         oracle::AbstractOracle;
-        preprocessing::AbstractBendersPreprocessing = NoPreprocessing(),
+        preprocessing::AbstractPreprocessing = NoPreprocessing(),
         param::BendersBnBParam = BendersBnBParam(),
     )
 
@@ -75,14 +75,14 @@ result = solve!(env)
 
 The lazy and user callbacks may use different oracles.
 
-See also: [`BendersSeq`](@ref), [`AbstractBendersPreprocessing`](@ref), [`AbstractLazyCallback`](@ref), [`AbstractUserCallback`](@ref), [`LazyCallback`](@ref), [`UserCallback`](@ref)
+See also: [`BendersSeq`](@ref), [`AbstractPreprocessing`](@ref), [`AbstractLazyCallback`](@ref), [`AbstractUserCallback`](@ref), [`LazyCallback`](@ref), [`UserCallback`](@ref)
 """
 mutable struct BendersBnB <: AbstractBendersBnB
     master::AbstractMaster 
 
     param::BendersBnBParam 
 
-    preprocessing::AbstractBendersPreprocessing
+    preprocessing::AbstractPreprocessing
     lazy_callback::AbstractLazyCallback
     user_callback::AbstractUserCallback
 
@@ -92,7 +92,7 @@ mutable struct BendersBnB <: AbstractBendersBnB
     function BendersBnB(
         master::AbstractMaster;
         lazy_callback::AbstractLazyCallback,
-        preprocessing::AbstractBendersPreprocessing = NoPreprocessing(),
+        preprocessing::AbstractPreprocessing = NoPreprocessing(),
         user_callback::AbstractUserCallback = NoUserCallback(),
         param::BendersBnBParam = BendersBnBParam(),
     )
@@ -103,7 +103,7 @@ end
 function BendersBnB(
     master::AbstractMaster,
     oracle::AbstractOracle;
-    preprocessing::AbstractBendersPreprocessing = NoPreprocessing(),
+    preprocessing::AbstractPreprocessing = NoPreprocessing(),
     param::BendersBnBParam = BendersBnBParam(),
 )
     BendersBnB(
