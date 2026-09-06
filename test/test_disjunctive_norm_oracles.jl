@@ -7,11 +7,11 @@ using LinearAlgebra
 
 const DNO_MOI = MathOptInterface
 
-struct DisjunctiveNormTestData <: AbstractData
+struct DisjunctiveNormTestData
     costs::Matrix{Float64}
 end
 
-struct DirectionalVectorTTestData <: AbstractData end
+struct DirectionalVectorTTestData end
 
 struct DirectionalVectorTTestOracle <: BendersX.AbstractTypicalOracle end
 

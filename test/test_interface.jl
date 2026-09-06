@@ -253,7 +253,7 @@ end
 end
 
 @testset "Default optimizer is attached before model-update functions run" begin
-    struct AttrData <: AbstractData end
+    struct AttrData end
     data = AttrData()
 
     function update_master_model!(model::Model, data::AttrData)
@@ -279,8 +279,8 @@ end
     @test occursin("GLPK", solver_name(oracle.model))
 end
 
-@testset "model keyword accepts model-update functions" begin
-    struct ModelKeywordData <: AbstractData
+@testset "model keyword accepts model-update functions and unconstrained data types" begin
+    struct ModelKeywordData
         n_facilities::Int
         n_customers::Int
         capacities::Vector{Float64}
@@ -297,6 +297,7 @@ end
         [1.0, 1.0],
         reshape([1.0, 2.0], 2, 1),
     )
+    @test supertype(ModelKeywordData) === Any
 
     function keyword_master_model!(model::Model, data::ModelKeywordData)
         @variable(model, x[1:data.n_facilities], Bin)
@@ -335,7 +336,7 @@ end
 end
 
 @testset "SeparableOracle works with explicit non-GLPK optimizer" begin
-    struct SeparableData <: AbstractData
+    struct SeparableData
         n_scenarios::Int
     end
     data = SeparableData(2)
@@ -433,7 +434,7 @@ end
 end
 
 @testset "BendersX model-update functions" begin
-    struct EmptyData <: AbstractData end
+    struct EmptyData end
     data = EmptyData()
 
     @testset "no model-update functions provided (should throw)" begin
