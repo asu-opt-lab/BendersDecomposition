@@ -150,7 +150,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         end
 
         # Build the submodel using user-defined model update
-        model(sub_model, data; x_copy..., scen_idx = scen_idx)
+        model(sub_model, data, scen_idx; x_copy...)
 
         # Validate that the subproblem is LP-compatible for typical oracles
         _validate_lp_compatibility(sub_model)
@@ -166,7 +166,7 @@ mutable struct ParetoOracle <: AbstractTypicalOracle
         pareto_x = var_from_tuple(pareto_x_copy)
 
         # Build pareto model structure
-        model(pareto_model, data; pareto_x_copy..., scen_idx = scen_idx)
+        model(pareto_model, data, scen_idx; pareto_x_copy...)
 
         # Apply Magnanti-Wong transformations (add σ, etc.)
         _apply_pareto_transformations!(pareto_model, pareto_x)

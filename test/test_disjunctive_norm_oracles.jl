@@ -55,7 +55,7 @@ function update_continuous_disjunctive_norm_master!(model::Model, data::Disjunct
     return (x = x,), t
 end
 
-function update_disjunctive_norm_sub!(model::Model, data::DisjunctiveNormTestData; x, scen_idx::Int = 0)
+function update_disjunctive_norm_sub!(model::Model, data::DisjunctiveNormTestData, scen_idx::Int; x)
     set_optimizer(model, disjunctive_norm_optimizer())
     n_facilities, n_customers = size(data.costs)
 

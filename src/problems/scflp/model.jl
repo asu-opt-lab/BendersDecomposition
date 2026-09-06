@@ -11,7 +11,7 @@ function update_master_model!(model::Model, data::SCFLPData)
     return (x = x, ), t
 end
 
-function update_sub_model!(model::Model, data::SCFLPData; x, scen_idx::Int = 0)
+function update_sub_model!(model::Model, data::SCFLPData, scen_idx::Int; x)
     I, J = data.n_facilities, data.n_customers
     @variable(model, y[1:I, 1:J] >= 0)
     # Set objective

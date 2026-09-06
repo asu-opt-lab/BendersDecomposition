@@ -264,7 +264,7 @@ end
         return (x = x,), t
     end
 
-    function update_sub_model!(model::Model, data::AttrData; x, scen_idx::Int = 0)
+    function update_sub_model!(model::Model, data::AttrData, scen_idx::Int; x)
         set_optimizer_attribute(model, MOI.Silent(), true)
         @variable(model, y >= 0)
         @objective(model, Min, y)
@@ -307,17 +307,13 @@ end
         return (x = x,), t
     end
 
-    function keyword_subproblem_model!(model::Model, data::ModelKeywordData; x, scen_idx::Int = 0)
+    function keyword_subproblem_model!(model::Model, data::ModelKeywordData, scen_idx::Int; x)
         @variable(model, y[1:data.n_facilities, 1:data.n_customers] >= 0)
         @objective(model, Min, sum(data.costs[i, j] * y[i, j] for i in 1:data.n_facilities, j in 1:data.n_customers))
         @constraint(model, demand[j in 1:data.n_customers], sum(y[:, j]) == data.demands[j])
         @constraint(model, facility_open[i in 1:data.n_facilities, j in 1:data.n_customers], y[i, j] <= x[i])
         return nothing
     end
-
-    direct_subproblem = Model()
-    @variable(direct_subproblem, direct_x[1:data.n_facilities])
-    @test isnothing(keyword_subproblem_model!(direct_subproblem, data; x = direct_x))
 
     optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 
@@ -352,7 +348,7 @@ end
         return (x = x,), t
     end
 
-    function update_sub_model!(model::Model, data::SeparableData; x, scen_idx::Int = 0)
+    function update_sub_model!(model::Model, data::SeparableData, scen_idx::Int; x)
         @variable(model, y >= 0)
         @objective(model, Min, y)
         @constraint(model, y >= 1 - x[scen_idx])
@@ -488,7 +484,7 @@ end
             return (u = u, ), t
         end
 
-        function update_sub_model!(model::Model, data::EmptyData; u, scen_idx::Int = 0)
+        function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u)
 
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
@@ -513,7 +509,7 @@ end
             return (u = u, ), t
         end
 
-        function update_sub_model!(model::Model, data::EmptyData; u, scen_idx::Int = 0)
+        function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u)
 
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))
@@ -541,7 +537,7 @@ end
             return (u = u, v = v, w = w), t
         end
 
-        function update_sub_model!(model::Model, data::EmptyData; u, v, w, scen_idx::Int = 0)
+        function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w)
 
             @variable(model, y[1:10] >= 0)
             @objective(model, Min, sum(y))

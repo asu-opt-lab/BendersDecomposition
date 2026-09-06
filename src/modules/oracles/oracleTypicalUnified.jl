@@ -131,7 +131,7 @@ mutable struct UnifiedOracle <: AbstractTypicalOracle
         x = var_from_tuple(x_copy)
 
         # Build the submodel using user-defined model update, passing the copied variables
-        model(sub_model, data; x_copy..., scen_idx = scen_idx)
+        model(sub_model, data, scen_idx; x_copy...)
 
         # Validate that the subproblem is LP-compatible for typical oracles
         _validate_lp_compatibility(sub_model)

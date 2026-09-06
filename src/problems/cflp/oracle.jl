@@ -58,7 +58,7 @@ mutable struct CFLKnapsackOracle <: AbstractTypicalOracle
         @constraint(sub_model, fix_x, x .== 0)
 
         # Build the submodel using user-defined model update, passing the copied variables
-        result = model(sub_model, data; x_copy..., scen_idx = scen_idx)
+        result = model(sub_model, data, scen_idx; x_copy...)
         
         # Parse the result to extract GBC information using shared helper
         gbc_lhs, gbc_rhs, gbc_sense = _parse_gbc_result(result, x)

@@ -19,7 +19,7 @@ function update_master_model!(model::Model, data::UFLPData)
 end
 
 """
-    update_sub_model!(model::Model, data::UFLPData; x, scen_idx::Int = 0)
+    update_sub_model!(model::Model, data::UFLPData, scen_idx::Int; x)
 
 Formulate the UFLP subproblem in `model`.
 
@@ -29,7 +29,7 @@ The argument `scen_idx` is unused because the UFLP formulation is deterministic.
 
 Returns `nothing`.
 """
-function update_sub_model!(model::Model, data::UFLPData; x, scen_idx::Int = 0)
+function update_sub_model!(model::Model, data::UFLPData, scen_idx::Int; x)
     I, J = data.n_facilities, data.n_customers
 
     @variable(model, y[1:I, 1:J] >= 0)
@@ -43,7 +43,7 @@ function update_sub_model!(model::Model, data::UFLPData; x, scen_idx::Int = 0)
 end
 
 """
-    update_sub_gbc_model!(model::Model, data::UFLPData; x, scen_idx::Int = 0)
+    update_sub_gbc_model!(model::Model, data::UFLPData, scen_idx::Int; x)
 
 Formulate the UFLP subproblem using generalized bound constraints (GBCs).
 
@@ -53,7 +53,7 @@ The argument `scen_idx` is unused because the UFLP formulation is deterministic.
 
 Returns `(gbc_lhs, gbc_rhs, gbc_sense)`, representing the linking constraints `y[i, j] <= x[i]`.
 """
-function update_sub_gbc_model!(model::Model, data::UFLPData; x, scen_idx::Int = 0)
+function update_sub_gbc_model!(model::Model, data::UFLPData, scen_idx::Int; x)
     
     I, J = data.n_facilities, data.n_customers
     @variable(model, y[1:I, 1:J] >= 0)

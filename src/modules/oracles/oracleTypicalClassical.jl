@@ -73,7 +73,7 @@ mutable struct ClassicalOracle <: AbstractTypicalOracle
             @constraint(sub_model, fix_x, x .== 0)
 
             # Build the submodel using user-defined model update, passing the copied variables
-            result = model(sub_model, data; x_copy..., scen_idx = scen_idx)
+            result = model(sub_model, data, scen_idx; x_copy...)
             
             # Validate that the subproblem is LP-compatible for typical oracles
             _validate_lp_compatibility(sub_model)

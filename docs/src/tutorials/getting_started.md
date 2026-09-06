@@ -93,7 +93,7 @@ function update_master_model!(model::Model, data::CFLPData)
     return (x = x, ), t
 end
 
-function update_sub_model!(model::Model, data::CFLPData; x, scen_idx::Int = 0)
+function update_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
     I, J = data.n_facilities, data.n_customers   
     @variable(model, y[1:I, 1:J] >= 0)
     cost_demands = data.costs .* data.demands'
@@ -194,18 +194,14 @@ master = Master(
 ### Subproblem Modeling
 Subproblems are specified by the user through a model-update function:
 ```julia
-update_sub_model!(model::Model, data; scen_idx::Int = 0, kwargs...)
+update_sub_model!(model::Model, data, scen_idx::Int; kwargs...)
 ```
 Here, `kwargs...` contains the symbolic names of the master variables that appear in the subproblem. This allows users to formulate the subproblem in JuMP **while referencing these master variables directly**, without explicitly adding them to the subproblem model.
-
-`scen_idx` is an optional keyword. Deterministic models may omit or ignore it;
-[`SeparableOracle`](@ref) supplies the corresponding one-based scenario index
-for each scenario-dependent subproblem.
 
 ### Example 1
 [The CFLP subproblem](@ref cflp-sub) can be implemented like this:
 ```julia
-function update_sub_model!(model::Model, data::CFLPData; x, scen_idx::Int = 0)
+function update_sub_model!(model::Model, data::CFLPData, scen_idx::Int; x)
     I, J = data.n_facilities, data.n_customers   
     @variable(model, y[1:I, 1:J] >= 0)
     cost_demands = data.costs .* data.demands'
@@ -270,7 +266,7 @@ function update_master_model!(model::Model, data::EmptyData)
     return (u = u, v = v, w = w), t
 end
 
-function update_sub_model!(model::Model, data::EmptyData; u, v, w, scen_idx::Int = 0)
+function update_sub_model!(model::Model, data::EmptyData, scen_idx::Int; u, v, w)
     @variable(model, y[1:10] >= 0)
     @objective(model, Min, sum(y))
     @constraint(model, y .<= u)
